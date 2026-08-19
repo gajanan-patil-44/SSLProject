@@ -25,7 +25,6 @@ export const addRole = async (userRole) => {
             "RoleName",
             "RoleCode",
             "RoleDescription",
-            "IsDisabled",
             "CreatedByUserName",
             "CreatedAt",
             "UpdatedAt"
@@ -36,7 +35,6 @@ export const addRole = async (userRole) => {
             $2,
             $3,
             $4,
-            $5,
             CURRENT_TIMESTAMP,
             CURRENT_TIMESTAMP
         )
@@ -47,7 +45,6 @@ export const addRole = async (userRole) => {
         userRole.RoleName,
         userRole.Role_Code,
         userRole.Description,
-        false,
         userRole.RequestUserName
     ];
 
@@ -67,8 +64,9 @@ export const updateRoles = async (userRole) => {
             "CreatedByUserName" = $3,
             "RoleCode" = $4,
             "IsDisabled" = $5,
-            "UpdatedAt" = CURRENT_TIMESTAMP
-        WHERE "RoleId" = $6
+            "UpdatedAt" = CURRENT_TIMESTAMP,
+            "UpdatedByUserName"=$6
+        WHERE "RoleId" = $7
     `;
 
     const values = [
@@ -77,6 +75,7 @@ export const updateRoles = async (userRole) => {
         userRole.RequestUserName,
         userRole.Role_Code,
         userRole.IsDisabled,
+        userRole.UpdatedByUserName,
         userRole.RoleId
     ];
 
