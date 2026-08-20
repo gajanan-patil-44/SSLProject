@@ -2,6 +2,7 @@ import {
     getAllCompanies,
     addCompany,
     updateCompanies,
+    toggleCompanyStatuses,
     deleteCompanies
 } from "../../Models/CompanyModels.js";
 
@@ -140,13 +141,52 @@ export const updateCompany = async (req, res) => {
 
 
 // ==========================================
+// TOGGLE COMPANY STATUS
+// ==========================================
+
+export const toggleCompanyStatus = async (req, res) => {
+    const {flagId}=req.body;
+    try {
+        if (parseInt(flagId)==4){
+            const companyData = req.body;
+
+        console.log("Received toggle company data:", companyData);
+
+        const company = await toggleCompanyStatuses(companyData);
+
+        return res.status(200).json({
+            status: "success",
+            message: "Company status updated successfully",
+            data: company
+        });
+        } else {
+            return res.status(400).json({
+                status:"error",
+                message:"Invalid flagId"
+            })
+        }
+
+    } catch (error) {
+
+        console.error("Error toggling company status:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to update company status",
+            error: error.message
+        });
+    }
+};
+
+
+// ==========================================
 // DELETE / DISABLE COMPANY
 // ==========================================
 
 export const deleteCompany = async (req, res) => {
     const {flagId}=req.body;
     try {
-        if (parseInt(flagId)==4){
+        if (parseInt(flagId)==5){
             const companyData = req.body;
 
         console.log("Received delete company data:", companyData);
