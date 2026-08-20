@@ -45,8 +45,8 @@ export const addRoles = async (req, res) => {
 
     try {
 
-        // FlagId 1 = Add Role
-        if (parseInt(FlagId) === 1) {
+        // FlagId 2 = Add Role
+        if (parseInt(FlagId) === 2) {
             const roleData = req.body;
             // Check Role Name and Role Code
             const existingRole = await checkRoleExists(
@@ -109,8 +109,8 @@ export const updateRole = async (req, res) => {
 
     try {
 
-        // FlagId 1 = Update Role
-        if (parseInt(FlagId) === 1) {
+        // FlagId 3 = Update Role
+        if (parseInt(FlagId) === 3) {
 
             const roleData = req.body;
             // Check Role Name and Role Code
@@ -173,8 +173,8 @@ export const deleteRole = async (req, res) => {
 
     try {
 
-        // FlagId 1 = Delete Role
-        if (parseInt(FlagId) === 1) {
+        // FlagId 4 = Delete Role
+        if (parseInt(FlagId) === 4) {
             const roleData = req.body;
             const role = await deleteRoles(roleData);
             return res.status(200).json({
@@ -216,8 +216,8 @@ export const updateRoleStatusController = async (req, res) => {
 
     try {
 
-        // FlagId 1 = Update Role Status
-        if (parseInt(FlagId) === 1) {
+        // FlagId 5 = Update Role Status
+        if (parseInt(FlagId) === 5) {
 
             // Make sure IsDisabled is boolean
             if (typeof IsDisabled !== "boolean") {
