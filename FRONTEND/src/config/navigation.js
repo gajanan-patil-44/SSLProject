@@ -53,6 +53,17 @@ export const navigationConfig = [
     ]
   },
   {
+    title: "DOCUMENTS",
+    items: [
+      {
+        label: "Letter Builder",
+        icon: "FileSignature",
+        path: "/documents/letter-builder",
+        badge: "New"
+      }
+    ]
+  },
+  {
     title: "INVENTORY",
     items: [
       {
