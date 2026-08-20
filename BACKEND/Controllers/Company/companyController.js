@@ -11,15 +11,22 @@ import {
 // ==========================================
 
 export const getCompany = async (req, res) => {
+    const {flagId}=req.body;
     try {
-
-        const rows = await getAllCompanies();
+        if (parseInt(flagId)==1){
+            const rows = await getAllCompanies();
 
         return res.status(200).json({
             status: "success",
             message: "Companies fetched successfully",
             data: rows
         });
+        } else{
+            return res.status(400).json({
+                status:"error",
+                message:"Invalid flagId"
+            })
+        }
 
     } catch (error) {
 
@@ -39,9 +46,10 @@ export const getCompany = async (req, res) => {
 // ==========================================
 
 export const addCompanies = async (req, res) => {
+    const {flagId}=req.body;
     try {
-
-        const companyData = req.body;
+        if (parseInt(flagId==2)){
+            const companyData = req.body;
 
         console.log("Received company data:", companyData);
 
@@ -52,6 +60,13 @@ export const addCompanies = async (req, res) => {
             message: "Company added successfully",
             data: company
         });
+
+        } else{
+            return res.status(400).json({
+                status:"error",
+                message:"Invalid flagId"
+            })
+        }
 
     } catch (error) {
 
@@ -80,9 +95,10 @@ export const addCompanies = async (req, res) => {
 // ==========================================
 
 export const updateCompany = async (req, res) => {
+    const {flagId}=req.body;
     try {
-
-        const companyData = req.body;
+        if(parseInt(flagId)==3){
+            const companyData = req.body;
 
         console.log("Received update company data:", companyData);
 
@@ -93,6 +109,13 @@ export const updateCompany = async (req, res) => {
             message: "Company updated successfully",
             data: company
         });
+
+        } else {
+            return res.status(400).json({
+                status:"error",
+                message:"Invalid flagId"
+            })
+        }
 
     } catch (error) {
 
@@ -121,9 +144,10 @@ export const updateCompany = async (req, res) => {
 // ==========================================
 
 export const deleteCompany = async (req, res) => {
+    const {flagId}=req.body;
     try {
-
-        const companyData = req.body;
+        if (parseInt(flagId)==4){
+            const companyData = req.body;
 
         console.log("Received delete company data:", companyData);
 
@@ -134,6 +158,13 @@ export const deleteCompany = async (req, res) => {
             message: "Company disabled successfully",
             data: company
         });
+
+        } else {
+            return res.status(400).json({
+                status:"error",
+                message:"Invalid flagId"
+            })
+        }
 
     } catch (error) {
 

@@ -11,15 +11,23 @@ import {
 // ==========================================
 
 export const getProduct = async (req, res) => {
+    const { flagId } = req.body;
     try {
+        if (parseInt(flagId) === 1) {
+            const rows = await getAllProducts();
 
-        const rows = await getAllProducts();
+            return res.status(200).json({
+                status: "success",
+                message: "Products fetched successfully",
+                data: rows
+            });
 
-        return res.status(200).json({
-            status: "success",
-            message: "Products fetched successfully",
-            data: rows
-        });
+        } else {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid flagId"
+            })
+        }
 
     } catch (error) {
 
@@ -39,19 +47,26 @@ export const getProduct = async (req, res) => {
 // ==========================================
 
 export const addProducts = async (req, res) => {
+    const { flagId } = req.body;
     try {
+        if (parseInt(flagId) === 2) {
+            const productData = req.body;
 
-        const productData = req.body;
+            console.log("Received product data:", productData);
 
-        console.log("Received product data:", productData);
+            const product = await addProduct(productData);
 
-        const product = await addProduct(productData);
-
-        return res.status(201).json({
-            status: "success",
-            message: "Product added successfully",
-            data: product
-        });
+            return res.status(201).json({
+                status: "success",
+                message: "Product added successfully",
+                data: product
+            });
+        } else {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid flagId"
+            })
+        }
 
     } catch (error) {
 
@@ -80,19 +95,26 @@ export const addProducts = async (req, res) => {
 // ==========================================
 
 export const updateProduct = async (req, res) => {
+    const { flagId } = req.body;
     try {
+        if (parseInt(flagId) == 3) {
+            const productData = req.body;
 
-        const productData = req.body;
+            console.log("Received update product data:", productData);
 
-        console.log("Received update product data:", productData);
+            const product = await updateProducts(productData);
 
-        const product = await updateProducts(productData);
-
-        return res.status(200).json({
-            status: "success",
-            message: "Product updated successfully",
-            data: product
-        });
+            return res.status(200).json({
+                status: "success",
+                message: "Product updated successfully",
+                data: product
+            });
+        } else {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid flagId"
+            })
+        }
 
     } catch (error) {
 
@@ -121,19 +143,26 @@ export const updateProduct = async (req, res) => {
 // ==========================================
 
 export const deleteProduct = async (req, res) => {
+    const { flagId } = req.body;
     try {
+        if (parseInt(flagId) == 4) {
+            const productData = req.body;
 
-        const productData = req.body;
+            console.log("Received delete product data:", productData);
 
-        console.log("Received delete product data:", productData);
+            const product = await deleteProducts(productData);
 
-        const product = await deleteProducts(productData);
-
-        return res.status(200).json({
-            status: "success",
-            message: "Product disabled successfully",
-            data: product
-        });
+            return res.status(200).json({
+                status: "success",
+                message: "Product disabled successfully",
+                data: product
+            });
+        } else {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid flagId"
+            })
+        }
 
     } catch (error) {
 
