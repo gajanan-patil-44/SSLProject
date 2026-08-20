@@ -2,6 +2,7 @@ import {
     getAllProducts,
     addProduct,
     updateProducts,
+    toggleProductStatuses,
     deleteProducts
 } from "../../Models/ProductModels.js";
 
@@ -138,6 +139,48 @@ export const updateProduct = async (req, res) => {
 };
 
 
+
+
+
+// ==========================================
+// TOGGLE PRODUCT STATUS
+// ==========================================
+
+export const toggleProductStatus = async (req, res) => {
+    const {flagId}=req.body;
+    try {
+        if (parseInt(flagId)==4){
+            const productData = req.body;
+
+        console.log("Received toggle product data:", productData);
+
+        const product = await toggleProductStatuses(productData);
+
+        return res.status(200).json({
+            status: "success",
+            message: "Product status updated successfully",
+            data: product
+        });
+        } else{
+            return res.status(400).json({
+                status:"error",
+                message:"Invalid flagId"
+            })
+        }
+
+    } catch (error) {
+
+        console.error("Error toggling product status:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to update product status",
+            error: error.message
+        });
+    }
+};
+
+
 // ==========================================
 // DELETE / DISABLE PRODUCT
 // ==========================================
@@ -145,7 +188,7 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     const { flagId } = req.body;
     try {
-        if (parseInt(flagId) == 4) {
+        if (parseInt(flagId) == 5) {
             const productData = req.body;
 
             console.log("Received delete product data:", productData);

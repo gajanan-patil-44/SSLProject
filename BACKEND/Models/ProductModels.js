@@ -16,12 +16,12 @@ export const getAllProducts = async () => {
             "createdByUserName" AS "RequestUserName",
             "CreatedAt" AS "CreatedOn",
             "UpdatedAt" AS "UpdatedOn",
-            "updatedByUserName" AS "UpdatedByUserName",
-            "isDisabled" AS "IsDisabled"
+            "UpdatedByUserName" AS "UpdatedByUserName",
+            "IsDisabled" AS "IsDisabled"
 
         FROM "LKP"."Product"
 
-        WHERE "isDisabled" = false
+        WHERE "IsDisabled" = false
 
         ORDER BY "ProductId"
     `);
@@ -42,11 +42,11 @@ export const addProduct = async (productData) => {
             "ProductCode",
             "ProductName",
             "ProductDescription",
-            "isDisabled",
+            "IsDisabled",
             "CreatedAt",
             "UpdatedAt",
-            "createdByUserName",
-            "updatedByUserName"
+            "CreatedByUserName",
+            "UpdatedByUserName"
         )
         VALUES
         (
@@ -88,10 +88,10 @@ export const updateProducts = async (productData) => {
             "ProductName" = $2,
             "ProductDescription" = $3,
             "UpdatedAt" = CURRENT_TIMESTAMP,
-            "updatedByUserName" = $4,
-            "isDisabled" = $5
+            "UpdatedByUserName" = $4,
+           
 
-        WHERE "ProductId" = $6
+        WHERE "ProductId" = $5
     `;
 
     const values = [
@@ -99,7 +99,6 @@ export const updateProducts = async (productData) => {
         productData.ProductName,
         productData.ProductDescription,
         productData.UpdatedByUserName,
-        productData.IsDisabled,
         productData.ProductId
     ];
 
@@ -109,6 +108,35 @@ export const updateProducts = async (productData) => {
 };
 
 
+
+// ==========================================
+// TOGGLE PRODUCT STATUS
+// ==========================================
+
+export const toggleProductStatuses = async (productData) => {
+
+    const query = `
+        UPDATE "LKP"."Product"
+        SET
+            "IsDisabled" = NOT "IsDisabled",
+            "UpdatedAt" = CURRENT_TIMESTAMP,
+            "UpdatedByUserName" = $1
+        WHERE "ProductId" = $2
+        RETURNING *;
+    `;
+
+    const values = [
+        productData.UpdatedByUserName,
+        productData.ProductId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows[0];
+};
+
+
+
 // ==========================================
 // DELETE / DISABLE PRODUCT
 // ==========================================
@@ -116,17 +144,11 @@ export const updateProducts = async (productData) => {
 export const deleteProducts = async (productData) => {
 
     const query = `
-        UPDATE "LKP"."Product"
-        SET
-            "isDisabled" = true,
-            "UpdatedAt" = CURRENT_TIMESTAMP,
-            "updatedByUserName" = $1
-
-        WHERE "ProductId" = $2
+        DELETE FROM "LKP"."Product"
+        WHERE "ProductId" = $1
     `;
 
     const values = [
-        productData.UpdatedByUserName,
         productData.ProductId
     ];
 
