@@ -13,7 +13,7 @@ export const getAllProducts = async () => {
             "ProductCode" AS "ProductCode",
             "ProductName" AS "ProductName",
             "ProductDescription" AS "Description",
-            "createdByUserName" AS "RequestUserName",
+            "CreatedByUserName" AS "RequestUserName",
             "CreatedAt" AS "CreatedOn",
             "UpdatedAt" AS "UpdatedOn",
             "UpdatedByUserName" AS "UpdatedByUserName",

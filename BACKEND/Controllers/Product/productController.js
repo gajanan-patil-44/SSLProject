@@ -53,14 +53,11 @@ export const addProducts = async (req, res) => {
         if (parseInt(flagId) === 2) {
             const productData = req.body;
 
-            console.log("Received product data:", productData);
-
             const product = await addProduct(productData);
 
             return res.status(201).json({
                 status: "success",
-                message: "Product added successfully",
-                data: product
+                message: "Product added successfully"
             });
         } else {
             return res.status(400).json({

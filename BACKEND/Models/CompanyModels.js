@@ -7,7 +7,8 @@ import { pool } from "../Config/db.js";
 
 export const getAllCompanies = async () => {
 
-    const result = await pool.query(`
+    try {
+        const result = await pool.query(`
         SELECT
             "CompanyId" AS "CompanyId",
             "CompanyName" AS "CompanyName",
@@ -26,7 +27,11 @@ export const getAllCompanies = async () => {
         ORDER BY "CompanyName"
     `);
 
-    return result.rows;
+        return result.rows;
+    } catch (error) {
+        throw error
+    }
+
 };
 
 

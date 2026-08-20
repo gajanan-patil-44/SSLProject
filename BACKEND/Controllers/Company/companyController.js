@@ -48,26 +48,21 @@ export const getCompany = async (req, res) => {
 // ==========================================
 
 export const addCompanies = async (req, res) => {
-
-    const {flagId}=req.body;
+    const { flagId, ...companyData } = req.body;
     try {
-        if (parseInt(flagId==2)){
-            const companyData = req.body;
+        if (parseInt(flagId == 2)) {
+            const company = await addCompany(companyData);
 
-        console.log("Received company data:", companyData);
+            return res.status(201).json({
+                status: "success",
+                message: "Company added successfully",
+                data: company
+            });
 
-        const company = await addCompany(companyData);
-
-        return res.status(201).json({
-            status: "success",
-            message: "Company added successfully",
-            data: company
-        });
-
-        } else{
+        } else {
             return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
+                status: "error",
+                message: "Invalid flagId"
             })
         }
 
@@ -98,25 +93,25 @@ export const addCompanies = async (req, res) => {
 // ==========================================
 
 export const updateCompany = async (req, res) => {
-    const {flagId}=req.body;
+    const { flagId } = req.body;
     try {
-        if(parseInt(flagId)==3){
+        if (parseInt(flagId) == 3) {
             const companyData = req.body;
 
-        console.log("Received update company data:", companyData);
+            console.log("Received update company data:", companyData);
 
-        const company = await updateCompanies(companyData);
+            const company = await updateCompanies(companyData);
 
-        return res.status(200).json({
-            status: "success",
-            message: "Company updated successfully",
-            data: company
-        });
+            return res.status(200).json({
+                status: "success",
+                message: "Company updated successfully",
+                data: company
+            });
 
         } else {
             return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
+                status: "error",
+                message: "Invalid flagId"
             })
         }
 
@@ -147,24 +142,24 @@ export const updateCompany = async (req, res) => {
 // ==========================================
 
 export const toggleCompanyStatus = async (req, res) => {
-    const {flagId}=req.body;
+    const { flagId } = req.body;
     try {
-        if (parseInt(flagId)==4){
+        if (parseInt(flagId) == 4) {
             const companyData = req.body;
 
-        console.log("Received toggle company data:", companyData);
+            console.log("Received toggle company data:", companyData);
 
-        const company = await toggleCompanyStatuses(companyData);
+            const company = await toggleCompanyStatuses(companyData);
 
-        return res.status(200).json({
-            status: "success",
-            message: "Company status updated successfully",
-            data: company
-        });
+            return res.status(200).json({
+                status: "success",
+                message: "Company status updated successfully",
+                data: company
+            });
         } else {
             return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
+                status: "error",
+                message: "Invalid flagId"
             })
         }
 
@@ -186,25 +181,25 @@ export const toggleCompanyStatus = async (req, res) => {
 // ==========================================
 
 export const deleteCompany = async (req, res) => {
-    const {flagId}=req.body;
+    const { flagId } = req.body;
     try {
-        if (parseInt(flagId)==5){
+        if (parseInt(flagId) == 5) {
             const companyData = req.body;
 
-        console.log("Received delete company data:", companyData);
+            console.log("Received delete company data:", companyData);
 
-        const company = await deleteCompanies(companyData);
+            const company = await deleteCompanies(companyData);
 
-        return res.status(200).json({
-            status: "success",
-            message: "Company disabled successfully",
-            data: company
-        });
+            return res.status(200).json({
+                status: "success",
+                message: "Company disabled successfully",
+                data: company
+            });
 
         } else {
             return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
+                status: "error",
+                message: "Invalid flagId"
             })
         }
 
