@@ -8,30 +8,34 @@ import { pool } from "../Config/db.js";
 export const getAllCompanies = async () => {
 
     try {
-        const result = await pool.query(`
-        SELECT
-            "CompanyId" AS "CompanyId",
-            "CompanyName" AS "CompanyName",
-            "CompanyCode" AS "CompanyCode",
-            "CreatedByUserName" AS "RequestUserName",
-            "Email" AS "Email",
-            "PhoneNumber" AS "PhoneNumber",
-            "Address" AS "Address",
-            "CreatedAt" AS "CreatedOn",
-            "UpdatedAt" AS "UpdatedOn",
-            "UpdatedByUserName" AS "UpdatedByUserName",
-            "IsDisabled" AS "IsDisabled"
 
-        FROM "LKP"."Company"
-        WHERE "IsDisabled" = false
-        ORDER BY "CompanyName"
-    `);
+        const result = await pool.query(`
+            SELECT
+                "CompanyId" AS "CompanyId",
+                "CompanyName" AS "CompanyName",
+                "CompanyCode" AS "CompanyCode",
+                "CreatedByUserName" AS "RequestUserName",
+                "Email" AS "Email",
+                "PhoneNumber" AS "PhoneNumber",
+                "Address" AS "Address",
+                "CreatedAt" AS "CreatedOn",
+                "UpdatedAt" AS "UpdatedOn",
+                "UpdatedByUserName" AS "UpdatedByUserName",
+                "IsDisabled" AS "IsDisabled"
+
+            FROM "LKP"."Company"
+            WHERE "IsDisabled" = false
+            ORDER BY "CompanyName"
+        `);
 
         return result.rows;
-    } catch (error) {
-        throw error
-    }
 
+    } catch (error) {
+
+        console.error("Error fetching companies:", error);
+
+        throw error;
+    }
 };
 
 
@@ -41,27 +45,36 @@ export const checkCompanyExists = async (
     CompanyCode
 ) => {
 
-    const query = `
-        SELECT
-            "CompanyId",
-            "CompanyName",
-            "CompanyCode"
-        FROM "LKP"."Company"
-        WHERE
-            (
-                "CompanyName" = $1
-                OR "CompanyCode" = $2
-            )
-    `;
+    try {
 
-    const values = [
-        CompanyName,
-        CompanyCode
-    ];
+        const query = `
+            SELECT
+                "CompanyId",
+                "CompanyName",
+                "CompanyCode"
+            FROM "LKP"."Company"
+            WHERE
+                (
+                    "CompanyName" = $1
+                    OR "CompanyCode" = $2
+                )
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            CompanyName,
+            CompanyCode
+        ];
 
-    return result.rows;
+        const result = await pool.query(query, values);
+
+        return result.rows;
+
+    } catch (error) {
+
+        console.error("Error checking company existence:", error);
+
+        throw error;
+    }
 };
 
 
@@ -71,48 +84,57 @@ export const checkCompanyExists = async (
 
 export const addCompany = async (companyData) => {
 
-    const query = `
-        INSERT INTO "LKP"."Company"
-        (
-            "CompanyName",
-            "CompanyCode",
-            "CreatedAt",
-            "UpdatedAt",
-            "CreatedByUserName",
-            "UpdatedByUserName",
-            "IsDisabled",
-            "Email",
-            "PhoneNumber",
-            "Address"
-        )
-        VALUES
-        (
-            $1,
-            $2,
-            CURRENT_TIMESTAMP,
-            CURRENT_TIMESTAMP,
-            $3,
-            $3,
-            false,
-            $4,
-            $5,
-            $6
-        )
-        RETURNING *;
-    `;
+    try {
 
-    const values = [
-        companyData.CompanyName,
-        companyData.CompanyCode,
-        companyData.RequestUserName,
-        companyData.Email,
-        companyData.PhoneNumber,
-        companyData.Address
-    ];
+        const query = `
+            INSERT INTO "LKP"."Company"
+            (
+                "CompanyName",
+                "CompanyCode",
+                "CreatedAt",
+                "UpdatedAt",
+                "CreatedByUserName",
+                "UpdatedByUserName",
+                "IsDisabled",
+                "Email",
+                "PhoneNumber",
+                "Address"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP,
+                $3,
+                $3,
+                false,
+                $4,
+                $5,
+                $6
+            )
+            RETURNING *;
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            companyData.CompanyName,
+            companyData.CompanyCode,
+            companyData.RequestUserName,
+            companyData.Email,
+            companyData.PhoneNumber,
+            companyData.Address
+        ];
 
-    return result.rows[0];
+        const result = await pool.query(query, values);
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        console.error("Error adding company:", error);
+
+        throw error;
+    }
 };
 
 
@@ -122,29 +144,41 @@ export const checkCompanyExistsForUpdate = async (
     CompanyId
 ) => {
 
-    const query = `
-        SELECT
-            "CompanyId",
-            "CompanyName",
-            "CompanyCode"
-        FROM "LKP"."Company"
-        WHERE
-            (
-                "CompanyName" = $1
-                OR "CompanyCode" = $2
-            )
-            AND "CompanyId" <> $3
-    `;
+    try {
 
-    const values = [
-        CompanyName,
-        CompanyCode,
-        CompanyId
-    ];
+        const query = `
+            SELECT
+                "CompanyId",
+                "CompanyName",
+                "CompanyCode"
+            FROM "LKP"."Company"
+            WHERE
+                (
+                    "CompanyName" = $1
+                    OR "CompanyCode" = $2
+                )
+                AND "CompanyId" <> $3
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            CompanyName,
+            CompanyCode,
+            CompanyId
+        ];
 
-    return result.rows;
+        const result = await pool.query(query, values);
+
+        return result.rows;
+
+    } catch (error) {
+
+        console.error(
+            "Error checking company existence for update:",
+            error
+        );
+
+        throw error;
+    }
 };
 
 
@@ -154,33 +188,42 @@ export const checkCompanyExistsForUpdate = async (
 
 export const updateCompanies = async (companyData) => {
 
-    const query = `
-        UPDATE "LKP"."Company"
-        SET
-            "CompanyName" = $1,
-            "CompanyCode" = $2,
-            "UpdatedAt" = CURRENT_TIMESTAMP,
-            "UpdatedByUserName" = $3,
-            "Email"=$4,
-            "PhoneNumber"=$5,
-            "Address"=$6
+    try {
 
-        WHERE "CompanyId" = $7
-    `;
+        const query = `
+            UPDATE "LKP"."Company"
+            SET
+                "CompanyName" = $1,
+                "CompanyCode" = $2,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $3,
+                "Email"=$4,
+                "PhoneNumber"=$5,
+                "Address"=$6
 
-    const values = [
-        companyData.CompanyName,
-        companyData.CompanyCode,
-        companyData.UpdatedByUserName,
-        companyData.Email,
-        companyData.PhoneNumber,
-        companyData.Address,
-        companyData.CompanyId
-    ];
+            WHERE "CompanyId" = $7
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            companyData.CompanyName,
+            companyData.CompanyCode,
+            companyData.UpdatedByUserName,
+            companyData.Email,
+            companyData.PhoneNumber,
+            companyData.Address,
+            companyData.CompanyId
+        ];
 
-    return result.rowCount;
+        const result = await pool.query(query, values);
+
+        return result.rowCount;
+
+    } catch (error) {
+
+        console.error("Error updating company:", error);
+
+        throw error;
+    }
 };
 
 
@@ -190,24 +233,33 @@ export const updateCompanies = async (companyData) => {
 
 export const toggleCompanyStatuses = async (companyData) => {
 
-    const query = `
-        UPDATE "LKP"."Company"
-        SET
-            "IsDisabled"= $1
-            "UpdatedAt" = CURRENT_TIMESTAMP,
-            "UpdatedByUserName" = $2
-        WHERE "CompanyId" = $3
-    `;
+    try {
 
-    const values = [
-        companyData.IsDisabled,
-        companyData.UpdatedByUserName,
-        companyData.CompanyId
-    ];
+        const query = `
+            UPDATE "LKP"."Company"
+            SET
+                "IsDisabled" = NOT "IsDisabled",
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $1
+            WHERE "CompanyId" = $2
+            RETURNING *;
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            companyData.UpdatedByUserName,
+            companyData.CompanyId
+        ];
 
-    return result.rows[0];
+        const result = await pool.query(query, values);
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        console.error("Error toggling company status:", error);
+
+        throw error;
+    }
 };
 
 
@@ -219,16 +271,25 @@ export const toggleCompanyStatuses = async (companyData) => {
 
 export const deleteCompanies = async (companyData) => {
 
-    const query = `
-        DELETE FROM "LKP"."Company"
-        WHERE "CompanyId" = $1
-    `;
+    try {
 
-    const values = [
-        companyData.CompanyId
-    ];
+        const query = `
+            DELETE FROM "LKP"."Company"
+            WHERE "CompanyId" = $1
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            companyData.CompanyId
+        ];
 
-    return result.rowCount;
+        const result = await pool.query(query, values);
+
+        return result.rowCount;
+
+    } catch (error) {
+
+        console.error("Error deleting company:", error);
+
+        throw error;
+    }
 };

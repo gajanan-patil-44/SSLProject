@@ -196,24 +196,42 @@ export const updateProduct = async (req, res) => {
 // ==========================================
 
 export const toggleProductStatus = async (req, res) => {
+
     const { flagId } = req.body;
+
     try {
-        if (parseInt(flagId) == 4) {
+
+        // flagId 4 = Toggle Product Status
+        if (parseInt(flagId) === 4) {
+
             const productData = req.body;
+
+            console.log("Received toggle product data:", productData);
 
             const product = await toggleProductStatuses(productData);
 
+            // Product does not exist
+            if (!product) {
+
+                return res.status(404).json({
+                    status: "error",
+                    message: "Product not found"
+                });
+            }
+
+            // Product status successfully toggled
             return res.status(200).json({
                 status: "success",
                 message: "Product status updated successfully",
                 data: product
             });
-        } else {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            })
         }
+
+        // Invalid flagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid flagId"
+        });
 
     } catch (error) {
 
