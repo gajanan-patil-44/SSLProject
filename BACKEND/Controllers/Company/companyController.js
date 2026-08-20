@@ -57,11 +57,7 @@ export const addCompanies = async (req, res) => {
 
         // flagId 2 = Add Company
         if (parseInt(flagId) === 2) {
-
             const companyData = req.body;
-
-            console.log("Received company data:", companyData);
-
             // Check Company Name and Company Code
             const existingCompany = await checkCompanyExists(
                 companyData.CompanyName,
@@ -134,9 +130,6 @@ export const updateCompany = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const companyData = req.body;
-
-            console.log("Received update company data:", companyData);
-
             // Check Company Name and Company Code
             // Exclude the current CompanyId
             const existingCompanies = await checkCompanyExistsForUpdate(
@@ -205,9 +198,6 @@ export const toggleCompanyStatus = async (req, res) => {
     try {
         if (parseInt(flagId) == 4) {
             const companyData = req.body;
-
-            console.log("Received toggle company data:", companyData);
-
             const company = await toggleCompanyStatuses(companyData);
 
             return res.status(200).json({

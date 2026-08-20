@@ -143,7 +143,7 @@ export const updateProducts = async (productData) => {
             "ProductName" = $2,
             "ProductDescription" = $3,
             "UpdatedAt" = CURRENT_TIMESTAMP,
-            "UpdatedByUserName" = $4,
+            "UpdatedByUserName" = $4
            
 
         WHERE "ProductId" = $5
@@ -173,14 +173,14 @@ export const toggleProductStatuses = async (productData) => {
     const query = `
         UPDATE "LKP"."Product"
         SET
-            "IsDisabled" = NOT "IsDisabled",
+            "IsDisabled" = $1,
             "UpdatedAt" = CURRENT_TIMESTAMP,
-            "UpdatedByUserName" = $1
-        WHERE "ProductId" = $2
-        RETURNING *;
+            "UpdatedByUserName" = $2
+        WHERE "ProductId" = $3
     `;
 
     const values = [
+        productData.IsDisabled,
         productData.UpdatedByUserName,
         productData.ProductId
     ];

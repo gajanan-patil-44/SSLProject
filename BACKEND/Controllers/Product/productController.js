@@ -58,9 +58,6 @@ export const addProducts = async (req, res) => {
         if (parseInt(flagId) === 2) {
 
             const productData = req.body;
-
-            console.log("Received product data:", productData);
-
             // Check Product Name and Product Code
             const existingProduct = await checkProductExists(
                 productData.ProductName,
@@ -132,9 +129,6 @@ export const updateProduct = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const productData = req.body;
-
-            console.log("Received update product data:", productData);
-
             // Check Product Name and Product Code
             // Exclude the current ProductId
             const existingProducts = await checkProductExistsForUpdate(
@@ -202,24 +196,22 @@ export const updateProduct = async (req, res) => {
 // ==========================================
 
 export const toggleProductStatus = async (req, res) => {
-    const {flagId}=req.body;
+    const { flagId } = req.body;
     try {
-        if (parseInt(flagId)==4){
+        if (parseInt(flagId) == 4) {
             const productData = req.body;
 
-        console.log("Received toggle product data:", productData);
+            const product = await toggleProductStatuses(productData);
 
-        const product = await toggleProductStatuses(productData);
-
-        return res.status(200).json({
-            status: "success",
-            message: "Product status updated successfully",
-            data: product
-        });
-        } else{
+            return res.status(200).json({
+                status: "success",
+                message: "Product status updated successfully",
+                data: product
+            });
+        } else {
             return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
+                status: "error",
+                message: "Invalid flagId"
             })
         }
 
@@ -252,7 +244,7 @@ export const deleteProduct = async (req, res) => {
 
             return res.status(200).json({
                 status: "success",
-                message: "Product disabled successfully",
+                message: "Product Deleted successfully",
                 data: product
             });
         } else {
