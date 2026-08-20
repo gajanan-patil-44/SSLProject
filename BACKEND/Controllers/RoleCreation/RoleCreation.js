@@ -1,20 +1,34 @@
-import {getAllRoles,addRole,updateRoles,deleteRoles} from "../../Models/RoleModels.js";
+import { getAllRoles, addRole, updateRoles, deleteRoles } from "../../Models/RoleModels.js";
 
 
 // ==========================================
 // GET ALL ROLES
 // ==========================================
 export const getRole = async (req, res) => {
+    const { FlagId } = req.body;
+
     try {
-        const rows = await getAllRoles();
-        return res.status(200).json({
-            status: "success",
-            message: "Roles fetched successfully",
-            data: rows
-        });
+        if (parseInt(FlagId) === 1) {
+            const rows = await getAllRoles();
+            return res.status(200).json({
+                status: "success",
+                message: "Roles fetched successfully",
+                data: rows
+            });
+
+        } else {
+
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid FlagId."
+            });
+
+        }
 
     } catch (error) {
+
         console.error("Error fetching roles:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch roles",
@@ -29,14 +43,22 @@ export const getRole = async (req, res) => {
 // ==========================================
 
 export const addRoles = async (req, res) => {
+    const { FlagId } = req.body;
+
     try {
-        const roleData = req.body;
-        console.log("Received role data:", roleData);
-        const role = await addRole(roleData);
-        return res.status(201).json({
-            status: "success",
-            message: "Role added successfully",
-            data: role
+        if (parseInt(FlagId) === 1) {
+            const roleData = req.body;
+            console.log("Received role data:", roleData);
+            const role = await addRole(roleData);
+            return res.status(201).json({
+                status: "success",
+                message: "Role added successfully",
+                data: role
+            });
+        }
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid FlagId."
         });
 
     } catch (error) {
@@ -66,14 +88,29 @@ export const addRoles = async (req, res) => {
 // ==========================================
 
 export const updateRole = async (req, res) => {
+    const { FlagId } = req.body;
+
     try {
-        const roleData = req.body;
-        console.log("Received update role data:", roleData);
-        const role = await updateRoles(roleData);
-        return res.status(200).json({
-            status: "success",
-            message: "Role updated successfully",
-            data: role
+
+        // FlagId 1 = Update Role
+        if (parseInt(FlagId) === 1) {
+            const roleData = req.body;
+
+            console.log("Received update role data:", roleData);
+
+            const role = await updateRoles(roleData);
+
+            return res.status(200).json({
+                status: "success",
+                message: "Role updated successfully",
+                data: role
+            });
+        }
+
+        // Invalid FlagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid FlagId."
         });
 
     } catch (error) {
@@ -97,20 +134,35 @@ export const updateRole = async (req, res) => {
     }
 };
 
-
 // ==========================================
 // DELETE ROLE
 // ==========================================
 
 export const deleteRole = async (req, res) => {
+    const { FlagId } = req.body;
+
     try {
-        const roleData = req.body;
-        console.log("Received delete role data:", roleData);
-        const role = await deleteRoles(roleData);
-        return res.status(200).json({
-            status: "success",
-            message: "Role deleted successfully",
-            data: role
+
+        // FlagId 1 = Delete Role
+        if (parseInt(FlagId) === 1) {
+
+            const roleData = req.body;
+
+            console.log("Received delete role data:", roleData);
+
+            const role = await deleteRoles(roleData);
+
+            return res.status(200).json({
+                status: "success",
+                message: "Role deleted successfully",
+                data: role
+            });
+        }
+
+        // Invalid FlagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid FlagId."
         });
 
     } catch (error) {
@@ -125,6 +177,7 @@ export const deleteRole = async (req, res) => {
                 message: "Role cannot be deleted because it is being used"
             });
         }
+
         return res.status(500).json({
             status: "error",
             message: "Failed to delete role",
