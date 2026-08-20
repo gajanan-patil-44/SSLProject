@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PageHeader, Card, Button } from '../../components/ui/index';
-import { Printer, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify, MousePointerClick, Settings2, FileText, Image as ImageIcon, GripHorizontal } from 'lucide-react';
+import { Printer, Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify, MousePointerClick, Settings2, FileText, Image as ImageIcon, GripHorizontal, Award, Briefcase, Minus, Type } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component {
 // ----------------------------------------------------------------------
 // DRAGGABLE WRAPPER
 // ----------------------------------------------------------------------
-const DraggableWrapper = ({ id, activeId, position, onPositionChange, children }) => {
+const DraggableWrapper = ({ id, activeId, position, onPositionChange, onDelete, children }) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef(null);
   const startPos = useRef({ x: 0, y: 0 });
@@ -76,7 +76,14 @@ const DraggableWrapper = ({ id, activeId, position, onPositionChange, children }
         <GripHorizontal className="w-3 h-3" />
       </div>
       
-      {isActive && <div className="absolute -top-5 left-4 text-[9px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-1.5 py-0.5 rounded-t print:hidden">{id}</div>}
+      {isActive && (
+        <>
+          <div className="absolute -top-5 left-4 text-[9px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-1.5 py-0.5 rounded-t print:hidden">{id.split('-')[0]}</div>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(id); }} className="absolute -top-3 -right-3 w-6 h-6 bg-red-50 text-red-500 border border-red-200 rounded-full flex items-center justify-center shadow-sm hover:bg-red-500 hover:text-white transition-colors z-30 print:hidden" title="Delete Component">
+             &times;
+          </button>
+        </>
+      )}
       
       <div className={isDragging ? 'pointer-events-none' : ''}>
          {children}
@@ -103,27 +110,33 @@ const InlineEditable = ({ id, onFocus, value, onChange, className, tagName = 'di
       suppressContentEditableWarning 
       onFocus={() => onFocus(id)}
       onBlur={handleBlur} 
-      className={`${className} outline-none cursor-text min-h-[1em] min-w-[2em] empty:before:content-[attr(placeholder)] empty:before:text-slate-300 empty:before:pointer-events-none custom-editor`}
+      className={`${className} outline-none cursor-text min-h-[1em] min-w-[2em] empty:before:content-[attr(placeholder)] empty:before:text-slate-300 empty:before:pointer-events-none custom-editor resizable-content`}
       placeholder={placeholder}
       dangerouslySetInnerHTML={{__html: value}}
-      style={{ whiteSpace: 'pre-wrap' }}
+      style={{ whiteSpace: 'pre-wrap', overflow: 'hidden' }}
     />
   );
 };
 
-const LogoUploader = ({ logo, logoSize, onUpload, onFocus }) => {
+const ImageUploader = ({ id, label = "Add Image", image, imageSize, onUpload, onFocus }) => {
   const fileInputRef = useRef(null);
+  const isHeaderFooter = id === 'header' || id === 'footer';
+  
   return (
-    <div className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onFocus('logo'); }}>
-       {logo ? (
-          <img src={logo} alt="Logo" className="object-contain hover:opacity-80 transition-opacity" style={{ maxHeight: `${logoSize}px` }} onClick={() => fileInputRef.current?.click()} />
+    <div className="cursor-pointer resizable-content relative group" style={{ overflow: 'hidden', minWidth: '50px', minHeight: '50px', width: isHeaderFooter ? '800px' : `${Math.max(120, imageSize * 1.5)}px`, height: `${imageSize}px` }} onClick={(e) => { e.stopPropagation(); onFocus(id); }}>
+       {image ? (
+          <img src={image} alt={label} className={`object-contain ${isHeaderFooter ? 'w-full h-full object-cover' : 'w-full h-full'}`} />
        ) : (
-          <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-300 hover:border-primary bg-slate-50 hover:bg-primary/5 flex flex-col gap-2 items-center justify-center text-slate-400 hover:text-primary text-[10px] font-bold uppercase tracking-widest rounded transition-colors print:hidden" style={{ height: `${logoSize}px`, width: `${Math.max(120, logoSize * 1.5)}px` }}>
+          <div className="border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col gap-2 items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-widest rounded print:hidden w-full h-full text-center p-2">
              <ImageIcon className="w-6 h-6 opacity-50" />
-             Add Logo
+             {label}
           </div>
        )}
-       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onUpload} />
+       <button onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="absolute inset-0 bg-slate-900/60 text-white flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex print:hidden backdrop-blur-sm">
+          <ImageIcon className="w-6 h-6 mb-1" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">{image ? 'Change' : 'Upload'}</span>
+       </button>
+       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onUpload(e, id)} />
     </div>
   );
 };
@@ -137,6 +150,10 @@ export default function LetterBuilderView() {
   const [formData, setFormData] = useState({
     logo: '',
     logoSize: 80,
+    header: '',
+    headerSize: 100,
+    footer: '',
+    footerSize: 100,
     fontFamily: 'font-sans',
     fontSize: 14,
     companyName: 'Company Name',
@@ -148,8 +165,29 @@ export default function LetterBuilderView() {
     signature: 'Sincerely,<br/><br/><strong>Oliver Weber</strong><br/>General Manager'
   });
 
+  const [visibleComponents, setVisibleComponents] = useState([
+    'logo', 'companyName', 'contactInfo', 'date', 'recipient', 'subject', 'content', 'signature'
+  ]);
+
+  const availableComponents = [
+    { id: 'logo', label: 'Company Logo', icon: ImageIcon },
+    { id: 'header', label: 'Header Design', icon: ImageIcon },
+    { id: 'footer', label: 'Footer Design', icon: ImageIcon },
+    { id: 'companyName', label: 'Company Name', icon: FileText },
+    { id: 'contactInfo', label: 'Contact Details', icon: FileText },
+    { id: 'date', label: 'Date', icon: FileText },
+    { id: 'recipient', label: 'Recipient Info', icon: FileText },
+    { id: 'subject', label: 'Subject Line', icon: FileText },
+    { id: 'content', label: 'Letter Body', icon: FileText },
+    { id: 'signature', label: 'Signature Block', icon: FileText },
+    { id: 'divider', label: 'Divider Line', icon: Minus, isMulti: true },
+    { id: 'textblock', label: 'Text Block', icon: Type, isMulti: true },
+  ];
+
   const [positions, setPositions] = useState({
     logo: { x: 48, y: 48 },
+    header: { x: 0, y: 0 },
+    footer: { x: 0, y: 950 },
     companyName: { x: 48, y: 150 },
     contactInfo: { x: 600, y: 48 },
     date: { x: 48, y: 220 },
@@ -177,13 +215,79 @@ export default function LetterBuilderView() {
     setPositions(prev => ({ ...prev, [id]: newPos }));
   };
 
-  const handleLogoUpload = (e) => {
+  const handleImageUpload = (e, id) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => handleInputChange('logo', reader.result);
+      reader.onloadend = () => handleInputChange(id, reader.result);
       reader.readAsDataURL(file);
     }
+  };
+
+  const toggleComponent = (comp) => {
+    if (comp.isMulti) {
+      const newId = `${comp.id}-${Date.now()}`;
+      setPositions(prev => ({ ...prev, [newId]: { x: 100, y: 100 } }));
+      if (comp.id === 'textblock') {
+         setFormData(prev => ({ ...prev, [newId]: 'New Text Block' }));
+      }
+      setVisibleComponents(prev => [...prev, newId]);
+      setActiveId(newId);
+    } else {
+      setVisibleComponents(prev => 
+        prev.includes(comp.id) ? prev.filter(c => c !== comp.id) : [...prev, comp.id]
+      );
+    }
+  };
+
+  const handleDragStart = (e, comp) => {
+    e.dataTransfer.setData('componentId', comp.id);
+    e.dataTransfer.setData('isMulti', comp.isMulti ? 'true' : 'false');
+  };
+
+  const removeComponent = (id) => {
+    setVisibleComponents(prev => prev.filter(c => c !== id));
+    if (activeId === id) setActiveId(null);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const baseId = e.dataTransfer.getData('componentId');
+    const isMulti = e.dataTransfer.getData('isMulti') === 'true';
+    
+    if (baseId) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = Math.max(0, e.clientX - rect.left - 20);
+      const y = Math.max(0, e.clientY - rect.top - 20);
+      
+      if (isMulti) {
+         const newId = `${baseId}-${Date.now()}`;
+         setPositions(prev => ({ ...prev, [newId]: { x, y } }));
+         if (baseId === 'textblock') {
+            setFormData(prev => ({ ...prev, [newId]: 'New Text Block' }));
+         }
+         setVisibleComponents(prev => [...prev, newId]);
+         setActiveId(newId);
+      } else if (!visibleComponents.includes(baseId)) {
+         let finalX = x;
+         let finalY = y;
+         if (baseId === 'header') {
+            finalX = 0;
+            finalY = 0;
+         } else if (baseId === 'footer') {
+            finalX = 0;
+            finalY = 950;
+         }
+         
+         setPositions(prev => ({ ...prev, [baseId]: { x: finalX, y: finalY } }));
+         setVisibleComponents(prev => [...prev, baseId]);
+         setActiveId(baseId);
+      }
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
   };
 
   const handlePrint = () => {
@@ -195,7 +299,9 @@ export default function LetterBuilderView() {
     document.execCommand(command, false, val);
   };
 
-  const activeLabel = activeId === 'logo' ? 'Company Logo' 
+  const activeLabel = activeId === 'logo' ? 'Company Logo'
+    : activeId === 'header' ? 'Header Design'
+    : activeId === 'footer' ? 'Footer Design'
     : activeId === 'companyName' ? 'Company Name'
     : activeId === 'contactInfo' ? 'Contact Details'
     : activeId === 'date' ? 'Date'
@@ -203,6 +309,8 @@ export default function LetterBuilderView() {
     : activeId === 'subject' ? 'Subject Line'
     : activeId === 'content' ? 'Letter Body'
     : activeId === 'signature' ? 'Signature Block'
+    : activeId?.startsWith('divider') ? 'Divider Line'
+    : activeId?.startsWith('textblock') ? 'Text Block'
     : 'Unknown Component';
 
   return (
@@ -224,51 +332,50 @@ export default function LetterBuilderView() {
       <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-180px)] print:h-auto print:block">
         
         {/* Settings Panel */}
-        <div className="w-full xl:w-[320px] shrink-0 flex flex-col h-full print:hidden space-y-4 sidebar-panel">
+        <div className="w-full xl:w-[320px] shrink-0 flex flex-col h-full print:hidden space-y-4 sidebar-panel overflow-y-auto">
+
           <Card className="p-5 bg-slate-50 dark:bg-slate-900/40 shrink-0 flex-1 border-primary/20 flex flex-col">
-             <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2">
-               <MousePointerClick className="w-4 h-4 text-primary" /> Active Component
+             <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+               <MousePointerClick className="w-4 h-4 text-primary" /> Components
              </h3>
 
-             {!activeId && (
-                <div className="text-sm text-slate-500 bg-white dark:bg-slate-800 p-6 rounded-lg text-center border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center gap-2">
-                  <FileText className="w-8 h-8 text-slate-300 mb-2" />
-                  No component selected.<br/>Click anywhere on the document to edit its properties, or grab a handle to move it.
-                </div>
-             )}
-
-             {activeId === 'logo' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                   <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 p-3 rounded-lg">
-                      <ImageIcon className="w-5 h-5 text-primary" />
-                      <div className="font-bold text-sm text-primary">Company Logo</div>
+             <div className="grid grid-cols-2 gap-2 mb-6">
+               {availableComponents.map(comp => {
+                 const isVisible = !comp.isMulti && visibleComponents.includes(comp.id);
+                 return (
+                   <div 
+                     key={comp.id}
+                     draggable={!isVisible}
+                     onDragStart={(e) => handleDragStart(e, comp)}
+                     onClick={() => toggleComponent(comp)}
+                     className={`flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all ${isVisible ? 'bg-primary/5 border-primary/20 text-primary opacity-60 cursor-pointer' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-sm cursor-grab active:cursor-grabbing text-slate-700 dark:text-slate-300'}`}
+                     title={isVisible ? "Click to hide" : "Drag to canvas or click to add"}
+                   >
+                     <comp.icon className="w-5 h-5 mb-1.5 opacity-70" />
+                     <span className="text-[10px] font-bold uppercase tracking-wider">{comp.label}</span>
                    </div>
-                   
+                 )
+               })}
+             </div>
+
+             {['logo', 'header', 'footer'].includes(activeId) && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                   <div className="font-bold text-sm text-primary mb-4">Edit {activeLabel}</div>
                    <div>
                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Logo Size</label>
-                        <span className="text-xs text-slate-800 dark:text-slate-200 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">{formData.logoSize}px</span>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Image Size</label>
+                        <span className="text-xs text-slate-800 dark:text-slate-200 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">{formData[`${activeId}Size`]}px</span>
                      </div>
-                     <input type="range" min="30" max="250" value={formData.logoSize} onChange={(e) => handleInputChange('logoSize', e.target.value)} className="w-full accent-primary mt-2" />
-                   </div>
-                   
-                   <div className="text-xs text-slate-500 text-center pt-4">
-                     Click the logo on the document again to upload a new image.
+                     <input type="range" min="30" max="600" value={formData[`${activeId}Size`]} onChange={(e) => handleInputChange(`${activeId}Size`, e.target.value)} className="w-full accent-primary mt-2" />
                    </div>
                 </div>
              )}
 
-             {activeId && activeId !== 'logo' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                   <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 p-3 rounded-lg">
-                      <FileText className="w-5 h-5 text-primary" />
-                      <div className="font-bold text-sm text-primary">{activeLabel}</div>
-                   </div>
-
-                   <div className="text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-                      You are editing the <strong>{activeLabel}</strong>. 
-                      <br/><br/>
-                      Use the floating toolbar above the document to apply Bold, Italic, Lists, or Alignment to this block.
+             {activeId && !['logo', 'header', 'footer'].includes(activeId) && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                   <div className="text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                      Editing: <strong className="text-primary">{activeLabel}</strong>
+                      <div className="text-xs text-slate-400 mt-2">Use the floating toolbar to format text. Drag edges to resize.</div>
                    </div>
                 </div>
              )}
@@ -318,39 +425,86 @@ export default function LetterBuilderView() {
           </div>
 
           {/* Absolute Canvas Document Sheet */}
-          <div className={`bg-white border border-slate-200 shadow-lg w-[800px] min-h-[1056px] print:border-none print:shadow-none print:m-0 print:w-full print:max-w-none text-slate-800 relative overflow-hidden transition-colors ${formData.fontFamily}`} style={{ width: '800px', minHeight: '1056px', fontSize: `${formData.fontSize}px` }}>
+          <div 
+             onDrop={handleDrop}
+             onDragOver={handleDragOver}
+             className={`bg-white border border-slate-200 shadow-lg w-[800px] min-h-[1056px] print:border-none print:shadow-none print:m-0 print:w-full print:max-w-none text-slate-800 relative transition-colors ${formData.fontFamily}`} 
+             style={{ width: '800px', minHeight: '1056px', fontSize: `${formData.fontSize}px` }}
+          >
              
-             <DraggableWrapper id="logo" activeId={activeId} position={positions.logo} onPositionChange={handlePositionChange}>
-               <LogoUploader onFocus={setActiveId} logo={formData.logo} logoSize={formData.logoSize} onUpload={handleLogoUpload} />
+             {visibleComponents.includes('header') && (
+             <DraggableWrapper id="header" activeId={activeId} position={positions.header} onPositionChange={handlePositionChange} onDelete={removeComponent}>
+               <ImageUploader id="header" label="Add Header Image" onFocus={setActiveId} image={formData.header} imageSize={formData.headerSize} onUpload={handleImageUpload} />
              </DraggableWrapper>
+             )}
 
-             <DraggableWrapper id="companyName" activeId={activeId} position={positions.companyName} onPositionChange={handlePositionChange}>
+             {visibleComponents.includes('footer') && (
+             <DraggableWrapper id="footer" activeId={activeId} position={positions.footer} onPositionChange={handlePositionChange} onDelete={removeComponent}>
+               <ImageUploader id="footer" label="Add Footer Image" onFocus={setActiveId} image={formData.footer} imageSize={formData.footerSize} onUpload={handleImageUpload} />
+             </DraggableWrapper>
+             )}
+
+             {visibleComponents.includes('logo') && (
+             <DraggableWrapper id="logo" activeId={activeId} position={positions.logo} onPositionChange={handlePositionChange} onDelete={removeComponent}>
+               <ImageUploader id="logo" label="Add Logo" onFocus={setActiveId} image={formData.logo} imageSize={formData.logoSize} onUpload={handleImageUpload} />
+             </DraggableWrapper>
+             )}
+
+             {visibleComponents.includes('companyName') && (
+             <DraggableWrapper id="companyName" activeId={activeId} position={positions.companyName} onPositionChange={handlePositionChange} onDelete={removeComponent}>
                <InlineEditable id="companyName" onFocus={setActiveId} tagName="h1" className="text-[2em] font-black leading-tight" value={formData.companyName} onChange={v => handleInputChange('companyName', v)} placeholder="Company Name" />
              </DraggableWrapper>
+             )}
 
-             <DraggableWrapper id="contactInfo" activeId={activeId} position={positions.contactInfo} onPositionChange={handlePositionChange}>
+             {visibleComponents.includes('contactInfo') && (
+             <DraggableWrapper id="contactInfo" activeId={activeId} position={positions.contactInfo} onPositionChange={handlePositionChange} onDelete={removeComponent}>
                <InlineEditable id="contactInfo" onFocus={setActiveId} className="text-[0.9em] text-slate-700 min-w-[150px]" value={formData.contactInfo} onChange={v => handleInputChange('contactInfo', v)} placeholder="Contact Info" />
              </DraggableWrapper>
+             )}
 
-             <DraggableWrapper id="date" activeId={activeId} position={positions.date} onPositionChange={handlePositionChange}>
+             {visibleComponents.includes('date') && (
+             <DraggableWrapper id="date" activeId={activeId} position={positions.date} onPositionChange={handlePositionChange} onDelete={removeComponent}>
                <InlineEditable id="date" onFocus={setActiveId} className="font-medium" value={formData.date} onChange={v => handleInputChange('date', v)} placeholder="Date" />
              </DraggableWrapper>
+             )}
 
-             <DraggableWrapper id="recipient" activeId={activeId} position={positions.recipient} onPositionChange={handlePositionChange}>
+             {visibleComponents.includes('recipient') && (
+             <DraggableWrapper id="recipient" activeId={activeId} position={positions.recipient} onPositionChange={handlePositionChange} onDelete={removeComponent}>
                <InlineEditable id="recipient" onFocus={setActiveId} className="min-w-[200px]" value={formData.recipient} onChange={v => handleInputChange('recipient', v)} placeholder="Recipient Name and Address" />
              </DraggableWrapper>
+             )}
 
-             <DraggableWrapper id="subject" activeId={activeId} position={positions.subject} onPositionChange={handlePositionChange}>
+             {visibleComponents.includes('subject') && (
+             <DraggableWrapper id="subject" activeId={activeId} position={positions.subject} onPositionChange={handlePositionChange} onDelete={removeComponent}>
                <InlineEditable id="subject" onFocus={setActiveId} tagName="h2" className="text-[1.2em] font-bold underline min-w-[200px]" value={formData.subject} onChange={v => handleInputChange('subject', v)} placeholder="Subject" />
              </DraggableWrapper>
+             )}
 
-             <DraggableWrapper id="content" activeId={activeId} position={positions.content} onPositionChange={handlePositionChange}>
+             {visibleComponents.includes('content') && (
+             <DraggableWrapper id="content" activeId={activeId} position={positions.content} onPositionChange={handlePositionChange} onDelete={removeComponent}>
                <InlineEditable id="content" onFocus={setActiveId} className="min-w-[400px] max-w-[700px] min-h-[100px]" value={formData.content} onChange={v => handleInputChange('content', v)} placeholder="Type your letter content here..." />
              </DraggableWrapper>
+             )}
 
-             <DraggableWrapper id="signature" activeId={activeId} position={positions.signature} onPositionChange={handlePositionChange}>
+             {visibleComponents.includes('signature') && (
+             <DraggableWrapper id="signature" activeId={activeId} position={positions.signature} onPositionChange={handlePositionChange} onDelete={removeComponent}>
                <InlineEditable id="signature" onFocus={setActiveId} className="min-w-[200px]" value={formData.signature} onChange={v => handleInputChange('signature', v)} placeholder="Signature block" />
              </DraggableWrapper>
+             )}
+
+             {visibleComponents.filter(id => id.startsWith('divider-')).map(id => (
+               <DraggableWrapper key={id} id={id} activeId={activeId} position={positions[id] || {x: 100, y: 100}} onPositionChange={handlePositionChange} onDelete={removeComponent}>
+                 <div className="flex items-center min-w-[50px] min-h-[10px] resizable-content overflow-hidden cursor-pointer px-2" style={{ width: '400px' }} onClick={(e) => { e.stopPropagation(); setActiveId(id); }}>
+                   <div className="w-full border-t-[3px] border-slate-800"></div>
+                 </div>
+               </DraggableWrapper>
+             ))}
+
+             {visibleComponents.filter(id => id.startsWith('textblock-')).map(id => (
+               <DraggableWrapper key={id} id={id} activeId={activeId} position={positions[id] || {x: 100, y: 100}} onPositionChange={handlePositionChange} onDelete={removeComponent}>
+                 <InlineEditable id={id} onFocus={setActiveId} className="min-w-[150px] min-h-[30px]" value={formData[id] || ''} onChange={v => handleInputChange(id, v)} placeholder="Type here..." />
+               </DraggableWrapper>
+             ))}
 
              <style dangerouslySetInnerHTML={{__html: `
                .custom-editor ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
@@ -358,6 +512,9 @@ export default function LetterBuilderView() {
                .custom-editor b, .custom-editor strong { font-weight: bold; }
                .custom-editor i, .custom-editor em { font-style: italic; }
                .custom-editor u { text-decoration: underline; }
+               
+               .resizable-content { resize: none; }
+               .group:hover .resizable-content, .ring-2 .resizable-content { resize: both; }
              `}} />
           </div>
         </div>
