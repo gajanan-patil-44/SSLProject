@@ -166,7 +166,7 @@ export function ModuleRenderer() {
         <Modal
           isOpen={isAddOpen}
           onClose={() => setIsAddOpen(false)}
-          title={`Add New ${config.title.slice(0, -1)}`}
+          title={`Add New ${config.title.endsWith('ies') ? config.title.slice(0, -3) + 'y' : config.title.slice(0, -1)}`}
           size="lg"
         >
           <DynamicFormPage
@@ -185,7 +185,7 @@ export function ModuleRenderer() {
             setIsViewOpen(false);
             setSelectedRecord(null);
           }}
-          title={`${config.title.slice(0, -1)} Details`}
+          title={`${config.title.endsWith('ies') ? config.title.slice(0, -3) + 'y' : config.title.slice(0, -1)} Details`}
           size="md"
         >
           <div className="space-y-4">
@@ -216,7 +216,7 @@ export function ModuleRenderer() {
             setIsEditOpen(false);
             setSelectedRecord(null);
           }}
-          title={`Edit ${config.title.slice(0, -1)}`}
+          title={`Edit ${config.title.endsWith('ies') ? config.title.slice(0, -3) + 'y' : config.title.slice(0, -1)}`}
           size="lg"
         >
           <DynamicFormPage
@@ -295,6 +295,132 @@ function GenericAnalyticsDashboard({ title }) {
 }
 
 const registryConfigs = {
+  master_companies: {
+    title: "Companies",
+    description: "Manage registered companies in the system.",
+    apiFetch: async () => [
+      { id: 1, companyCode: "VISHVIN", companyName: "Vishvin Technologies", email: "info@vishvin.com", phone: "9999999999", status: "Active" },
+      { id: 2, companyCode: "ABCORP", companyName: "ABC Corporation", email: "contact@abccorp.com", phone: "8888888888", status: "Active" },
+      { id: 3, companyCode: "INFOSYS", companyName: "Infosys Limited", email: "info@infosys.com", phone: "080-12345678", status: "Active" },
+      { id: 4, companyCode: "TCS", companyName: "Tata Consultancy Services", email: "info@tcs.com", phone: "022-12345678", status: "Inactive" },
+      { id: 5, companyCode: "WIPRO", companyName: "Wipro Limited", email: "info@wipro.com", phone: "080-87654321", status: "Active" }
+    ],
+    columns: [
+      { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
+      { id: 'companyCode', header: 'Company Code', accessorKey: 'companyCode', key: 'companyCode' },
+      { id: 'companyName', header: 'Company Name', accessorKey: 'companyName', key: 'companyName', cell: ({ row }) => <span className="font-bold">{row.original.companyName}</span> },
+      { id: 'email', header: 'Email', accessorKey: 'email', key: 'email' },
+      { id: 'phone', header: 'Phone Number', accessorKey: 'phone', key: 'phone' },
+      { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
+    ],
+    formFields: [
+      { key: "companyCode", label: "Company Code", type: "text", required: true, placeholder: "Enter company code" },
+      { key: "companyName", label: "Company Name", type: "text", required: true, placeholder: "Enter company name" },
+      { key: "email", label: "Email", type: "email", placeholder: "Enter email" },
+      { key: "phone", label: "Phone Number", type: "text", placeholder: "Enter phone number" },
+      { key: "address", label: "Address", type: "text", placeholder: "Enter address" },
+      { key: "status", label: "Status", type: "select", options: [
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" }
+      ]}
+    ]
+  },
+  master_products: {
+    title: "Products",
+    description: "Manage registered products in the system.",
+    apiFetch: async () => [
+      { id: 1, productCode: "DMS", productName: "Document Management System", description: "Application for document management", status: "Active" },
+      { id: 2, productCode: "PDMS", productName: "Project Data Management System", description: "Project data management application", status: "Active" },
+      { id: 3, productCode: "WFMS", productName: "Workforce Management System", description: "Workforce & field operations", status: "Active" },
+      { id: 4, productCode: "AMS", productName: "Asset Management System", description: "Asset tracking and management", status: "Active" },
+      { id: 5, productCode: "MRS", productName: "Material Requisition System", description: "Material request and tracking", status: "Inactive" }
+    ],
+    columns: [
+      { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
+      { id: 'productCode', header: 'Product Code', accessorKey: 'productCode', key: 'productCode' },
+      { id: 'productName', header: 'Product Name', accessorKey: 'productName', key: 'productName', cell: ({ row }) => <span className="font-bold">{row.original.productName}</span> },
+      { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
+      { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
+    ],
+    formFields: [
+      { key: "productCode", label: "Product Code", type: "text", required: true, placeholder: "Enter product code" },
+      { key: "productName", label: "Product Name", type: "text", required: true, placeholder: "Enter product name" },
+      { key: "description", label: "Description", type: "text", placeholder: "Enter description" },
+      { key: "status", label: "Status", type: "select", options: [
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" }
+      ]}
+    ]
+  },
+  master_company_products: {
+    title: "Company Products",
+    description: "Assign products to companies.",
+    apiFetch: async () => [
+      { id: 1, company: "Vishvin Technologies", product: "DMS", status: "Active", createdOn: "12/05/2024" },
+      { id: 2, company: "Vishvin Technologies", product: "PDMS", status: "Active", createdOn: "13/05/2024" },
+      { id: 3, company: "ABC Corporation", product: "WFMS", status: "Active", createdOn: "14/05/2024" },
+      { id: 4, company: "TCS", product: "AMS", status: "Active", createdOn: "15/05/2024" },
+      { id: 5, company: "Infosys Limited", product: "MRS", status: "Inactive", createdOn: "16/05/2024" }
+    ],
+    columns: [
+      { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
+      { id: 'company', header: 'Company', accessorKey: 'company', key: 'company', cell: ({ row }) => <span className="font-bold">{row.original.company}</span> },
+      { id: 'product', header: 'Product', accessorKey: 'product', key: 'product' },
+      { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+      { id: 'createdOn', header: 'Created On', accessorKey: 'createdOn', key: 'createdOn' }
+    ],
+    formFields: [
+      { key: "company", label: "Company", type: "select", required: true, options: [
+        { value: "Vishvin Technologies", label: "Vishvin Technologies" },
+        { value: "ABC Corporation", label: "ABC Corporation" },
+        { value: "Infosys Limited", label: "Infosys Limited" },
+        { value: "TCS", label: "TCS" }
+      ]},
+      { key: "product", label: "Product", type: "select", required: true, options: [
+        { value: "DMS", label: "DMS" },
+        { value: "PDMS", label: "PDMS" },
+        { value: "WFMS", label: "WFMS" },
+        { value: "AMS", label: "AMS" }
+      ]},
+      { key: "status", label: "Status", type: "select", options: [
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" }
+      ]}
+    ]
+  },
+  master_projects: {
+    title: "Projects",
+    description: "Manage projects under company product assignments.",
+    apiFetch: async () => [
+      { id: 1, projectCode: "UMS-KA", projectName: "DMS Karnataka", company: "Vishvin Technologies", product: "DMS", status: "Active" },
+      { id: 2, projectCode: "DMS-BLR", projectName: "DMS Bangalore", company: "Vishvin Technologies", product: "DMS", status: "Active" },
+      { id: 3, projectCode: "DMS-MYS", projectName: "DMS Mysore", company: "Vishvin Technologies", product: "DMS", status: "Active" },
+      { id: 4, projectCode: "PDMS-KA", projectName: "PDMS Karnataka", company: "Vishvin Technologies", product: "PDMS", status: "Active" },
+      { id: 5, projectCode: "WFMS-KA", projectName: "WFMS Karnataka", company: "ABC Corporation", product: "WFMS", status: "Active" }
+    ],
+    columns: [
+      { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
+      { id: 'projectCode', header: 'Project Code', accessorKey: 'projectCode', key: 'projectCode' },
+      { id: 'projectName', header: 'Project Name', accessorKey: 'projectName', key: 'projectName', cell: ({ row }) => <span className="font-bold">{row.original.projectName}</span> },
+      { id: 'company', header: 'Company', accessorKey: 'company', key: 'company' },
+      { id: 'product', header: 'Product', accessorKey: 'product', key: 'product' },
+      { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
+    ],
+    formFields: [
+      { key: "companyProduct", label: "Company Product", type: "select", required: true, options: [
+        { value: "Vishvin Technologies - DMS", label: "Vishvin Technologies - DMS" },
+        { value: "Vishvin Technologies - PDMS", label: "Vishvin Technologies - PDMS" },
+        { value: "ABC Corporation - WFMS", label: "ABC Corporation - WFMS" }
+      ]},
+      { key: "projectCode", label: "Project Code", type: "text", required: true, placeholder: "Enter project code" },
+      { key: "projectName", label: "Project Name", type: "text", required: true, placeholder: "Enter project name" },
+      { key: "description", label: "Description", type: "text", placeholder: "Enter description" },
+      { key: "status", label: "Status", type: "select", options: [
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" }
+      ]}
+    ]
+  },
   applications: {
     title: "ERP Integrated Applications",
     description: "Manage and launch active ERP core system modules.",
@@ -1420,3 +1546,5 @@ registryConfigs.system_settings_notifications = {
     { key: "provider", label: "Provider Service", type: "text", required: true }
   ]
 };
+
+registryConfigs.master_designations = registryConfigs.hrm_designations;

@@ -74,7 +74,7 @@ export const addCompany = async (companyData) => {
 // ==========================================
 // UPDATE COMPANY
 // ==========================================
-  
+
 export const updateCompanies = async (companyData) => {
 
     const query = `
