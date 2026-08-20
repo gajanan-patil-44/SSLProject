@@ -13,7 +13,7 @@ export const getAllProducts = async () => {
             "ProductCode" AS "ProductCode",
             "ProductName" AS "ProductName",
             "ProductDescription" AS "Description",
-            "createdByUserName" AS "RequestUserName",
+            "CreatedByUserName" AS "RequestUserName",
             "CreatedAt" AS "CreatedOn",
             "UpdatedAt" AS "UpdatedOn",
             "UpdatedByUserName" AS "UpdatedByUserName",
@@ -25,6 +25,29 @@ export const getAllProducts = async () => {
 
         ORDER BY "ProductId"
     `);
+
+    return result.rows;
+};
+
+
+export const checkProductExists = async (ProductName, ProductCode) => {
+
+    const query = `
+        SELECT
+            "ProductId",
+            "ProductName",
+            "ProductCode"
+        FROM "LKP"."Product"
+        WHERE "ProductName" = $1
+           OR "ProductCode" = $2
+    `;
+
+    const values = [
+        ProductName,
+        ProductCode
+    ];
+
+    const result = await pool.query(query, values);
 
     return result.rows;
 };
@@ -74,6 +97,38 @@ export const addProduct = async (productData) => {
     return result.rows[0];
 };
 
+
+
+export const checkProductExistsForUpdate = async (
+    ProductName,
+    ProductCode,
+    ProductId
+) => {
+
+    const query = `
+        SELECT
+            "ProductId",
+            "ProductName",
+            "ProductCode"
+        FROM "LKP"."Product"
+        WHERE
+            (
+                "ProductName" = $1
+                OR "ProductCode" = $2
+            )
+            AND "ProductId" <> $3
+    `;
+
+    const values = [
+        ProductName,
+        ProductCode,
+        ProductId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
+};
 
 // ==========================================
 // UPDATE PRODUCT

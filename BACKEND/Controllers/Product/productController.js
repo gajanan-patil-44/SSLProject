@@ -1,7 +1,9 @@
 import {
     getAllProducts,
+    checkProductExists,
     addProduct,
     updateProducts,
+    checkProductExistsForUpdate,
     toggleProductStatuses,
     deleteProducts
 } from "../../Models/ProductModels.js";
@@ -48,13 +50,47 @@ export const getProduct = async (req, res) => {
 // ==========================================
 
 export const addProducts = async (req, res) => {
+
     const { flagId } = req.body;
+
     try {
+        // flagId 2 = Add Product
         if (parseInt(flagId) === 2) {
+
             const productData = req.body;
 
             console.log("Received product data:", productData);
 
+            // Check Product Name and Product Code
+            const existingProduct = await checkProductExists(
+                productData.ProductName,
+                productData.ProductCode
+            );
+
+            if (existingProduct.length > 0) {
+
+                const product = existingProduct[0];
+
+                // Product Name exists
+                if (product.ProductName === productData.ProductName) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Product name already exists"
+                    });
+                }
+
+                // Product Code exists
+                if (product.ProductCode === productData.ProductCode) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Product code already exists"
+                    });
+                }
+            }
+
+            // Add Product
             const product = await addProduct(productData);
 
             return res.status(201).json({
@@ -62,25 +98,17 @@ export const addProducts = async (req, res) => {
                 message: "Product added successfully",
                 data: product
             });
-        } else {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            })
         }
+
+        // Invalid flagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid flagId"
+        });
 
     } catch (error) {
 
         console.error("Error adding product:", error);
-
-        // PostgreSQL unique constraint violation
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Product code or Product name already exists"
-            });
-        }
 
         return res.status(500).json({
             status: "error",
@@ -96,13 +124,49 @@ export const addProducts = async (req, res) => {
 // ==========================================
 
 export const updateProduct = async (req, res) => {
+
     const { flagId } = req.body;
+
     try {
-        if (parseInt(flagId) == 3) {
+
+        // flagId 3 = Update Product
+        if (parseInt(flagId) === 3) {
+
             const productData = req.body;
 
             console.log("Received update product data:", productData);
 
+            // Check Product Name and Product Code
+            // Exclude the current ProductId
+            const existingProducts = await checkProductExistsForUpdate(
+                productData.ProductName,
+                productData.ProductCode,
+                productData.ProductId
+            );
+
+            // Check duplicate Product Name / Product Code
+            for (const product of existingProducts) {
+
+                // Product Name exists
+                if (product.ProductName === productData.ProductName) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Product name already exists"
+                    });
+                }
+
+                // Product Code exists
+                if (product.ProductCode === productData.ProductCode) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Product code already exists"
+                    });
+                }
+            }
+
+            // Update Product
             const product = await updateProducts(productData);
 
             return res.status(200).json({
@@ -110,25 +174,17 @@ export const updateProduct = async (req, res) => {
                 message: "Product updated successfully",
                 data: product
             });
-        } else {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            })
         }
+
+        // Invalid flagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid flagId"
+        });
 
     } catch (error) {
 
         console.error("Error updating product:", error);
-
-        // PostgreSQL unique constraint violation
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Product code or Product name already exists"
-            });
-        }
 
         return res.status(500).json({
             status: "error",
