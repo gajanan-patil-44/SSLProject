@@ -1,6 +1,8 @@
 import {
     getAllCompanies,
     addCompany,
+    checkCompanyExists,
+    checkCompanyExistsForUpdate,
     updateCompanies,
     toggleCompanyStatuses,
     deleteCompanies
@@ -48,9 +50,48 @@ export const getCompany = async (req, res) => {
 // ==========================================
 
 export const addCompanies = async (req, res) => {
-    const { flagId, ...companyData } = req.body;
+
+    const { flagId } = req.body;
+
     try {
-        if (parseInt(flagId == 2)) {
+
+        // flagId 2 = Add Company
+        if (parseInt(flagId) === 2) {
+
+            const companyData = req.body;
+
+            console.log("Received company data:", companyData);
+
+            // Check Company Name and Company Code
+            const existingCompany = await checkCompanyExists(
+                companyData.CompanyName,
+                companyData.CompanyCode
+            );
+
+            if (existingCompany.length > 0) {
+
+                const company = existingCompany[0];
+
+                // Company Name exists
+                if (company.CompanyName === companyData.CompanyName) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company name already exists"
+                    });
+                }
+
+                // Company Code exists
+                if (company.CompanyCode === companyData.CompanyCode) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company code already exists"
+                    });
+                }
+            }
+
+            // Add Company
             const company = await addCompany(companyData);
 
             return res.status(201).json({
@@ -58,26 +99,17 @@ export const addCompanies = async (req, res) => {
                 message: "Company added successfully",
                 data: company
             });
-
-        } else {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            })
         }
+
+        // Invalid flagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid flagId"
+        });
 
     } catch (error) {
 
         console.error("Error adding company:", error);
-
-        // PostgreSQL unique constraint violation
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Company code or Company name already exists"
-            });
-        }
 
         return res.status(500).json({
             status: "error",
@@ -93,13 +125,49 @@ export const addCompanies = async (req, res) => {
 // ==========================================
 
 export const updateCompany = async (req, res) => {
+
     const { flagId } = req.body;
+
     try {
-        if (parseInt(flagId) == 3) {
+
+        // flagId 3 = Update Company
+        if (parseInt(flagId) === 3) {
+
             const companyData = req.body;
 
             console.log("Received update company data:", companyData);
 
+            // Check Company Name and Company Code
+            // Exclude the current CompanyId
+            const existingCompanies = await checkCompanyExistsForUpdate(
+                companyData.CompanyName,
+                companyData.CompanyCode,
+                companyData.CompanyId
+            );
+
+            // Check duplicate Company Name / Company Code
+            for (const company of existingCompanies) {
+
+                // Company Name exists
+                if (company.CompanyName === companyData.CompanyName) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company name already exists"
+                    });
+                }
+
+                // Company Code exists
+                if (company.CompanyCode === companyData.CompanyCode) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company code already exists"
+                    });
+                }
+            }
+
+            // Update Company
             const company = await updateCompanies(companyData);
 
             return res.status(200).json({
@@ -107,26 +175,17 @@ export const updateCompany = async (req, res) => {
                 message: "Company updated successfully",
                 data: company
             });
-
-        } else {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            })
         }
+
+        // Invalid flagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid flagId"
+        });
 
     } catch (error) {
 
         console.error("Error updating company:", error);
-
-        // PostgreSQL unique constraint violation
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Company code or Company name already exists"
-            });
-        }
 
         return res.status(500).json({
             status: "error",

@@ -35,6 +35,36 @@ export const getAllCompanies = async () => {
 };
 
 
+
+export const checkCompanyExists = async (
+    CompanyName,
+    CompanyCode
+) => {
+
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName",
+            "CompanyCode"
+        FROM "LKP"."Company"
+        WHERE
+            (
+                "CompanyName" = $1
+                OR "CompanyCode" = $2
+            )
+    `;
+
+    const values = [
+        CompanyName,
+        CompanyCode
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
+};
+
+
 // ==========================================
 // ADD COMPANY
 // ==========================================
@@ -83,6 +113,38 @@ export const addCompany = async (companyData) => {
     const result = await pool.query(query, values);
 
     return result.rows[0];
+};
+
+
+export const checkCompanyExistsForUpdate = async (
+    CompanyName,
+    CompanyCode,
+    CompanyId
+) => {
+
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName",
+            "CompanyCode"
+        FROM "LKP"."Company"
+        WHERE
+            (
+                "CompanyName" = $1
+                OR "CompanyCode" = $2
+            )
+            AND "CompanyId" <> $3
+    `;
+
+    const values = [
+        CompanyName,
+        CompanyCode,
+        CompanyId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
 };
 
 
