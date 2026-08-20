@@ -11,7 +11,37 @@ export const getAllRoles = async () => {
             "CreatedAt" AS "CreatedOn"
 
         FROM "LKP"."Role"
+        where "IsDisabled" = false
     `);
+
+    return result.rows;
+};
+
+
+export const addRoleName = async (RoleName) => {
+
+    const query = `
+        SELECT "RoleId"
+        FROM "LKP"."Role"
+        WHERE "RoleName" = $1
+    `;
+
+    const result = await pool.query(query, [RoleName]);
+
+    return result.rows;
+};
+
+
+
+export const addRoleCode = async (RoleCode) => {
+
+    const query = `
+        SELECT "RoleId"
+        FROM "LKP"."Role"
+        WHERE "RoleCode" = $1
+    `;
+
+    const result = await pool.query(query, [RoleCode]);
 
     return result.rows;
 };
@@ -52,6 +82,44 @@ export const addRole = async (userRole) => {
 
     return result.rows[0];
 };
+export const checkRoleName = async (RoleName, RoleId) => {
+
+    const query = `
+        SELECT "RoleId"
+        FROM "LKP"."Role"
+        WHERE "RoleName" = $1
+        AND "RoleId" <> $2
+    `;
+
+    const values = [
+        RoleName,
+        RoleId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
+};
+
+
+export const checkRoleCode = async (RoleCode, RoleId) => {
+
+    const query = `
+        SELECT "RoleId"
+        FROM "LKP"."Role"
+        WHERE "RoleCode" = $1
+        AND "RoleId" <> $2
+    `;
+
+    const values = [
+        RoleCode,
+        RoleId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
+};
 
 
 export const updateRoles = async (userRole) => {
@@ -63,10 +131,11 @@ export const updateRoles = async (userRole) => {
             "RoleDescription" = $2,
             "CreatedByUserName" = $3,
             "RoleCode" = $4,
-            "IsDisabled" = $5,
             "UpdatedAt" = CURRENT_TIMESTAMP,
-            "UpdatedByUserName"=$6
-        WHERE "RoleId" = $7
+            "UpdatedByUserName" = $5
+        WHERE "RoleId" = $6,
+        IsDisabled = false
+
     `;
 
     const values = [
@@ -74,7 +143,6 @@ export const updateRoles = async (userRole) => {
         userRole.Description,
         userRole.RequestUserName,
         userRole.Role_Code,
-        userRole.IsDisabled,
         userRole.UpdatedByUserName,
         userRole.RoleId
     ];
@@ -83,7 +151,6 @@ export const updateRoles = async (userRole) => {
 
     return result.rowCount;
 };
-
 
 export const deleteRoles = async (userRole) => {
 
@@ -94,6 +161,29 @@ export const deleteRoles = async (userRole) => {
 
     const values = [
         userRole.RoleId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rowCount;
+};
+
+
+
+
+export const updateRoleStatus = async (RoleId, IsDisabled) => {
+
+    const query = `
+        UPDATE "LKP"."Role"
+        SET 
+            "IsDisabled" = $1,
+            "UpdatedAt" = CURRENT_TIMESTAMP
+        WHERE "RoleId" = $2
+    `;
+
+    const values = [
+        IsDisabled,
+        RoleId
     ];
 
     const result = await pool.query(query, values);
