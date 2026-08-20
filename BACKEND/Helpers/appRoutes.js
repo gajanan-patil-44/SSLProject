@@ -7,8 +7,8 @@ import CompanyRoute from "../Routes/Company/companyRoutes.js";
 
 const applyRoutes = (app) => {
 app.use(backendHelpers.ROLES_CREATION, RoleRoutes);
-app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);
-app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);
+app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);      // Done by kavya
+app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);     // Done by kavya
 
 };
 
