@@ -2,6 +2,36 @@
 
 export const navigationConfig = [
   {
+    title: "MASTER",
+    items: [
+      {
+        label: "Companies",
+        icon: "Building",
+        path: "/master/companies"
+      },
+      {
+        label: "Products",
+        icon: "Package",
+        path: "/master/products"
+      },
+      {
+        label: "Company Products",
+        icon: "Link",
+        path: "/master/company-products"
+      },
+      {
+        label: "Projects",
+        icon: "Folder",
+        path: "/master/projects"
+      },
+      {
+        label: "Designations",
+        icon: "UserBadge",
+        path: "/master/designations"
+      }
+    ]
+  },
+  {
     title: "MAIN",
     items: [
       {
