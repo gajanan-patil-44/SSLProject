@@ -1,4 +1,4 @@
-import { getAllRoles, addRole, updateRoles, deleteRoles, checkRoleName,checkRoleCode, updateRoleStatus,addRoleCode,addRoleName } from "../../Models/RoleModels.js";
+import { getAllRoles, addRole, updateRoles, deleteRoles, checkRoleExistsForUpdate, updateRoleStatus, checkRoleExists } from "../../Models/RoleModels.js";
 
 
 // ==========================================
@@ -11,9 +11,7 @@ export const getRole = async (req, res) => {
 
         // FlagId 1 = Get All Roles
         if (parseInt(FlagId) === 1) {
-
             const rows = await getAllRoles();
-
             return res.status(200).json({
                 status: "success",
                 message: "Roles fetched successfully",
@@ -28,8 +26,6 @@ export const getRole = async (req, res) => {
         });
 
     } catch (error) {
-
-        console.error("Error fetching roles:", error);
 
         return res.status(500).json({
             status: "error",
@@ -51,43 +47,35 @@ export const addRoles = async (req, res) => {
 
         // FlagId 1 = Add Role
         if (parseInt(FlagId) === 1) {
-
             const roleData = req.body;
-
-            console.log("Received role data:", roleData);
-
-
-            // Check Role Name
-            const roleName = await addRoleName(
-                roleData.RoleName
-            );
-
-            if (roleName.length > 0) {
-
-                return res.status(409).json({
-                    status: "error",
-                    message: "Role name already exists"
-                });
-            }
-
-
-            // Check Role Code
-            const roleCode = await addRoleCode(
+            // Check Role Name and Role Code
+            const existingRole = await checkRoleExists(
+                roleData.RoleName,
                 roleData.Role_Code
             );
 
-            if (roleCode.length > 0) {
+            if (existingRole.length > 0) {
 
-                return res.status(409).json({
-                    status: "error",
-                    message: "Role code already exists"
-                });
+                const role = existingRole[0];
+                // Role Name exists
+                if (role.RoleName === roleData.RoleName) {
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Role name already exists"
+                    });
+                }
+                // Role Code exists
+                if (role.RoleCode === roleData.Role_Code) {
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Role code already exists"
+                    });
+                }
             }
 
 
             // Add Role
             const role = await addRole(roleData);
-
             return res.status(201).json({
                 status: "success",
                 message: "Role added successfully",
@@ -103,9 +91,6 @@ export const addRoles = async (req, res) => {
         });
 
     } catch (error) {
-
-        console.error("Error adding role:", error);
-
         return res.status(500).json({
             status: "error",
             message: "Failed to add role",
@@ -126,37 +111,38 @@ export const updateRole = async (req, res) => {
 
         // FlagId 1 = Update Role
         if (parseInt(FlagId) === 1) {
+
             const roleData = req.body;
-            console.log("Received update role data:", roleData);
-
-            // Check Role Name
-            const roleName = await checkRoleName(
+            // Check Role Name and Role Code
+            const existingRoles = await checkRoleExistsForUpdate(
                 roleData.RoleName,
-                roleData.RoleId
-            );
-
-            if (roleName.length > 0) {
-                return res.status(409).json({
-                    status: "error",
-                    message: "Role name already exists"
-                });
-            }
-
-            // Check Role Code
-            const roleCode = await checkRoleCode(
                 roleData.Role_Code,
                 roleData.RoleId
             );
 
-            if (roleCode.length > 0) {
-                return res.status(409).json({
-                    status: "error",
-                    message: "Role code already exists"
-                });
+
+            // Check duplicate Role Name / Role Code
+            for (const role of existingRoles) {
+                if (role.RoleName === roleData.RoleName) {
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Role name already exists"
+                    });
+                }
+
+                if (role.RoleCode === roleData.Role_Code) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Role code already exists"
+                    });
+                }
             }
+
 
             // Update Role
             const role = await updateRoles(roleData);
+
             return res.status(200).json({
                 status: "success",
                 message: "Role updated successfully",
@@ -171,9 +157,6 @@ export const updateRole = async (req, res) => {
         });
 
     } catch (error) {
-
-        console.error("Error updating role:", error);
-
         return res.status(500).json({
             status: "error",
             message: "Failed to update role",
@@ -193,7 +176,6 @@ export const deleteRole = async (req, res) => {
         // FlagId 1 = Delete Role
         if (parseInt(FlagId) === 1) {
             const roleData = req.body;
-            console.log("Received delete role data:", roleData);
             const role = await deleteRoles(roleData);
             return res.status(200).json({
                 status: "success",
@@ -209,8 +191,6 @@ export const deleteRole = async (req, res) => {
         });
 
     } catch (error) {
-
-        console.error("Error deleting role:", error);
 
         // Role is being used
         if (error.code === "ROLE_IN_USE") {

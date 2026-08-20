@@ -3,12 +3,14 @@ import { pool } from "../Config/db.js";
 export const getAllRoles = async () => {
     const result = await pool.query(`
         SELECT 
-            "RoleId" AS "RoleId",
-            "RoleName" AS "RoleName",
-            "RoleCode" AS "Role_Code",
-            "RoleDescription" AS "Description",
-            "CreatedByUserName" AS "RequestUserName",
-            "CreatedAt" AS "CreatedOn"
+            "RoleId",
+            "RoleName",
+            "RoleCode",
+            "RoleDescription",
+            "CreatedByUserName",
+            "CreatedAt" ,
+            "UpdatedAt" ,
+            "UpdatedByUserName"
 
         FROM "LKP"."Role"
         where "IsDisabled" = false
@@ -17,56 +19,34 @@ export const getAllRoles = async () => {
     return result.rows;
 };
 
-
-export const addRoleName = async (RoleName) => {
+export const checkRoleExists = async (RoleName, RoleCode) => {
 
     const query = `
-        SELECT "RoleId"
+        SELECT "RoleId","RoleName","RoleCode"
         FROM "LKP"."Role"
-        WHERE "RoleName" = $1
+        WHERE "RoleName" = $1 OR "RoleCode" = $2
     `;
 
-    const result = await pool.query(query, [RoleName]);
+    const values = [
+        RoleName,
+        RoleCode
+    ];
+
+    const result = await pool.query(query, values);
 
     return result.rows;
 };
-
-
-
-export const addRoleCode = async (RoleCode) => {
-
-    const query = `
-        SELECT "RoleId"
-        FROM "LKP"."Role"
-        WHERE "RoleCode" = $1
-    `;
-
-    const result = await pool.query(query, [RoleCode]);
-
-    return result.rows;
-};
-
 
 export const addRole = async (userRole) => {
 
     const query = `
         INSERT INTO "LKP"."Role"
         (
-            "RoleName",
-            "RoleCode",
-            "RoleDescription",
-            "CreatedByUserName",
-            "CreatedAt",
-            "UpdatedAt"
+            "RoleName","RoleCode", "RoleDescription","CreatedByUserName","CreatedAt","UpdatedAt"
         )
         VALUES
         (
-            $1,
-            $2,
-            $3,
-            $4,
-            CURRENT_TIMESTAMP,
-            CURRENT_TIMESTAMP
+            $1,$2,$3,$4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
         )
         RETURNING *;
     `;
@@ -82,36 +62,28 @@ export const addRole = async (userRole) => {
 
     return result.rows[0];
 };
-export const checkRoleName = async (RoleName, RoleId) => {
+export const checkRoleExistsForUpdate = async (
+    RoleName,
+    RoleCode,
+    RoleId
+) => {
 
     const query = `
-        SELECT "RoleId"
+        SELECT
+            "RoleId",
+            "RoleName",
+            "RoleCode"
         FROM "LKP"."Role"
-        WHERE "RoleName" = $1
-        AND "RoleId" <> $2
+        WHERE
+            (
+                "RoleName" = $1
+                OR "RoleCode" = $2
+            )
+            AND "RoleId" <> $3
     `;
 
     const values = [
         RoleName,
-        RoleId
-    ];
-
-    const result = await pool.query(query, values);
-
-    return result.rows;
-};
-
-
-export const checkRoleCode = async (RoleCode, RoleId) => {
-
-    const query = `
-        SELECT "RoleId"
-        FROM "LKP"."Role"
-        WHERE "RoleCode" = $1
-        AND "RoleId" <> $2
-    `;
-
-    const values = [
         RoleCode,
         RoleId
     ];
@@ -120,7 +92,6 @@ export const checkRoleCode = async (RoleCode, RoleId) => {
 
     return result.rows;
 };
-
 
 export const updateRoles = async (userRole) => {
 
@@ -133,8 +104,7 @@ export const updateRoles = async (userRole) => {
             "RoleCode" = $4,
             "UpdatedAt" = CURRENT_TIMESTAMP,
             "UpdatedByUserName" = $5
-        WHERE "RoleId" = $6,
-        IsDisabled = false
+        WHERE "RoleId" = $6
 
     `;
 
@@ -145,6 +115,7 @@ export const updateRoles = async (userRole) => {
         userRole.Role_Code,
         userRole.UpdatedByUserName,
         userRole.RoleId
+
     ];
 
     const result = await pool.query(query, values);
