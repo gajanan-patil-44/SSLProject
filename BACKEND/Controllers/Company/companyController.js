@@ -12,20 +12,21 @@ import {
 // ==========================================
 
 export const getCompany = async (req, res) => {
-    const {flagId}=req.body;
+    const { flagId } = req.body;
     try {
-        if (parseInt(flagId)==1){
+        if (parseInt(flagId) == 1) {
             const rows = await getAllCompanies();
 
-        return res.status(200).json({
-            status: "success",
-            message: "Companies fetched successfully",
-            data: rows
-        });
-        } else{
+            return res.status(200).json({
+                status: "success",
+                message: "Companies fetched successfully",
+                data: rows
+            });
+        } else {
             return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
+                status: "error",
+                message: "Invalid flagId"
+
             })
         }
 
@@ -47,6 +48,7 @@ export const getCompany = async (req, res) => {
 // ==========================================
 
 export const addCompanies = async (req, res) => {
+
     const {flagId}=req.body;
     try {
         if (parseInt(flagId==2)){
