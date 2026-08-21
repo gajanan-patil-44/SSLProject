@@ -76,10 +76,10 @@ export const addCompanyProduct = async (companyProductData) => {
         (
             $1,
             $2,
-            false,
+            $3,
             CURRENT_TIMESTAMP,
             CURRENT_TIMESTAMP,
-            $3
+            $4
         )
         RETURNING
             "CompanyProductId",
@@ -93,6 +93,7 @@ export const addCompanyProduct = async (companyProductData) => {
     const values = [
         companyProductData.CompanyId,
         companyProductData.ProductId,
+        companyProductData.IsDisabled,
         companyProductData.CreatedByUserName
     ];
 
@@ -122,4 +123,52 @@ export const checkCompanyProductData = async (CompanyId, ProductId) => {
     const result = await pool.query(query, values);
 
     return result.rows;
+};
+
+
+export const editCompanyProduct = async (companyProduct) => {
+
+    const query = `
+        UPDATE "LKP"."CompanyProduct"
+        SET
+            "CompanyId" = $1,
+            "ProductId" = $2,
+            "IsDisabled" = $3,
+            "UpdatedAt" = CURRENT_TIMESTAMP,
+            "UpdatedByUserName" = $4
+        WHERE "CompanyProductId" = $5
+    `;
+
+    const values = [
+        companyProduct.CompanyId,
+        companyProduct.ProductId,
+        companyProduct.IsDisabled,
+        companyProduct.UpdatedByUserName,
+        companyProduct.CompanyProductId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rowCount;
+};
+
+
+// ==========================================
+// DELETE COMPANY PRODUCT
+// ==========================================
+
+export const deleteCompanyProduct = async (CompanyProductId) => {
+
+    const query = `
+        DELETE FROM "LKP"."CompanyProduct"
+        WHERE "CompanyProductId" = $1
+    `;
+
+    const values = [
+        CompanyProductId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rowCount;
 };
