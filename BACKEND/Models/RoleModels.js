@@ -1,30 +1,61 @@
 import { pool } from "../Config/db.js";
 
-export const getAllRoles = async () => {
-    const result = await pool.query(`
-        SELECT 
-            "RoleId",
-            "RoleName",
-            "RoleCode",
-            "RoleDescription",
-            "CreatedByUserName",
-            "CreatedAt" ,
-            "UpdatedAt" ,
-            "UpdatedByUserName"
 
-        FROM "LKP"."Role"
-        where "IsDisabled" = false
-    `);
+// ==========================================
+// GET ALL ROLES
+// ==========================================
+
+export const getAllRoles = async () => {
+
+    const query = `
+        SELECT
+            R."RoleId",
+            R."CompanyId",
+            C."CompanyName",
+            R."RoleName",
+            R."RoleCode",
+            R."RoleDescription",
+            R."IsDisabled",
+            R."CreatedByUserName",
+            R."CreatedAt",
+            R."UpdatedAt",
+            R."UpdatedByUserName"
+
+        FROM "LKP"."Role" R
+
+        INNER JOIN "LKP"."Company" C
+            ON R."CompanyId" = C."CompanyId"
+
+        WHERE R."IsDisabled" = false
+
+        ORDER BY R."RoleId";
+    `;
+
+    const result = await pool.query(query);
 
     return result.rows;
 };
 
-export const checkRoleExists = async (RoleName, RoleCode) => {
+
+// ==========================================
+// CHECK ROLE NAME / ROLE CODE
+// ADD ROLE
+// ==========================================
+
+export const checkRoleExists = async (
+    RoleName,
+    RoleCode
+) => {
 
     const query = `
-        SELECT "RoleId","RoleName","RoleCode"
+        SELECT
+            "RoleId",
+            "RoleName",
+            "RoleCode"
         FROM "LKP"."Role"
-        WHERE "RoleName" = $1 OR "RoleCode" = $2
+        WHERE
+            "RoleName" = $1
+            OR "RoleCode" = $2
     `;
 
     const values = [
@@ -37,21 +68,64 @@ export const checkRoleExists = async (RoleName, RoleCode) => {
     return result.rows;
 };
 
+
+// ==========================================
+// CHECK COMPANY EXISTS
+// ==========================================
+
+export const checkCompanyExists = async (CompanyId) => {
+
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName"
+        FROM "LKP"."Company"
+        WHERE "CompanyId" = $1
+        AND "IsDisabled" = false
+    `;
+
+    const values = [
+        CompanyId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
+};
+
+
+// ==========================================
+// ADD ROLE
+// ==========================================
+
 export const addRole = async (userRole) => {
 
     const query = `
         INSERT INTO "LKP"."Role"
         (
-            "RoleName","RoleCode", "RoleDescription","CreatedByUserName","CreatedAt","UpdatedAt"
+            "CompanyId",
+            "RoleName",
+            "RoleCode",
+            "RoleDescription",
+            "CreatedByUserName",
+            "CreatedAt",
+            "UpdatedAt"
         )
         VALUES
         (
-            $1,$2,$3,$4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
         )
         RETURNING *;
     `;
 
     const values = [
+        userRole.CompanyId,
         userRole.RoleName,
         userRole.Role_Code,
         userRole.Description,
@@ -62,6 +136,12 @@ export const addRole = async (userRole) => {
 
     return result.rows[0];
 };
+
+
+// ==========================================
+// CHECK ROLE EXISTS FOR UPDATE
+// ==========================================
+
 export const checkRoleExistsForUpdate = async (
     RoleName,
     RoleCode,
@@ -93,35 +173,75 @@ export const checkRoleExistsForUpdate = async (
     return result.rows;
 };
 
+
+
+// ==========================================
+// GET ALL COMPANIES
+// ==========================================
+
+export const getCompaniesForRole = async () => {
+
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName",
+            "CompanyCode",
+            "CreatedAt",
+            "UpdatedAt",
+            "CreatedByUserName",
+            "UpdatedByUserName",
+            "IsDisabled",
+            "Email",
+            "PhoneNumber",
+            "Address"
+        FROM "LKP"."Company"
+        ORDER BY "CompanyName";
+    `;
+
+    const result = await pool.query(query);
+
+    return result.rows;
+};
+
+// ==========================================
+// UPDATE ROLE
+// ==========================================
+
+
+
+
 export const updateRoles = async (userRole) => {
 
     const query = `
         UPDATE "LKP"."Role"
-        SET 
-            "RoleName" = $1,
-            "RoleDescription" = $2,
-            "CreatedByUserName" = $3,
+        SET
+            "CompanyId" = $1,
+            "RoleName" = $2,
+            "RoleDescription" = $3,
             "RoleCode" = $4,
             "UpdatedAt" = CURRENT_TIMESTAMP,
             "UpdatedByUserName" = $5
         WHERE "RoleId" = $6
-
     `;
 
     const values = [
+        userRole.CompanyId,
         userRole.RoleName,
         userRole.Description,
-        userRole.RequestUserName,
         userRole.Role_Code,
         userRole.UpdatedByUserName,
         userRole.RoleId
-
     ];
 
     const result = await pool.query(query, values);
 
     return result.rowCount;
 };
+
+
+// ==========================================
+// DELETE ROLE
+// ==========================================
 
 export const deleteRoles = async (userRole) => {
 
@@ -140,13 +260,18 @@ export const deleteRoles = async (userRole) => {
 };
 
 
+// ==========================================
+// UPDATE ROLE STATUS
+// ==========================================
 
-
-export const updateRoleStatus = async (RoleId, IsDisabled) => {
+export const updateRoleStatus = async (
+    RoleId,
+    IsDisabled
+) => {
 
     const query = `
         UPDATE "LKP"."Role"
-        SET 
+        SET
             "IsDisabled" = $1,
             "UpdatedAt" = CURRENT_TIMESTAMP
         WHERE "RoleId" = $2
