@@ -216,8 +216,8 @@ export const toggleCompanyStatus = async (req, res) => {
             // Company status successfully toggled
             return res.status(200).json({
                 status: "success",
-                message: "Company status updated successfully",
-                data: company
+                message: "Company status updated successfully"
+                
             });
         }
 

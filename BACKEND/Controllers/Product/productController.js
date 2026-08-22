@@ -222,8 +222,7 @@ export const toggleProductStatus = async (req, res) => {
             // Product status successfully toggled
             return res.status(200).json({
                 status: "success",
-                message: "Product status updated successfully",
-                data: product
+                message: "Product status updated successfully"
             });
         }
 
