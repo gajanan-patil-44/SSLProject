@@ -221,14 +221,15 @@ export const toggleProductStatuses = async (productData) => {
         const query = `
             UPDATE "LKP"."Product"
             SET
-                "IsDisabled" = NOT "IsDisabled",
+                "IsDisabled" = $1,
                 "UpdatedAt" = CURRENT_TIMESTAMP,
-                "UpdatedByUserName" = $1
-            WHERE "ProductId" = $2
+                "UpdatedByUserName" = $2
+            WHERE "ProductId" = $3
             RETURNING *;
         `;
 
         const values = [
+            productData.IsDisabled,
             productData.UpdatedByUserName,
             productData.ProductId
         ];
