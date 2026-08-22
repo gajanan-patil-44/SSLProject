@@ -238,14 +238,15 @@ export const toggleCompanyStatuses = async (companyData) => {
         const query = `
             UPDATE "LKP"."Company"
             SET
-                "IsDisabled" = NOT "IsDisabled",
+                "IsDisabled" = $1,
                 "UpdatedAt" = CURRENT_TIMESTAMP,
-                "UpdatedByUserName" = $1
-            WHERE "CompanyId" = $2
+                "UpdatedByUserName" = $2
+            WHERE "CompanyId" = $3
             RETURNING *;
         `;
 
         const values = [
+            companyData.IsDisabled,
             companyData.UpdatedByUserName,
             companyData.CompanyId
         ];
