@@ -1,4 +1,6 @@
+export const USER_CREATION="/verp-service/userCreation"
 export const ROLES_CREATION="/verp-service/roleCreation"
 export const PRODUCT_CREATION="/verp-service/productCreation"
 export const COMPANY_CREATION="/verp-service/companyCreation"
 export const COMPANY_PRODUCT_CREATION="/verp-service/companyProductCreation"
+export const FILE_TYPE="/verp-service/fileType"
