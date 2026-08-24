@@ -13,7 +13,7 @@ app.use(backendHelpers.ROLES_CREATION, RoleRoutes);
 app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);
 app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);
 app.use(backendHelpers.COMPANY_PRODUCT_CREATION, CompanyProductRoutes);
-app.use(backendHelpers.Designation_CREATION, DesignationRoutes);
+app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);
 
 };
 

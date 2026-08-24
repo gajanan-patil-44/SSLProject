@@ -299,20 +299,6 @@ export const designationController = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error processing designation:", error);
-
-
-        // PostgreSQL duplicate constraint
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-
-                status: "error",
-                message: "Designation already exists"
-
-            });
-        }
-
 
         return res.status(500).json({
 
