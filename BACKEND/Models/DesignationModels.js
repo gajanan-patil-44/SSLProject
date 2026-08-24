@@ -24,6 +24,7 @@ export const getAllDesignations = async () => {
             FROM "LKP"."CompanyDesignation" CD
             INNER JOIN "LKP"."Company" C
                 ON CD."CompanyId" = C."CompanyId"
+            WHERE CD.IsDisabled= FALSE
             ORDER BY CD."CreatedAt" DESC;
         `;
 
@@ -369,6 +370,54 @@ export const editDesignation = async (designationData) => {
     } catch (error) {
 
         console.error("Error updating designation:", error);
+
+        throw error;
+    }
+};
+
+
+// ==========================================
+// TOGGLE DESIGNATION STATUS
+// ==========================================
+
+export const toggleDesignationStatuses = async (designationData) => {
+
+    try {
+
+        const query = `
+            UPDATE "LKP"."CompanyDesignation"
+            SET
+                "IsDisabled" = $1,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdateByUserName" = $2
+            WHERE "CompanyDesignationId" = $3
+            RETURNING
+                "CompanyDesignationId",
+                "CompanyId",
+                "DesignationName",
+                "DesignationCode",
+                "IsDisabled",
+                "UpdatedAt",
+                "UpdateByUserName";
+        `;
+
+
+        const values = [
+            designationData.IsDisabled,
+            designationData.UpdateByUserName,
+            designationData.CompanyDesignationId
+
+        ];
+
+
+        const result = await pool.query(query, values);
+
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        // console.error("Error toggling designation status:", error);
 
         throw error;
     }
