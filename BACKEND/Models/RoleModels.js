@@ -184,16 +184,7 @@ export const getCompaniesForRole = async () => {
     const query = `
         SELECT
             "CompanyId",
-            "CompanyName",
-            "CompanyCode",
-            "CreatedAt",
-            "UpdatedAt",
-            "CreatedByUserName",
-            "UpdatedByUserName",
-            "IsDisabled",
-            "Email",
-            "PhoneNumber",
-            "Address"
+            "CompanyName"
         FROM "LKP"."Company"
         ORDER BY "CompanyName";
     `;
