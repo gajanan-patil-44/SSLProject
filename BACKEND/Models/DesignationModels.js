@@ -376,6 +376,54 @@ export const editDesignation = async (designationData) => {
 };
 
 
+// ==========================================
+// TOGGLE DESIGNATION STATUS
+// ==========================================
+
+export const toggleDesignationStatuses = async (designationData) => {
+
+    try {
+
+        const query = `
+            UPDATE "LKP"."CompanyDesignation"
+            SET
+                "IsDisabled" = $1,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdateByUserName" = $2
+            WHERE "CompanyDesignationId" = $3
+            RETURNING
+                "CompanyDesignationId",
+                "CompanyId",
+                "DesignationName",
+                "DesignationCode",
+                "IsDisabled",
+                "UpdatedAt",
+                "UpdateByUserName";
+        `;
+
+
+        const values = [
+            designationData.IsDisabled,
+            designationData.UpdateByUserName,
+            designationData.CompanyDesignationId
+
+        ];
+
+
+        const result = await pool.query(query, values);
+
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        // console.error("Error toggling designation status:", error);
+
+        throw error;
+    }
+};
+
+
 
 // ==========================================
 // DELETE DESIGNATION

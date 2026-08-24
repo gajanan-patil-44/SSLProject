@@ -8,6 +8,7 @@ import {
     getDesignationById,
     checkDesignationExistsForUpdate,
     editDesignation,
+    toggleDesignationStatuses,
     deleteDesignation
 } from "../../Models/DesignationModels.js";
 
@@ -51,7 +52,7 @@ export const getDesignation = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error fetching designations:", error);
+        // console.error("Error fetching designations:", error);
 
         return res.status(500).json({
 
@@ -298,6 +299,7 @@ export const designationController = async (req, res) => {
         });
 
     } catch (error) {
+
 
 
         return res.status(500).json({
@@ -696,8 +698,7 @@ export const editDesignationController = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error editing designation:", error
-        );
+        // console.error("Error editing designation:", error);
 
 
         if (error.code === "23505") {
@@ -715,6 +716,159 @@ export const editDesignationController = async (req, res) => {
 
             status: "error",
             message:"Failed to edit designation",
+            error: error.message
+
+        });
+    }
+};
+
+
+// ==========================================
+// TOGGLE DESIGNATION STATUS CONTROLLER
+// ==========================================
+
+export const toggleDesignationStatus = async (req, res) => {
+
+    const { flagId } = req.body;
+
+    try {
+
+        // ==========================================
+        // FLAG ID 4 - TOGGLE DESIGNATION STATUS
+        // ==========================================
+
+        if (parseInt(flagId) === 1) {
+
+            const {
+                CompanyDesignationId,
+                IsDisabled,
+                UpdateByUserName
+            } = req.body;
+
+
+            // ==========================================
+            // VALIDATE COMPANY DESIGNATION ID
+            // ==========================================
+
+            if (
+                CompanyDesignationId === undefined ||
+                CompanyDesignationId === null ||
+                CompanyDesignationId === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyDesignationId is required"
+                });
+            }
+
+
+            if (!Number.isInteger(Number(CompanyDesignationId) ) || Number(CompanyDesignationId) <= 0 ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyDesignationId must be a valid positive integer"
+                });
+            }
+
+
+            // ==========================================
+            // VALIDATE IS DISABLED
+            // ==========================================
+
+            if (typeof IsDisabled !== "boolean") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "IsDisabled must be true or false"
+                });
+            }
+
+
+            // ==========================================
+            // VALIDATE UPDATED USER
+            // ==========================================
+
+            if (
+                typeof UpdateByUserName !== "string" ||!UpdateByUserName.trim()) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:"UpdateByUserName is required"
+                });
+            }
+
+
+            // ==========================================
+            // PREPARE DESIGNATION DATA
+            // ==========================================
+
+            const designationData = {
+
+                CompanyDesignationId: Number(CompanyDesignationId),
+                IsDisabled,
+                UpdateByUserName:UpdateByUserName.trim()
+
+            };
+
+
+            // console.log("Received toggle designation data:", designationData);
+
+
+            // ==========================================
+            // TOGGLE DESIGNATION STATUS
+            // ==========================================
+
+            const designation =await toggleDesignationStatuses(designationData);
+
+
+            // ==========================================
+            // DESIGNATION DOES NOT EXIST
+            // ==========================================
+
+            if (!designation) {
+
+                return res.status(404).json({
+                    status: "error",
+                    message: "Designation not found"
+                });
+            }
+
+
+            // ==========================================
+            // SUCCESS
+            // ==========================================
+
+            return res.status(200).json({
+
+                status: "success",
+                message:"Designation status updated successfully",
+                data: designation
+
+            });
+        }
+
+
+        // ==========================================
+        // INVALID FLAG ID
+        // ==========================================
+
+        return res.status(400).json({
+
+            status: "error",
+            message: "Invalid flagId"
+
+        });
+
+    } catch (error) {
+
+        // console.error("Error toggling designation status:", error);
+
+
+        return res.status(500).json({
+
+            status: "error",
+            message:"Failed to update designation status",
             error: error.message
 
         });
@@ -813,7 +967,7 @@ export const deleteDesignationController = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error deleting designation:", error);
+        // console.error("Error deleting designation:", error);
 
 
         return res.status(500).json({

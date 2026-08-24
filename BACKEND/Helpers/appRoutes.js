@@ -6,7 +6,7 @@ import ProductRoute from "../Routes/Product/productRoutes.js";
 import CompanyRoute from "../Routes/Company/companyRoutes.js";
 import CompanyProductRoutes from "../Routes/CompanyProduct/CompanyProduct.js";
 import DesignationRoutes from "../Routes/Designation/designationRoutes.js";
-
+import ProjectRoutes from "../Routes/Projects/projectRoutes.js"
 
 const applyRoutes = (app) => {
 app.use(backendHelpers.ROLES_CREATION, RoleRoutes);
@@ -14,6 +14,7 @@ app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);
 app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);
 app.use(backendHelpers.COMPANY_PRODUCT_CREATION, CompanyProductRoutes);
 app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);
+app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);
 
 };
 
