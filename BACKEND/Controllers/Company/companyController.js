@@ -201,26 +201,42 @@ export const updateCompany = async (req, res) => {
 // ==========================================
 
 export const toggleCompanyStatus = async (req, res) => {
-    const {flagId}=req.body;
+
+    const { flagId } = req.body;
+
     try {
-        if (parseInt(flagId)==4){
+
+        // flagId 4 = Toggle Company Status
+        if (parseInt(flagId) === 4) {
+
             const companyData = req.body;
 
-        console.log("Received toggle company data:", companyData);
+            console.log("Received toggle company data:", companyData);
 
-        const company = await toggleCompanyStatuses(companyData);
+            const company = await toggleCompanyStatuses(companyData);
 
-        return res.status(200).json({
-            status: "success",
-            message: "Company status updated successfully",
-            data: company
-        });
-        } else {
-            return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
-            })
+            // Company does not exist
+            if (!company) {
+
+                return res.status(404).json({
+                    status: "error",
+                    message: "Company not found"
+                });
+            }
+
+            // Company status successfully toggled
+            return res.status(200).json({
+                status: "success",
+                message: "Company status updated successfully"
+                
+            });
         }
+
+        // Invalid flagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid flagId"
+        });
 
     } catch (error) {
 
@@ -233,7 +249,6 @@ export const toggleCompanyStatus = async (req, res) => {
         });
     }
 };
-
 
 // ==========================================
 // DELETE / DISABLE COMPANY
