@@ -39,7 +39,7 @@ export const getAllProjects = async () => {
                 ON CP."ProductId" =
                    P."ProductId"
 
-            WHERE IsDisabled=FALSE       
+            WHERE PR."IsDisabled"=FALSE       
             ORDER BY PR."CreatedAt" DESC;
         `;
 
@@ -173,14 +173,11 @@ export const checkProjectData =async (CompanyProductId, ProjectCode, ProjectName
 
                 WHERE "CompanyProductId" = $1
 
-                AND (
-                    LOWER(TRIM("ProjectCode")) =
-                        LOWER(TRIM($2))
+                AND (LOWER(TRIM("ProjectCode")) =LOWER(TRIM($2))
 
                     OR
 
-                    LOWER(TRIM("ProjectName")) =
-                        LOWER(TRIM($3))
+                    LOWER(TRIM("ProjectName")) = LOWER(TRIM($3))
                 );
             `;
 
@@ -198,7 +195,7 @@ export const checkProjectData =async (CompanyProductId, ProjectCode, ProjectName
 
         } catch (error) {
 
-            console.error("Error checking project data:", error);
+            // console.error("Error checking project data:", error);
 
             throw error;
         }
@@ -219,11 +216,11 @@ export const addProject =async (projectData) => {
                     "CompanyProductId",
                     "ProjectCode",
                     "ProjectName",
-                    "ProjectDescription",
+                    "Description",
                     "IsDisabled",
                     "CreatedAt",
                     "UpdatedAt",
-                    "CreatedByUserName"
+                    "CreatedByUserId"
                 )
                 VALUES
                 (
@@ -241,10 +238,10 @@ export const addProject =async (projectData) => {
                     "CompanyProductId",
                     "ProjectCode",
                     "ProjectName",
-                    "ProjectDescription",
+                    "Description",
                     "IsDisabled",
                     "CreatedAt",
-                    "CreatedByUserName";
+                    "CreatedByUserId";
             `;
 
 
@@ -254,7 +251,7 @@ export const addProject =async (projectData) => {
                 projectData.ProjectName,
                 projectData.ProjectDescription,
                 projectData.IsDisabled,
-                projectData.CreatedByUserName
+                projectData.CreatedByUserId
 
             ];
 
@@ -287,7 +284,7 @@ export const checkProjectExistsForEdit =async (ProjectId) => {
                     "CompanyProductId",
                     "ProjectCode",
                     "ProjectName",
-                    "ProjectDescription",
+                    "Description",
                     "IsDisabled"
                 FROM "LKP"."Project"
 
@@ -334,14 +331,11 @@ export const checkProjectDataForUpdate =async (ProjectId, CompanyProductId, Proj
 
                 AND "ProjectId" <> $2
 
-                AND (
-                    LOWER(TRIM("ProjectCode")) =
-                        LOWER(TRIM($3))
+                AND (LOWER(TRIM("ProjectCode")) = LOWER(TRIM($3))
 
                     OR
 
-                    LOWER(TRIM("ProjectName")) =
-                        LOWER(TRIM($4))
+                    LOWER(TRIM("ProjectName")) =LOWER(TRIM($4))
                 );
             `;
 
@@ -383,9 +377,9 @@ export const editProject =async (projectData) => {
                     "CompanyProductId" = $1,
                     "ProjectCode" = $2,
                     "ProjectName" = $3,
-                    "ProjectDescription" = $4,
+                    "Description" = $4,
                     "UpdatedAt" = CURRENT_TIMESTAMP,
-                    "UpdatedByUserName" = $5
+                    "UpdatedByUserId" = $5
 
                 WHERE "ProjectId" = $6;
             `;
@@ -395,8 +389,8 @@ export const editProject =async (projectData) => {
                 projectData.CompanyProductId,
                 projectData.ProjectCode,
                 projectData.ProjectName,
-                projectData.ProjectDescription,
-                projectData.UpdatedByUserName,
+                projectData.Description,
+                projectData.UpdatedByUserId,
                 projectData.ProjectId
             ];
 
@@ -428,7 +422,7 @@ export const toggleProjectStatuses =async (projectData) => {
                 SET
                     "IsDisabled" = $1,
                     "UpdatedAt" = CURRENT_TIMESTAMP,
-                    "UpdatedByUserName" = $2
+                    "UpdatedByUserId" = $2
 
                 WHERE "ProjectId" = $3
 
@@ -437,16 +431,16 @@ export const toggleProjectStatuses =async (projectData) => {
                     "CompanyProductId",
                     "ProjectCode",
                     "ProjectName",
-                    "ProjectDescription",
+                    "Description",
                     "IsDisabled",
                     "UpdatedAt",
-                    "UpdatedByUserName";
+                    "UpdatedByUserId";
             `;
 
 
             const values = [
                 projectData.IsDisabled,
-                projectData.UpdatedByUserName,
+                projectData.UpdatedByUserId,
                 projectData.ProjectId
             ];
 
