@@ -182,7 +182,7 @@ export const updateProducts = async (productData) => {
                 "ProductName" = $2,
                 "ProductDescription" = $3,
                 "UpdatedAt" = CURRENT_TIMESTAMP,
-                "UpdatedByUserName" = $4,
+                "UpdatedByUserName" = $4
                
 
             WHERE "ProductId" = $5

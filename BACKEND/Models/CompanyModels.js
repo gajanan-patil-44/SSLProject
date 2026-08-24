@@ -154,10 +154,15 @@ export const checkCompanyExistsForUpdate = async (
             FROM "LKP"."Company"
             WHERE
                 (
-                    "CompanyName" = $1
-                    OR "CompanyCode" = $2
+                    LOWER(TRIM("CompanyName")) =
+                    LOWER(TRIM($1))
+
+                    OR
+
+                    LOWER(TRIM("CompanyCode")) =
+                    LOWER(TRIM($2))
                 )
-                AND "CompanyId" <> $3
+                AND "CompanyId" <> $3;
         `;
 
         const values = [
@@ -167,6 +172,11 @@ export const checkCompanyExistsForUpdate = async (
         ];
 
         const result = await pool.query(query, values);
+
+        console.log(
+            "Duplicate company check result:",
+            result.rows
+        );
 
         return result.rows;
 
