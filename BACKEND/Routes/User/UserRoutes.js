@@ -1,9 +1,8 @@
 import express from "express";
 
-import {
-    userDropdownController,
-    createUserController
-} from "../../Controllers/User/UserController.js";
+import {userDropdownController,createUserController,companyProductProjectDropdownController} from "../../Controllers/User/UserController.js";
+
+import {uploadUserPhoto} from "../../MiddleWare/Uploads.js";
 
 const router = express.Router();
 
@@ -14,9 +13,8 @@ const router = express.Router();
 // FlagId 2 = Marital Status
 // FlagId 3 = Designation
 // ==========================================
-
 router.post("/userdropdowns",userDropdownController);
-router.post("/createuser",createUserController);
-
+router.post("/createuser",uploadUserPhoto.single("Photo"),createUserController);
+router.post("/companyproductprojectdropdown", companyProductProjectDropdownController);  ///superadmindropdown
 
 export default router;
