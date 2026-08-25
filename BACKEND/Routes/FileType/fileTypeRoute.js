@@ -17,8 +17,6 @@ const router = express.Router();
 // FlagId = 1 -> Get File Types
 router.post("/getfiletypes", getFileTypesController);
 
-
-
 // FlagId = 2 -> Add File Type
 router.post("/addfiletype", addFileTypeController);
 
