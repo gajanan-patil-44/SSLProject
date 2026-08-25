@@ -71,6 +71,17 @@ export const addCompanies = async (req, res) => {
             if (existingCompany.length > 0) {
 
                 const company = existingCompany[0];
+                
+                //Both Company Name and Company Code exist
+                if (
+                    company.CompanyName === companyData.CompanyName &&
+                    company.CompanyCode === companyData.CompanyCode
+                ) {
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company name and company code already exist"
+                    });
+                }
 
                 // Company Name exists
                 if (company.CompanyName === companyData.CompanyName) {
@@ -89,7 +100,10 @@ export const addCompanies = async (req, res) => {
                         message: "Company code already exists"
                     });
                 }
+
+
             }
+
 
             // Add Company
             const company = await addCompany(companyData);
@@ -137,19 +151,31 @@ export const updateCompany = async (req, res) => {
 
             console.log("Received update company data:", companyData);
 
-            // Check Company Name and Company Code
-            // Exclude the current CompanyId
+            // Check whether Company Name and Company Code already exist
             const existingCompanies = await checkCompanyExistsForUpdate(
                 companyData.CompanyName,
-                companyData.CompanyCode,
-                companyData.CompanyId
+                companyData.CompanyCode
             );
 
             // Check duplicate Company Name / Company Code
             for (const company of existingCompanies) {
 
+                // Both Company Name and Company Code exist
+                if (
+                    company.CompanyName === companyData.CompanyName &&
+                    company.CompanyCode === companyData.CompanyCode
+                ) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company name and company code already exist"
+                    });
+                }
+
                 // Company Name exists
-                if (company.CompanyName === companyData.CompanyName) {
+                if (
+                    company.CompanyName === companyData.CompanyName
+                ) {
 
                     return res.status(409).json({
                         status: "error",
@@ -158,7 +184,9 @@ export const updateCompany = async (req, res) => {
                 }
 
                 // Company Code exists
-                if (company.CompanyCode === companyData.CompanyCode) {
+                if (
+                    company.CompanyCode === companyData.CompanyCode
+                ) {
 
                     return res.status(409).json({
                         status: "error",
@@ -167,7 +195,7 @@ export const updateCompany = async (req, res) => {
                 }
             }
 
-            // Update Company
+            // Only updateCompanies() updates the database
             const company = await updateCompanies(companyData);
 
             return res.status(200).json({
@@ -228,7 +256,7 @@ export const toggleCompanyStatus = async (req, res) => {
             return res.status(200).json({
                 status: "success",
                 message: "Company status updated successfully"
-                
+
             });
         }
 
@@ -255,25 +283,25 @@ export const toggleCompanyStatus = async (req, res) => {
 // ==========================================
 
 export const deleteCompany = async (req, res) => {
-    const {flagId}=req.body;
+    const { flagId } = req.body;
     try {
-        if (parseInt(flagId)==5){
+        if (parseInt(flagId) == 5) {
             const companyData = req.body;
 
-        console.log("Received delete company data:", companyData);
+            console.log("Received delete company data:", companyData);
 
-        const company = await deleteCompanies(companyData);
+            const company = await deleteCompanies(companyData);
 
-        return res.status(200).json({
-            status: "success",
-            message: "Company disabled successfully",
-            data: company
-        });
+            return res.status(200).json({
+                status: "success",
+                message: "Company disabled successfully",
+                data: company
+            });
 
         } else {
             return res.status(400).json({
-                status:"error",
-                message:"Invalid flagId"
+                status: "error",
+                message: "Invalid flagId"
             })
         }
 

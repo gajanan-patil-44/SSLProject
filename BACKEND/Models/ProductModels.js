@@ -128,8 +128,7 @@ export const addProduct = async (productData) => {
 
 export const checkProductExistsForUpdate = async (
     ProductName,
-    ProductCode,
-    ProductId
+    ProductCode
 ) => {
 
     try {
@@ -141,17 +140,13 @@ export const checkProductExistsForUpdate = async (
                 "ProductCode"
             FROM "LKP"."Product"
             WHERE
-                (
-                    "ProductName" = $1
-                    OR "ProductCode" = $2
-                )
-                AND "ProductId" <> $3
+                "ProductName" = $1
+                OR "ProductCode" = $2
         `;
 
         const values = [
             ProductName,
-            ProductCode,
-            ProductId
+            ProductCode
         ];
 
         const result = await pool.query(query, values);
@@ -160,7 +155,10 @@ export const checkProductExistsForUpdate = async (
 
     } catch (error) {
 
-        console.error("Error checking product existence for update:", error);
+        console.error(
+            "Error checking product for update:",
+            error
+        );
 
         throw error;
     }
