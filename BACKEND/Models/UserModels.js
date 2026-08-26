@@ -380,34 +380,26 @@ export const getProductDropdown = async (CompanyId) => {
 };
 
 
-// ==========================================================
-// FLAG ID 3 - PROJECT BASED ON COMPANY + PRODUCT
-// ==========================================================
-export const getProjectDropdown = async (
-    CompanyId,
-    ProductId
-) => {
+export const getProjectDropdown = async (CompanyProductId) => {
 
     const query = `
         SELECT DISTINCT
             pr."ProjectId",
             pr."ProjectName"
         FROM "LKP"."CompanyProduct" cp
+
         INNER JOIN "LKP"."Project" pr
             ON pr."CompanyProductId" = cp."CompanyProductId"
-        WHERE cp."CompanyId" = $1
-          AND cp."ProductId" = $2
+
+        WHERE cp."CompanyProductId" = $1
           AND pr."IsDisabled" = false
+
         ORDER BY pr."ProjectName";
     `;
 
-    const result = await pool.query(
-        query,
-        [
-            CompanyId,
-            ProductId
-        ]
-    );
+    const result = await pool.query(query, [
+        CompanyProductId
+    ]);
 
     return result.rows;
 };
