@@ -4,7 +4,6 @@ import UserRoutes from "../Routes/User/userRoutes.js";
 import RoleRoutes from "../Routes/Role/roleRoutes.js";
 import ProductRoute from "../Routes/Product/productRoutes.js";
 import CompanyRoute from "../Routes/Company/companyRoutes.js";
-import CompanyProductRoutes from "../Routes/CompanyProduct/companyProduct.js";
 import FileTypeRoutes from "../Routes/FileType/fileTypeRoute.js";
 import CompanyProductRoutes from "../Routes/CompanyProduct/CompanyProduct.js";
 import DesignationRoutes from "../Routes/Designation/designationRoutes.js";

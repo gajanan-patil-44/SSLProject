@@ -23,8 +23,8 @@ export const getDesignation = async (req, res) => {
 
     try {
 
-        // FLAG ID 1 - GET ALL DESIGNATIONS
-        if (parseInt(flagId) === 1) {
+        // FlagId 1 = Get All Designations
+        if (Number(flagId) === 1) {
 
             const rows = await getAllDesignations();
 
@@ -35,7 +35,7 @@ export const getDesignation = async (req, res) => {
             });
         }
 
-        // INVALID FLAG ID
+
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
@@ -43,7 +43,10 @@ export const getDesignation = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error fetching designations:", error);
+        console.error(
+            "Error fetching designations:",
+            error
+        );
 
         return res.status(500).json({
             status: "error",
@@ -65,10 +68,10 @@ export const designationController = async (req, res) => {
     try {
 
         // ==================================================
-        // FLAG ID 1 - GET COMPANIES FOR DROPDOWN
+        // FLAG ID 1 - GET COMPANIES
         // ==================================================
 
-        if (parseInt(flagId) === 1) {
+        if (Number(flagId) === 1) {
 
             const companies = await getCompaniesForDropdown();
 
@@ -84,7 +87,7 @@ export const designationController = async (req, res) => {
         // FLAG ID 2 - ADD DESIGNATION
         // ==================================================
 
-        if (parseInt(flagId) === 2) {
+        if (Number(flagId) === 2) {
 
             const {
                 CompanyId,
@@ -99,13 +102,12 @@ export const designationController = async (req, res) => {
             // VALIDATE COMPANY ID
             // ==================================================
 
-           
-
             if (
                 CompanyId === undefined ||
                 CompanyId === null ||
                 CompanyId === "" ||
-                !Number.isInteger(Number(CompanyId)) || Number(CompanyId) <= 0 ) {
+                (!Number(CompanyId)) ||Number(CompanyId) <= 0
+            ) {
 
                 return res.status(400).json({
                     status: "error",
@@ -115,10 +117,11 @@ export const designationController = async (req, res) => {
 
 
             // ==================================================
-            // CHECK WHETHER COMPANY EXISTS AND IS ACTIVE
+            // CHECK COMPANY EXISTS AND IS ACTIVE
             // ==================================================
 
             const companyData = await checkCompanyExists(Number(CompanyId));
+
 
             if (companyData.length === 0) {
 
@@ -133,7 +136,7 @@ export const designationController = async (req, res) => {
             // VALIDATE DESIGNATION NAME
             // ==================================================
 
-            if (typeof DesignationName !== "string" ||!DesignationName.trim()) {
+            if (typeof DesignationName !== "string" || !DesignationName.trim()) {
 
                 return res.status(400).json({
                     status: "error",
@@ -155,7 +158,7 @@ export const designationController = async (req, res) => {
             // VALIDATE DESIGNATION CODE
             // ==================================================
 
-            if (typeof DesignationCode !== "string" ||!DesignationCode.trim()) {
+            if (typeof DesignationCode !== "string" || !DesignationCode.trim()) {
 
                 return res.status(400).json({
                     status: "error",
@@ -203,52 +206,68 @@ export const designationController = async (req, res) => {
             // CHECK DUPLICATE DESIGNATION
             // ==================================================
 
-            const existingDesignation = await checkDesignationData(
-                Number(CompanyId),
-                DesignationCode.trim(),
-                DesignationName.trim()
-            );
+            const existingDesignation =await checkDesignationData(
+                    Number(CompanyId),
+                    DesignationName.trim(),
+                    DesignationCode.trim()
+                );
 
 
-            if (existingDesignation.length > 0) {
+            let nameExists = false;
+            let codeExists = false;
 
-                const duplicate = existingDesignation[0];
 
+            for (const designation of existingDesignation) {
 
-                // BOTH NAME AND CODE EXIST
+                if (designation.DesignationName && designation.DesignationName.trim().toLowerCase() === DesignationName.trim().toLowerCase()) {
 
-                if (
-                    duplicate.DesignationName?.trim().toLowerCase() === DesignationName.trim().toLowerCase() &&
-                    duplicate.DesignationCode?.trim().toLowerCase() === DesignationCode.trim().toLowerCase()
-                ) {
-
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Designation name and designation code already exist for this company"
-                    });
+                    nameExists = true;
                 }
 
 
-                // DESIGNATION CODE EXISTS
+                if (designation.DesignationCode && designation.DesignationCode.trim().toLowerCase() === DesignationCode.trim().toLowerCase()) {
 
-                if (duplicate.DesignationCode?.trim().toLowerCase() === DesignationCode.trim().toLowerCase()) {
-
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Designation code already exists for this company"
-                    });
+                    codeExists = true;
                 }
+            }
 
 
-                // DESIGNATION NAME EXISTS
+            // ==================================================
+            // BOTH NAME AND CODE EXIST
+            // ==================================================
 
-                if (duplicate.DesignationName?.trim().toLowerCase() === DesignationName.trim().toLowerCase()) {
+            if (nameExists && codeExists) {
 
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Designation name already exists for this company"
-                    });
-                }
+                return res.status(409).json({
+                    status: "error",
+                    message: "Designation name and code already exist for this company"
+                });
+            }
+
+
+            // ==================================================
+            // NAME EXISTS
+            // ==================================================
+
+            if (nameExists) {
+
+                return res.status(409).json({
+                    status: "error",
+                    message: "Designation name already exists for this company"
+                });
+            }
+
+
+            // ==================================================
+            // CODE EXISTS
+            // ==================================================
+
+            if (codeExists) {
+
+                return res.status(409).json({
+                    status: "error",
+                    message: "Designation code already exists for this company"
+                });
             }
 
 
@@ -256,14 +275,14 @@ export const designationController = async (req, res) => {
             // ADD DESIGNATION
             // ==================================================
 
-            const designation = await addDesignation({
+            const designation =await addDesignation({
 
-                CompanyId: Number(CompanyId),
-                DesignationName: DesignationName.trim(),
-                DesignationCode: DesignationCode.trim(),
-                IsDisabled: IsDisabled ?? false,
-                CreatedByUserName: CreatedByUserName.trim()
-            });
+                    CompanyId: Number(CompanyId),
+                    DesignationName: DesignationName.trim(),
+                    DesignationCode: DesignationCode.trim(),
+                    IsDisabled: IsDisabled ?? false,
+                    CreatedByUserName: CreatedByUserName.trim()
+                });
 
 
             // ==================================================
@@ -289,17 +308,7 @@ export const designationController = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error processing designation:", error);
-
-
-        // PostgreSQL UNIQUE constraint
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Designation already exists"
-            });
-        }
+        // console.error("Error processing designation:", error);
 
 
         return res.status(500).json({
@@ -325,9 +334,9 @@ export const editDesignationController = async (req, res) => {
         // FLAG ID 1 - GET COMPANIES
         // ==================================================
 
-        if (parseInt(flagId) === 1) {
+        if (Number(flagId) === 1) {
 
-            const companies = await getCompaniesForEditDropdown();
+            const companies =await getCompaniesForEditDropdown();
 
             return res.status(200).json({
                 status: "success",
@@ -341,7 +350,7 @@ export const editDesignationController = async (req, res) => {
         // FLAG ID 2 - GET DESIGNATION BY ID
         // ==================================================
 
-        if (parseInt(flagId) === 2) {
+        if (Number(flagId) === 2) {
 
             const {CompanyDesignationId} = req.body;
 
@@ -376,12 +385,8 @@ export const editDesignationController = async (req, res) => {
             // GET DESIGNATION
             // ==================================================
 
-            const designation = await getDesignationById(Number(CompanyDesignationId));
+            const designation =await getDesignationById(Number(CompanyDesignationId));
 
-
-            // ==================================================
-            // DESIGNATION NOT FOUND
-            // ==================================================
 
             if (designation.length === 0) {
 
@@ -391,10 +396,6 @@ export const editDesignationController = async (req, res) => {
                 });
             }
 
-
-            // ==================================================
-            // SUCCESS
-            // ==================================================
 
             return res.status(200).json({
                 status: "success",
@@ -408,7 +409,7 @@ export const editDesignationController = async (req, res) => {
         // FLAG ID 3 - UPDATE DESIGNATION
         // ==================================================
 
-        if (parseInt(flagId) === 3) {
+        if (Number(flagId) === 3) {
 
             const {
                 CompanyDesignationId,
@@ -454,8 +455,7 @@ export const editDesignationController = async (req, res) => {
                 CompanyId === undefined ||
                 CompanyId === null ||
                 CompanyId === "" ||
-                !Number.isInteger(Number(CompanyId)) ||
-                Number(CompanyId) <= 0
+                !Number.isInteger(Number(CompanyId)) || Number(CompanyId) <= 0
             ) {
 
                 return res.status(400).json({
@@ -469,7 +469,7 @@ export const editDesignationController = async (req, res) => {
             // CHECK COMPANY EXISTS AND IS ACTIVE
             // ==================================================
 
-            const companyData = await checkCompanyExists(Number(CompanyId));
+            const companyData =await checkCompanyExists(Number(CompanyId));
 
 
             if (companyData.length === 0) {
@@ -555,7 +555,7 @@ export const editDesignationController = async (req, res) => {
             // CHECK DESIGNATION EXISTS
             // ==================================================
 
-            const existingRecord =await getDesignationById(Number(CompanyDesignationId));
+            const existingRecord = await getDesignationById(Number(CompanyDesignationId));
 
 
             if (existingRecord.length === 0) {
@@ -571,64 +571,69 @@ export const editDesignationController = async (req, res) => {
             // CHECK DUPLICATE DESIGNATION
             // ==================================================
 
-            const duplicateDesignation =await checkDesignationExistsForUpdate(
-
+            const duplicateDesignation = await checkDesignationExistsForUpdate(
                     Number(CompanyDesignationId),
                     Number(CompanyId),
-                    DesignationCode.trim(),
-                    DesignationName.trim()
+                    DesignationName.trim(),
+                    DesignationCode.trim()
                 );
 
 
-            if (duplicateDesignation.length > 0) {
+            let nameExists = false;
+            let codeExists = false;
 
-                const duplicate =duplicateDesignation[0];
 
+            for (const designation of duplicateDesignation) {
 
-                // ==================================================
-                // BOTH NAME AND CODE EXIST
-                // ==================================================
+                if (designation.DesignationName && designation.DesignationName.trim().toLowerCase() === DesignationName.trim().toLowerCase()) {
 
-                if (
-                    duplicate.DesignationName?.trim().toLowerCase() === DesignationName.trim().toLowerCase() &&
-                    duplicate.DesignationCode?.trim().toLowerCase() === DesignationCode.trim().toLowerCase()
-                ) {
-
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Designation name and designation code already exist for this company"
-                    });
+                    nameExists = true;
                 }
 
 
-                // ==================================================
-                // DESIGNATION CODE EXISTS
-                // ==================================================
+                if ( designation.DesignationCode && designation.DesignationCode.trim().toLowerCase() ===DesignationCode.trim().toLowerCase()) {
 
-                if (
-                    duplicate.DesignationCode?.trim().toLowerCase() === DesignationCode.trim().toLowerCase()
-                ) {
-
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Designation code already exists for this company"
-                    });
+                    codeExists = true;
                 }
+            }
 
 
-                // ==================================================
-                // DESIGNATION NAME EXISTS
-                // ==================================================
+            // ==================================================
+            // BOTH NAME AND CODE EXIST
+            // ==================================================
 
-                if (
-                    duplicate.DesignationName?.trim().toLowerCase() === DesignationName.trim().toLowerCase()
-                ) {
+            if (nameExists && codeExists) {
 
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Designation name already exists for this company"
-                    });
-                }
+                return res.status(409).json({
+                    status: "error",
+                    message: "Designation name and code already exist for this company"
+                });
+            }
+
+
+            // ==================================================
+            // NAME EXISTS
+            // ==================================================
+
+            if (nameExists) {
+
+                return res.status(409).json({
+                    status: "error",
+                    message: "Designation name already exists for this company"
+                });
+            }
+
+
+            // ==================================================
+            // CODE EXISTS
+            // ==================================================
+
+            if (codeExists) {
+
+                return res.status(409).json({
+                    status: "error",
+                    message: "Designation code already exists for this company"
+                });
             }
 
 
@@ -636,12 +641,13 @@ export const editDesignationController = async (req, res) => {
             // UPDATE DESIGNATION
             // ==================================================
 
-            const result = await editDesignation({
+            const result =await editDesignation({
+
                     CompanyDesignationId: Number(CompanyDesignationId),
                     CompanyId: Number(CompanyId),
                     DesignationName: DesignationName.trim(),
                     DesignationCode: DesignationCode.trim(),
-                    IsDisabled:IsDisabled ?? existingRecord[0].IsDisabled,
+                    IsDisabled: IsDisabled ?? existingRecord[0].IsDisabled,
                     UpdateByUserName: UpdateByUserName.trim()
                 });
 
@@ -670,7 +676,6 @@ export const editDesignationController = async (req, res) => {
             });
         }
 
-
         // ==================================================
         // INVALID FLAG ID
         // ==================================================
@@ -692,6 +697,7 @@ export const editDesignationController = async (req, res) => {
                 message: "Designation already exists"
             });
         }
+
 
         return res.status(500).json({
             status: "error",
@@ -716,7 +722,7 @@ export const toggleDesignationStatus = async (req, res) => {
         // FLAG ID 4 - TOGGLE DESIGNATION STATUS
         // ==================================================
 
-        if (parseInt(flagId) === 4) {
+        if (Number(flagId) === 4) {
 
             const {
                 CompanyDesignationId,
@@ -746,8 +752,7 @@ export const toggleDesignationStatus = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyDesignationId must be a valid positive integer"
+                    message: "CompanyDesignationId must be a valid positive integer"
                 });
             }
 
@@ -779,22 +784,15 @@ export const toggleDesignationStatus = async (req, res) => {
 
 
             // ==================================================
-            // PREPARE DATA
+            // TOGGLE STATUS
             // ==================================================
 
-            const designationData = {
+            const designation = await toggleDesignationStatuses({
 
-                CompanyDesignationId: Number(CompanyDesignationId),
-                IsDisabled,
-                UpdateByUserName: UpdateByUserName.trim()
-            };
-
-
-            // ==================================================
-            // UPDATE DESIGNATION STATUS
-            // ==================================================
-
-            const designation = await toggleDesignationStatuses(designationData);
+                    CompanyDesignationId: Number(CompanyDesignationId),
+                    IsDisabled,
+                    UpdateByUserName: UpdateByUserName.trim()
+                });
 
 
             // ==================================================
@@ -828,7 +826,7 @@ export const toggleDesignationStatus = async (req, res) => {
 
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId."
+            message: "Invalid FlagId"
         });
 
     } catch (error) {
@@ -850,7 +848,10 @@ export const toggleDesignationStatus = async (req, res) => {
 
 export const deleteDesignationController = async (req, res) => {
 
-    const {flagId, CompanyDesignationId} = req.body;
+    const {
+        flagId,
+        CompanyDesignationId
+    } = req.body;
 
 
     try {
@@ -859,7 +860,7 @@ export const deleteDesignationController = async (req, res) => {
         // FLAG ID 1 - DELETE DESIGNATION
         // ==================================================
 
-        if (parseInt(flagId) === 1) {
+        if (Number(flagId) === 1) {
 
 
             // ==================================================
@@ -892,7 +893,7 @@ export const deleteDesignationController = async (req, res) => {
             // DELETE DESIGNATION
             // ==================================================
 
-            const result = await deleteDesignation(Number(CompanyDesignationId));
+            const result =await deleteDesignation(Number(CompanyDesignationId));
 
 
             // ==================================================
@@ -935,7 +936,7 @@ export const deleteDesignationController = async (req, res) => {
 
         return res.status(500).json({
             status: "error",
-            message: "Failed to delete designation",
+            message:"Failed to delete designation",
             error: error.message
         });
     }
