@@ -68,6 +68,15 @@ export const addProducts = async (req, res) => {
 
                 const product = existingProduct[0];
 
+                //  both product Name and product code exists
+                if (product.ProductName === productData.ProductName && product.ProductCode === productData.ProductCode) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Product name and Product code already exists"
+                    });
+                }
+                
                 // Product Name exists
                 if (product.ProductName === productData.ProductName) {
 
@@ -129,19 +138,32 @@ export const updateProduct = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const productData = req.body;
-            // Check Product Name and Product Code
-            // Exclude the current ProductId
+
+            // Check whether Product Name and Product Code already exist
             const existingProducts = await checkProductExistsForUpdate(
                 productData.ProductName,
-                productData.ProductCode,
-                productData.ProductId
+                productData.ProductCode
             );
 
             // Check duplicate Product Name / Product Code
             for (const product of existingProducts) {
 
+                // Both Product Name and Product Code exist
+                if (
+                    product.ProductName === productData.ProductName &&
+                    product.ProductCode === productData.ProductCode
+                ) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Product name and product code already exist"
+                    });
+                }
+
                 // Product Name exists
-                if (product.ProductName === productData.ProductName) {
+                if (
+                    product.ProductName === productData.ProductName
+                ) {
 
                     return res.status(409).json({
                         status: "error",
@@ -150,7 +172,9 @@ export const updateProduct = async (req, res) => {
                 }
 
                 // Product Code exists
-                if (product.ProductCode === productData.ProductCode) {
+                if (
+                    product.ProductCode === productData.ProductCode
+                ) {
 
                     return res.status(409).json({
                         status: "error",
@@ -159,7 +183,7 @@ export const updateProduct = async (req, res) => {
                 }
             }
 
-            // Update Product
+            // Only updateProducts() updates the database
             const product = await updateProducts(productData);
 
             return res.status(200).json({

@@ -256,6 +256,7 @@ export const createUser = async (userData) => {
             "PhoneNumber",
             "AltPhoneNumber",
             "DateOfBirth",
+            "Photo",
             "GenderId",
             "MaritalStatusId",
             "DesignationId",
@@ -280,8 +281,9 @@ export const createUser = async (userData) => {
             $11,
             $12,
             $13,
+            $14,
             CURRENT_TIMESTAMP,
-            $14
+            $15
         )
         RETURNING
             "UserId",
@@ -302,6 +304,7 @@ export const createUser = async (userData) => {
     `;
 
     const values = [
+
         userData.EmployeeId,
         userData.FirstName,
         userData.MiddleName || null,
@@ -309,6 +312,7 @@ export const createUser = async (userData) => {
         userData.PhoneNumber,
         userData.AltPhoneNumber || null,
         userData.DateOfBirth,
+        userData.Photo || null,
         userData.GenderId,
         userData.MaritalStatusId,
         userData.DesignationId,
@@ -318,7 +322,92 @@ export const createUser = async (userData) => {
         userData.CreatedByUserName
     ];
 
-    const result = await pool.query(query, values);
+    const result = await pool.query(
+        query,
+        values
+    );
 
     return result.rows[0];
+};
+
+
+
+// ==========================================================
+// FLAG ID 1 - COMPANY
+// ==========================================================
+
+export const getCompanyDropdown = async () => {
+
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName"
+        FROM "LKP"."Company"
+        WHERE "IsDisabled" = false
+        ORDER BY "CompanyName";
+    `;
+
+    const result = await pool.query(query);
+
+    return result.rows;
+};
+
+
+// ==========================================================
+// FLAG ID 2 - PRODUCT BASED ON COMPANY
+// ==========================================================
+
+export const getProductDropdown = async (CompanyId) => {
+
+    const query = `
+        SELECT DISTINCT
+            p."ProductId",
+            p."ProductName"
+        FROM "LKP"."CompanyProduct" cp
+        INNER JOIN "LKP"."Product" p
+            ON p."ProductId" = cp."ProductId"
+        WHERE cp."CompanyId" = $1
+          AND p."IsDisabled" = false
+        ORDER BY p."ProductName";
+    `;
+
+    const result = await pool.query(
+        query,
+        [CompanyId]
+    );
+
+    return result.rows;
+};
+
+
+// ==========================================================
+// FLAG ID 3 - PROJECT BASED ON COMPANY + PRODUCT
+// ==========================================================
+export const getProjectDropdown = async (
+    CompanyId,
+    ProductId
+) => {
+
+    const query = `
+        SELECT DISTINCT
+            pr."ProjectId",
+            pr."ProjectName"
+        FROM "LKP"."CompanyProduct" cp
+        INNER JOIN "LKP"."Project" pr
+            ON pr."CompanyProductId" = cp."CompanyProductId"
+        WHERE cp."CompanyId" = $1
+          AND cp."ProductId" = $2
+          AND pr."IsDisabled" = false
+        ORDER BY pr."ProjectName";
+    `;
+
+    const result = await pool.query(
+        query,
+        [
+            CompanyId,
+            ProductId
+        ]
+    );
+
+    return result.rows;
 };

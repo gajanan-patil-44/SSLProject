@@ -67,6 +67,17 @@ export const addCompanies = async (req, res) => {
             if (existingCompany.length > 0) {
 
                 const company = existingCompany[0];
+                
+                //Both Company Name and Company Code exist
+                if (
+                    company.CompanyName === companyData.CompanyName &&
+                    company.CompanyCode === companyData.CompanyCode
+                ) {
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company name and company code already exist"
+                    });
+                }
 
                 // Company Name exists
                 if (company.CompanyName === companyData.CompanyName) {
@@ -85,7 +96,10 @@ export const addCompanies = async (req, res) => {
                         message: "Company code already exists"
                     });
                 }
+
+
             }
+
 
             // Add Company
             const company = await addCompany(companyData);
@@ -129,19 +143,34 @@ export const updateCompany = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const companyData = req.body;
-            // Check Company Name and Company Code
-            // Exclude the current CompanyId
+
+            console.log("Received update company data:", companyData);
+
+            // Check whether Company Name and Company Code already exist
             const existingCompanies = await checkCompanyExistsForUpdate(
                 companyData.CompanyName,
-                companyData.CompanyCode,
-                companyData.CompanyId
+                companyData.CompanyCode
             );
 
             // Check duplicate Company Name / Company Code
             for (const company of existingCompanies) {
 
+                // Both Company Name and Company Code exist
+                if (
+                    company.CompanyName === companyData.CompanyName &&
+                    company.CompanyCode === companyData.CompanyCode
+                ) {
+
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Company name and company code already exist"
+                    });
+                }
+
                 // Company Name exists
-                if (company.CompanyName === companyData.CompanyName) {
+                if (
+                    company.CompanyName === companyData.CompanyName
+                ) {
 
                     return res.status(409).json({
                         status: "error",
@@ -150,7 +179,9 @@ export const updateCompany = async (req, res) => {
                 }
 
                 // Company Code exists
-                if (company.CompanyCode === companyData.CompanyCode) {
+                if (
+                    company.CompanyCode === companyData.CompanyCode
+                ) {
 
                     return res.status(409).json({
                         status: "error",
@@ -159,7 +190,7 @@ export const updateCompany = async (req, res) => {
                 }
             }
 
-            // Update Company
+            // Only updateCompanies() updates the database
             const company = await updateCompanies(companyData);
 
             return res.status(200).json({
@@ -217,7 +248,7 @@ export const toggleCompanyStatus = async (req, res) => {
             return res.status(200).json({
                 status: "success",
                 message: "Company status updated successfully"
-                
+
             });
         }
 
