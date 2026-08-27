@@ -4,10 +4,10 @@ import UserRoutes from "../Routes/User/userRoutes.js";
 import RoleRoutes from "../Routes/Role/roleRoutes.js";
 import ProductRoute from "../Routes/Product/productRoutes.js";
 import CompanyRoute from "../Routes/Company/companyRoutes.js";
-import CompanyProductRoutes from "../Routes/CompanyProduct/companyProduct.js";
 import FileTypeRoutes from "../Routes/FileType/fileTypeRoute.js";
 import DesignationRoutes from "../Routes/Designation/designationRoutes.js";
 import ProjectRoutes from "../Routes/Projects/projectRoutes.js"
+import CompanyProductRoutes from "../Routes/CompanyProduct/CompanyProduct.js"
 
 const applyRoutes = (app) => {
 app.use(backendHelpers.USER_CREATION, UserRoutes);
