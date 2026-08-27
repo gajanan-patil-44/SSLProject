@@ -383,7 +383,7 @@ export const createUserController = async (req, res) => {
 
 export const companyProductProjectDropdownController = async (req, res) => {
 
-    const { FlagId, CompanyId, ProductId } = req.body;
+    const { FlagId, CompanyId, CompanyProductId } = req.body;
 
     try {
 
@@ -455,32 +455,19 @@ export const companyProductProjectDropdownController = async (req, res) => {
 
         if (parseInt(FlagId) === 3) {
 
-            if (
-                CompanyId === undefined ||
-                CompanyId === null ||
-                String(CompanyId).trim() === ""
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId is required"
-                });
-            }
-
-            if (
-                ProductId === undefined ||
-                ProductId === null ||
-                String(ProductId).trim() === ""
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "ProductId is required"
-                });
-            }
-
+          if (
+        CompanyProductId === undefined ||
+        CompanyProductId === null ||
+        String(CompanyProductId).trim() === ""
+    ) {
+        return res.status(400).json({
+            status: "error",
+            message: "CompanyProductId is required"
+        });
+    }
             const result =
                 await getProjectDropdown(
-                    CompanyId,
-                    ProductId
+                   CompanyProductId
                 );
 
             return res.status(200).json({
