@@ -240,97 +240,446 @@ export const checkEmployeeIdExists = async (EmployeeId) => {
 };
 
 
+
+
 // ==========================================================
-// CREATE USER
+// CREATE USER + USER COMPANY + USER PRODUCT
+// + USER PROJECT + USER ROLE + USER FILE
 // ==========================================================
 
 export const createUser = async (userData) => {
 
-    const query = `
-        INSERT INTO "DATA"."User"
-        (
-            "EmployeeId",
-            "FirstName",
-            "MiddleName",
-            "LastName",
-            "PhoneNumber",
-            "AltPhoneNumber",
-            "DateOfBirth",
-            "Photo",
-            "GenderId",
-            "MaritalStatusId",
-            "DesignationId",
-            "Email",
-            "Password",
-            "LoginName",
-            "CreatedAt",
-            "CreatedByUserName"
-        )
-        VALUES
-        (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8,
-            $9,
-            $10,
-            $11,
-            $12,
-            $13,
-            $14,
-            CURRENT_TIMESTAMP,
-            $15
-        )
-        RETURNING
-            "UserId",
-            "EmployeeId",
-            "FirstName",
-            "MiddleName",
-            "LastName",
-            "PhoneNumber",
-            "AltPhoneNumber",
-            "DateOfBirth",
-            "GenderId",
-            "MaritalStatusId",
-            "DesignationId",
-            "Email",
-            "LoginName",
-            "CreatedAt",
-            "CreatedByUserName";
-    `;
+    const client = await pool.connect();
 
-    const values = [
+    try {
 
-        userData.EmployeeId,
-        userData.FirstName,
-        userData.MiddleName || null,
-        userData.LastName || null,
-        userData.PhoneNumber,
-        userData.AltPhoneNumber || null,
-        userData.DateOfBirth,
-        userData.Photo || null,
-        userData.GenderId,
-        userData.MaritalStatusId,
-        userData.DesignationId,
-        userData.Email,
-        userData.Password,
-        userData.LoginName,
-        userData.CreatedByUserName
-    ];
+        // ==================================================
+        // START TRANSACTION
+        // ==================================================
 
-    const result = await pool.query(
-        query,
-        values
-    );
+        await client.query("BEGIN");
 
-    return result.rows[0];
+
+        // ==================================================
+        // 1. CREATE USER
+        // ==================================================
+
+        const userQuery = `
+            INSERT INTO "DATA"."User"
+            (
+                "EmployeeId",
+                "FirstName",
+                "MiddleName",
+                "LastName",
+                "PhoneNumber",
+                "AltPhoneNumber",
+                "DateOfBirth",
+                "GenderId",
+                "MaritalStatusId",
+                "DesignationId",
+                "Email",
+                "Password",
+                "LoginName",
+                "Photo",
+                "CreatedAt",
+                "CreatedByUserName"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13,
+                $14,
+                CURRENT_TIMESTAMP,
+                $15
+            )
+            RETURNING
+                "UserId",
+                "EmployeeId",
+                "FirstName",
+                "MiddleName",
+                "LastName",
+                "PhoneNumber",
+                "AltPhoneNumber",
+                "DateOfBirth",
+                "GenderId",
+                "MaritalStatusId",
+                "DesignationId",
+                "Email",
+                "LoginName",
+                "CreatedAt",
+                "CreatedByUserName";
+        `;
+
+        const userValues = [
+            userData.EmployeeId,
+            userData.FirstName,
+            userData.MiddleName || null,
+            userData.LastName || null,
+            userData.PhoneNumber,
+            userData.AltPhoneNumber || null,
+            userData.DateOfBirth,
+            userData.GenderId,
+            userData.MaritalStatusId,
+            userData.DesignationId,
+            userData.Email,
+            userData.Password,
+            userData.LoginName,
+
+            // Photo path from multer disk storage
+            userData.Photo || null,
+
+            userData.CreatedByUserName
+        ];
+
+        const userResult = await client.query(
+            userQuery,
+            userValues
+        );
+
+        const user = userResult.rows[0];
+
+        if (!user) {
+            throw new Error("User creation failed");
+        }
+
+        const UserId = user.UserId;
+
+
+        // ==================================================
+        // 2. CREATE USER COMPANY
+        // ==================================================
+
+        const userCompanyQuery = `
+            INSERT INTO "DATA"."UserCompany"
+            (
+                "UserId",
+                "CompanyId",
+                "IsPrimaryCompany",
+                "IsDisabled",
+                "CreatedAt",
+                "CreatedByUserId"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                true,
+                false,
+                CURRENT_TIMESTAMP,
+                $3
+            )
+            RETURNING "UserCompanyId";
+        `;
+
+        await client.query(
+            userCompanyQuery,
+            [
+                UserId,
+                Number(userData.CompanyId),
+                UserId
+            ]
+        );
+
+
+        // ==================================================
+        // 3. CREATE USER PRODUCT
+        // ==================================================
+
+        const userProductQuery = `
+            INSERT INTO "DATA"."UserProduct"
+            (
+                "UserId",
+                "CompanyProductId",
+                "IsDisabled",
+                "CreatedAt",
+                "CreatedByUserId"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                false,
+                CURRENT_TIMESTAMP,
+                $3
+            )
+            RETURNING "UserProductId";
+        `;
+
+        await client.query(
+            userProductQuery,
+            [
+                UserId,
+                Number(userData.CompanyProductId),
+                UserId
+            ]
+        );
+
+
+        // ==================================================
+        // 4. CREATE USER PROJECT
+        // ==================================================
+
+        const userProjectQuery = `
+            INSERT INTO "DATA"."UserProject"
+            (
+                "UserId",
+                "ProjectId",
+                "IsPrimary",
+                "IsDisabled",
+                "CreatedAt",
+                "CreatedByUserId"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                true,
+                false,
+                CURRENT_TIMESTAMP,
+                $3
+            )
+            RETURNING "UserProjectId";
+        `;
+
+        await client.query(
+            userProjectQuery,
+            [
+                UserId,
+                Number(userData.ProjectId),
+                UserId
+            ]
+        );
+
+
+        // ==================================================
+        // 5. CREATE USER ROLE
+        // ==================================================
+
+        const userRoleQuery = `
+            INSERT INTO "DATA"."UserRole"
+            (
+                "UserId",
+                "RoleId",
+                "CompanyId",
+                "CompanyProductId",
+                "ProjectId",
+                "CreatedAt",
+                "CreatedByUserId"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                CURRENT_TIMESTAMP,
+                $6
+            )
+            RETURNING "UserRoleId";
+        `;
+
+        await client.query(
+            userRoleQuery,
+            [
+                UserId,
+                Number(userData.RoleId),
+                Number(userData.CompanyId),
+                Number(userData.CompanyProductId),
+                Number(userData.ProjectId),
+                UserId
+            ]
+        );
+
+
+        // ==================================================
+        // 6. CREATE USER FILES
+        // ==================================================
+
+        /*
+            userData.UserFiles is an ARRAY.
+
+            Example:
+
+            [
+                {
+                    FileTypeId: 1,
+                    FilePath: "uploads/userfiles/resume.pdf"
+                },
+                {
+                    FileTypeId: 2,
+                    FilePath: "uploads/userfiles/certificate.pdf"
+                },
+                {
+                    FileTypeId: 3,
+                    FilePath: "uploads/userfiles/experience.pdf"
+                }
+            ]
+        */
+
+        const userFiles = userData.UserFiles || [];
+
+        const createdUserFiles = [];
+
+
+        // ==================================================
+        // INSERT EACH USER FILE
+        // ==================================================
+
+        for (const userFile of userFiles) {
+
+            // ----------------------------------------------
+            // VALIDATE FILE TYPE ID
+            // ----------------------------------------------
+
+            if (
+                userFile.FileTypeId === undefined ||
+                userFile.FileTypeId === null ||
+                !Number.isInteger(
+                    Number(userFile.FileTypeId)
+                ) ||
+                Number(userFile.FileTypeId) <= 0
+            ) {
+
+                throw new Error(
+                    "Valid FileTypeId is required for every UserFile"
+                );
+
+            }
+
+
+            // ----------------------------------------------
+            // VALIDATE FILE PATH
+            // ----------------------------------------------
+
+            if (
+                !userFile.FilePath ||
+                String(userFile.FilePath).trim() === ""
+            ) {
+
+                throw new Error(
+                    "FilePath is required for every UserFile"
+                );
+
+            }
+
+
+            // ----------------------------------------------
+            // INSERT USER FILE
+            // ----------------------------------------------
+
+            const userFileQuery = `
+                INSERT INTO "DATA"."UserFile"
+                (
+                    "FileTypeId",
+                    "UserId",
+                    "FilePath",
+                    "IsDisabled",
+                    "CreatedAt",
+                    "CreatedByUserId"
+                )
+                VALUES
+                (
+                    $1,
+                    $2,
+                    $3,
+                    false,
+                    CURRENT_TIMESTAMP,
+                    $4
+                )
+                RETURNING
+                    "UserFileId",
+                    "FileTypeId",
+                    "UserId",
+                    "FilePath",
+                    "IsDisabled",
+                    "CreatedAt",
+                    "CreatedByUserId";
+            `;
+
+
+            const userFileValues = [
+
+                Number(userFile.FileTypeId),
+
+                UserId,
+
+                userFile.FilePath,
+
+                UserId
+
+            ];
+
+
+            const userFileResult = await client.query(
+                userFileQuery,
+                userFileValues
+            );
+
+
+            if (userFileResult.rows.length > 0) {
+
+                createdUserFiles.push(
+                    userFileResult.rows[0]
+                );
+
+            }
+
+        }
+
+
+        // ==================================================
+        // COMMIT TRANSACTION
+        // ==================================================
+
+        await client.query("COMMIT");
+
+
+        // ==================================================
+        // RETURN RESULT
+        // ==================================================
+
+        return {
+
+            ...user,
+
+            UserFiles: createdUserFiles
+
+        };
+
+
+    } catch (error) {
+
+        // ==================================================
+        // ROLLBACK TRANSACTION
+        // ==================================================
+
+        await client.query("ROLLBACK");
+
+        throw error;
+
+
+    } finally {
+
+        // ==================================================
+        // RELEASE DATABASE CONNECTION
+        // ==================================================
+
+        client.release();
+
+    }
 };
-
-
 
 // ==========================================================
 // FLAG ID 1 - COMPANY
