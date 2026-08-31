@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/getRole", getRole);
 router.post("/addRole", addRoles);
-router.post("/companyexists", getCompanyForRole);
+router.post("/companyexists", getCompanyForRole);  //drodown
 router.post("/updateRole", updateRole);
 router.post("/deleteRole", deleteRole);
 router.post("/updateRoleStatus", updateRoleStatusController);

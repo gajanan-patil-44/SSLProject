@@ -58,9 +58,6 @@ export const addProducts = async (req, res) => {
         if (parseInt(flagId) === 2) {
 
             const productData = req.body;
-
-            console.log("Received product data:", productData);
-
             // Check Product Name and Product Code
             const existingProduct = await checkProductExists(
                 productData.ProductName,
@@ -104,8 +101,7 @@ export const addProducts = async (req, res) => {
 
             return res.status(201).json({
                 status: "success",
-                message: "Product added successfully",
-                data: product
+                message: "Product added successfully"
             });
         }
 
@@ -142,8 +138,6 @@ export const updateProduct = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const productData = req.body;
-
-            console.log("Received update product data:", productData);
 
             // Check whether Product Name and Product Code already exist
             const existingProducts = await checkProductExistsForUpdate(
@@ -291,7 +285,7 @@ export const deleteProduct = async (req, res) => {
 
             return res.status(200).json({
                 status: "success",
-                message: "Product disabled successfully",
+                message: "Product Deleted successfully",
                 data: product
             });
         } else {

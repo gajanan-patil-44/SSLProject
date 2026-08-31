@@ -57,11 +57,7 @@ export const addCompanies = async (req, res) => {
 
         // flagId 2 = Add Company
         if (parseInt(flagId) === 2) {
-
             const companyData = req.body;
-
-            console.log("Received company data:", companyData);
-
             // Check Company Name and Company Code
             const existingCompany = await checkCompanyExists(
                 companyData.CompanyName,
@@ -110,8 +106,7 @@ export const addCompanies = async (req, res) => {
 
             return res.status(201).json({
                 status: "success",
-                message: "Company added successfully",
-                data: company
+                message: "Company added successfully"
             });
         }
 
@@ -238,9 +233,6 @@ export const toggleCompanyStatus = async (req, res) => {
         if (parseInt(flagId) === 4) {
 
             const companyData = req.body;
-
-            console.log("Received toggle company data:", companyData);
-
             const company = await toggleCompanyStatuses(companyData);
 
             // Company does not exist
