@@ -15,6 +15,9 @@ import {
 
 } from "../../Models/UserModels.js";
 import { readFile } from "fs/promises";
+import {
+    processUserFileUsingWorker
+} from "../../Helpers/userFileWorkerHelper.js";
 
 // =====================================================
 // USER DROPDOWNS
@@ -240,32 +243,79 @@ export const createUserController = async (req, res) => {
         // CREATE USER FILE ARRAY
         // ==========================================================
 
-        userData.UserFiles = userFiles.map(
-            (file, index) => {
+        // ==========================================================
+        // PROCESS USER FILES USING WORKER THREAD
+        // ==========================================================
 
-                return {
+        userData.UserFiles = [];
+
+
+        for (
+            let i = 0;
+            i < userFiles.length;
+            i++
+        ) {
+
+            const file =
+                userFiles[i];
+
+
+            const fileTypeId =
+                fileTypeIds[i];
+
+
+            try {
+
+                // ==================================================
+                // SEND EVERY USERFILE TO WORKER
+                // ==================================================
+
+                const workerResult =
+                    await processUserFileUsingWorker(
+
+                        file.path
+
+                    );
+
+
+                // ==================================================
+                // STORE ONLY REQUIRED DATA
+                // ==================================================
+
+                userData.UserFiles.push({
 
                     FileTypeId:
-                        fileTypeIds[index],
+                        fileTypeId,
 
                     FilePath:
-                        file.path,
+                        workerResult.filePath
 
-                    OriginalFileName:
-                        file.originalname,
+                });
 
-                    MimeType:
-                        file.mimetype,
 
-                    FileSize:
-                        file.size
+            } catch (workerError) {
 
-                };
+                console.error(
+                    "UserFile Worker Error:",
+                    workerError
+                );
+
+
+                return res.status(500).json({
+
+                    status: "error",
+
+                    message:
+                        `Failed to process UserFile: ${file.originalname}`,
+
+                    error:
+                        workerError.message
+
+                });
 
             }
-        );
 
-
+        }
         // ==========================================================
         // REQUIRED USER FIELDS
         // ==========================================================
@@ -754,7 +804,7 @@ export const createUserController = async (req, res) => {
         });
 
     }
-}; 
+};
 
 // ==========================================================
 // COMPANY / PRODUCT / PROJECT DROPDOWN
