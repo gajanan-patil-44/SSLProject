@@ -23,6 +23,13 @@ export const getDesignation = async (req, res) => {
 
     try {
 
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
         // FlagId 1 = Get All Designations
         if (Number(flagId) === 1) {
 
@@ -66,6 +73,13 @@ export const designationController = async (req, res) => {
     const { flagId } = req.body;
 
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
 
         // ==================================================
         // FLAG ID 1 - GET COMPANIES
@@ -329,6 +343,13 @@ export const editDesignationController = async (req, res) => {
     const { flagId } = req.body;
 
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
 
         // ==================================================
         // FLAG ID 1 - GET COMPANIES
@@ -718,6 +739,13 @@ export const toggleDesignationStatus = async (req, res) => {
 
     try {
 
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
         // ==================================================
         // FLAG ID 4 - TOGGLE DESIGNATION STATUS
         // ==================================================
@@ -855,6 +883,13 @@ export const deleteDesignationController = async (req, res) => {
 
 
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
 
         // ==================================================
         // FLAG ID 1 - DELETE DESIGNATION
