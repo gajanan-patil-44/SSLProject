@@ -21,7 +21,6 @@ app.use(backendHelpers.FILE_TYPE,FileTypeRoutes);
 app.use(backendHelpers.COMPANY_PRODUCT_CREATION, CompanyProductRoutes);
 app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);
 app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);
-
 };
 
 export default applyRoutes;
