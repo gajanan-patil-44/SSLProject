@@ -8,6 +8,7 @@ import FileTypeRoutes from "../Routes/FileType/fileTypeRoute.js";
 import CompanyProductRoutes from "../Routes/CompanyProduct/CompanyProduct.js";
 import DesignationRoutes from "../Routes/Designation/designationRoutes.js";
 import ProjectRoutes from "../Routes/Projects/projectRoutes.js"
+import BirthdayRoutes from "../Routes/Birthday/birthdayRoutes.js";
 
 const applyRoutes = (app) => {
 app.use(backendHelpers.USER_CREATION, UserRoutes);
@@ -18,6 +19,7 @@ app.use(backendHelpers.FILE_TYPE,FileTypeRoutes);
 app.use(backendHelpers.COMPANY_PRODUCT_CREATION, CompanyProductRoutes);
 app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);
 app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);
+app.use(backendHelpers.BIRTHDAY_EMAILS, BirthdayRoutes);
 
 };
 
