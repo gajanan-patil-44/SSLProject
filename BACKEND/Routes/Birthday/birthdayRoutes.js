@@ -14,30 +14,19 @@ const router = express.Router();
 // PROCESS BIRTHDAY EMAILS
 // ==========================================================
 
-router.post(
-    "/processbirthdaymail",
-    processBirthdayMailController
-);
-
+router.post("/processbirthdaymail", processBirthdayMailController);
 
 // ==========================================================
 // GET ALL BIRTHDAY MAIL LOGS
 // ==========================================================
 
-router.get(
-    "/birthdaymaillogs",
-    getBirthdayMailLogsController
-);
-
+router.get("/birthdaymaillogs", getBirthdayMailLogsController);
 
 // ==========================================================
 // GET BIRTHDAY MAIL LOG BY ID
 // ==========================================================
 
-router.get(
-    "/birthdaymaillogs/:id",
-    getBirthdayMailLogController
-);
+router.get("/birthdaymaillogs/:id", getBirthdayMailLogController);
 
 
 export default router;
