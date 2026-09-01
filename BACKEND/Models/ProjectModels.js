@@ -13,14 +13,18 @@ export const getAllProjects = async () => {
                SELECT
                 PR."ProjectId",
                 PR."CompanyProductId",
+
                 CP."CompanyId",
                 C."CompanyName",
+
                 CP."ProductId",
                 P."ProductName",
-                PR."ProjectCode",
+
                 PR."ProjectName",
                 PR."Description",
                 PR."IsDisabled",
+                PR."Description",
+
                 PR."CreatedAt",
                 PR."UpdatedAt",
 				U."FirstName" AS "CreatedByUserName"
@@ -40,19 +44,18 @@ export const getAllProjects = async () => {
                 ON PR."CreatedByUserId" = U."UserId"
 
 
-            WHERE PR."IsDisabled"=FALSE       
-            ORDER BY PR."CreatedAt" DESC;
+            ORDER BY
+                PR."CreatedAt" DESC;
         `;
 
 
-        const result =await pool.query(query);
-
+        const result = await pool.query(query);
 
         return result.rows;
 
     } catch (error) {
 
-        // console.error("Error fetching projects:", error );
+        // console.error("Error fetching projects:", error);
 
         throw error;
     }
@@ -60,7 +63,7 @@ export const getAllProjects = async () => {
 
 
 // ==========================================
-// GET COMPANY PRODUCTS FOR ADD DROPDOWN
+// GET COMPANY PRODUCT DROPDOWN
 // ==========================================
 
 export const getCompanyProductsForDropdown =async () => {
@@ -85,11 +88,12 @@ export const getCompanyProductsForDropdown =async () => {
 
             const result =await pool.query(query);
 
+
             return result.rows;
 
         } catch (error) {
 
-            // console.error("Error fetching company products:", error);
+            // console.error("Error fetching company products for dropdown:", error);
 
             throw error;
         }
@@ -97,7 +101,7 @@ export const getCompanyProductsForDropdown =async () => {
 
 
 // ==========================================
-// CHECK COMPANY PRODUCT EXISTS
+// CHECK COMPANY PRODUCT
 // ==========================================
 
 export const checkCompanyProductExists =async (CompanyProductId) => {
@@ -109,6 +113,7 @@ export const checkCompanyProductExists =async (CompanyProductId) => {
                     CP."CompanyProductId",
                     CP."CompanyId",
                     CP."ProductId"
+
                 FROM "LKP"."CompanyProduct" CP
 
                 INNER JOIN "LKP"."Company" C
@@ -120,18 +125,17 @@ export const checkCompanyProductExists =async (CompanyProductId) => {
                        P."ProductId"
 
                 WHERE CP."CompanyProductId" = $1
+
                 AND CP."IsDisabled" = false
                 AND C."IsDisabled" = false
                 AND P."IsDisabled" = false;
             `;
 
 
-            const values = [
-                CompanyProductId
-            ];
+            const values = [CompanyProductId];
 
 
-            const result = await pool.query(query, values);
+            const result =await pool.query(query, values);
 
 
             return result.rows;
@@ -146,118 +150,130 @@ export const checkCompanyProductExists =async (CompanyProductId) => {
 
 
 // ==========================================
-// CHECK DUPLICATE PROJECT FOR ADD
+// CHECK DUPLICATE PROJECT WHILE ADDING
 // ==========================================
 
-export const checkProjectData =async (CompanyProductId, ProjectCode, ProjectName) => {
+export const checkProjectData = async (
+    CompanyProductId,
+    ProjectCode,
+    ProjectName
+) => {
 
-        try {
+    try {
 
-            const query = `
-                SELECT
-                    "ProjectId",
-                    "CompanyProductId",
-                    "ProjectCode",
-                    "ProjectName"
-                FROM "LKP"."Project"
+        const query = `
+            SELECT
+                "ProjectId",
+                "CompanyProductId",
+                "ProjectCode",
+                "ProjectName"
 
-                WHERE "CompanyProductId" = $1
+            FROM "LKP"."Project"
 
-                AND (LOWER(TRIM("ProjectCode")) =LOWER(TRIM($2))
+            WHERE "CompanyProductId" = $1
 
-                    OR
+            AND
+            (
+                LOWER(TRIM("ProjectCode"))
+                    = LOWER(TRIM($2))
 
-                    LOWER(TRIM("ProjectName")) = LOWER(TRIM($3))
-                );
-            `;
+                OR
 
-
-            const values = [
-                CompanyProductId,
-                ProjectCode,
-                ProjectName
-            ];
+                LOWER(TRIM("ProjectName"))
+                    = LOWER(TRIM($3))
+            );
+        `;
 
 
-            const result =await pool.query(query, values);
+        const values = [
+            CompanyProductId,
+            ProjectCode,
+            ProjectName
+        ];
 
-            return result.rows;
 
-        } catch (error) {
+        const result =await pool.query(query, values);
 
-            // console.error("Error checking project data:", error);
 
-            throw error;
-        }
-    };
+        return result.rows;
+
+    } catch (error) {
+
+        // console.error("Error checking duplicate project:", error);
+
+        throw error;
+    }
+};
 
 
 // ==========================================
 // ADD PROJECT
 // ==========================================
 
-export const addProject =async (projectData) => {
+export const addProject = async (projectData) => {
 
-        try {
+    try {
 
-            const query = `
-                INSERT INTO "LKP"."Project"
-                (
-                    "CompanyProductId",
-                    "ProjectCode",
-                    "ProjectName",
-                    "Description",
-                    "IsDisabled",
-                    "CreatedAt",
-                    "UpdatedAt",
-                    "CreatedByUserId"
-                )
-                VALUES
-                (
-                    $1,
-                    $2,
-                    $3,
-                    $4,
-                    $5,
-                    CURRENT_TIMESTAMP,
-                    CURRENT_TIMESTAMP,
-                    $6
-                )
-                RETURNING
-                    "ProjectId",
-                    "CompanyProductId",
-                    "ProjectCode",
-                    "ProjectName",
-                    "Description",
-                    "IsDisabled",
-                    "CreatedAt",
-                    "CreatedByUserId";
-            `;
+        const query = `
+            INSERT INTO "LKP"."Project"
+            (
+                "CompanyProductId",
+                "ProjectName",
+                "ProjectCode",
+                "IsDisabled",
+                "Description",
+                "CreatedAt",
+                "UpdatedAt",
+                "CreatedByUserId"
+            )
 
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP,
+                $6
+            )
 
-            const values = [
-                projectData.CompanyProductId,
-                projectData.ProjectCode,
-                projectData.ProjectName,
-                projectData.ProjectDescription,
-                projectData.IsDisabled,
-                projectData.CreatedByUserId
-
-            ];
+            RETURNING
+                "ProjectId",
+                "CompanyProductId",
+                "ProjectName",
+                "ProjectCode",
+                "IsDisabled",
+                "Description",
+                "CreatedAt",
+                "UpdatedAt",
+                "CreatedByUserId";
+        `;
 
 
-            const result =await pool.query(query, values);
+        const values = [
+            projectData.CompanyProductId,
+            projectData.ProjectName,
+            projectData.ProjectCode,
+            projectData.IsDisabled,
+            projectData.Description,
+            projectData.CreatedByUserId
+
+        ];
 
 
-            return result.rows[0];
+        const result =await pool.query(query, values);
 
-        } catch (error) {
+        return result.rows[0];
 
-            // console.error("Error adding project:", error);
+    } catch (error) {
 
-            throw error;
-        }
-    };
+        // console.error("Error adding project:", error);
+
+        throw error;
+    }
+};
 
 
 // ==========================================
@@ -272,23 +288,24 @@ export const checkProjectExistsForEdit =async (ProjectId) => {
                 SELECT
                     "ProjectId",
                     "CompanyProductId",
-                    "ProjectCode",
                     "ProjectName",
+                    "ProjectCode",
+                    "IsDisabled",
                     "Description",
-                    "IsDisabled"
-                FROM "LKP"."Project"
+                    "CreatedAt",
+                    "UpdatedAt",
+                    "CreatedByUserId",
+                    "UpdatedByUserId"
 
+                FROM "LKP"."Project"
                 WHERE "ProjectId" = $1;
             `;
 
 
-            const values = [
-                ProjectId
-            ];
+            const values = [ProjectId];
 
 
             const result =await pool.query(query, values);
-
 
             return result.rows;
 
@@ -305,7 +322,12 @@ export const checkProjectExistsForEdit =async (ProjectId) => {
 // CHECK DUPLICATE PROJECT FOR UPDATE
 // ==========================================
 
-export const checkProjectDataForUpdate =async (ProjectId, CompanyProductId, ProjectCode, ProjectName) => {
+export const checkProjectDataForUpdate =async (
+        ProjectId,
+        CompanyProductId,
+        ProjectCode,
+        ProjectName
+    ) => {
 
         try {
 
@@ -315,17 +337,19 @@ export const checkProjectDataForUpdate =async (ProjectId, CompanyProductId, Proj
                     "CompanyProductId",
                     "ProjectCode",
                     "ProjectName"
+
                 FROM "LKP"."Project"
-
                 WHERE "CompanyProductId" = $1
-
                 AND "ProjectId" <> $2
-
-                AND (LOWER(TRIM("ProjectCode")) = LOWER(TRIM($3))
+                AND
+                (
+                    LOWER(TRIM("ProjectCode"))
+                        = LOWER(TRIM($3))
 
                     OR
 
-                    LOWER(TRIM("ProjectName")) =LOWER(TRIM($4))
+                    LOWER(TRIM("ProjectName"))
+                        = LOWER(TRIM($4))
                 );
             `;
 
@@ -338,8 +362,7 @@ export const checkProjectDataForUpdate =async (ProjectId, CompanyProductId, Proj
             ];
 
 
-            const result = await pool.query(query, values);
-
+            const result =await pool.query(query, values);
 
             return result.rows;
 
@@ -356,46 +379,47 @@ export const checkProjectDataForUpdate =async (ProjectId, CompanyProductId, Proj
 // EDIT PROJECT
 // ==========================================
 
-export const editProject =async (projectData) => {
+export const editProject = async (projectData) => {
 
-        try {
+    try {
 
-            const query = `
-                UPDATE "LKP"."Project"
+        const query = `
+            UPDATE "LKP"."Project"
 
-                SET
-                    "CompanyProductId" = $1,
-                    "ProjectCode" = $2,
-                    "ProjectName" = $3,
-                    "Description" = $4,
-                    "UpdatedAt" = CURRENT_TIMESTAMP,
-                    "UpdatedByUserId" = $5
+            SET
+                "CompanyProductId" = $1,
+                "ProjectName" = $2,
+                "ProjectCode" = $3,
+                "Description" = $4,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserId" = $5
 
-                WHERE "ProjectId" = $6;
-            `;
-
-
-            const values = [
-                projectData.CompanyProductId,
-                projectData.ProjectCode,
-                projectData.ProjectName,
-                projectData.Description,
-                projectData.UpdatedByUserId,
-                projectData.ProjectId
-            ];
+            WHERE "ProjectId" = $6;
+        `;
 
 
-            const result =await pool.query(query, values);
+        const values = [
+            projectData.CompanyProductId,
+            projectData.ProjectName,
+            projectData.ProjectCode,
+            projectData.Description,
+            projectData.UpdatedByUserId,
+            projectData.ProjectId
 
-            return result.rowCount;
+        ];
 
-        } catch (error) {
 
-            // console.error("Error editing project:", error);
+        const result =await pool.query(query, values);
 
-            throw error;
-        }
-    };
+        return result.rowCount;
+
+    } catch (error) {
+
+        // console.error("Error editing project:", error);
+
+        throw error;
+    }
+};
 
 
 // ==========================================
@@ -419,10 +443,10 @@ export const toggleProjectStatuses =async (projectData) => {
                 RETURNING
                     "ProjectId",
                     "CompanyProductId",
-                    "ProjectCode",
                     "ProjectName",
-                    "Description",
+                    "ProjectCode",
                     "IsDisabled",
+                    "Description",
                     "UpdatedAt",
                     "UpdatedByUserId";
             `;
@@ -432,11 +456,11 @@ export const toggleProjectStatuses =async (projectData) => {
                 projectData.IsDisabled,
                 projectData.UpdatedByUserId,
                 projectData.ProjectId
+
             ];
 
 
             const result =await pool.query(query, values);
-
 
             return result.rows[0];
 
@@ -459,18 +483,14 @@ export const deleteProject =async (ProjectId) => {
 
             const query = `
                 DELETE FROM "LKP"."Project"
-
                 WHERE "ProjectId" = $1;
             `;
 
 
-            const values = [
-                ProjectId
-            ];
+            const values = [ProjectId];
 
 
             const result =await pool.query(query, values);
-
 
             return result.rowCount;
 

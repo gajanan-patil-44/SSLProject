@@ -16,6 +16,17 @@ import {
 export const getCompany = async (req, res) => {
     const { flagId } = req.body;
     try {
+
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+
+
         if (parseInt(flagId) == 1) {
             const rows = await getAllCompanies();
 
@@ -55,6 +66,14 @@ export const addCompanies = async (req, res) => {
 
     try {
 
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+
         // flagId 2 = Add Company
         if (parseInt(flagId) === 2) {
             const companyData = req.body;
@@ -67,7 +86,7 @@ export const addCompanies = async (req, res) => {
             if (existingCompany.length > 0) {
 
                 const company = existingCompany[0];
-                
+
                 //Both Company Name and Company Code exist
                 if (
                     company.CompanyName === companyData.CompanyName &&
@@ -138,6 +157,13 @@ export const updateCompany = async (req, res) => {
     const { flagId } = req.body;
 
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
 
         // flagId 3 = Update Company
         if (parseInt(flagId) === 3) {
@@ -229,6 +255,13 @@ export const toggleCompanyStatus = async (req, res) => {
 
     try {
 
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
         // flagId 4 = Toggle Company Status
         if (parseInt(flagId) === 4) {
 
@@ -277,6 +310,15 @@ export const toggleCompanyStatus = async (req, res) => {
 export const deleteCompany = async (req, res) => {
     const { flagId } = req.body;
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+
         if (parseInt(flagId) == 5) {
             const companyData = req.body;
 
