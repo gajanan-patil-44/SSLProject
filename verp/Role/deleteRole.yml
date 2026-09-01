@@ -1,0 +1,21 @@
+info:
+  name: deleteRole
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/roleCreation/deleteRole
+  body:
+    type: json
+    data: |-
+      {
+        "RoleId": 3
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
