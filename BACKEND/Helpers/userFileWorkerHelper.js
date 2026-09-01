@@ -2,159 +2,127 @@ import { Worker } from "worker_threads";
 import path from "path";
 import { fileURLToPath } from "url";
 
-
-// ==========================================================
-// __DIRNAME
-// ==========================================================
-
-const __filename =
-    fileURLToPath(import.meta.url);
-
-const __dirname =
-    path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
-// ==========================================================
-// PROCESS USER FILE USING WORKER
-// ==========================================================
-
-export const processUserFileUsingWorker = (
-    inputPath
+export const processUserFilesUsingWorker = (
+    inputPaths
 ) => {
 
     return new Promise((resolve, reject) => {
 
-        try {
+        if (
+            !Array.isArray(inputPaths) ||
+            inputPaths.length === 0
+        ) {
+            return reject(
+                new Error("UserFile paths are missing")
+            );
+        }
 
-            // ==================================================
-            // VALIDATE INPUT PATH
-            // ==================================================
 
-            if (!inputPath) {
+        const uploadsDirectory =
+            process.env.UPLOADS_DIRECTORY;
 
-                return reject(
+
+        if (!uploadsDirectory) {
+            return reject(
+                new Error(
+                    "UPLOADS_DIRECTORY is not configured in .env"
+                )
+            );
+        }
+
+
+        const workerPath =
+            path.resolve(
+                __dirname,
+                "../Workers/userFileWorker.js"
+            );
+
+
+        const worker =
+            new Worker(
+                workerPath,
+                {
+                    workerData: {
+                        inputPaths,
+                        uploadsDirectory
+                    }
+                }
+            );
+
+
+        let finished = false;
+
+
+        worker.on("message", (message) => {
+
+            if (finished) {
+                return;
+            }
+
+
+            if (
+                message &&
+                message.success === true &&
+                typeof message.filePath === "string"
+            ) {
+
+                finished = true;
+
+                resolve({
+                    filePath: message.filePath
+                });
+
+                return;
+            }
+
+
+            finished = true;
+
+            reject(
+                new Error(
+                    message?.error ||
+                    "Worker failed to process UserFile"
+                )
+            );
+
+        });
+
+
+        worker.on("error", (error) => {
+
+            if (!finished) {
+
+                finished = true;
+
+                reject(error);
+
+            }
+
+        });
+
+
+        worker.on("exit", (code) => {
+
+            if (
+                code !== 0 &&
+                !finished
+            ) {
+
+                finished = true;
+
+                reject(
                     new Error(
-                        "UserFile path is missing"
+                        `Worker stopped with exit code ${code}`
                     )
                 );
 
             }
 
-
-            // ==================================================
-            // UPLOADS DIRECTORY
-            // ==================================================
-
-            const uploadsDirectory =
-                "C:\\Users\\hithi\\OneDrive\\Desktop\\Repoting system\\Business-Operations-Management-System-BOMS-\\uploads";
-
-
-            // ==================================================
-            // WORKER PATH
-            // ==================================================
-
-            const workerPath =
-                path.resolve(
-                    __dirname,
-                    "../Workers/userFileWorker.js"
-                );
-
-
-            // ==================================================
-            // CREATE WORKER
-            // ==================================================
-
-            const worker =
-                new Worker(
-                    workerPath,
-                    {
-                        workerData: {
-
-                            inputPath,
-
-                            uploadsDirectory
-
-                        }
-                    }
-                );
-
-
-            // ==================================================
-            // WORKER MESSAGE
-            // ==================================================
-
-            worker.on(
-                "message",
-                (message) => {
-
-                    if (
-                        message &&
-                        message.success === true &&
-                        typeof message.filePath === "string"
-                    ) {
-
-                        resolve({
-
-                            filePath:
-                                message.filePath
-
-                        });
-
-                        return;
-                    }
-
-
-                    reject(
-                        new Error(
-                            message?.error ||
-                            "Worker failed to process UserFile"
-                        )
-                    );
-
-                }
-            );
-
-
-            // ==================================================
-            // WORKER ERROR
-            // ==========================================================
-
-            worker.on(
-                "error",
-                (error) => {
-
-                    reject(error);
-
-                }
-            );
-
-
-            // ==================================================
-            // WORKER EXIT
-            // ==========================================================
-
-            worker.on(
-                "exit",
-                (code) => {
-
-                    if (code !== 0) {
-
-                        reject(
-                            new Error(
-                                `Worker stopped with exit code ${code}`
-                            )
-                        );
-
-                    }
-
-                }
-            );
-
-        } catch (error) {
-
-            reject(error);
-
-        }
+        });
 
     });
 

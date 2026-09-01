@@ -11,85 +11,135 @@ import PDFDocument from "pdfkit";
 
 
 // ==========================================================
+// WORKER DATA
+// ==========================================================
+
+const {
+    inputPaths,
+    uploadsDirectory
+} = workerData;
+
+
+// ==========================================================
 // IMAGE -> PDF
 // ==========================================================
 
-const convertImageToPdf = async (
-    inputPath,
+const convertImagesToPdf = async (
+    imagePaths,
     outputPath
 ) => {
 
-    const metadata =
-        await sharp(inputPath).metadata();
-
-
-    const width =
-        metadata.width || 595;
-
-    const height =
-        metadata.height || 842;
-
-
     await new Promise(
-        (resolve, reject) => {
+        async (resolve, reject) => {
 
-            const pdf =
-                new PDFDocument({
-                    autoFirstPage: false
-                });
+            try {
+
+                const pdf =
+                    new PDFDocument({
+                        autoFirstPage: false
+                    });
 
 
-            const outputStream =
-                fs.createWriteStream(
-                    outputPath
+                const outputStream =
+                    fs.createWriteStream(
+                        outputPath
+                    );
+
+
+                outputStream.on(
+                    "finish",
+                    resolve
                 );
 
 
-            outputStream.on(
-                "finish",
-                resolve
-            );
+                outputStream.on(
+                    "error",
+                    reject
+                );
 
 
-            outputStream.on(
-                "error",
-                reject
-            );
+                pdf.on(
+                    "error",
+                    reject
+                );
 
 
-            pdf.on(
-                "error",
-                reject
-            );
+                pdf.pipe(
+                    outputStream
+                );
 
 
-            pdf.pipe(outputStream);
+                // ==================================================
+                // ADD EVERY IMAGE AS A PAGE
+                // ==================================================
+
+                for (
+                    const imagePath
+                    of imagePaths
+                ) {
+
+                    // ==============================================
+                    // READ IMAGE METADATA
+                    // ==============================================
+
+                    const metadata =
+                        await sharp(
+                            imagePath
+                        ).metadata();
 
 
-            pdf.addPage({
-
-                size: [
-                    width,
-                    height
-                ],
-
-                margin: 0
-
-            });
+                    const width =
+                        metadata.width || 595;
 
 
-            pdf.image(
-                inputPath,
-                0,
-                0,
-                {
-                    width: width,
-                    height: height
+                    const height =
+                        metadata.height || 842;
+
+
+                    // ==============================================
+                    // ADD PAGE FOR THIS IMAGE
+                    // ==============================================
+
+                    pdf.addPage({
+
+                        size: [
+                            width,
+                            height
+                        ],
+
+                        margin: 0
+
+                    });
+
+
+                    // ==============================================
+                    // ADD IMAGE
+                    // ==============================================
+
+                    pdf.image(
+                        imagePath,
+                        0,
+                        0,
+                        {
+                            width,
+                            height
+                        }
+                    );
+
                 }
-            );
 
 
-            pdf.end();
+                // ==================================================
+                // FINISH PDF
+                // ==================================================
+
+                pdf.end();
+
+            } catch (error) {
+
+                reject(error);
+
+            }
 
         }
     );
@@ -115,6 +165,52 @@ const copyPdf = async (
 
 
 // ==========================================================
+// GET FILE TYPE
+// ==========================================================
+
+const getFileType = (
+    inputPath
+) => {
+
+    const extension =
+        path.extname(
+            inputPath
+        ).toLowerCase();
+
+
+    if (
+        extension === ".pdf"
+    ) {
+
+        return "pdf";
+
+    }
+
+
+    if (
+        [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp",
+            ".gif",
+            ".tiff",
+            ".tif",
+            ".bmp"
+        ].includes(extension)
+    ) {
+
+        return "image";
+
+    }
+
+
+    return "unsupported";
+
+};
+
+
+// ==========================================================
 // WORKER
 // ==========================================================
 
@@ -122,44 +218,25 @@ const copyPdf = async (
 
     try {
 
-        const {
-            inputPath,
-            originalFileName,
-            mimeType,
-            uploadsDirectory
-        } = workerData;
+        // ==================================================
+        // VALIDATE INPUT PATHS
+        // ==================================================
+
+        if (
+            !Array.isArray(inputPaths) ||
+            inputPaths.length === 0
+        ) {
+
+            throw new Error(
+                "inputPaths are missing"
+            );
+
+        }
 
 
         // ==================================================
-        // VALIDATE INPUT
+        // VALIDATE UPLOAD DIRECTORY
         // ==================================================
-
-        if (!inputPath) {
-
-            throw new Error(
-                "inputPath is missing"
-            );
-
-        }
-
-
-        if (!originalFileName) {
-
-            throw new Error(
-                "originalFileName is missing"
-            );
-
-        }
-
-
-        if (!mimeType) {
-
-            throw new Error(
-                "mimeType is missing"
-            );
-
-        }
-
 
         if (!uploadsDirectory) {
 
@@ -183,55 +260,115 @@ const copyPdf = async (
 
 
         // ==================================================
-        // FILE NAME WITHOUT EXTENSION
+        // VALIDATE EVERY INPUT FILE
         // ==================================================
 
-        const originalName =
-            path.basename(
-                originalFileName,
-                path.extname(
-                    originalFileName
-                )
+        for (
+            const inputPath
+            of inputPaths
+        ) {
+
+            if (!inputPath) {
+
+                throw new Error(
+                    "One of the input paths is missing"
+                );
+
+            }
+
+
+            try {
+
+                await fs.promises.access(
+                    inputPath,
+                    fs.constants.F_OK
+                );
+
+            } catch {
+
+                throw new Error(
+                    `Input file does not exist: ${inputPath}`
+                );
+
+            }
+
+        }
+
+
+        // ==================================================
+        // DETERMINE FILE TYPES
+        // ==================================================
+
+        const fileTypes =
+            inputPaths.map(
+                inputPath =>
+                    getFileType(
+                        inputPath
+                    )
             );
 
 
         // ==================================================
-        // CREATE UNIQUE PDF NAME
+        // CHECK UNSUPPORTED FILES
         // ==================================================
 
-        const pdfFileName =
-            `${originalName}_${Date.now()}.pdf`;
-
-
-        // ==================================================
-        // FINAL PHYSICAL PATH
-        // ==================================================
-
-        const outputPath =
-            path.join(
-                uploadsDirectory,
-                pdfFileName
+        const unsupportedIndex =
+            fileTypes.findIndex(
+                type =>
+                    type === "unsupported"
             );
 
 
+        if (
+            unsupportedIndex !== -1
+        ) {
+
+            throw new Error(
+                `Unsupported file type: ${inputPaths[unsupportedIndex]}`
+            );
+
+        }
+
+
         // ==================================================
-        // PDF FILE
+        // EXISTING PDF
+        //
+        // For PDF, only one PDF should be supplied
+        // for a FileTypeId.
         // ==================================================
 
         if (
-            mimeType === "application/pdf"
+            inputPaths.length === 1 &&
+            fileTypes[0] === "pdf"
         ) {
 
-            console.log(
-                "Worker: PDF received"
-            );
+            const inputPath =
+                inputPaths[0];
 
 
-            console.log(
-                "Worker: Copying PDF to:",
-                outputPath
-            );
+            const originalName =
+                path.basename(
+                    inputPath,
+                    path.extname(
+                        inputPath
+                    )
+                );
 
+
+            const pdfFileName =
+                `${originalName}_${Date.now()}.pdf`;
+
+
+            const outputPath =
+                path.join(
+                    uploadsDirectory,
+                    pdfFileName
+                );
+
+
+            // ==============================================
+            // COPY PDF
+            // ==============================================
 
             await copyPdf(
                 inputPath,
@@ -239,9 +376,9 @@ const copyPdf = async (
             );
 
 
-            // ==================================================
+            // ==============================================
             // RETURN PATH
-            // ==================================================
+            // ==============================================
 
             parentPort.postMessage({
 
@@ -254,37 +391,72 @@ const copyPdf = async (
 
 
             return;
+
         }
 
 
         // ==================================================
-        // IMAGE FILE
+        // IMAGES
         // ==================================================
 
-        if (
-            mimeType.startsWith("image/")
-        ) {
-
-            console.log(
-                "Worker: Image received"
+        const allImages =
+            fileTypes.every(
+                type =>
+                    type === "image"
             );
 
 
-            console.log(
-                "Worker: Converting image to:",
+        if (allImages) {
+
+            // ==============================================
+            // FIRST IMAGE NAME
+            // ==============================================
+
+            const firstImage =
+                inputPaths[0];
+
+
+            const originalName =
+                path.basename(
+                    firstImage,
+                    path.extname(
+                        firstImage
+                    )
+                );
+
+
+            // ==============================================
+            // PDF FILE NAME
+            // ==============================================
+
+            const pdfFileName =
+                `${originalName}_${Date.now()}.pdf`;
+
+
+            // ==============================================
+            // FINAL OUTPUT PATH
+            // ==============================================
+
+            const outputPath =
+                path.join(
+                    uploadsDirectory,
+                    pdfFileName
+                );
+
+
+            // ==============================================
+            // CONVERT ALL IMAGES TO ONE PDF
+            // ==============================================
+
+            await convertImagesToPdf(
+                inputPaths,
                 outputPath
             );
 
 
-            await convertImageToPdf(
-                inputPath,
-                outputPath
-            );
-
-
-            // ==================================================
+            // ==============================================
             // RETURN PATH
-            // ==================================================
+            // ==============================================
 
             parentPort.postMessage({
 
@@ -297,15 +469,16 @@ const copyPdf = async (
 
 
             return;
+
         }
 
 
         // ==================================================
-        // UNSUPPORTED FILE
+        // MIXED PDF + IMAGE
         // ==================================================
 
         throw new Error(
-            `Unsupported file type: ${mimeType}`
+            "A FileTypeId cannot contain both PDF and image files"
         );
 
 
@@ -329,3 +502,8 @@ const copyPdf = async (
     }
 
 })();
+
+
+
+
+
