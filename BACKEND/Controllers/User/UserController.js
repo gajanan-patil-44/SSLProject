@@ -16,7 +16,7 @@ import {
 } from "../../Models/UserModels.js";
 import { readFile } from "fs/promises";
 import {
-    processUserFileUsingWorker
+    processUserFilesUsingWorker
 } from "../../Helpers/userFileWorkerHelper.js";
 
 // =====================================================
@@ -159,163 +159,218 @@ export const createUserController = async (req, res) => {
         }
 
 
-        // ==========================================================
-        // USER FILES
-        // ==========================================================
+       // ==========================================================
+// USER FILES
+// ==========================================================
 
-        const userFiles = files.filter(
-            file => file.fieldname === "UserFile"
+const userFiles = files.filter(
+    file => file.fieldname === "UserFile"
+);
+
+
+// ==========================================================
+// FILE TYPE IDS
+// ==========================================================
+
+let fileTypeIds =
+    req.body.FileTypeId || [];
+
+
+// ==========================================================
+// ALWAYS MAKE ARRAY
+// ==========================================================
+
+if (!Array.isArray(fileTypeIds)) {
+
+    fileTypeIds = [fileTypeIds];
+
+}
+
+
+// ==========================================================
+// CONVERT FILE TYPE IDS TO NUMBER
+// ==========================================================
+
+fileTypeIds =
+    fileTypeIds.map(
+        id => Number(id)
+    );
+
+
+// ==========================================================
+// VALIDATE USER FILE COUNT
+// ==========================================================
+
+if (
+    userFiles.length !== fileTypeIds.length
+) {
+
+    return res.status(400).json({
+
+        status: "error",
+
+        message:
+            `Received ${userFiles.length} UserFiles but ${fileTypeIds.length} FileTypeIds`
+
+    });
+
+}
+
+
+// ==========================================================
+// VALIDATE FILE TYPE IDS
+// ==========================================================
+
+for (
+    let i = 0;
+    i < fileTypeIds.length;
+    i++
+) {
+
+    if (
+        !Number.isInteger(
+            fileTypeIds[i]
+        ) ||
+        fileTypeIds[i] <= 0
+    ) {
+
+        return res.status(400).json({
+
+            status: "error",
+
+            message:
+                `Invalid FileTypeId for UserFile ${i + 1}`
+
+        });
+
+    }
+
+}
+
+
+// ==========================================================
+// USER FILES RESULT
+// ==========================================================
+
+userData.UserFiles = [];
+
+
+// ==========================================================
+// GROUP BY FILE TYPE ID
+//
+// NO FileGroup is required.
+//
+// Example:
+//
+// FileTypeId 1 -> image
+// FileTypeId 1 -> image
+// FileTypeId 2 -> pdf
+//
+// Result:
+//
+// FileTypeId 1 -> ONE PDF
+// FileTypeId 2 -> ONE PDF
+// ==========================================================
+
+const fileTypeGroups = new Map();
+
+
+for (
+    let i = 0;
+    i < userFiles.length;
+    i++
+) {
+
+    const file =
+        userFiles[i];
+
+    const fileTypeId =
+        fileTypeIds[i];
+
+
+    if (
+        !fileTypeGroups.has(
+            fileTypeId
+        )
+    ) {
+
+        fileTypeGroups.set(
+            fileTypeId,
+            []
+        );
+
+    }
+
+
+    fileTypeGroups
+        .get(fileTypeId)
+        .push(file.path);
+
+}
+
+
+// ==========================================================
+// SEND EACH FILE TYPE GROUP TO WORKER
+// ==========================================================
+
+for (
+    const [
+        fileTypeId,
+        inputPaths
+    ]
+    of fileTypeGroups
+) {
+
+    try {
+
+        // ==================================================
+        // EVERYTHING GOES THROUGH WORKER
+        // ==================================================
+
+        const workerResult =
+            await processUserFilesUsingWorker(
+                inputPaths
+            );
+
+
+        // ==================================================
+        // STORE ONLY TWO VALUES
+        // ==================================================
+
+        userData.UserFiles.push({
+
+            FileTypeId:
+                Number(fileTypeId),
+
+            FilePath:
+                workerResult.filePath
+
+        });
+
+
+    } catch (workerError) {
+
+        console.error(
+            "UserFile Worker Error:",
+            workerError
         );
 
 
-        // ==========================================================
-        // FILE TYPE IDS
-        // ==========================================================
+        return res.status(500).json({
 
-        let fileTypeIds = req.body.FileTypeId || [];
+            status: "error",
 
+            message:
+                "Failed to process UserFile",
 
-        // If only one FileTypeId is received,
-        // convert it into an array
+            error:
+                workerError.message
 
-        if (!Array.isArray(fileTypeIds)) {
+        });
 
-            fileTypeIds = [fileTypeIds];
+    }
 
-        }
-
-
-        // Convert FileTypeIds to numbers
-
-        fileTypeIds = fileTypeIds.map(
-            id => Number(id)
-        );
-
-
-        // ==========================================================
-        // USER FILE VALIDATION
-        // ==========================================================
-
-        if (userFiles.length > 0) {
-
-            // Number of files must match number of FileTypeIds
-
-            if (userFiles.length !== fileTypeIds.length) {
-
-                return res.status(400).json({
-
-                    status: "error",
-
-                    message:
-                        `Received ${userFiles.length} UserFiles but ${fileTypeIds.length} FileTypeIds`
-
-                });
-
-            }
-
-
-            // Validate every FileTypeId
-
-            for (let i = 0; i < fileTypeIds.length; i++) {
-
-                if (
-                    !Number.isInteger(fileTypeIds[i]) ||
-                    fileTypeIds[i] <= 0
-                ) {
-
-                    return res.status(400).json({
-
-                        status: "error",
-
-                        message:
-                            `Invalid FileTypeId for UserFile ${i + 1}`
-
-                    });
-
-                }
-
-            }
-
-        }
-
-
-        // ==========================================================
-        // CREATE USER FILE ARRAY
-        // ==========================================================
-
-        // ==========================================================
-        // PROCESS USER FILES USING WORKER THREAD
-        // ==========================================================
-
-        userData.UserFiles = [];
-
-
-        for (
-            let i = 0;
-            i < userFiles.length;
-            i++
-        ) {
-
-            const file =
-                userFiles[i];
-
-
-            const fileTypeId =
-                fileTypeIds[i];
-
-
-            try {
-
-                // ==================================================
-                // SEND EVERY USERFILE TO WORKER
-                // ==================================================
-
-                const workerResult =
-                    await processUserFileUsingWorker(
-
-                        file.path
-
-                    );
-
-
-                // ==================================================
-                // STORE ONLY REQUIRED DATA
-                // ==================================================
-
-                userData.UserFiles.push({
-
-                    FileTypeId:
-                        fileTypeId,
-
-                    FilePath:
-                        workerResult.filePath
-
-                });
-
-
-            } catch (workerError) {
-
-                console.error(
-                    "UserFile Worker Error:",
-                    workerError
-                );
-
-
-                return res.status(500).json({
-
-                    status: "error",
-
-                    message:
-                        `Failed to process UserFile: ${file.originalname}`,
-
-                    error:
-                        workerError.message
-
-                });
-
-            }
-
-        }
+}
         // ==========================================================
         // REQUIRED USER FIELDS
         // ==========================================================
