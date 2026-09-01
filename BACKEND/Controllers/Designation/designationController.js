@@ -322,7 +322,6 @@ export const designationController = async (req, res) => {
 
     } catch (error) {
 
-        // console.error("Error processing designation:", error);
 
 
         return res.status(500).json({

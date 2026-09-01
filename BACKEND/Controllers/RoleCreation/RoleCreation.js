@@ -19,6 +19,8 @@ export const getRole = async (req, res) => {
 
     const { FlagId } = req.body;
 
+    console.log("FlagId",FlagId)
+
     try {
 
         if (parseInt(FlagId) === 1) {
