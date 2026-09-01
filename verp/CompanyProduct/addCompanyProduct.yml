@@ -1,0 +1,26 @@
+info:
+  name: addCompanyProduct
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/companyProductCreation/companyProduct
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 3,
+          "CompanyId": 1,
+          "ProductId": 3,
+          "IsDisabled":false ,
+          "CreatedByUserName": "hithin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

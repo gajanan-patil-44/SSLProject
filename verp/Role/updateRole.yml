@@ -1,0 +1,29 @@
+info:
+  name: updateRole
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/roleCreation/updateRole
+  body:
+    type: json
+    data: |-
+      {
+        "FlagId":3,
+        "RoleId": 4,
+        "CompanyId":1,
+        "RoleName": "Admi",
+        "Description": "Officer responsible for processing application",
+        "RequestUserName": "Praveen",
+        "Role_Code": "123",
+        "UpdatedByUserName":"praveen"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
