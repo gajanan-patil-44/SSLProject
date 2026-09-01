@@ -150,11 +150,11 @@ export const findUserForLogin = async (username) => {
 
 `;
 
-const productResult =
-    await pool.query(
-        productQuery,
-        [user.UserId]
-    );
+    const productResult =
+        await pool.query(
+            productQuery,
+            [user.UserId]
+        );
 
     // ==========================================================
     // 4. PROJECT
