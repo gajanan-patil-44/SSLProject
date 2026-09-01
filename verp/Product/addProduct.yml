@@ -1,0 +1,27 @@
+info:
+  name: addProduct
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/productCreation/addProduct
+  body:
+    type: json
+    data: |2-
+       {
+         "flagId":2,
+              "ProductCode": "PROD_003",
+              "ProductName": "System",
+              "ProductDescription": "Software for managing and storing documents",
+              "IsDisabled": false,
+              "CreatedByUserName": "nithin",
+              "UpdatedByUserName": "nithin"
+          }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

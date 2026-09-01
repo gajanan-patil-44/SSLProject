@@ -1,0 +1,22 @@
+info:
+  name: GetAllFiles
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/fileType/getfiletypes
+  body:
+    type: json
+    data: |-
+      {
+      "FlagId":1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
