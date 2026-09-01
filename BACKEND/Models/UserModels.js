@@ -68,8 +68,74 @@ export const getDesignationDropdown = async () => {
     return result.rows;
 };
 
+// =====================================================
+// GET USER REPORTING MANAGER DROPDOWN
+// =====================================================
 
 
+export const getUserReportingManagerDropdown = async (
+    CompanyId,
+    DesignationId
+) => {
+
+    const query = `
+        SELECT
+            u."UserId",
+            u."EmployeeId",
+            CONCAT_WS(
+                ' ',
+                u."FirstName",
+                u."MiddleName",
+                u."LastName"
+            ) AS "ReportingManagerName",
+            u."DesignationId",
+            managerDesignation."DesignationName",
+            managerDesignation."DesignationLevel"
+
+        FROM "DATA"."User" u
+
+        INNER JOIN "LKP"."CompanyDesignation" managerDesignation
+            ON managerDesignation."CompanyDesignationId" = u."DesignationId"
+
+        WHERE
+            -- Manager's designation belongs to selected company
+            managerDesignation."CompanyId" = $1
+
+            -- Manager's designation is active
+            AND managerDesignation."IsDisabled" = false
+
+            -- Manager is allowed to be a reporting manager
+            AND managerDesignation."CanBeReportingManager" = true
+
+            -- Manager must be higher than selected user's designation
+            AND managerDesignation."DesignationLevel" > (
+                SELECT
+                    selectedDesignation."DesignationLevel"
+
+                FROM "LKP"."CompanyDesignation" selectedDesignation
+
+                WHERE
+                    selectedDesignation."CompanyDesignationId" = $2
+                    AND selectedDesignation."CompanyId" = $1
+                    AND selectedDesignation."IsDisabled" = false
+            )
+
+            -- Existing user must be active
+            AND u."IsDisabled" = false
+            AND u."IsBlocked" = false
+
+        ORDER BY
+            managerDesignation."DesignationLevel" ASC,
+            "ReportingManagerName" ASC;
+    `;
+
+    const result = await pool.query(
+        query,
+        [CompanyId, DesignationId]
+    );
+
+    return result.rows;
+};
 // ==========================================================
 // VALIDATE GENDER
 // ==========================================================
@@ -430,37 +496,38 @@ export const createUser = async (userData) => {
         // 4. CREATE USER PROJECT
         // ==================================================
 
-        const userProjectQuery = `
-            INSERT INTO "DATA"."UserProject"
-            (
-                "UserId",
-                "ProjectId",
-                "IsPrimary",
-                "IsDisabled",
-                "CreatedAt",
-                "CreatedByUserId"
-            )
-            VALUES
-            (
-                $1,
-                $2,
-                true,
-                false,
-                CURRENT_TIMESTAMP,
-                $3
-            )
-            RETURNING "UserProjectId";
-        `;
+       // 4. CREATE USER PROJECT
 
-        await client.query(
-            userProjectQuery,
-            [
-                UserId,
-                Number(userData.ProjectId),
-                UserId
-            ]
-        );
+const userProjectQuery = `
+    INSERT INTO "DATA"."UserProject"
+    (
+        "UserId",
+        "ProjectId",
+        "IsPrimary",
+        "IsDisabled",
+        "CreatedAt",
+        "CreatedByUserId"
+    )
+    VALUES
+    (
+        $1,
+        $2,
+        true,
+        false,
+        CURRENT_TIMESTAMP,
+        $3
+    )
+    RETURNING "UserProjectId";
+`;
 
+await client.query(
+    userProjectQuery,
+    [
+        UserId,
+        Number(userData.ProjectId),  // <-- ProjectId = 1
+        UserId
+    ]
+);
 
         // ==================================================
         // 5. CREATE USER ROLE

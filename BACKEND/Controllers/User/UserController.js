@@ -12,6 +12,7 @@ import {
     getCompanyDropdown,
     getProductDropdown,
     getProjectDropdown,
+    getUserReportingManagerDropdown
 
 } from "../../Models/UserModels.js";
 import { readFile } from "fs/promises";
@@ -28,7 +29,7 @@ import {
 
 export const userDropdownController = async (req, res) => {
 
-    const { FlagId } = req.body;
+    const { FlagId, CompanyId, DesignationId } = req.body;
 
     try {
 
@@ -91,6 +92,20 @@ export const userDropdownController = async (req, res) => {
             });
         }
 
+        // ==========================================
+        // FLAG 4 = USER REPORTING MANAGER
+        // ==========================================
+
+        if (parseInt(FlagId) === 4) {
+
+            const result = await getUserReportingManagerDropdown(CompanyId, DesignationId);
+
+            return res.status(200).json({
+                status: "success",
+                message: "User reporting manager data fetched successfully",
+                data: result
+            });
+        }
 
         // ==========================================
         // INVALID FLAG
@@ -159,218 +174,218 @@ export const createUserController = async (req, res) => {
         }
 
 
-       // ==========================================================
-// USER FILES
-// ==========================================================
+        // ==========================================================
+        // USER FILES
+        // ==========================================================
 
-const userFiles = files.filter(
-    file => file.fieldname === "UserFile"
-);
-
-
-// ==========================================================
-// FILE TYPE IDS
-// ==========================================================
-
-let fileTypeIds =
-    req.body.FileTypeId || [];
-
-
-// ==========================================================
-// ALWAYS MAKE ARRAY
-// ==========================================================
-
-if (!Array.isArray(fileTypeIds)) {
-
-    fileTypeIds = [fileTypeIds];
-
-}
-
-
-// ==========================================================
-// CONVERT FILE TYPE IDS TO NUMBER
-// ==========================================================
-
-fileTypeIds =
-    fileTypeIds.map(
-        id => Number(id)
-    );
-
-
-// ==========================================================
-// VALIDATE USER FILE COUNT
-// ==========================================================
-
-if (
-    userFiles.length !== fileTypeIds.length
-) {
-
-    return res.status(400).json({
-
-        status: "error",
-
-        message:
-            `Received ${userFiles.length} UserFiles but ${fileTypeIds.length} FileTypeIds`
-
-    });
-
-}
-
-
-// ==========================================================
-// VALIDATE FILE TYPE IDS
-// ==========================================================
-
-for (
-    let i = 0;
-    i < fileTypeIds.length;
-    i++
-) {
-
-    if (
-        !Number.isInteger(
-            fileTypeIds[i]
-        ) ||
-        fileTypeIds[i] <= 0
-    ) {
-
-        return res.status(400).json({
-
-            status: "error",
-
-            message:
-                `Invalid FileTypeId for UserFile ${i + 1}`
-
-        });
-
-    }
-
-}
-
-
-// ==========================================================
-// USER FILES RESULT
-// ==========================================================
-
-userData.UserFiles = [];
-
-
-// ==========================================================
-// GROUP BY FILE TYPE ID
-//
-// NO FileGroup is required.
-//
-// Example:
-//
-// FileTypeId 1 -> image
-// FileTypeId 1 -> image
-// FileTypeId 2 -> pdf
-//
-// Result:
-//
-// FileTypeId 1 -> ONE PDF
-// FileTypeId 2 -> ONE PDF
-// ==========================================================
-
-const fileTypeGroups = new Map();
-
-
-for (
-    let i = 0;
-    i < userFiles.length;
-    i++
-) {
-
-    const file =
-        userFiles[i];
-
-    const fileTypeId =
-        fileTypeIds[i];
-
-
-    if (
-        !fileTypeGroups.has(
-            fileTypeId
-        )
-    ) {
-
-        fileTypeGroups.set(
-            fileTypeId,
-            []
+        const userFiles = files.filter(
+            file => file.fieldname === "UserFile"
         );
 
-    }
+
+        // ==========================================================
+        // FILE TYPE IDS
+        // ==========================================================
+
+        let fileTypeIds =
+            req.body.FileTypeId || [];
 
 
-    fileTypeGroups
-        .get(fileTypeId)
-        .push(file.path);
+        // ==========================================================
+        // ALWAYS MAKE ARRAY
+        // ==========================================================
 
-}
+        if (!Array.isArray(fileTypeIds)) {
+
+            fileTypeIds = [fileTypeIds];
+
+        }
 
 
-// ==========================================================
-// SEND EACH FILE TYPE GROUP TO WORKER
-// ==========================================================
+        // ==========================================================
+        // CONVERT FILE TYPE IDS TO NUMBER
+        // ==========================================================
 
-for (
-    const [
-        fileTypeId,
-        inputPaths
-    ]
-    of fileTypeGroups
-) {
-
-    try {
-
-        // ==================================================
-        // EVERYTHING GOES THROUGH WORKER
-        // ==================================================
-
-        const workerResult =
-            await processUserFilesUsingWorker(
-                inputPaths
+        fileTypeIds =
+            fileTypeIds.map(
+                id => Number(id)
             );
 
 
-        // ==================================================
-        // STORE ONLY TWO VALUES
-        // ==================================================
+        // ==========================================================
+        // VALIDATE USER FILE COUNT
+        // ==========================================================
 
-        userData.UserFiles.push({
+        if (
+            userFiles.length !== fileTypeIds.length
+        ) {
 
-            FileTypeId:
-                Number(fileTypeId),
+            return res.status(400).json({
 
-            FilePath:
-                workerResult.filePath
+                status: "error",
 
-        });
+                message:
+                    `Received ${userFiles.length} UserFiles but ${fileTypeIds.length} FileTypeIds`
 
+            });
 
-    } catch (workerError) {
-
-        console.error(
-            "UserFile Worker Error:",
-            workerError
-        );
+        }
 
 
-        return res.status(500).json({
+        // ==========================================================
+        // VALIDATE FILE TYPE IDS
+        // ==========================================================
 
-            status: "error",
+        for (
+            let i = 0;
+            i < fileTypeIds.length;
+            i++
+        ) {
 
-            message:
-                "Failed to process UserFile",
+            if (
+                !Number.isInteger(
+                    fileTypeIds[i]
+                ) ||
+                fileTypeIds[i] <= 0
+            ) {
 
-            error:
-                workerError.message
+                return res.status(400).json({
 
-        });
+                    status: "error",
 
-    }
+                    message:
+                        `Invalid FileTypeId for UserFile ${i + 1}`
 
-}
+                });
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // USER FILES RESULT
+        // ==========================================================
+
+        userData.UserFiles = [];
+
+
+        // ==========================================================
+        // GROUP BY FILE TYPE ID
+        //
+        // NO FileGroup is required.
+        //
+        // Example:
+        //
+        // FileTypeId 1 -> image
+        // FileTypeId 1 -> image
+        // FileTypeId 2 -> pdf
+        //
+        // Result:
+        //
+        // FileTypeId 1 -> ONE PDF
+        // FileTypeId 2 -> ONE PDF
+        // ==========================================================
+
+        const fileTypeGroups = new Map();
+
+
+        for (
+            let i = 0;
+            i < userFiles.length;
+            i++
+        ) {
+
+            const file =
+                userFiles[i];
+
+            const fileTypeId =
+                fileTypeIds[i];
+
+
+            if (
+                !fileTypeGroups.has(
+                    fileTypeId
+                )
+            ) {
+
+                fileTypeGroups.set(
+                    fileTypeId,
+                    []
+                );
+
+            }
+
+
+            fileTypeGroups
+                .get(fileTypeId)
+                .push(file.path);
+
+        }
+
+
+        // ==========================================================
+        // SEND EACH FILE TYPE GROUP TO WORKER
+        // ==========================================================
+
+        for (
+            const [
+                fileTypeId,
+                inputPaths
+            ]
+            of fileTypeGroups
+        ) {
+
+            try {
+
+                // ==================================================
+                // EVERYTHING GOES THROUGH WORKER
+                // ==================================================
+
+                const workerResult =
+                    await processUserFilesUsingWorker(
+                        inputPaths
+                    );
+
+
+                // ==================================================
+                // STORE ONLY TWO VALUES
+                // ==================================================
+
+                userData.UserFiles.push({
+
+                    FileTypeId:
+                        Number(fileTypeId),
+
+                    FilePath:
+                        workerResult.filePath
+
+                });
+
+
+            } catch (workerError) {
+
+                console.error(
+                    "UserFile Worker Error:",
+                    workerError
+                );
+
+
+                return res.status(500).json({
+
+                    status: "error",
+
+                    message:
+                        "Failed to process UserFile",
+
+                    error:
+                        workerError.message
+
+                });
+
+            }
+
+        }
         // ==========================================================
         // REQUIRED USER FIELDS
         // ==========================================================
