@@ -408,9 +408,7 @@ export const getBirthdayMailLogs = async () => {
 // GET SINGLE BIRTHDAY MAIL LOG
 // ==========================================================
 
-export const getBirthdayMailLogById = async (
-    BirthdayMailLogId
-) => {
+export const getBirthdayMailLogById = async (BirthdayMailLogId) => {
 
     const query = `
         SELECT

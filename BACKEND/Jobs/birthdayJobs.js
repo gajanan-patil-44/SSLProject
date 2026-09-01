@@ -21,9 +21,7 @@ const startBirthdayJob = () => {
 
     if (!cron.validate(cronExpression)) {
 
-        throw new Error(
-            `Invalid birthday cron expression: ${cronExpression}`
-        );
+        throw new Error(`Invalid birthday cron expression: ${cronExpression}`);
     }
 
 
@@ -32,9 +30,7 @@ const startBirthdayJob = () => {
 
         async () => {
 
-            console.log(
-                `Birthday cron job triggered at ${new Date().toISOString()}`
-            );
+            console.log(`Birthday cron job triggered at ${new Date().toISOString()}`);
 
 
             try {
@@ -43,10 +39,7 @@ const startBirthdayJob = () => {
 
             } catch (error) {
 
-                console.error(
-                    "Birthday cron job failed:",
-                    error
-                );
+                console.error("Birthday cron job failed:", error);
             }
         },
 
@@ -57,13 +50,9 @@ const startBirthdayJob = () => {
     );
 
 
-    console.log(
-        `Birthday job scheduled with: ${cronExpression}`
-    );
+    console.log(`Birthday job scheduled with: ${cronExpression}`);
 
-    console.log(
-        `Birthday job timezone: ${timezone}`
-    );
+    console.log(`Birthday job timezone: ${timezone}`);
 
 
     return task;

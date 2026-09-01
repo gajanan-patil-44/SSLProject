@@ -1,0 +1,34 @@
+info:
+  name: project
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://192.168.23.73:9004/verp-service/projectCreation/project
+  body:
+    type: json
+    data: |+
+      // {
+      //   "flagId":1
+      // }
+
+
+      {
+        "flagId":2,
+        "CompanyProductId":1,
+        "ProjectName":"Documyentt Managementttt",
+        "ProjectCode":"DOC0051",
+        "Description":"kjhk",
+        "IsDisabled":false,
+        "CreatedByUserId":4
+      }
+
+
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

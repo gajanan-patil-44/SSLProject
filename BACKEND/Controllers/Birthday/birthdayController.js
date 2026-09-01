@@ -7,15 +7,11 @@ import {getBirthdayMailLogs, getBirthdayMailLogById} from "../../Models/Birthday
 // PROCESS BIRTHDAY EMAILS
 // ==========================================================
 
-export const processBirthdayMailController = async (
-    req,
-    res
-) => {
+export const processBirthdayMailController = async (req, res) => {
 
     try {
 
-        const result =
-            await processBirthdayEmails();
+        const result =await processBirthdayEmails();
 
 
         if (!result.success) {
@@ -23,10 +19,7 @@ export const processBirthdayMailController = async (
             return res.status(500).json({
 
                 status: "error",
-
-                message:
-                    "Birthday email processing failed.",
-
+                message: "Birthday email processing failed.",
                 data: result
             });
         }
@@ -35,28 +28,20 @@ export const processBirthdayMailController = async (
         return res.status(200).json({
 
             status: "success",
-
-            message:
-                "Birthday email processing completed successfully.",
-
+            message: "Birthday email processing completed successfully.",
             data: result
         });
 
 
     } catch (error) {
 
-        console.error(
-            "Process birthday mail controller error:",
-            error
-        );
+        console.error("Process birthday mail controller error:", error);
 
 
         return res.status(500).json({
 
             status: "error",
-
-            message:
-                "Failed to process birthday emails."
+            message: "Failed to process birthday emails."
         });
     }
 };
@@ -66,42 +51,29 @@ export const processBirthdayMailController = async (
 // GET BIRTHDAY MAIL LOGS
 // ==========================================================
 
-export const getBirthdayMailLogsController = async (
-    req,
-    res
-) => {
+export const getBirthdayMailLogsController = async (req, res) => {
 
     try {
 
-        const logs =
-            await getBirthdayMailLogs();
-
+        const logs =await getBirthdayMailLogs();
 
         return res.status(200).json({
 
             status: "success",
-
-            message:
-                "Birthday mail logs fetched successfully.",
-
+            message: "Birthday mail logs fetched successfully.",
             data: logs
         });
 
 
     } catch (error) {
 
-        console.error(
-            "Get birthday mail logs controller error:",
-            error
-        );
+        console.error("Get birthday mail logs controller error:", error);
 
 
         return res.status(500).json({
 
             status: "error",
-
-            message:
-                "Failed to fetch birthday mail logs."
+            message: "Failed to fetch birthday mail logs."
         });
     }
 };
@@ -111,10 +83,7 @@ export const getBirthdayMailLogsController = async (
 // GET BIRTHDAY MAIL LOG BY ID
 // ==========================================================
 
-export const getBirthdayMailLogController = async (
-    req,
-    res
-) => {
+export const getBirthdayMailLogController = async (req, res) => {
 
     try {
 
@@ -129,17 +98,12 @@ export const getBirthdayMailLogController = async (
             return res.status(400).json({
 
                 status: "error",
-
-                message:
-                    "Birthday mail log ID must be a valid number."
+                message: "Birthday mail log ID must be a valid number."
             });
         }
 
 
-        const log =
-            await getBirthdayMailLogById(
-                Number(id)
-            );
+        const log =await getBirthdayMailLogById(Number(id));
 
 
         if (!log) {
@@ -147,9 +111,7 @@ export const getBirthdayMailLogController = async (
             return res.status(404).json({
 
                 status: "error",
-
-                message:
-                    "Birthday mail log not found."
+                message: "Birthday mail log not found."
             });
         }
 
@@ -157,9 +119,7 @@ export const getBirthdayMailLogController = async (
         return res.status(200).json({
 
             status: "success",
-
-            message:
-                "Birthday mail log fetched successfully.",
+            message: "Birthday mail log fetched successfully.",
 
             data: log
         });
@@ -167,18 +127,13 @@ export const getBirthdayMailLogController = async (
 
     } catch (error) {
 
-        console.error(
-            "Get birthday mail log controller error:",
-            error
-        );
+        console.error("Get birthday mail log controller error:", error);
 
 
         return res.status(500).json({
 
             status: "error",
-
-            message:
-                "Failed to fetch birthday mail log."
+            message: "Failed to fetch birthday mail log."
         });
     }
 };

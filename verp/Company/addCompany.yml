@@ -1,0 +1,33 @@
+info:
+  name: addCompany
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://192.168.23.73:9004/verp-service/companyCreation/addCompany
+  body:
+    type: json
+    data: |-
+      // {
+      //   "flagId":2,
+      //   "CompanyName":"ABC Technologies Pvt Ltd",
+      //   "CompanyCode":"ABC"
+      // }
+
+      {
+        "flagId":2,
+        "CompanyName":"ATME",
+        "CompanyCode":"ATME006",
+        "RequestUserName": "ATME",
+        "Email":"atme@gmail.com",
+        "PhoneNumber":8217263481,
+        "Address":"Mysore"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

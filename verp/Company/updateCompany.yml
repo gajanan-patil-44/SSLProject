@@ -1,0 +1,37 @@
+info:
+  name: updateCompany
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://192.168.23.73:9004/verp-service/companyCreation/updateCompany
+  body:
+    type: json
+    data: |-
+      // {
+      //   "flagId":3,
+      //   "CompanyName":"ATME",
+      //   "CompanyCode":"ATME00",
+      //   "CompanyId":6
+      // }
+
+
+
+      {
+         "flagId":3,
+         "CompanyName":"ATME",
+         "CompanyCode":"ATME006",
+        "UpdatedByUserName":"atme",
+        "Email":"atme@gmail.com",
+        "PhoneNumber":8757647365,
+        "Address":"mysore",
+        "CompanyId":6
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
