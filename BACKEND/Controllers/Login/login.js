@@ -20,10 +20,7 @@ export const login = async (req, res) => {
 
     try {
 
-        const {
-            username,
-            password
-        } = req.body || {};
+        const { username, password } = req.body || {};
 
 
         // ======================================================
@@ -62,10 +59,7 @@ export const login = async (req, res) => {
         // FIND USER
         // ======================================================
 
-        const loginData =
-            await findUserForLogin(
-                String(username).trim()
-            );
+        const loginData = await findUserForLogin(String(username).trim());
 
 
         if (
@@ -82,8 +76,7 @@ export const login = async (req, res) => {
         }
 
 
-        const user =
-            loginData.user;
+        const user = loginData.user;
 
 
         // ======================================================
@@ -157,11 +150,7 @@ export const login = async (req, res) => {
         // PASSWORD
         // ======================================================
 
-        const passwordMatch =
-            await bcrypt.compare(
-                String(password),
-                user.Password
-            );
+        const passwordMatch = await bcrypt.compare(String(password), user.Password);
 
 
         if (!passwordMatch) {
@@ -278,31 +267,19 @@ export const login = async (req, res) => {
 
         const userResponse = {
 
-            UserId:
-                user.UserId,
-
-            loginName:
-                user.LoginName,
+            UserId: user.UserId,
+            loginName: user.LoginName,
 
             name: {
-
                 first:
                     user.FirstName,
-
                 middle:
                     user.MiddleName,
-
                 last:
                     user.LastName
-
             },
-
-            email:
-                user.Email,
-
-            phone:
-                user.PhoneNumber,
-
+            email: user.Email,
+            phone: user.PhoneNumber,
             photo: {
 
                 url:
@@ -330,20 +307,13 @@ export const login = async (req, res) => {
         // RAW DATA
         // ======================================================
 
-        const companies =
-            loginData.companies || [];
+        const companies = loginData.companies || [];
+        const products = loginData.products || [];
+        const projects = loginData.projects || [];
 
-        const products =
-            loginData.products || [];
+        const roles = loginData.roles || [];
 
-        const projects =
-            loginData.projects || [];
-
-        const roles =
-            loginData.roles || [];
-
-        const reportingManagers =
-            loginData.reportingManager || [];
+        const reportingManagers =loginData.reportingManager || [];
 
 
         // ======================================================

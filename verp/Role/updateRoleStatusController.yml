@@ -1,0 +1,23 @@
+info:
+  name: updateRoleStatusController
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/roleCreation/updateRoleStatus
+  body:
+    type: json
+    data: |-
+      {
+        "FlagId":1,
+        "RoleId": 5,
+        "IsDisabled":false
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

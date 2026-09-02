@@ -23,7 +23,6 @@ app.use(backendHelpers.COMPANY_PRODUCT_CREATION, CompanyProductRoutes);
 app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);
 app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);
 app.use(backendHelpers.BIRTHDAY_EMAILS, BirthdayRoutes);
-
 };
 
 export default applyRoutes;
