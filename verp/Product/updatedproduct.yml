@@ -1,0 +1,26 @@
+info:
+  name: updatedproduct
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/productCreation/updateProduct
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 3,
+          "ProductId": 1,
+          "ProductCode": "P001",
+          "ProductName": "Updated Product",
+          "ProductDescription": "Updated product description",
+          "UpdatedByUserName": "Praveen"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

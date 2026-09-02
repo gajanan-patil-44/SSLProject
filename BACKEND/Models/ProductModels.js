@@ -7,26 +7,67 @@ import { pool } from "../Config/db.js";
 
 export const getAllProducts = async () => {
 
-    const result = await pool.query(`
-        SELECT
-            "ProductId" AS "ProductId",
-            "ProductCode" AS "ProductCode",
-            "ProductName" AS "ProductName",
-            "ProductDescription" AS "Description",
-            "createdByUserName" AS "RequestUserName",
-            "CreatedAt" AS "CreatedOn",
-            "UpdatedAt" AS "UpdatedOn",
-            "updatedByUserName" AS "UpdatedByUserName",
-            "isDisabled" AS "IsDisabled"
+    try {
 
-        FROM "LKP"."Product"
+        const result = await pool.query(`
+            SELECT
+                "ProductId" AS "ProductId",
+                "ProductCode" AS "ProductCode",
+                "ProductName" AS "ProductName",
+                "ProductDescription" AS "Description",
+                "CreatedByUserName" AS "RequestUserName",
+                "CreatedAt" AS "CreatedOn",
+                "UpdatedAt" AS "UpdatedOn",
+                "UpdatedByUserName" AS "UpdatedByUserName",
+                "IsDisabled" AS "IsDisabled"
 
-        WHERE "isDisabled" = false
+            FROM "LKP"."Product"
 
-        ORDER BY "ProductId"
-    `);
+            WHERE "IsDisabled" = false
 
-    return result.rows;
+            ORDER BY "ProductId"
+        `);
+
+        return result.rows;
+
+    } catch (error) {
+
+        console.error("Error fetching products:", error);
+
+        throw error;
+    }
+};
+
+
+export const checkProductExists = async (ProductName, ProductCode) => {
+
+    try {
+
+        const query = `
+            SELECT
+                "ProductId",
+                "ProductName",
+                "ProductCode"
+            FROM "LKP"."Product"
+            WHERE "ProductName" = $1
+               OR "ProductCode" = $2
+        `;
+
+        const values = [
+            ProductName,
+            ProductCode
+        ];
+
+        const result = await pool.query(query, values);
+
+        return result.rows;
+
+    } catch (error) {
+
+        console.error("Error checking product existence:", error);
+
+        throw error;
+    }
 };
 
 
@@ -36,42 +77,91 @@ export const getAllProducts = async () => {
 
 export const addProduct = async (productData) => {
 
-    const query = `
-        INSERT INTO "LKP"."Product"
-        (
-            "ProductCode",
-            "ProductName",
-            "ProductDescription",
-            "isDisabled",
-            "CreatedAt",
-            "UpdatedAt",
-            "createdByUserName",
-            "updatedByUserName"
-        )
-        VALUES
-        (
-            $1,
-            $2,
-            $3,
-            false,
-            CURRENT_TIMESTAMP,
-            CURRENT_TIMESTAMP,
-            $4,
-            $4
-        )
-        RETURNING *;
-    `;
+    try {
 
-    const values = [
-        productData.ProductCode,
-        productData.ProductName,
-        productData.ProductDescription,
-        productData.RequestUserName
-    ];
+        const query = `
+            INSERT INTO "LKP"."Product"
+            (
+                "ProductCode",
+                "ProductName",
+                "ProductDescription",
+                "IsDisabled",
+                "CreatedAt",
+                "UpdatedAt",
+                "CreatedByUserName",
+                "UpdatedByUserName"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                false,
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP,
+                $4,
+                $4
+            )
+            RETURNING *;
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            productData.ProductCode,
+            productData.ProductName,
+            productData.ProductDescription,
+            productData.RequestUserName
+        ];
 
-    return result.rows[0];
+        const result = await pool.query(query, values);
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        console.error("Error adding product:", error);
+
+        throw error;
+    }
+};
+
+
+
+export const checkProductExistsForUpdate = async (
+    ProductName,
+    ProductCode
+) => {
+
+    try {
+
+        const query = `
+            SELECT
+                "ProductId",
+                "ProductName",
+                "ProductCode"
+            FROM "LKP"."Product"
+            WHERE
+                "ProductName" = $1
+                OR "ProductCode" = $2
+        `;
+
+        const values = [
+            ProductName,
+            ProductCode
+        ];
+
+        const result = await pool.query(query, values);
+
+        return result.rows;
+
+    } catch (error) {
+
+        console.error(
+            "Error checking product for update:",
+            error
+        );
+
+        throw error;
+    }
 };
 
 
@@ -81,32 +171,79 @@ export const addProduct = async (productData) => {
 
 export const updateProducts = async (productData) => {
 
-    const query = `
-        UPDATE "LKP"."Product"
-        SET
-            "ProductCode" = $1,
-            "ProductName" = $2,
-            "ProductDescription" = $3,
-            "UpdatedAt" = CURRENT_TIMESTAMP,
-            "updatedByUserName" = $4,
-            "isDisabled" = $5
+    try {
 
-        WHERE "ProductId" = $6
-    `;
+        const query = `
+            UPDATE "LKP"."Product"
+            SET
+                "ProductCode" = $1,
+                "ProductName" = $2,
+                "ProductDescription" = $3,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $4
+               
 
-    const values = [
-        productData.ProductCode,
-        productData.ProductName,
-        productData.ProductDescription,
-        productData.UpdatedByUserName,
-        productData.IsDisabled,
-        productData.ProductId
-    ];
+            WHERE "ProductId" = $5
+        `;
 
-    const result = await pool.query(query, values);
+        const values = [
+            productData.ProductCode,
+            productData.ProductName,
+            productData.ProductDescription,
+            productData.UpdatedByUserName,
+            productData.ProductId
+        ];
 
-    return result.rowCount;
+        const result = await pool.query(query, values);
+
+        return result.rowCount;
+
+    } catch (error) {
+
+        console.error("Error updating product:", error);
+
+        throw error;
+    }
 };
+
+
+
+// ==========================================
+// TOGGLE PRODUCT STATUS
+// ==========================================
+
+export const toggleProductStatuses = async (productData) => {
+
+    try {
+
+        const query = `
+            UPDATE "LKP"."Product"
+            SET
+                "IsDisabled" = $1,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $2
+            WHERE "ProductId" = $3
+            RETURNING *;
+        `;
+
+        const values = [
+            productData.IsDisabled,
+            productData.UpdatedByUserName,
+            productData.ProductId
+        ];
+
+        const result = await pool.query(query, values);
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        console.error("Error toggling product status:", error);
+
+        throw error;
+    }
+};
+
 
 
 // ==========================================
@@ -115,22 +252,25 @@ export const updateProducts = async (productData) => {
 
 export const deleteProducts = async (productData) => {
 
-    const query = `
-        UPDATE "LKP"."Product"
-        SET
-            "isDisabled" = true,
-            "UpdatedAt" = CURRENT_TIMESTAMP,
-            "updatedByUserName" = $1
+    try {
 
-        WHERE "ProductId" = $2
-    `;
+        const query = `
+            DELETE FROM "LKP"."Product"
+            WHERE "ProductId" = $1
+        `;
 
-    const values = [
-        productData.UpdatedByUserName,
-        productData.ProductId
-    ];
+        const values = [
+            productData.ProductId
+        ];
 
-    const result = await pool.query(query, values);
+        const result = await pool.query(query, values);
 
-    return result.rowCount;
+        return result.rowCount;
+
+    } catch (error) {
+
+        console.error("Error deleting product:", error);
+
+        throw error;
+    }
 };

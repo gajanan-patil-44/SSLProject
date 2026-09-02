@@ -1,0 +1,26 @@
+info:
+  name: UpdateFiles
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/fileType/updatefiletype
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 3,
+          "FileTypeId": 1,
+          "FileTypeName": "PDF Document",
+          "Description": "Portable Document Format",
+          "UpdatedByUserName": "admin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

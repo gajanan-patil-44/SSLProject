@@ -1,5 +1,3 @@
-// src/config/navigation.js
-
 export const navigationConfig = [
   {
     title: "MASTER",
@@ -28,6 +26,11 @@ export const navigationConfig = [
         label: "Designations",
         icon: "UserBadge",
         path: "/master/designations"
+      },
+      {
+        label: "Roles & Permissions",
+        icon: "ShieldCheck",
+        path: "/master/roles"
       }
     ]
   },

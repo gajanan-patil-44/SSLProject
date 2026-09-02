@@ -1,0 +1,25 @@
+info:
+  name: addFiles
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/fileType/addfiletype
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 2,
+          "FileTypeName": "Excel",
+          "Description": "Excel spreadsheet file",
+          "CreatedByUserName": "admin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,26 @@
+info:
+  name: updateRoleStatusController
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://192.168.23.76:9004/verp-service/roleCreation/updateRoleStatus
+  body:
+    type: json
+    data: |-
+      {
+        "FlagId":6,
+        "RoleId": 5,
+        "IsDisabled":false
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIyLCJFbXBsb3llZUlkIjoiRU1QMTEiLCJMb2dpbk5hbWUiOiJhZG1pbjExIiwiRW1haWwiOiJhZG1pbjExQGV4YW1wbGUuY29tIiwiRGVzaWduYXRpb25JZCI6MSwiaWF0IjoxNzg4MzQzMjkyLCJleHAiOjE3ODgzODY0OTJ9.ArrBlM-WUsF6509-2l5OIxkX-x0V5qrRIQkthHLocYA
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

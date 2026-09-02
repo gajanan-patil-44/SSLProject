@@ -1,0 +1,24 @@
+info:
+  name: userdropdowns 4
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/userCreation/userdropdowns
+  body:
+    type: json
+    data: |-
+      {
+        "FlagId": 4,
+        "CompanyId": 1,
+        "DesignationId": 4
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

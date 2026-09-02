@@ -1,0 +1,24 @@
+info:
+  name: addRole
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/roleCreation/addRole
+  body:
+    type: json
+    data: |-
+      {
+        "RoleName": "Administrator",
+        "Role_Code": "hr",
+        "Description": "System Administrator",
+        "RequestUserName": "Praveen"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

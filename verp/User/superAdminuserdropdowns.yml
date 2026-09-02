@@ -1,0 +1,23 @@
+info:
+  name: superAdminuserdropdowns
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/userCreation/companyproductprojectdropdown
+  body:
+    type: json
+    data: |-
+      {
+      "FlagId": 3,
+        "CompanyProductId":1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
