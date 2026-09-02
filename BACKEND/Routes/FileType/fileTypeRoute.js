@@ -7,27 +7,17 @@ import {
     deleteFileTypeController,
     updateFileTypeStatusController
 } from "../../Controllers/FileType/FileTypeController.js";
-
+import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 const router = express.Router();
 
 // ==========================================================
 // FILE TYPE ROUTES
 // ==========================================================
-
-// FlagId = 1 -> Get File Types
-router.post("/getfiletypes", getFileTypesController);
-
-// FlagId = 2 -> Add File Type
-router.post("/addfiletype", addFileTypeController);
-
-// FlagId = 3 -> Update File Type
-router.post("/updatefiletype", updateFileTypeController);
-
-// FlagId = 4 -> Delete File Type
-router.post("/deletefiletype", deleteFileTypeController);
-
-// FlagId = 5 -> Update File Type Status
-router.post("/updatefiletypestatus", updateFileTypeStatusController);
+router.post("/getfiletypes", authenticateToken, getFileTypesController);
+router.post("/addfiletype", authenticateToken, addFileTypeController);
+router.post("/updatefiletype", authenticateToken, updateFileTypeController);
+router.post("/deletefiletype", authenticateToken, deleteFileTypeController);
+router.post("/updatefiletypestatus", authenticateToken, updateFileTypeStatusController);
 
 
 export default router;
