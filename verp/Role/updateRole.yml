@@ -1,7 +1,7 @@
 info:
   name: updateRole
   type: http
-  seq: 2
+  seq: 3
 
 http:
   method: POST
@@ -10,13 +10,12 @@ http:
     type: json
     data: |-
       {
-        "FlagId":3,
-        "RoleId": 4,
-        "CompanyId":1,
-        "RoleName": "Admi",
+        "RoleId": 5,
+        "RoleName": "Officer",
         "Description": "Officer responsible for processing application",
         "RequestUserName": "Praveen",
-        "Role_Code": "123",
+        "Role_Code": "OFFICER",
+        "IsDisabled": false,
         "UpdatedByUserName":"praveen"
       }
   auth: inherit
@@ -26,4 +25,3 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: true

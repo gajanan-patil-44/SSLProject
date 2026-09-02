@@ -1,0 +1,25 @@
+info:
+  name: addprodcut
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/productCreation/addProduct
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 2,
+          "ProductCode": "P001",
+          "ProductName": "Test Product",
+          "ProductDescription": "This is a test product",
+          "RequestUserName": "Praveen"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

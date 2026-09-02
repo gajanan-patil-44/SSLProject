@@ -10,8 +10,7 @@ http:
     type: json
     data: |-
       {
-        "FlagId":1,
-        "RoleId": 4
+        "RoleId": 3
       }
   auth: inherit
 

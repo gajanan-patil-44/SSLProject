@@ -49,6 +49,8 @@ __snapshots__/
 # Upload folders — ignore all uploads in BACKEND
 BACKEND/uploads/
 
+BOMS/uploads/
+
 
 
 

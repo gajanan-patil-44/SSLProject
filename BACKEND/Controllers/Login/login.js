@@ -8,7 +8,10 @@ import { findUserForLogin, updateFailedLogin, setTempBlock, clearTempBlock, rese
 // ==========================================================
 export const login = async (req, res) => {
     try {
+
         const { username, password } = req.body || {};
+
+
         // ======================================================
         // VALIDATION
         // ======================================================
@@ -35,14 +38,24 @@ export const login = async (req, res) => {
         // ======================================================
 
         const loginData = await findUserForLogin(String(username).trim());
-        if (!loginData || !loginData.user) {
+
+
+        if (
+            !loginData ||
+            !loginData.user
+        ) {
+
             return res.status(401).json({
                 success: false,
                 message: "Invalid login credentials"
             });
 
         }
+
+
         const user = loginData.user;
+
+
         // ======================================================
         // ACCOUNT STATUS
         // ======================================================
@@ -82,6 +95,7 @@ export const login = async (req, res) => {
         // ======================================================
 
         const passwordMatch = await bcrypt.compare(String(password), user.Password);
+
 
         if (!passwordMatch) {
             const attemptCount = await updateFailedLogin(user.UserId);
@@ -164,16 +178,26 @@ export const login = async (req, res) => {
         // ======================================================
 
         const userResponse = {
-            UserId: user.UserId,
-            EmployeeId: user.EmployeeId,
-            loginName: user.LoginName,
-            name: {
-                first: user.FirstName,
-                middle: user.MiddleName,
-                last: user.LastName
-            },
 
+            UserId: user.UserId,
+            loginName: user.LoginName,
+
+            name: {
+                first:
+                    user.FirstName,
+                middle:
+                    user.MiddleName,
+                last:
+                    user.LastName
+            },
             email: user.Email,
+            phone: user.PhoneNumber,
+            photo: {
+
+                url:
+                    `/api/users/${user.UserId}/photo`
+
+            },
 
             phone: user.PhoneNumber,
             designation: {
@@ -188,11 +212,16 @@ export const login = async (req, res) => {
         // ======================================================
         // RAW DATA FROM MODEL
         // ======================================================
+
         const companies = loginData.companies || [];
         const products = loginData.products || [];
         const projects = loginData.projects || [];
+
         const roles = loginData.roles || [];
-        const reportingManagers = loginData.reportingManager || [];
+
+        const reportingManagers =loginData.reportingManager || [];
+
+
         // ======================================================
         // BUILD COMPANY CONTEXT
         // ======================================================
