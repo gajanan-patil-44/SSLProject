@@ -23,54 +23,78 @@ class ErrorBoundary extends React.Component {
 // ----------------------------------------------------------------------
 const DraggableWrapper = ({ id, activeId, position, onPositionChange, onDelete, children }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef(null);
-  const startPos = useRef({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const wrapperRef = useRef(null);
+  const startPos = useRef({ x: 0, y: 0, w: 0, h: 0 });
   const startMouse = useRef({ x: 0, y: 0 });
 
-  const handleMouseDown = (e) => {
-    if (e.button !== 0 || !e.target.closest('.drag-handle')) return;
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDragStart = (clientX, clientY) => {
     setIsDragging(true);
     startPos.current = { ...position };
-    startMouse.current = { x: e.clientX, y: e.clientY };
+    startMouse.current = { x: clientX, y: clientY };
+  };
+
+  const handleResizeStart = (clientX, clientY) => {
+    setIsResizing(true);
+    startPos.current = { 
+      x: position.x, 
+      y: position.y, 
+      w: wrapperRef.current.offsetWidth - 16, // account for p-2 (16px total)
+      h: wrapperRef.current.offsetHeight - 16
+    };
+    if (position.w) startPos.current.w = position.w;
+    if (position.h) startPos.current.h = position.h;
+    startMouse.current = { x: clientX, y: clientY };
   };
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging && !isResizing) return;
 
-    const handleMouseMove = (e) => {
-      const dx = e.clientX - startMouse.current.x;
-      const dy = e.clientY - startMouse.current.y;
-      onPositionChange(id, {
-        x: startPos.current.x + dx,
-        y: startPos.current.y + dy
-      });
+    const handleMove = (clientX, clientY) => {
+      const dx = clientX - startMouse.current.x;
+      const dy = clientY - startMouse.current.y;
+      
+      if (isDragging) {
+        onPositionChange(id, { ...position, x: startPos.current.x + dx, y: startPos.current.y + dy });
+      } else if (isResizing) {
+        onPositionChange(id, { ...position, w: Math.max(20, startPos.current.w + dx), h: Math.max(20, startPos.current.h + dy) });
+      }
     };
 
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
+    const handleMouseMove = (e) => handleMove(e.clientX, e.clientY);
+    const handleTouchMove = (e) => { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); };
+    const handleUp = () => { setIsDragging(false); setIsResizing(false); };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('mouseup', handleUp);
+      document.addEventListener('touchend', handleUp);
+    }
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('mouseup', handleUp);
+      document.removeEventListener('touchend', handleUp);
     };
-  }, [isDragging, id, onPositionChange]);
+  }, [isDragging, isResizing, id, onPositionChange, position]);
 
   const isActive = activeId === id;
+  const style = { left: position.x, top: position.y };
+  if (position.w) style.width = position.w + 16; // Add padding to wrapper width
+  if (position.h) style.height = position.h + 16;
+  if (position.fontSize) style.fontSize = `${position.fontSize}px`;
 
   return (
     <div 
-      ref={dragRef}
-      className={`absolute group transition-shadow rounded-md p-2 -m-2 ${isActive ? 'ring-2 ring-primary/40 bg-primary/5 z-20' : 'hover:ring-1 hover:ring-primary/20 hover:bg-primary/5 z-10'} print:ring-0 print:bg-transparent print:p-0 print:m-0`}
-      style={{ left: position.x, top: position.y }}
+      ref={wrapperRef}
+      className={`absolute group transition-shadow rounded-md p-2 -m-2 ${isActive ? 'ring-2 ring-primary/40 bg-primary/5 z-20' : 'hover:ring-1 hover:ring-primary/20 hover:bg-primary/5 z-10'} print:ring-0 print:bg-transparent print:p-0 print:m-0 flex flex-col`}
+      style={style}
     >
       <div 
-        className={`drag-handle absolute -top-3 -left-3 w-6 h-6 bg-white border border-slate-300 rounded shadow-sm flex items-center justify-center cursor-move text-slate-400 hover:text-primary hover:border-primary opacity-0 transition-opacity print:hidden z-30 ${isActive || isDragging ? 'opacity-100' : 'group-hover:opacity-100'}`}
-        onMouseDown={handleMouseDown}
+        className={`absolute -top-3 -left-3 w-6 h-6 bg-white border border-slate-300 rounded shadow-sm flex items-center justify-center cursor-move text-slate-400 hover:text-primary hover:border-primary opacity-0 transition-opacity print:hidden z-30 ${isActive || isDragging ? 'opacity-100' : 'group-hover:opacity-100'}`}
+        onMouseDown={(e) => { if (e.button === 0) { e.preventDefault(); e.stopPropagation(); handleDragStart(e.clientX, e.clientY); } }}
+        onTouchStart={(e) => { e.stopPropagation(); handleDragStart(e.touches[0].clientX, e.touches[0].clientY); }}
         title="Drag to move"
       >
         <GripHorizontal className="w-3 h-3" />
@@ -82,10 +106,19 @@ const DraggableWrapper = ({ id, activeId, position, onPositionChange, onDelete, 
           <button onClick={(e) => { e.stopPropagation(); onDelete(id); }} className="absolute -top-3 -right-3 w-6 h-6 bg-red-50 text-red-500 border border-red-200 rounded-full flex items-center justify-center shadow-sm hover:bg-red-500 hover:text-white transition-colors z-30 print:hidden" title="Delete Component">
              &times;
           </button>
+          
+          <div 
+            className="absolute -bottom-2 -right-2 w-5 h-5 bg-white border border-slate-300 rounded shadow-sm flex items-center justify-center cursor-se-resize text-slate-400 hover:text-primary hover:border-primary z-30 print:hidden"
+            onMouseDown={(e) => { if (e.button === 0) { e.preventDefault(); e.stopPropagation(); handleResizeStart(e.clientX, e.clientY); } }}
+            onTouchStart={(e) => { e.stopPropagation(); handleResizeStart(e.touches[0].clientX, e.touches[0].clientY); }}
+            title="Drag to resize"
+          >
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 15 21 21 15 21"></polyline><line x1="21" y1="21" x2="15" y2="15"></line></svg>
+          </div>
         </>
       )}
       
-      <div className={isDragging ? 'pointer-events-none' : ''}>
+      <div className={`w-full h-full flex-1 relative ${isDragging || isResizing ? 'pointer-events-none' : ''}`}>
          {children}
       </div>
     </div>
@@ -110,7 +143,7 @@ const InlineEditable = ({ id, onFocus, value, onChange, className, tagName = 'di
       suppressContentEditableWarning 
       onFocus={() => onFocus(id)}
       onBlur={handleBlur} 
-      className={`${className} outline-none cursor-text min-h-[1em] min-w-[2em] empty:before:content-[attr(placeholder)] empty:before:text-slate-300 empty:before:pointer-events-none custom-editor resizable-content`}
+      className={`${className} outline-none cursor-text min-h-[1em] min-w-[2em] w-full h-full empty:before:content-[attr(placeholder)] empty:before:text-slate-300 empty:before:pointer-events-none custom-editor`}
       placeholder={placeholder}
       dangerouslySetInnerHTML={{__html: value}}
       style={{ whiteSpace: 'pre-wrap', overflow: 'hidden' }}
@@ -118,16 +151,16 @@ const InlineEditable = ({ id, onFocus, value, onChange, className, tagName = 'di
   );
 };
 
-const ImageUploader = ({ id, label = "Add Image", image, imageSize, onUpload, onFocus }) => {
+const ImageUploader = ({ id, label = "Add Image", image, onUpload, onFocus }) => {
   const fileInputRef = useRef(null);
   const isHeaderFooter = id === 'header' || id === 'footer';
   
   return (
-    <div className="cursor-pointer resizable-content relative group" style={{ overflow: 'hidden', minWidth: '50px', minHeight: '50px', width: isHeaderFooter ? '800px' : `${Math.max(120, imageSize * 1.5)}px`, height: `${imageSize}px` }} onClick={(e) => { e.stopPropagation(); onFocus(id); }}>
+    <div className="cursor-pointer relative group w-full h-full min-w-[50px] min-h-[50px] overflow-hidden" onClick={(e) => { e.stopPropagation(); onFocus(id); }}>
        {image ? (
           <img src={image} alt={label} className={`object-contain ${isHeaderFooter ? 'w-full h-full object-cover' : 'w-full h-full'}`} />
        ) : (
-          <div className="border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col gap-2 items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-widest rounded print:hidden w-full h-full text-center p-2">
+          <div className="border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col gap-2 items-center justify-center text-slate-400 text-[10px] font-bold uppercase tracking-widest rounded print:hidden w-full h-full text-center p-2 min-h-[60px]">
              <ImageIcon className="w-6 h-6 opacity-50" />
              {label}
           </div>
@@ -185,15 +218,15 @@ export default function LetterBuilderView() {
   ];
 
   const [positions, setPositions] = useState({
-    logo: { x: 48, y: 48 },
-    header: { x: 0, y: 0 },
-    footer: { x: 0, y: 950 },
+    logo: { x: 48, y: 48, w: 120, h: 80 },
+    header: { x: 0, y: 0, w: 800, h: 100 },
+    footer: { x: 0, y: 950, w: 800, h: 100 },
     companyName: { x: 48, y: 150 },
     contactInfo: { x: 600, y: 48 },
     date: { x: 48, y: 220 },
     recipient: { x: 48, y: 270 },
     subject: { x: 48, y: 380 },
-    content: { x: 48, y: 430 },
+    content: { x: 48, y: 430, w: 700, h: 200 },
     signature: { x: 48, y: 800 }
   });
 
@@ -329,10 +362,10 @@ export default function LetterBuilderView() {
         />
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-180px)] print:h-auto print:block">
+      <div className="flex flex-col xl:flex-row gap-6 xl:h-[calc(100vh-180px)] print:h-auto print:block">
         
         {/* Settings Panel */}
-        <div className="w-full xl:w-[320px] shrink-0 flex flex-col h-full print:hidden space-y-4 sidebar-panel overflow-y-auto">
+        <div className="w-full xl:w-[320px] shrink-0 flex flex-col xl:h-full print:hidden space-y-4 sidebar-panel xl:overflow-y-auto">
 
           <Card className="p-5 bg-slate-50 dark:bg-slate-900/40 shrink-0 flex-1 border-primary/20 flex flex-col">
              <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
@@ -358,25 +391,28 @@ export default function LetterBuilderView() {
                })}
              </div>
 
-             {['logo', 'header', 'footer'].includes(activeId) && (
+             {activeId && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                    <div className="font-bold text-sm text-primary mb-4">Edit {activeLabel}</div>
-                   <div>
-                     <div className="flex justify-between items-center mb-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Image Size</label>
-                        <span className="text-xs text-slate-800 dark:text-slate-200 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">{formData[`${activeId}Size`]}px</span>
+                   
+                   {['logo', 'header', 'footer'].includes(activeId) ? (
+                     <div>
+                       <div className="flex justify-between items-center mb-1">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Image Width</label>
+                          <span className="text-xs text-slate-800 dark:text-slate-200 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">{positions[activeId]?.w || 120}px</span>
+                       </div>
+                       <input type="range" min="30" max="800" value={positions[activeId]?.w || 120} onChange={(e) => handlePositionChange(activeId, { ...positions[activeId], w: parseInt(e.target.value) })} className="w-full accent-primary mt-2" />
                      </div>
-                     <input type="range" min="30" max="600" value={formData[`${activeId}Size`]} onChange={(e) => handleInputChange(`${activeId}Size`, e.target.value)} className="w-full accent-primary mt-2" />
-                   </div>
-                </div>
-             )}
-
-             {activeId && !['logo', 'header', 'footer'].includes(activeId) && (
-                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                   <div className="text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                      Editing: <strong className="text-primary">{activeLabel}</strong>
-                      <div className="text-xs text-slate-400 mt-2">Use the floating toolbar to format text. Drag edges to resize.</div>
-                   </div>
+                   ) : (
+                     <div>
+                       <div className="flex justify-between items-center mb-1">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Text Size</label>
+                          <span className="text-xs text-slate-800 dark:text-slate-200 font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">{positions[activeId]?.fontSize || formData.fontSize}px</span>
+                       </div>
+                       <input type="range" min="10" max="120" value={positions[activeId]?.fontSize || formData.fontSize} onChange={(e) => handlePositionChange(activeId, { ...positions[activeId], fontSize: parseInt(e.target.value) })} className="w-full accent-primary mt-2" />
+                       <div className="text-xs text-slate-400 mt-4 leading-relaxed">Use the floating toolbar to format text. Drag the corner handle to adjust the bounding box.</div>
+                     </div>
+                   )}
                 </div>
              )}
 
@@ -408,45 +444,49 @@ export default function LetterBuilderView() {
         </div>
 
         {/* Live Editable Document Panel */}
-        <div className="flex-1 h-full overflow-y-auto bg-slate-200/50 dark:bg-slate-950 p-4 md:p-8 flex flex-col items-center print:p-0 print:bg-white print:border-none print:shadow-none print:h-auto print:overflow-visible print:block print:w-full relative" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+        <div className="flex-1 h-[70vh] xl:h-full flex flex-col bg-slate-200/50 dark:bg-slate-950 relative print:h-auto print:bg-white" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
           
-          {/* Universal Floating Toolbar */}
-          <div className={`global-toolbar sticky top-0 mb-6 bg-slate-900 text-white rounded-full shadow-2xl p-1.5 flex items-center gap-1 z-50 print:hidden transition-all duration-300 mx-auto transform ${activeId && activeId !== 'logo' ? 'translate-y-0 opacity-100 visible' : '-translate-y-4 opacity-0 invisible'}`}>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('bold'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full font-bold flex items-center justify-center" title="Bold"><Bold className="w-4 h-4"/></button>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('italic'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full italic font-serif flex items-center justify-center" title="Italic"><Italic className="w-4 h-4"/></button>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('underline'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full underline flex items-center justify-center" title="Underline"><Underline className="w-4 h-4"/></button>
-             <div className="w-px h-5 bg-slate-700 mx-2"></div>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('justifyLeft'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Align Left"><AlignLeft className="w-4 h-4"/></button>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('justifyCenter'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Align Center"><AlignCenter className="w-4 h-4"/></button>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('justifyRight'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Align Right"><AlignRight className="w-4 h-4"/></button>
-             <div className="w-px h-5 bg-slate-700 mx-2"></div>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('insertUnorderedList'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Bullet List"><List className="w-4 h-4"/></button>
-             <button type="button" onMouseDown={e => { e.preventDefault(); exec('insertOrderedList'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center text-xs" title="Numbered List"><ListOrdered className="w-4 h-4"/></button>
+          {/* Universal Floating Toolbar (Absolute positioned to stay on screen) */}
+          <div className="absolute top-4 left-0 w-full flex justify-center z-50 print:hidden pointer-events-none">
+             <div className={`global-toolbar pointer-events-auto bg-slate-900 text-white rounded-full shadow-2xl p-1.5 flex items-center gap-1 transition-all duration-300 transform ${activeId && activeId !== 'logo' ? 'translate-y-0 opacity-100 visible' : '-translate-y-4 opacity-0 invisible'}`}>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('bold'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full font-bold flex items-center justify-center" title="Bold"><Bold className="w-4 h-4"/></button>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('italic'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full italic font-serif flex items-center justify-center" title="Italic"><Italic className="w-4 h-4"/></button>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('underline'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full underline flex items-center justify-center" title="Underline"><Underline className="w-4 h-4"/></button>
+               <div className="w-px h-5 bg-slate-700 mx-2"></div>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('justifyLeft'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Align Left"><AlignLeft className="w-4 h-4"/></button>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('justifyCenter'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Align Center"><AlignCenter className="w-4 h-4"/></button>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('justifyRight'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Align Right"><AlignRight className="w-4 h-4"/></button>
+               <div className="w-px h-5 bg-slate-700 mx-2"></div>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('insertUnorderedList'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center" title="Bullet List"><List className="w-4 h-4"/></button>
+               <button type="button" onMouseDown={e => { e.preventDefault(); exec('insertOrderedList'); }} className="p-2 hover:bg-slate-700 hover:text-primary transition-colors rounded-full flex items-center justify-center text-xs" title="Numbered List"><ListOrdered className="w-4 h-4"/></button>
+             </div>
           </div>
 
-          {/* Absolute Canvas Document Sheet */}
-          <div 
-             onDrop={handleDrop}
-             onDragOver={handleDragOver}
-             className={`bg-white border border-slate-200 shadow-lg w-[800px] min-h-[1056px] print:border-none print:shadow-none print:m-0 print:w-full print:max-w-none text-slate-800 relative transition-colors ${formData.fontFamily}`} 
-             style={{ width: '800px', minHeight: '1056px', fontSize: `${formData.fontSize}px` }}
-          >
+          <div className="flex-1 overflow-auto p-4 pt-20 md:p-8 md:pt-24 print:p-0 print:overflow-visible text-center whitespace-nowrap">
+            <div className="inline-block text-left whitespace-normal print:block print:w-full">
+              {/* Absolute Canvas Document Sheet */}
+              <div 
+                 onDrop={handleDrop}
+                 onDragOver={handleDragOver}
+                 className={`bg-white border border-slate-200 shadow-lg w-[800px] min-h-[1056px] print:border-none print:shadow-none print:m-0 print:w-full print:max-w-none text-slate-800 relative transition-colors ${formData.fontFamily}`} 
+                 style={{ width: '800px', minHeight: '1056px', fontSize: `${formData.fontSize}px` }}
+              >
              
              {visibleComponents.includes('header') && (
              <DraggableWrapper id="header" activeId={activeId} position={positions.header} onPositionChange={handlePositionChange} onDelete={removeComponent}>
-               <ImageUploader id="header" label="Add Header Image" onFocus={setActiveId} image={formData.header} imageSize={formData.headerSize} onUpload={handleImageUpload} />
+               <ImageUploader id="header" label="Add Header Image" onFocus={setActiveId} image={formData.header} onUpload={handleImageUpload} />
              </DraggableWrapper>
              )}
 
              {visibleComponents.includes('footer') && (
              <DraggableWrapper id="footer" activeId={activeId} position={positions.footer} onPositionChange={handlePositionChange} onDelete={removeComponent}>
-               <ImageUploader id="footer" label="Add Footer Image" onFocus={setActiveId} image={formData.footer} imageSize={formData.footerSize} onUpload={handleImageUpload} />
+               <ImageUploader id="footer" label="Add Footer Image" onFocus={setActiveId} image={formData.footer} onUpload={handleImageUpload} />
              </DraggableWrapper>
              )}
 
              {visibleComponents.includes('logo') && (
              <DraggableWrapper id="logo" activeId={activeId} position={positions.logo} onPositionChange={handlePositionChange} onDelete={removeComponent}>
-               <ImageUploader id="logo" label="Add Logo" onFocus={setActiveId} image={formData.logo} imageSize={formData.logoSize} onUpload={handleImageUpload} />
+               <ImageUploader id="logo" label="Add Logo" onFocus={setActiveId} image={formData.logo} onUpload={handleImageUpload} />
              </DraggableWrapper>
              )}
 
@@ -512,10 +552,9 @@ export default function LetterBuilderView() {
                .custom-editor b, .custom-editor strong { font-weight: bold; }
                .custom-editor i, .custom-editor em { font-style: italic; }
                .custom-editor u { text-decoration: underline; }
-               
-               .resizable-content { resize: none; }
-               .group:hover .resizable-content, .ring-2 .resizable-content { resize: both; }
              `}} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
