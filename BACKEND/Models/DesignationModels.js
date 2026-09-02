@@ -1,6 +1,7 @@
 import { pool } from "../Config/db.js";
 
 
+
 // ======================================================
 // GET ALL DESIGNATIONS
 // ======================================================
@@ -25,8 +26,10 @@ export const getAllDesignations = async () => {
             FROM "LKP"."CompanyDesignation" cd
             INNER JOIN "LKP"."Company" c
                 ON c."CompanyId" = cd."CompanyId"
-            WHERE cd."IsDisabled" = false
-            ORDER BY cd."CompanyDesignationId" ASC
+            WHERE
+                cd."IsDisabled" = false
+            ORDER BY
+                cd."CompanyDesignationId" ASC
         `;
 
         const result = await pool.query(query);
@@ -45,6 +48,7 @@ export const getAllDesignations = async () => {
 };
 
 
+
 // ======================================================
 // GET COMPANIES FOR ADD DROPDOWN
 // ======================================================
@@ -59,8 +63,10 @@ export const getCompaniesForDropdown = async () => {
                 "CompanyName",
                 "CompanyCode"
             FROM "LKP"."Company"
-            WHERE "IsDisabled" = false
-            ORDER BY "CompanyName" ASC
+            WHERE
+                "IsDisabled" = false
+            ORDER BY
+                "CompanyName" ASC
         `;
 
         const result = await pool.query(query);
@@ -79,11 +85,14 @@ export const getCompaniesForDropdown = async () => {
 };
 
 
+
 // ======================================================
 // CHECK COMPANY EXISTS AND IS ACTIVE
 // ======================================================
 
-export const checkCompanyExists = async (CompanyId) => {
+export const checkCompanyExists = async (
+    CompanyId
+) => {
 
     try {
 
@@ -117,8 +126,12 @@ export const checkCompanyExists = async (CompanyId) => {
 };
 
 
+
 // ======================================================
 // CHECK DUPLICATE DESIGNATION FOR ADD
+//
+// STRICT UNIQUENESS:
+// ACTIVE + INACTIVE BOTH COUNT
 // ======================================================
 
 export const checkDesignationData = async (
@@ -139,7 +152,6 @@ export const checkDesignationData = async (
             FROM "LKP"."CompanyDesignation"
             WHERE
                 "CompanyId" = $1
-                AND "IsDisabled" = false
                 AND (
                     LOWER(TRIM("DesignationName")) =
                         LOWER(TRIM($2))
@@ -172,11 +184,14 @@ export const checkDesignationData = async (
 };
 
 
+
 // ======================================================
 // ADD DESIGNATION
 // ======================================================
 
-export const addDesignation = async (designationData) => {
+export const addDesignation = async (
+    designationData
+) => {
 
     try {
 
@@ -245,6 +260,7 @@ export const addDesignation = async (designationData) => {
 };
 
 
+
 // ======================================================
 // GET COMPANIES FOR EDIT DROPDOWN
 // ======================================================
@@ -259,8 +275,10 @@ export const getCompaniesForEditDropdown = async () => {
                 "CompanyName",
                 "CompanyCode"
             FROM "LKP"."Company"
-            WHERE "IsDisabled" = false
-            ORDER BY "CompanyName" ASC
+            WHERE
+                "IsDisabled" = false
+            ORDER BY
+                "CompanyName" ASC
         `;
 
         const result = await pool.query(query);
@@ -277,6 +295,7 @@ export const getCompaniesForEditDropdown = async () => {
         throw error;
     }
 };
+
 
 
 // ======================================================
@@ -328,8 +347,14 @@ export const getDesignationById = async (
 };
 
 
+
 // ======================================================
 // CHECK DUPLICATE DESIGNATION FOR UPDATE
+//
+// STRICT UNIQUENESS:
+// ACTIVE + INACTIVE BOTH COUNT
+//
+// CURRENT RECORD IS EXCLUDED
 // ======================================================
 
 export const checkDesignationExistsForUpdate = async (
@@ -352,7 +377,6 @@ export const checkDesignationExistsForUpdate = async (
             WHERE
                 "CompanyId" = $1
                 AND "CompanyDesignationId" <> $2
-                AND "IsDisabled" = false
                 AND (
                     LOWER(TRIM("DesignationName")) =
                         LOWER(TRIM($3))
@@ -386,8 +410,12 @@ export const checkDesignationExistsForUpdate = async (
 };
 
 
+
 // ======================================================
 // UPDATE DESIGNATION
+//
+// ONLY UPDATES THE RECORD
+// NO DUPLICATE VALIDATION HERE
 // ======================================================
 
 export const editDesignation = async (
@@ -455,6 +483,7 @@ export const editDesignation = async (
 };
 
 
+
 // ======================================================
 // TOGGLE DESIGNATION STATUS
 // ======================================================
@@ -513,6 +542,7 @@ export const toggleDesignationStatuses = async (
         throw error;
     }
 };
+
 
 
 // ======================================================

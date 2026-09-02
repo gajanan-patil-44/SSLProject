@@ -14,7 +14,6 @@ import Login from "../Routes/Login/login.js"
 const applyRoutes = (app) => {
 app.use(backendHelpers.USER_CREATION, UserRoutes);
 app.use(backendHelpers.LOGIN, Login);
-
 app.use(backendHelpers.ROLES_CREATION, RoleRoutes);
 app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);
 app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);
