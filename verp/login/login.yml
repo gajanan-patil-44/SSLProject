@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-          "username": "8888888888",
+          "username": "admin11",
           "password": "admin11@123"
       }
   auth: inherit
@@ -20,4 +20,3 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: false

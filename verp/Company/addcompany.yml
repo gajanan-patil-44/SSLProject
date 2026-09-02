@@ -1,23 +1,26 @@
 info:
-  name: addcompany
+  name: addCompany
   type: http
-  seq: 2
+  seq: 1
 
 http:
   method: POST
   url: http://localhost:9004/verp-service/companyCreation/addCompany
   body:
     type: json
-    data: |-
-      {
-          "flagId": 2,
-          "CompanyName": "ABC Technologies",
-          "CompanyCode": "ABCTECH001",
-          "RequestUserName": "Praveen",
-          "Email": "abc@technology.com",
-          "PhoneNumber": "9876543210",
-          "Address": "Bangalore, Karnataka"
-      }
+    data: |2-
+      
+          {
+            "flagId": 2,
+              "CompanyName": " Tech",
+              "CompanyCode": "ABC_003",
+              "CreatedByUserName": "hithin",
+              "UpdatedByUserName": "hithin",
+              "IsDisabled": false,
+              "Email": "c@technology.com",
+              "PhoneNumber": "8876543260",
+              "Address": "Bangalore, Karnataka"
+          }
   auth: inherit
 
 settings:
