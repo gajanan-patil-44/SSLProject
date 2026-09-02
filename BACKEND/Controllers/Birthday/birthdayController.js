@@ -1,6 +1,6 @@
-import { processBirthdayEmails} from "../../Services/birthdayService.js";
+import { processBirthdayEmails } from "../../Services/birthdayService.js";
 
-import {getBirthdayMailLogs, getBirthdayMailLogById} from "../../Models/BirthdayModels.js";
+import { getBirthdayMailLogs, getBirthdayMailLogById } from "../../Models/BirthdayModels.js";
 
 
 // ==========================================================
@@ -11,7 +11,7 @@ export const processBirthdayMailController = async (req, res) => {
 
     try {
 
-        const result =await processBirthdayEmails();
+        const result = await processBirthdayEmails();
 
 
         if (!result.success) {
@@ -55,7 +55,8 @@ export const getBirthdayMailLogsController = async (req, res) => {
 
     try {
 
-        const logs =await getBirthdayMailLogs();
+        const logs = await getBirthdayMailLogs();
+
 
         return res.status(200).json({
 

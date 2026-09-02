@@ -1,0 +1,27 @@
+info:
+  name: addcompany
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/companyCreation/addCompany
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 2,
+          "CompanyName": "ABC Technologies",
+          "CompanyCode": "ABCTECH001",
+          "RequestUserName": "Praveen",
+          "Email": "abc@technology.com",
+          "PhoneNumber": "9876543210",
+          "Address": "Bangalore, Karnataka"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

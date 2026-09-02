@@ -5,12 +5,20 @@ info:
 
 http:
   method: POST
+<<<<<<< HEAD
   url: http://192.168.23.73:9004/verp-service/companyCreation/getCompany
+=======
+  url: http://localhost:9004/verp-service/companyCreation/getCompany
+>>>>>>> 6036412146d342267cf18a73c0e3cbb5ae120acc
   body:
     type: json
     data: |-
       {
+<<<<<<< HEAD
         "flagId":""
+=======
+        "flagId" : 1
+>>>>>>> 6036412146d342267cf18a73c0e3cbb5ae120acc
       }
   auth: inherit
 

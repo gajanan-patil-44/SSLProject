@@ -1,7 +1,11 @@
 info:
   name: Company
   type: folder
+<<<<<<< HEAD
   seq: 1
+=======
+  seq: 3
+>>>>>>> 6036412146d342267cf18a73c0e3cbb5ae120acc
 
 request:
   auth: inherit

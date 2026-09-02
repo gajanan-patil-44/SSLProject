@@ -10,7 +10,7 @@ export const getAllProjects = async () => {
     try {
 
         const query = `
-            SELECT
+               SELECT
                 PR."ProjectId",
                 PR."CompanyProductId",
 
@@ -21,29 +21,28 @@ export const getAllProjects = async () => {
                 P."ProductName",
 
                 PR."ProjectName",
-                PR."ProjectCode",
+                PR."Description",
                 PR."IsDisabled",
                 PR."Description",
 
                 PR."CreatedAt",
                 PR."UpdatedAt",
-
-                PR."CreatedByUserId",
-                PR."UpdatedByUserId"
-
+				U."FirstName" AS "CreatedByUserName"
+                
             FROM "LKP"."Project" PR
 
             INNER JOIN "LKP"."CompanyProduct" CP
-                ON PR."CompanyProductId" =
-                   CP."CompanyProductId"
+                ON PR."CompanyProductId" = CP."CompanyProductId"
 
             INNER JOIN "LKP"."Company" C
-                ON CP."CompanyId" =
-                   C."CompanyId"
+                ON CP."CompanyId" = C."CompanyId"
 
             INNER JOIN "LKP"."Product" P
-                ON CP."ProductId" =
-                   P."ProductId"
+                ON CP."ProductId" = P."ProductId"
+				
+			INNER JOIN "DATA"."User" U
+                ON PR."CreatedByUserId" = U."UserId"
+
 
             ORDER BY
                 PR."CreatedAt" DESC;
@@ -74,31 +73,15 @@ export const getCompanyProductsForDropdown =async () => {
             const query = `
                 SELECT
                     CP."CompanyProductId",
-
-                    CP."CompanyId",
-                    C."CompanyName",
-
-                    CP."ProductId",
                     P."ProductName"
-
+					
                 FROM "LKP"."CompanyProduct" CP
-
-                INNER JOIN "LKP"."Company" C
-                    ON CP."CompanyId" =
-                       C."CompanyId"
-
                 INNER JOIN "LKP"."Product" P
-                    ON CP."ProductId" =
-                       P."ProductId"
-
+                    ON CP."ProductId" = P."ProductId"
                 WHERE CP."IsDisabled" = false
-
-                AND C."IsDisabled" = false
-
                 AND P."IsDisabled" = false
 
                 ORDER BY
-                    C."CompanyName",
                     P."ProductName";
             `;
 
