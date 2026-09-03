@@ -185,11 +185,11 @@ const companyResult = await pool.query(companyQuery, [user.UserId]);
     `;
 
 
-    const productResult =
-        await pool.query(
-            productQuery,
-            [user.UserId]
-        );
+    // const productResult =
+    //     await pool.query(
+    //         productQuery,
+    //         [user.UserId]
+    //     );
 
     const productResult =
         await pool.query(
