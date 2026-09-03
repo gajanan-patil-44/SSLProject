@@ -29,7 +29,7 @@ export default function PagesView() {
   const [email, setEmail] = useState('andrew@vishvin-erp.com');
   const [password, setPassword] = useState('password123');
   const [chartPeriod, setChartPeriod] = useState('Weekly');
-  
+
   const theme = useERPStore((state) => state.theme);
   const setTheme = useERPStore((state) => state.setTheme);
 
@@ -99,16 +99,16 @@ export default function PagesView() {
 
     return (
       <div className="min-h-screen w-full flex flex-col md:flex-row bg-white dark:bg-slate-950 font-sans">
-        
+
         {/* ========================================== */}
         {/* LEFT COLUMN: Clean Form Interface         */}
         {/* ========================================== */}
         <div className="w-full md:w-1/2 lg:w-7/12 xl:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
-          
+
           {/* Top Brand Header */}
           <div className="flex items-center justify-between w-full">
-            <div 
-              className="flex items-center gap-3 cursor-pointer select-none group" 
+            <div
+              className="flex items-center gap-3 cursor-pointer select-none group"
               onClick={() => navigate('/dashboard')}
             >
               <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 border border-teal-500/20 flex items-center justify-center p-2 shrink-0 shadow-xs group-hover:border-teal-500/40 transition-all">
@@ -122,7 +122,7 @@ export default function PagesView() {
 
           {/* Center Form Section */}
           <div className="w-full max-w-[400px] mx-auto my-auto py-8">
-            
+
             {/* LOGIN VIEW */}
             {isLogin && (
               <div className="space-y-6">
@@ -146,7 +146,7 @@ export default function PagesView() {
                   {/* Username / Email Field */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                      Username or Email
+                      Username or Email or PhoneNo
                     </label>
                     <input
                       type="text"
@@ -245,7 +245,7 @@ export default function PagesView() {
                     className="flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs hover:border-slate-300"
                   >
                     <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                     </svg>
                     <span>Facebook</span>
                   </button>
@@ -387,7 +387,7 @@ export default function PagesView() {
                     className="flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs hover:border-slate-300"
                   >
                     <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                     </svg>
                     <span>Facebook</span>
                   </button>
@@ -547,7 +547,7 @@ export default function PagesView() {
         {/* RIGHT COLUMN: Rich Deep Teal Showcase (SS) */}
         {/* ========================================== */}
         <div className="w-full md:w-1/2 lg:w-5/12 xl:w-1/2 relative bg-[#04333d] dark:bg-[#021f26] text-white p-8 sm:p-12 lg:p-14 xl:p-16 flex flex-col justify-between overflow-hidden min-h-screen">
-          
+
           {/* Subtle Geometric Square Mosaics (Top-Right & Bottom-Left) */}
           <div className="absolute top-4 right-4 grid grid-cols-4 gap-2.5 opacity-25 pointer-events-none">
             <div className="w-7 h-7 rounded-md bg-white/40"></div>
@@ -574,7 +574,7 @@ export default function PagesView() {
 
           {/* Center Showcase Mockup Cards (Exact visual recreation from screenshot) */}
           <div className="relative my-auto w-full max-w-[440px] mx-auto py-6">
-            
+
             {/* Primary Analytics Card */}
             <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-800 w-full max-w-[400px]">
               {/* Card Header with Tabs */}
@@ -586,9 +586,8 @@ export default function PagesView() {
                       key={t}
                       type="button"
                       onClick={() => setChartPeriod(t)}
-                      className={`px-2 py-0.5 rounded-md font-medium cursor-pointer transition-all ${
-                        chartPeriod === t ? 'bg-white text-slate-800 shadow-xs' : 'hover:text-slate-600'
-                      }`}
+                      className={`px-2 py-0.5 rounded-md font-medium cursor-pointer transition-all ${chartPeriod === t ? 'bg-white text-slate-800 shadow-xs' : 'hover:text-slate-600'
+                        }`}
                     >
                       {t}
                     </button>

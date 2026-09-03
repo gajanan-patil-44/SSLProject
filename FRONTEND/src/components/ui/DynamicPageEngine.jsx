@@ -17,11 +17,14 @@ export const DynamicListPage = ({
   searchPlaceholder = 'Search...',
   fetchDataFn,
   deleteDataFn,
+  toggleStatusFn,
   onAddClick,
   onEditClick,
   onViewClick,
+  onToggleStatusClick,
   actions,
-  breadcrumbs
+  breadcrumbs,
+  refreshKey
 }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,16 +46,32 @@ export const DynamicListPage = ({
 
   useEffect(() => {
     loadData();
-  }, [fetchDataFn]);
+  }, [fetchDataFn, refreshKey]);
+
+  const handleToggleStatus = async (record) => {
+    if (onToggleStatusClick) {
+      return onToggleStatusClick(record);
+    }
+    if (toggleStatusFn) {
+      try {
+        const isDisabled = record.IsDisabled === true || record.status === 'Inactive' || record.status === 'Disabled';
+        const newIsDisabled = !isDisabled;
+        await toggleStatusFn(record, newIsDisabled);
+        await loadData();
+      } catch (e) {
+        console.error("Failed to toggle status:", e);
+      }
+    }
+  };
 
   const handleDeleteConfirm = async () => {
     if (!deleteRecord || !deleteDataFn) return;
     setDeleteLoading(true);
     try {
-      await deleteDataFn(deleteRecord.id || deleteRecord.employeeId || deleteRecord.key);
+      const targetKey = deleteRecord.CompanyProductId || deleteRecord.ProductId || deleteRecord.RoleId || deleteRecord.id || deleteRecord.employeeId || deleteRecord.key;
+      await deleteDataFn(deleteRecord);
       setData(prev => prev.filter(item => {
-        const itemKey = item.id || item.employeeId || item.key;
-        const targetKey = deleteRecord.id || deleteRecord.employeeId || deleteRecord.key;
+        const itemKey = item.CompanyProductId || item.ProductId || item.RoleId || item.id || item.employeeId || item.key;
         return itemKey !== targetKey;
       }));
       setDeleteRecord(null);
@@ -81,6 +100,7 @@ export const DynamicListPage = ({
         onViewClick={onViewClick}
         onEditClick={onEditClick}
         onDeleteClick={deleteDataFn ? (row) => setDeleteRecord(row) : null}
+        onToggleStatusClick={toggleStatusFn || onToggleStatusClick ? handleToggleStatus : null}
         searchPlaceholder={searchPlaceholder}
       />
 

@@ -90,9 +90,10 @@ export const DynamicForm = ({
           </div>
         );
 
+      case 'toggle':
       case 'switch':
         return (
-          <div key={field.key} className={`flex items-center pt-5 ${field.gridSpan || "col-span-1"}`}>
+          <div key={field.key} className={`flex flex-col justify-center pt-2 ${field.gridSpan || "col-span-1"}`}>
             <Controller
               name={field.key}
               control={control}
@@ -105,6 +106,7 @@ export const DynamicForm = ({
                 />
               )}
             />
+            {field.helpText && <span className="text-xs text-slate-400 mt-1">{field.helpText}</span>}
           </div>
         );
 
@@ -220,7 +222,7 @@ function useFormSchema(fields) {
         validator = z.string().email({ message: "Invalid email address" });
       } else if (field.type === 'number') {
         validator = z.number({ invalid_type_error: "Must be a number" });
-      } else if (field.type === 'checkbox' || field.type === 'switch') {
+      } else if (field.type === 'checkbox' || field.type === 'switch' || field.type === 'toggle') {
         validator = z.boolean();
       } else {
         validator = z.string();
@@ -229,8 +231,10 @@ function useFormSchema(fields) {
       if (field.required) {
         if (field.type === 'number') {
           validator = validator.refine(val => val !== undefined && val !== null, { message: "Required field" });
-        } else if (field.type === 'checkbox' || field.type === 'switch') {
+        } else if (field.type === 'checkbox') {
           validator = validator.refine(val => val === true, { message: "Must check this box" });
+        } else if (field.type === 'switch' || field.type === 'toggle') {
+          validator = validator.optional();
         } else {
           validator = validator.min(1, { message: `${field.label || 'Field'} is required` });
         }

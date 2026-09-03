@@ -1,8 +1,9 @@
 // src/pages/ModuleRegistry.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { DynamicListPage, DynamicFormPage, DynamicDetailPage } from '../components/ui/DynamicPageEngine';
 import { api } from '../services/api';
+import { useERPStore } from '../store/useERPStore';
 import { Button, StatusBadge, Badge, Card, StatCard } from '../components/ui/index';
 import { Modal } from '../components/ui/Modal';
 import { CalendarRange, Coins, TrendingUp, Wallet, QrCode } from 'lucide-react';
@@ -28,26 +29,23 @@ export function ModuleRenderer() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Find current route configuration with hyphen-to-underscore normalization
-  const rawKey = path.split('/').filter(Boolean).join('_');
-  const normalizedKey = rawKey.replace(/-/g, '_');
-  let config = registryConfigs[rawKey] || registryConfigs[normalizedKey];
+  const config = useMemo(() => {
+    const rawKey = path.split('/').filter(Boolean).join('_');
+    const normalizedKey = rawKey.replace(/-/g, '_');
+    const found = registryConfigs[rawKey] || registryConfigs[normalizedKey];
+    if (found) return found;
 
-  if (!config) {
-    // If route matches an analytics/dashboard view, show a generic analytics dashboard
-    if (path.endsWith('/analytics') || path.endsWith('/dashboard')) {
-      return <GenericAnalyticsDashboard title={path.split('/').slice(-2)[0].toUpperCase().replace(/-/g, ' ') + " Analytics"} />;
-    }
-    
     // Auto-generate rich fallback configuration with realistic business records
     const segments = path.split('/').filter(Boolean);
     const moduleName = segments[0] ? segments[0].toUpperCase() : 'MODULE';
     const subName = segments[segments.length - 1]
       ? segments[segments.length - 1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
       : 'Management';
-    
-    config = {
+
+    return {
       title: `${subName}`,
       description: `Manage, monitor, and configure ${subName.toLowerCase()} within the ${moduleName} enterprise vertical.`,
       apiFetch: async () => [
@@ -70,6 +68,11 @@ export function ModuleRenderer() {
         { key: "assigned", label: "Assigned Person", type: "text" }
       ]
     };
+  }, [path]);
+
+  // If route matches an analytics/dashboard view, show a generic analytics dashboard
+  if (path.endsWith('/analytics') || path.endsWith('/dashboard')) {
+    return <GenericAnalyticsDashboard title={path.split('/').slice(-2)[0].toUpperCase().replace(/-/g, ' ') + " Analytics"} />;
   }
 
   const handleAddClick = () => {
@@ -77,28 +80,29 @@ export function ModuleRenderer() {
   };
 
   const handleFormSubmit = async (data) => {
-    if (config.apiCreate) {
-      await config.apiCreate(data);
-      alert("Record added successfully!");
-      setIsAddOpen(false);
-      window.location.reload(); // reload to refresh cache
-    } else {
-      alert("Local action simulated! Input: " + JSON.stringify(data));
-      setIsAddOpen(false);
+    if (config?.apiCreate) {
+      try {
+        await config.apiCreate(data);
+        setRefreshKey(prev => prev + 1);
+      } catch (err) {
+        console.error("Error creating record:", err);
+      }
     }
+    setIsAddOpen(false);
   };
 
   const handleEditSubmit = async (data) => {
-    if (config.apiCreate && selectedRecord) {
-      const recordId = selectedRecord.id || selectedRecord.sku || selectedRecord.key;
-      await config.apiCreate({ ...selectedRecord, ...data, id: recordId });
-      alert("Record updated successfully!");
-      setIsEditOpen(false);
-      window.location.reload();
-    } else {
-      alert("Record updated successfully!");
-      setIsEditOpen(false);
+    if (config?.apiUpdate && selectedRecord) {
+      try {
+        const recordId = selectedRecord.ProductId || selectedRecord.CompanyProductId || selectedRecord.CompanyId || selectedRecord.RoleId || selectedRecord.id || selectedRecord.key;
+        await config.apiUpdate({ ...selectedRecord, ...data, id: recordId, ProductId: recordId, CompanyProductId: recordId, CompanyId: recordId });
+        setRefreshKey(prev => prev + 1);
+      } catch (err) {
+        console.error("Error updating record:", err);
+      }
     }
+    setIsEditOpen(false);
+    setSelectedRecord(null);
   };
 
   // Guarantee form fields are always populated for Add and Edit modals
@@ -130,6 +134,7 @@ export function ModuleRenderer() {
               label: typeof c.header === 'string' ? c.header : (c.accessorKey || c.id || 'Field').replace(/([A-Z])/g, ' $1').replace(/_/g, ' '),
               type: (c.accessorKey || '').toLowerCase().includes('date') ? 'date'
                   : (c.accessorKey || '').toLowerCase().includes('status') ? 'select'
+                  : (c.accessorKey || '').toLowerCase().includes('price') || (c.accessorKey || '').toLowerCase().includes('amount') || (c.accessorKey || '').toLowerCase().includes('qty') || (c.accessorKey || '').toLowerCase().includes('quantity') || (c.accessorKey || '').toLowerCase().includes('rate') ? 'number'
                   : 'text',
               options: (c.accessorKey || '').toLowerCase().includes('status') ? [
                 { value: 'Active', label: 'Active' },
@@ -142,6 +147,32 @@ export function ModuleRenderer() {
             }))
       );
 
+  const [dynamicFormFields, setDynamicFormFields] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (config?.fetchDropdowns && (isAddOpen || isEditOpen)) {
+      config.fetchDropdowns().then((fields) => {
+        if (isMounted && fields) {
+          setDynamicFormFields(fields);
+        }
+      });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [path, isAddOpen, isEditOpen]);
+
+  const baseFormFields = dynamicFormFields || (config.formFields && config.formFields.length > 0 ? config.formFields : activeFormFields);
+
+  const activeAddFields = (config.addFormFields && config.addFormFields.length > 0)
+    ? config.addFormFields
+    : baseFormFields;
+
+  const activeEditFields = (config.editFormFields && config.editFormFields.length > 0)
+    ? config.editFormFields
+    : baseFormFields;
+
   return (
     <>
       <DynamicListPage
@@ -150,6 +181,8 @@ export function ModuleRenderer() {
         columns={config.columns}
         fetchDataFn={config.apiFetch}
         deleteDataFn={config.apiDelete}
+        toggleStatusFn={config.apiToggleStatus}
+        refreshKey={refreshKey}
         onAddClick={handleAddClick}
         onViewClick={(row) => {
           setSelectedRecord(row);
@@ -171,7 +204,7 @@ export function ModuleRenderer() {
         >
           <DynamicFormPage
             title=""
-            fields={activeFormFields}
+            fields={activeAddFields}
             onSubmit={handleFormSubmit}
             onCancel={() => setIsAddOpen(false)}
           />
@@ -191,7 +224,27 @@ export function ModuleRenderer() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               {Object.entries(selectedRecord).map(([key, val]) => {
-                if (typeof val === 'object' || key === 'image' || key === 'id' || key === 'avatar') return null;
+                if (
+                  typeof val === 'object' ||
+                  key === 'image' ||
+                  key === 'id' ||
+                  key === 'avatar' ||
+                  key === 'raw' ||
+                  key === 'IsDisabled' ||
+                  key === 'isEnabled' ||
+                  key === 'ProductId' ||
+                  key === 'ProductCode' ||
+                  key === 'ProductName' ||
+                  key === 'ProductDescription' ||
+                  key === 'RoleId' ||
+                  key === 'RoleCode' ||
+                  key === 'RoleName' ||
+                  key === 'RoleDescription' ||
+                  key === 'CompanyId' ||
+                  key === 'CompanyName' ||
+                  key === 'CompanyProductId' ||
+                  key === 'CreatedAt'
+                ) return null;
                 return (
                   <div key={key} className="border-b border-slate-100 dark:border-slate-800 pb-2">
                     <span className="text-slate-400 capitalize font-medium">{key.replace(/([A-Z])/g, ' $1')}</span>
@@ -221,7 +274,7 @@ export function ModuleRenderer() {
         >
           <DynamicFormPage
             title=""
-            fields={activeFormFields}
+            fields={activeEditFields}
             defaultValues={selectedRecord}
             onSubmit={handleEditSubmit}
             onCancel={() => setIsEditOpen(false)}
@@ -298,43 +351,212 @@ const registryConfigs = {
   master_companies: {
     title: "Companies",
     description: "Manage registered companies in the system.",
-    apiFetch: async () => [
-      { id: 1, companyCode: "VISHVIN", companyName: "Vishvin Technologies", email: "info@vishvin.com", phone: "9999999999", status: "Active" },
-      { id: 2, companyCode: "ABCORP", companyName: "ABC Corporation", email: "contact@abccorp.com", phone: "8888888888", status: "Active" },
-      { id: 3, companyCode: "INFOSYS", companyName: "Infosys Limited", email: "info@infosys.com", phone: "080-12345678", status: "Active" },
-      { id: 4, companyCode: "TCS", companyName: "Tata Consultancy Services", email: "info@tcs.com", phone: "022-12345678", status: "Inactive" },
-      { id: 5, companyCode: "WIPRO", companyName: "Wipro Limited", email: "info@wipro.com", phone: "080-87654321", status: "Active" }
-    ],
+    apiFetch: async () => {
+      try {
+        const res = await api.company.getCompanies();
+        const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        return items.map((c, idx) => {
+          const isDisabled = c.IsDisabled === true || c.status === 'Inactive' || c.status === 'Disabled';
+          const isEnabled = !isDisabled;
+          const createdOnDate = c.CreatedOn || c.CreatedAt || c.createdOn;
+          let formattedDate = '—';
+          if (createdOnDate) {
+            try {
+              const d = new Date(createdOnDate);
+              if (!isNaN(d.getTime())) {
+                formattedDate = d.toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric'
+                });
+              }
+            } catch {}
+          }
+          return {
+            id: c.CompanyId ?? (idx + 1),
+            CompanyId: c.CompanyId ?? (idx + 1),
+            companyCode: c.CompanyCode || c.companyCode || '',
+            CompanyCode: c.CompanyCode || c.companyCode || '',
+            companyName: c.CompanyName || c.companyName || '',
+            CompanyName: c.CompanyName || c.companyName || '',
+            email: c.Email || c.email || '—',
+            Email: c.Email || c.email || '',
+            phone: c.PhoneNumber || c.phone || '—',
+            PhoneNumber: c.PhoneNumber || c.phone || '',
+            address: c.Address || c.address || '—',
+            Address: c.Address || c.address || '',
+            requestUserName: c.RequestUserName || c.CreatedByUserName || '—',
+            status: isDisabled ? "Inactive" : "Active",
+            IsDisabled: Boolean(isDisabled),
+            isEnabled: isEnabled,
+            createdOn: formattedDate,
+            CreatedOn: createdOnDate,
+            raw: c
+          };
+        });
+      } catch (err) {
+        console.error("Failed to fetch companies:", err);
+        return [];
+      }
+    },
+    apiCreate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+
+      const payload = {
+        flagId: 2,
+        CompanyName: formData.CompanyName || formData.companyName || '',
+        CompanyCode: formData.CompanyCode || formData.companyCode || '',
+        CreatedByUserName: userName,
+        UpdatedByUserName: userName,
+        IsDisabled: false,
+        Email: formData.Email || formData.email || '',
+        PhoneNumber: formData.PhoneNumber || formData.phone || '',
+        Address: formData.Address || formData.address || ''
+      };
+
+      return await api.company.addCompany(payload);
+    },
+    apiUpdate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const companyId = Number(formData.CompanyId ?? formData.id);
+
+      const payload = {
+        flagId: 3,
+        CompanyId: companyId,
+        CompanyName: formData.CompanyName || formData.companyName || '',
+        CompanyCode: formData.CompanyCode || formData.companyCode || '',
+        UpdatedByUserName: userName,
+        Email: formData.Email || formData.email || '',
+        PhoneNumber: formData.PhoneNumber || formData.phone || '',
+        Address: formData.Address || formData.address || ''
+      };
+
+      return await api.company.updateCompany(payload);
+    },
+    apiToggleStatus: async (record, newIsDisabled) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const companyId = Number(record.CompanyId ?? record.id);
+
+      const statusPayload = {
+        flagId: 4,
+        CompanyId: companyId,
+        IsDisabled: Boolean(newIsDisabled),
+        UpdatedByUserName: userName
+      };
+      return await api.company.toggleCompanyStatus(statusPayload);
+    },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
-      { id: 'companyCode', header: 'Company Code', accessorKey: 'companyCode', key: 'companyCode' },
+      { id: 'companyCode', header: 'Company Code', accessorKey: 'companyCode', key: 'companyCode', cell: ({ row }) => <span className="font-semibold text-primary">{row.original.companyCode}</span> },
       { id: 'companyName', header: 'Company Name', accessorKey: 'companyName', key: 'companyName', cell: ({ row }) => <span className="font-bold">{row.original.companyName}</span> },
       { id: 'email', header: 'Email', accessorKey: 'email', key: 'email' },
       { id: 'phone', header: 'Phone Number', accessorKey: 'phone', key: 'phone' },
+      { id: 'address', header: 'Address', accessorKey: 'address', key: 'address' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
     formFields: [
-      { key: "companyCode", label: "Company Code", type: "text", required: true, placeholder: "Enter company code" },
-      { key: "companyName", label: "Company Name", type: "text", required: true, placeholder: "Enter company name" },
-      { key: "email", label: "Email", type: "email", placeholder: "Enter email" },
-      { key: "phone", label: "Phone Number", type: "text", placeholder: "Enter phone number" },
-      { key: "address", label: "Address", type: "text", placeholder: "Enter address" },
-      { key: "status", label: "Status", type: "select", options: [
-        { value: "Active", label: "Active" },
-        { value: "Inactive", label: "Inactive" }
-      ]}
+      { key: "CompanyCode", label: "Company Code", type: "text", required: true, placeholder: "e.g. GSL" },
+      { key: "CompanyName", label: "Company Name", type: "text", required: true, placeholder: "e.g. Global Solutions" },
+      { key: "Email", label: "Email", type: "email", placeholder: "e.g. contact@globalsolutions.com" },
+      { key: "PhoneNumber", label: "Phone Number", type: "text", placeholder: "e.g. 9876543210" },
+      { key: "Address", label: "Address", type: "textarea", placeholder: "e.g. Hyderabad, Telangana" }
+    ],
+    addFormFields: [
+      { key: "CompanyCode", label: "Company Code", type: "text", required: true, placeholder: "e.g. GSL" },
+      { key: "CompanyName", label: "Company Name", type: "text", required: true, placeholder: "e.g. Global Solutions" },
+      { key: "Email", label: "Email", type: "email", placeholder: "e.g. contact@globalsolutions.com" },
+      { key: "PhoneNumber", label: "Phone Number", type: "text", placeholder: "e.g. 9876543210" },
+      { key: "Address", label: "Address", type: "textarea", placeholder: "e.g. Hyderabad, Telangana" }
+    ],
+    editFormFields: [
+      { key: "CompanyCode", label: "Company Code", type: "text", required: true, placeholder: "e.g. GSL" },
+      { key: "CompanyName", label: "Company Name", type: "text", required: true, placeholder: "e.g. Global Solutions" },
+      { key: "Email", label: "Email", type: "email", placeholder: "e.g. contact@globalsolutions.com" },
+      { key: "PhoneNumber", label: "Phone Number", type: "text", placeholder: "e.g. 9876543210" },
+      { key: "Address", label: "Address", type: "textarea", placeholder: "e.g. Hyderabad, Telangana" }
     ]
   },
   master_products: {
     title: "Products",
     description: "Manage registered products in the system.",
-    apiFetch: async () => [
-      { id: 1, productCode: "DMS", productName: "Document Management System", description: "Application for document management", status: "Active" },
-      { id: 2, productCode: "PDMS", productName: "Project Data Management System", description: "Project data management application", status: "Active" },
-      { id: 3, productCode: "WFMS", productName: "Workforce Management System", description: "Workforce & field operations", status: "Active" },
-      { id: 4, productCode: "AMS", productName: "Asset Management System", description: "Asset tracking and management", status: "Active" },
-      { id: 5, productCode: "MRS", productName: "Material Requisition System", description: "Material request and tracking", status: "Inactive" }
-    ],
+    apiFetch: async () => {
+      try {
+        const res = await api.product.getProducts();
+        const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        return items.map((p) => {
+          const isDisabled = p.IsDisabled === true || p.status === 'Inactive' || p.status === 'Disabled';
+          const isEnabled = !isDisabled;
+          return {
+            id: p.ProductId ?? p.id,
+            ProductId: p.ProductId ?? p.id,
+            ProductCode: p.ProductCode || p.productCode || '',
+            ProductName: p.ProductName || p.productName || '',
+            ProductDescription: p.Description || p.description || p.ProductDescription || '',
+            productCode: p.ProductCode || p.productCode || '',
+            productName: p.ProductName || p.productName || '',
+            description: p.Description || p.description || p.ProductDescription || '',
+            status: isDisabled ? "Inactive" : "Active",
+            IsDisabled: Boolean(isDisabled),
+            isEnabled: isEnabled, // ON (true) when active (IsDisabled: false), OFF (false) when disabled (IsDisabled: true)
+            raw: p
+          };
+        });
+      } catch (err) {
+        console.error("Failed to fetch master products:", err);
+        return [];
+      }
+    },
+    apiCreate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+
+      const payload = {
+        flagId: 2,
+        ProductCode: formData.ProductCode || formData.productCode || '',
+        ProductName: formData.ProductName || formData.productName || '',
+        ProductDescription: formData.ProductDescription || formData.description || formData.Description || '',
+        IsDisabled: false,
+        CreatedByUserName: userName,
+        UpdatedByUserName: userName
+      };
+
+      return await api.product.addProduct(payload);
+    },
+    apiUpdate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const productId = Number(formData.ProductId ?? formData.id);
+
+      const updatePayload = {
+        flagId: 3,
+        ProductId: productId,
+        ProductCode: formData.ProductCode || formData.productCode || '',
+        ProductName: formData.ProductName || formData.productName || '',
+        ProductDescription: formData.ProductDescription || formData.description || formData.Description || '',
+        UpdatedByUserName: userName
+      };
+      return await api.product.updateProduct(updatePayload);
+    },
+    apiToggleStatus: async (record, newIsDisabled) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const productId = Number(record.ProductId ?? record.id);
+
+      const statusPayload = {
+        flagId: 4,
+        ProductId: productId,
+        IsDisabled: Boolean(newIsDisabled),
+        UpdatedByUserName: userName
+      };
+      return await api.product.toggleProductStatus(statusPayload);
+    },
+    apiDelete: async (idOrRecord) => {
+      const productId = typeof idOrRecord === 'object' ? (idOrRecord.ProductId ?? idOrRecord.id) : idOrRecord;
+      return await api.product.deleteProduct(productId);
+    },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
       { id: 'productCode', header: 'Product Code', accessorKey: 'productCode', key: 'productCode' },
@@ -342,50 +564,189 @@ const registryConfigs = {
       { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
-    formFields: [
-      { key: "productCode", label: "Product Code", type: "text", required: true, placeholder: "Enter product code" },
-      { key: "productName", label: "Product Name", type: "text", required: true, placeholder: "Enter product name" },
-      { key: "description", label: "Description", type: "text", placeholder: "Enter description" },
-      { key: "status", label: "Status", type: "select", options: [
-        { value: "Active", label: "Active" },
-        { value: "Inactive", label: "Inactive" }
-      ]}
+    addFormFields: [
+      { key: "ProductCode", label: "Product Code", type: "text", required: true, placeholder: "e.g. BOMS" },
+      { key: "ProductName", label: "Product Name", type: "text", required: true, placeholder: "e.g. Business Operations Management System" },
+      { key: "ProductDescription", label: "Product Description", type: "textarea", placeholder: "e.g. System for managing business operations and processes" }
+    ],
+    editFormFields: [
+      { key: "ProductCode", label: "Product Code", type: "text", required: true, placeholder: "e.g. BOMS" },
+      { key: "ProductName", label: "Product Name", type: "text", required: true, placeholder: "e.g. Business Operations Management System" },
+      { key: "ProductDescription", label: "Product Description", type: "textarea", placeholder: "e.g. System for managing business operations and processes" }
     ]
   },
   master_company_products: {
     title: "Company Products",
-    description: "Assign products to companies.",
-    apiFetch: async () => [
-      { id: 1, company: "Vishvin Technologies", product: "DMS", status: "Active", createdOn: "12/05/2024" },
-      { id: 2, company: "Vishvin Technologies", product: "PDMS", status: "Active", createdOn: "13/05/2024" },
-      { id: 3, company: "ABC Corporation", product: "WFMS", status: "Active", createdOn: "14/05/2024" },
-      { id: 4, company: "TCS", product: "AMS", status: "Active", createdOn: "15/05/2024" },
-      { id: 5, company: "Infosys Limited", product: "MRS", status: "Inactive", createdOn: "16/05/2024" }
-    ],
+    description: "View and manage registered company to product assignments.",
+    apiFetch: async () => {
+      try {
+        const res = await api.companyProduct.getCompanyProducts();
+        const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        return items.map((cp, idx) => {
+          const isDisabled = cp.IsDisabled === true || cp.status === 'Inactive' || cp.status === 'Disabled';
+          const isEnabled = !isDisabled;
+          const createdOnDate = cp.CreatedAt || cp.CreatedOn || cp.createdOn;
+          let formattedDate = '—';
+          if (createdOnDate) {
+            try {
+              const d = new Date(createdOnDate);
+              if (!isNaN(d.getTime())) {
+                formattedDate = d.toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric'
+                });
+              }
+            } catch {}
+          }
+          return {
+            id: cp.CompanyProductId ?? (idx + 1),
+            CompanyProductId: cp.CompanyProductId ?? (idx + 1),
+            company: cp.CompanyName || cp.company || '—',
+            CompanyName: cp.CompanyName || cp.company || '—',
+            product: cp.ProductName || cp.product || '—',
+            ProductName: cp.ProductName || cp.product || '—',
+            status: isDisabled ? "Inactive" : "Active",
+            IsDisabled: Boolean(isDisabled),
+            isEnabled: isEnabled,
+            createdOn: formattedDate,
+            CreatedAt: createdOnDate,
+            raw: cp
+          };
+        });
+      } catch (err) {
+        console.error("Failed to fetch company products:", err);
+        return [];
+      }
+    },
+    apiCreate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+
+      const payload = {
+        FlagId: 3,
+        CompanyId: Number(formData.CompanyId),
+        ProductId: Number(formData.ProductId),
+        IsDisabled: false,
+        CreatedByUserName: userName
+      };
+
+      return await api.companyProduct.addCompanyProduct(payload);
+    },
+    apiUpdate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+
+      const payload = {
+        FlagId: 3,
+        CompanyProductId: Number(formData.CompanyProductId ?? formData.id),
+        CompanyId: Number(formData.CompanyId),
+        ProductId: Number(formData.ProductId),
+        IsDisabled: typeof formData.IsDisabled === 'boolean'
+          ? formData.IsDisabled
+          : (formData.IsDisabled === 'true' || formData.IsDisabled === 'Inactive' || formData.IsDisabled === 'Disabled' || false),
+        UpdatedByUserName: userName
+      };
+
+      return await api.companyProduct.editCompanyProduct(payload);
+    },
+    apiDelete: async (idOrRecord) => {
+      const companyProductId = typeof idOrRecord === 'object'
+        ? (idOrRecord.CompanyProductId ?? idOrRecord.id)
+        : idOrRecord;
+      return await api.companyProduct.deleteCompanyProduct(companyProductId);
+    },
+    apiToggleStatus: async (record, newIsDisabled) => {
+      const companyProductId = Number(record.CompanyProductId ?? record.id);
+      return await api.companyProduct.updateCompanyProductStatus(companyProductId, Boolean(newIsDisabled));
+    },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
-      { id: 'company', header: 'Company', accessorKey: 'company', key: 'company', cell: ({ row }) => <span className="font-bold">{row.original.company}</span> },
-      { id: 'product', header: 'Product', accessorKey: 'product', key: 'product' },
+      { id: 'company', header: 'Company Name', accessorKey: 'company', key: 'company', cell: ({ row }) => <span className="font-bold">{row.original.company}</span> },
+      { id: 'product', header: 'Product Name', accessorKey: 'product', key: 'product', cell: ({ row }) => <span className="font-semibold text-primary">{row.original.product}</span> },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
       { id: 'createdOn', header: 'Created On', accessorKey: 'createdOn', key: 'createdOn' }
     ],
+    fetchDropdowns: async () => {
+      try {
+        const [companiesRes, productsRes] = await Promise.all([
+          api.companyProduct.getCompaniesDropdown(),
+          api.companyProduct.getProductsDropdown()
+        ]);
+
+        const companyItems = Array.isArray(companiesRes?.data) ? companiesRes.data : (Array.isArray(companiesRes) ? companiesRes : []);
+        const productItems = Array.isArray(productsRes?.data) ? productsRes.data : (Array.isArray(productsRes) ? productsRes : []);
+
+        const companyOptions = companyItems.map((c) => ({
+          value: Number(c.CompanyId ?? c.id),
+          label: c.CompanyName || c.name || `Company #${c.CompanyId}`
+        }));
+
+        const productOptions = productItems.map((p) => ({
+          value: Number(p.ProductId ?? p.id),
+          label: p.ProductName || p.name || `Product #${p.ProductId}`
+        }));
+
+        return [
+          {
+            key: "CompanyId",
+            label: "Company",
+            type: "select",
+            required: true,
+            options: companyOptions.length > 0 ? companyOptions : [
+              { value: 1, label: "vishvin Technologies" },
+              { value: 2, label: "Global Solutions" },
+              { value: 3, label: "TechNova Systems" },
+              { value: 4, label: "NextGen Industries" }
+            ]
+          },
+          {
+            key: "ProductId",
+            label: "Product",
+            type: "select",
+            required: true,
+            options: productOptions.length > 0 ? productOptions : [
+              { value: 1, label: "Updated Produccccc" },
+              { value: 2, label: "Human Resource Management System" },
+              { value: 3, label: "Customer Relationship Management" },
+              { value: 4, label: "Financial Management System" },
+              { value: 5, label: "Inventory Management System" },
+              { value: 6, label: "System" }
+            ]
+          }
+        ];
+      } catch (err) {
+        console.error("Failed to load company product dropdowns:", err);
+        return null;
+      }
+    },
     formFields: [
-      { key: "company", label: "Company", type: "select", required: true, options: [
-        { value: "Vishvin Technologies", label: "Vishvin Technologies" },
-        { value: "ABC Corporation", label: "ABC Corporation" },
-        { value: "Infosys Limited", label: "Infosys Limited" },
-        { value: "TCS", label: "TCS" }
-      ]},
-      { key: "product", label: "Product", type: "select", required: true, options: [
-        { value: "DMS", label: "DMS" },
-        { value: "PDMS", label: "PDMS" },
-        { value: "WFMS", label: "WFMS" },
-        { value: "AMS", label: "AMS" }
-      ]},
-      { key: "status", label: "Status", type: "select", options: [
-        { value: "Active", label: "Active" },
-        { value: "Inactive", label: "Inactive" }
-      ]}
+      {
+        key: "CompanyId",
+        label: "Company",
+        type: "select",
+        required: true,
+        options: [
+          { value: 1, label: "vishvin Technologies" },
+          { value: 2, label: "Global Solutions" },
+          { value: 3, label: "TechNova Systems" },
+          { value: 4, label: "NextGen Industries" }
+        ]
+      },
+      {
+        key: "ProductId",
+        label: "Product",
+        type: "select",
+        required: true,
+        options: [
+          { value: 1, label: "Updated Produccccc" },
+          { value: 2, label: "Human Resource Management System" },
+          { value: 3, label: "Customer Relationship Management" },
+          { value: 4, label: "Financial Management System" },
+          { value: 5, label: "Inventory Management System" },
+          { value: 6, label: "System" }
+        ]
+      }
     ]
   },
   master_projects: {
@@ -421,6 +782,103 @@ const registryConfigs = {
       ]}
     ]
   },
+  master_roles: {
+    title: "Roles & Permissions",
+    description: "Manage system roles, security levels, and user access authorizations.",
+    apiFetch: async () => {
+      try {
+        const res = await api.role.getRoles();
+        const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        return items.map((r) => {
+          const isDisabled = r.IsDisabled === true || r.status === 'Inactive' || r.status === 'Disabled';
+          const isEnabled = !isDisabled;
+          const description = r.RoleDescription || r.Description || r.description || '—';
+          const roleCode = r.RoleCode || r.Role_Code || r.roleCode || '—';
+          const roleName = r.RoleName || r.roleName || '—';
+          return {
+            id: r.RoleId ?? r.id,
+            RoleId: r.RoleId ?? r.id,
+            CompanyId: r.CompanyId,
+            roleCode: roleCode,
+            RoleCode: roleCode,
+            roleName: roleName,
+            RoleName: roleName,
+            company: r.CompanyName || (r.CompanyId ? `Company #${r.CompanyId}` : '—'),
+            CompanyName: r.CompanyName || (r.CompanyId ? `Company #${r.CompanyId}` : '—'),
+            description: description,
+            RoleDescription: description,
+            status: isDisabled ? "Inactive" : "Active",
+            IsDisabled: Boolean(isDisabled),
+            isEnabled: isEnabled,
+            raw: r
+          };
+        });
+      } catch (err) {
+        console.error("Failed to fetch roles:", err);
+        return [];
+      }
+    },
+    apiCreate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      return await api.role.addRole({
+        CompanyId: Number(formData.CompanyId) || 1,
+        RoleName: formData.roleName || formData.RoleName || '',
+        Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
+        Description: formData.description || formData.RoleDescription || formData.Description || '',
+        IsDisabled: false,
+        CreatedByUserName: userName,
+        UpdatedByUserName: userName
+      });
+    },
+    apiUpdate: async (formData) => {
+      const userState = useERPStore.getState().user;
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const roleId = Number(formData.RoleId ?? formData.id);
+
+      if (api.role.updateRole) {
+        return await api.role.updateRole({
+          RoleId: roleId,
+          CompanyId: Number(formData.CompanyId) || 1,
+          RoleName: formData.roleName || formData.RoleName || '',
+          Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
+          Description: formData.description || formData.RoleDescription || formData.Description || '',
+          UpdatedByUserName: userName
+        });
+      }
+    },
+    apiToggleStatus: async (record, newIsDisabled) => {
+      const roleId = Number(record.RoleId ?? record.id);
+      if (api.role.updateRoleStatus) {
+        return await api.role.updateRoleStatus(roleId, Boolean(newIsDisabled));
+      }
+    },
+    apiDelete: async (idOrRecord) => {
+      const roleId = typeof idOrRecord === 'object' ? (idOrRecord.RoleId ?? idOrRecord.id) : idOrRecord;
+      return await api.role.deleteRole(roleId);
+    },
+    columns: [
+      { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
+      { id: 'roleCode', header: 'Role Code', accessorKey: 'roleCode', key: 'roleCode' },
+      { id: 'roleName', header: 'Role Name', accessorKey: 'roleName', key: 'roleName', cell: ({ row }) => <span className="font-bold">{row.original.roleName}</span> },
+      { id: 'company', header: 'Company', accessorKey: 'company', key: 'company' },
+      { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
+      { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
+    ],
+    addFormFields: [
+      { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
+      { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
+      { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
+    ],
+    editFormFields: [
+      { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
+      { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
+      { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
+    ]
+  },
+  system_roles: null, // assigned below
+  user_management_roles: null, // assigned below
+  roles: null, // assigned below
   applications: {
     title: "ERP Integrated Applications",
     description: "Manage and launch active ERP core system modules.",
@@ -1548,3 +2006,10 @@ registryConfigs.system_settings_notifications = {
 };
 
 registryConfigs.master_designations = registryConfigs.hrm_designations;
+registryConfigs.system_roles = registryConfigs.master_roles;
+registryConfigs.roles = registryConfigs.master_roles;
+registryConfigs.user_management_roles = registryConfigs.master_roles;
+registryConfigs.company_products = registryConfigs.master_company_products;
+registryConfigs.master_company_product = registryConfigs.master_company_products;
+registryConfigs.companies = registryConfigs.master_companies;
+registryConfigs.master_company = registryConfigs.master_companies;
