@@ -23,7 +23,6 @@ export const getAllProducts = async () => {
 
             FROM "LKP"."Product"
 
-
             ORDER BY "ProductId"
         `);
 

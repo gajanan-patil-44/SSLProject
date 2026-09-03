@@ -1,16 +1,16 @@
 info:
-  name: getCompanyForRole
+  name: getRole
   type: http
-  seq: 6
+  seq: 2
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/roleCreation/companyexists
+  url: http://192.168.23.77:9004/verp-service/roleCreation/getRole
   body:
     type: json
     data: |-
       {
-        "FlagId":3
+        "FlagId" :1
       }
   auth: inherit
 
@@ -19,4 +19,3 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: true

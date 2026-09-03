@@ -16,6 +16,15 @@ import {
 export const getProduct = async (req, res) => {
     const { flagId } = req.body;
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+
         if (parseInt(flagId) === 1) {
             const rows = await getAllProducts();
 
@@ -54,6 +63,14 @@ export const addProducts = async (req, res) => {
     const { flagId } = req.body;
 
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
         // flagId 2 = Add Product
         if (parseInt(flagId) === 2) {
 
@@ -133,6 +150,14 @@ export const updateProduct = async (req, res) => {
     const { flagId } = req.body;
 
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
 
         // flagId 3 = Update Product
         if (parseInt(flagId) === 3) {
@@ -225,6 +250,14 @@ export const toggleProductStatus = async (req, res) => {
 
     try {
 
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+
         // flagId 4 = Toggle Product Status
         if (parseInt(flagId) === 4) {
 
@@ -276,6 +309,16 @@ export const toggleProductStatus = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     const { flagId } = req.body;
     try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+
+
         if (parseInt(flagId) == 5) {
             const productData = req.body;
 

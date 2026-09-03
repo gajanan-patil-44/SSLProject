@@ -1,0 +1,33 @@
+info:
+  name: project
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/projectCreation/project
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":1
+      }
+
+
+      // {
+      //   "flagId": 2,
+      //   "CompanyProductId": 1,
+      //   "ProjectName": "BOMS Development",
+      //   "ProjectCode": "BOMS-DEV",
+      //   "IsDisabled": false,
+      //   "Description": "gbfbf",
+      //   "CreatedByUserId": 1
+      // }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
