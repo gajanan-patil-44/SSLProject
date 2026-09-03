@@ -220,6 +220,12 @@ export const createUserController = async (req, res) => {
                 message: "DateOfBirth is required"
             });
         }
+        if (!userData.DateOfJoining) {
+            return res.status(400).json({
+                status: "error",
+                message: "DateOfJoining is required"
+            });
+        }
 
         if (!userData.GenderId) {
             return res.status(400).json({
@@ -418,6 +424,17 @@ export const createUserController = async (req, res) => {
 
         userData.Password = await bcrypt.hash(userData.Password, 10);
 
+
+        const joiningDate = new Date(userData.DateOfJoining);
+
+        if (isNaN(joiningDate.getTime())) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid DateOfJoining"
+            });
+        }
+
+        userData.DateOfJoining = userData.DateOfJoining;
         // ==========================================================
         // CREATE USER
         // ==========================================================

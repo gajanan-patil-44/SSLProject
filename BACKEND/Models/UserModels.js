@@ -253,6 +253,7 @@ export const createUser = async (userData) => {
                 "PhoneNumber",
                 "AltPhoneNumber",
                 "DateOfBirth",
+
                 "GenderId",
                 "MaritalStatusId",
                 "DesignationId",
@@ -261,11 +262,13 @@ export const createUser = async (userData) => {
                 "LoginName",
                 "Photo",
                 "CreatedAt",
-                "CreatedByUserName"
+                "CreatedByUserName",
+                "DateOfJoining"
+        
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6, $7,$8,$9,$10,$11,$12,$13,$14, CURRENT_TIMESTAMP,$15
+                $1,$2,$3,$4,$5,$6, $7,$8,$9,$10,$11,$12,$13,$14, CURRENT_TIMESTAMP,$15,$16
             )
             RETURNING
                 "UserId",
@@ -282,7 +285,8 @@ export const createUser = async (userData) => {
                 "Email",
                 "LoginName",
                 "CreatedAt",
-                "CreatedByUserName";
+                "CreatedByUserName",
+                "DateOfJoining"
         `;
 
         const userValues = [
@@ -301,7 +305,8 @@ export const createUser = async (userData) => {
             userData.LoginName,
             // Photo buffer
             userData.Photo || null,
-            userData.CreatedByUserName
+            userData.CreatedByUserName,
+            userData.DateOfJoining
         ];
 
         const userResult = await client.query(userQuery, userValues);
@@ -313,36 +318,43 @@ export const createUser = async (userData) => {
         }
         const UserId = user.UserId;
         // ==================================================
-        // 2. CREATE USER REPORTING MANAGER
-        // ==================================================
+// 2. CREATE USER REPORTING MANAGER
+// ==================================================
 
-        if (userData.ReportingManagerUserId !== null && userData.ReportingManagerUserId !== undefined) {
-            const reportingManagerQuery = `
-                INSERT INTO "DATA"."UserReportingManager"
-                (
-                    "UserId",
-                    "ReportingManagerUserId",
-                    "CompanyId",
-                    "CreatedAt",
-                    "UpdatedAt",
-                    "CreatedByUserId",
-                )
-                VALUES
-                (
-                    $1,$2,$3,CURRENT_TIMESTAMP,$1
-                )
-                RETURNING
-                    "UserReportingManagerId",
-                    "UserId",
-                    "ReportingManagerUserId",
-                    "CompanyId",
-                    "CreatedAt",
-                    "CreatedByUserId"
-            `;
+if ( userData.ReportingManagerUserId !== null &&  userData.ReportingManagerUserId !== undefined)
+    {
 
+    const reportingManagerQuery = `
+        INSERT INTO "DATA"."UserReportingManager"
+        (
+            "UserId",
+            "ReportingManagerUserId",
+            "CompanyId",
+            "CreatedAt",
+            "CreatedByUserId"
+        )
+        VALUES
+        ($1,$2,$3,CURRENT_TIMESTAMP,$4)
+        
+        RETURNING
+            "UserReportingManagerId",
+            "UserId",
+            "ReportingManagerUserId",
+            "CompanyId",
+            "CreatedAt",
+            "CreatedByUserId";
+    `;
 
-            await client.query(reportingManagerQuery, [UserId, Number(userData.ReportingManagerUserId), Number(userData.CompanyId)]);
-        }
+    await client.query(
+        reportingManagerQuery,
+        [
+            UserId,
+            Number(userData.ReportingManagerUserId),
+            Number(userData.CompanyId),
+            UserId
+        ]
+    );
+}
         // ==================================================
         // 3. CREATE USER COMPANY
         // ==================================================
