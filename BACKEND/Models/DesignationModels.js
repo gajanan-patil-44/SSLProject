@@ -10,26 +10,21 @@ export const getAllDesignations = async () => {
 
         const query = `
             SELECT
-                CD."CompanyDesignationId",
-                CD."CompanyId",
-                C."CompanyName",
-                CD."DesignationName",
-                CD."DesignationCode",
-                CD."IsDisabled",
-                CD."CreatedAt",
-                CD."CreatedByUserName",
-                CD."UpdateByUserName",
-                CD."UpdatedAt",
-                CD."DesignationLevel",
-                CD."CanBeReportingManager"
-
-            FROM "LKP"."CompanyDesignation" CD
-
-            INNER JOIN "LKP"."Company" C
-                ON CD."CompanyId" = C."CompanyId"
-
-            ORDER BY
-                CD."CreatedAt" DESC;
+                cd."CompanyDesignationId",
+                cd."CompanyId",
+                c."CompanyName",
+                c."CompanyCode",
+                cd."DesignationName",
+                cd."DesignationCode",
+                cd."IsDisabled",
+                cd."CreatedAt",
+                cd."CreatedByUserName",
+                cd."UpdateByUserName",
+                cd."UpdatedAt"
+            FROM "LKP"."CompanyDesignation" cd
+            INNER JOIN "LKP"."Company" c
+                ON c."CompanyId" = cd."CompanyId"
+            ORDER BY cd."CompanyDesignationId" ASC
         `;
 
 
