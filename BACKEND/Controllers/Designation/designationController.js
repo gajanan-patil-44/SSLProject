@@ -2,10 +2,8 @@ import {
     getAllDesignations,
     getCompaniesForDropdown,
     checkCompanyExists,
-    checkDesignationData,
+    checkDesignationExists,
     addDesignation,
-    getCompaniesForEditDropdown,
-    getDesignationById,
     checkDesignationExistsForUpdate,
     editDesignation,
     toggleDesignationStatuses,
@@ -23,38 +21,9 @@ export const getDesignation = async (req, res) => {
 
     try {
 
-        // ==================================================
-        // VALIDATE FLAG ID
-        // ==================================================
-
-        if (
-            flagId === undefined ||
-            flagId === null ||
-            flagId === ""
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        if (
-            !Number.isInteger(Number(flagId)) ||
-            Number(flagId) <= 0
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            });
-        }
-
-
-        // ==================================================
         // FLAG ID 1 - GET ALL DESIGNATIONS
-        // ==================================================
 
-        if (Number(flagId) === 1) {
+        if (parseInt(flagId) === 1) {
 
             const rows = await getAllDesignations();
 
@@ -66,10 +35,8 @@ export const getDesignation = async (req, res) => {
         }
 
 
-        // ==================================================
         // INVALID FLAG ID
-        // ==================================================
-
+       
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
@@ -77,10 +44,7 @@ export const getDesignation = async (req, res) => {
 
     } catch (error) {
 
-        console.error(
-            "Error fetching designations:",
-            error
-        );
+        // console.error("Error fetching designations:", error);
 
         return res.status(500).json({
             status: "error",
@@ -92,9 +56,8 @@ export const getDesignation = async (req, res) => {
 
 
 
-// ======================================================
-// DESIGNATION ADD / DROPDOWN CONTROLLER
-// ======================================================
+// ADD DESIGNATION / COMPANY DROPDOWN
+
 
 export const designationController = async (req, res) => {
 
@@ -102,38 +65,10 @@ export const designationController = async (req, res) => {
 
     try {
 
-        // ==================================================
-        // VALIDATE FLAG ID
-        // ==================================================
+        // FLAG ID 1 - GET COMPANIES FOR DROPDOWN
+     
 
-        if (
-            flagId === undefined ||
-            flagId === null ||
-            flagId === ""
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        if (
-            !Number.isInteger(Number(flagId)) ||
-            Number(flagId) <= 0
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            });
-        }
-
-
-        // ==================================================
-        // FLAG ID 1 - GET COMPANIES
-        // ==================================================
-
-        if (Number(flagId) === 1) {
+        if (parseInt(flagId) === 1) {
 
             const companies = await getCompaniesForDropdown();
 
@@ -145,11 +80,9 @@ export const designationController = async (req, res) => {
         }
 
 
-        // ==================================================
         // FLAG ID 2 - ADD DESIGNATION
-        // ==================================================
 
-        if (Number(flagId) === 2) {
+        if (parseInt(flagId) === 2) {
 
             const {
                 CompanyId,
@@ -160,32 +93,134 @@ export const designationController = async (req, res) => {
             } = req.body;
 
 
-            // ==================================================
             // VALIDATE COMPANY ID
-            // ==================================================
 
             if (
                 CompanyId === undefined ||
                 CompanyId === null ||
-                CompanyId === "" ||
-                !Number.isInteger(Number(CompanyId)) ||
-                Number(CompanyId) <= 0
+                CompanyId === ""
             ) {
 
                 return res.status(400).json({
                     status: "error",
-                    message: "Invalid or inactive CompanyId"
+                    message: "CompanyId is required"
                 });
             }
 
 
-            // ==================================================
-            // CHECK COMPANY EXISTS AND IS ACTIVE
-            // ==================================================
+            if (!Number.isInteger(Number(CompanyId)) || Number(CompanyId) <= 0) {
 
-            const companyData = await checkCompanyExists(
-                Number(CompanyId)
-            );
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId must be a valid positive integer"
+                });
+            }
+
+
+            // VALIDATE DESIGNATION NAME
+
+            if (
+                DesignationName === undefined ||
+                DesignationName === null ||
+                DesignationName.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationName is required"
+                });
+            }
+
+
+            if (typeof DesignationName !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationName must be a string"
+                });
+            }
+
+
+            if (DesignationName.trim().length > 150) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationName must not exceed 150 characters"
+                });
+            }
+
+
+            // VALIDATE DESIGNATION CODE
+
+            if (
+                DesignationCode === undefined ||
+                DesignationCode === null ||
+                DesignationCode.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationCode is required"
+                });
+            }
+
+
+            if (typeof DesignationCode !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationCode must be a string"
+                });
+            }
+
+
+            if (DesignationCode.trim().length > 150) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationCode must not exceed 150 characters"
+                });
+            }
+
+
+            // VALIDATE IS DISABLED
+
+            if (typeof IsDisabled !== "boolean") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "IsDisabled must be true or false"
+                });
+            }
+
+
+            // VALIDATE CREATED BY USER NAME
+    
+
+            if (
+                CreatedByUserName === undefined ||
+                CreatedByUserName === null ||
+                CreatedByUserName.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CreatedByUserName is required"
+                });
+            }
+
+
+            if (typeof CreatedByUserName !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CreatedByUserName must be a string"
+                });
+            }
+
+            // CHECK COMPANY
+
+            const companyData = await checkCompanyExists(Number(CompanyId));
 
 
             if (companyData.length === 0) {
@@ -197,204 +232,60 @@ export const designationController = async (req, res) => {
             }
 
 
-            // ==================================================
-            // VALIDATE DESIGNATION NAME
-            // ==================================================
-
-            if (
-                typeof DesignationName !== "string" ||
-                !DesignationName.trim()
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationName is required"
-                });
-            }
-
-
-            if (DesignationName.trim().length > 150) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationName cannot exceed 150 characters"
-                });
-            }
-
-
-            // ==================================================
-            // VALIDATE DESIGNATION CODE
-            // ==================================================
-
-            if (
-                typeof DesignationCode !== "string" ||
-                !DesignationCode.trim()
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationCode is required"
-                });
-            }
-
-
-            if (DesignationCode.trim().length > 150) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationCode cannot exceed 150 characters"
-                });
-            }
-
-
-            // ==================================================
-            // VALIDATE IS DISABLED
-            // ==================================================
-
-            if (
-                IsDisabled !== undefined &&
-                typeof IsDisabled !== "boolean"
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "IsDisabled must be true or false"
-                });
-            }
-
-
-            // ==================================================
-            // VALIDATE CREATED BY USER
-            // ==================================================
-
-            if (
-                typeof CreatedByUserName !== "string" ||
-                !CreatedByUserName.trim()
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "CreatedByUserName is required"
-                });
-            }
-
-
-            // ==================================================
             // CHECK DUPLICATE DESIGNATION
-            // STRICT UNIQUENESS
-            // ACTIVE + INACTIVE BOTH COUNT
-            // ==================================================
 
-            const existingDesignation =
-                await checkDesignationData(
+            const existingDesignation =await checkDesignationExists(
                     Number(CompanyId),
                     DesignationName.trim(),
                     DesignationCode.trim()
                 );
 
 
-            let nameExists = false;
-            let codeExists = false;
+            if (existingDesignation.length > 0) {
 
+                const duplicate = existingDesignation[0];
 
-            for (const designation of existingDesignation) {
 
                 if (
-                    designation.DesignationName &&
-                    designation.DesignationName
-                        .trim()
-                        .toLowerCase() ===
-                    DesignationName
-                        .trim()
-                        .toLowerCase()
+                    duplicate.DesignationName &&
+                    duplicate.DesignationName.trim().toLowerCase() ===
+                    DesignationName.trim().toLowerCase()
                 ) {
 
-                    nameExists = true;
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Designation name already exists for this company"
+                    });
                 }
 
 
                 if (
-                    designation.DesignationCode &&
-                    designation.DesignationCode
-                        .trim()
-                        .toLowerCase() ===
-                    DesignationCode
-                        .trim()
-                        .toLowerCase()
+                    duplicate.DesignationCode &&
+                    duplicate.DesignationCode.trim().toLowerCase() ===
+                    DesignationCode.trim().toLowerCase()
                 ) {
 
-                    codeExists = true;
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Designation code already exists for this company"
+                    });
                 }
             }
 
 
-            // ==================================================
-            // BOTH NAME AND CODE EXIST
-            // ==================================================
-
-            if (nameExists && codeExists) {
-
-                return res.status(409).json({
-                    status: "error",
-                    message:
-                        "Designation name and code already exist for this company"
-                });
-            }
-
-
-            // ==================================================
-            // NAME EXISTS
-            // ==================================================
-
-            if (nameExists) {
-
-                return res.status(409).json({
-                    status: "error",
-                    message:
-                        "Designation name already exists for this company"
-                });
-            }
-
-
-            // ==================================================
-            // CODE EXISTS
-            // ==================================================
-
-            if (codeExists) {
-
-                return res.status(409).json({
-                    status: "error",
-                    message:
-                        "Designation code already exists for this company"
-                });
-            }
-
-
-            // ==================================================
             // ADD DESIGNATION
-            // ==================================================
 
             const designation = await addDesignation({
-
                 CompanyId: Number(CompanyId),
-
-                DesignationName:
-                    DesignationName.trim(),
-
-                DesignationCode:
-                    DesignationCode.trim(),
-
-                IsDisabled:
-                    IsDisabled ?? false,
-
-                CreatedByUserName:
-                    CreatedByUserName.trim()
+                DesignationName: DesignationName.trim(),
+                DesignationCode: DesignationCode.trim(),
+                IsDisabled,
+                CreatedByUserName: CreatedByUserName.trim()
             });
 
 
-            // ==================================================
             // SUCCESS
-            // ==================================================
+            
 
             return res.status(201).json({
                 status: "success",
@@ -404,9 +295,7 @@ export const designationController = async (req, res) => {
         }
 
 
-        // ==================================================
         // INVALID FLAG ID
-        // ==================================================
 
         return res.status(400).json({
             status: "error",
@@ -415,20 +304,7 @@ export const designationController = async (req, res) => {
 
     } catch (error) {
 
-        console.error(
-            "Error processing designation:",
-            error
-        );
-
-
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Designation already exists"
-            });
-        }
-
+        // console.error("Error processing designation:", error);
 
         return res.status(500).json({
             status: "error",
@@ -441,7 +317,7 @@ export const designationController = async (req, res) => {
 
 
 // ======================================================
-// EDIT DESIGNATION CONTROLLER
+// EDIT DESIGNATION
 // ======================================================
 
 export const editDesignationController = async (req, res) => {
@@ -450,43 +326,11 @@ export const editDesignationController = async (req, res) => {
 
     try {
 
-        // ==================================================
-        // VALIDATE FLAG ID
-        // ==================================================
+        // FLAG ID 1 - GET COMPANIES
 
-        if (
-            flagId === undefined ||
-            flagId === null ||
-            flagId === ""
-        ) {
+        if (parseInt(flagId) === 1) {
 
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        if (
-            !Number.isInteger(Number(flagId)) ||
-            Number(flagId) <= 0
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            });
-        }
-
-
-        // ==================================================
-        // FLAG ID 1 - GET COMPANIES FOR EDIT
-        // ==================================================
-
-        if (Number(flagId) === 1) {
-
-            const companies =
-                await getCompaniesForEditDropdown();
+            const companies = await getCompaniesForDropdown();
 
             return res.status(200).json({
                 status: "success",
@@ -496,81 +340,10 @@ export const editDesignationController = async (req, res) => {
         }
 
 
-        // ==================================================
-        // FLAG ID 2 - GET DESIGNATION BY ID
-        // ==================================================
+        // FLAG ID 2 - EDIT DESIGNATION
+ 
 
-        if (Number(flagId) === 2) {
-
-            const {
-                CompanyDesignationId
-            } = req.body;
-
-
-            // ==================================================
-            // VALIDATE DESIGNATION ID
-            // ==================================================
-
-            if (
-                CompanyDesignationId === undefined ||
-                CompanyDesignationId === null ||
-                CompanyDesignationId === ""
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyDesignationId is required"
-                });
-            }
-
-
-            if (
-                !Number.isInteger(
-                    Number(CompanyDesignationId)
-                ) ||
-                Number(CompanyDesignationId) <= 0
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "CompanyDesignationId must be a valid positive integer"
-                });
-            }
-
-
-            // ==================================================
-            // GET DESIGNATION
-            // ==================================================
-
-            const designation =
-                await getDesignationById(
-                    Number(CompanyDesignationId)
-                );
-
-
-            if (designation.length === 0) {
-
-                return res.status(404).json({
-                    status: "error",
-                    message: "Designation not found"
-                });
-            }
-
-
-            return res.status(200).json({
-                status: "success",
-                message: "Designation fetched successfully",
-                data: designation[0]
-            });
-        }
-
-
-        // ==================================================
-        // FLAG ID 3 - UPDATE DESIGNATION
-        // ==================================================
-
-        if (Number(flagId) === 3) {
+        if (parseInt(flagId) === 2) {
 
             const {
                 CompanyDesignationId,
@@ -582,9 +355,7 @@ export const editDesignationController = async (req, res) => {
             } = req.body;
 
 
-            // ==================================================
-            // VALIDATE DESIGNATION ID
-            // ==================================================
+            // VALIDATE COMPANY DESIGNATION ID
 
             if (
                 CompanyDesignationId === undefined ||
@@ -600,47 +371,149 @@ export const editDesignationController = async (req, res) => {
 
 
             if (
-                !Number.isInteger(
-                    Number(CompanyDesignationId)
-                ) ||
+                !Number.isInteger(Number(CompanyDesignationId)) ||
                 Number(CompanyDesignationId) <= 0
             ) {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyDesignationId must be a valid positive integer"
+                    message: "CompanyDesignationId must be a valid positive integer"
                 });
             }
 
 
-            // ==================================================
             // VALIDATE COMPANY ID
-            // ==================================================
 
             if (
                 CompanyId === undefined ||
                 CompanyId === null ||
-                CompanyId === "" ||
+                CompanyId === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+            }
+
+
+            if (
                 !Number.isInteger(Number(CompanyId)) ||
                 Number(CompanyId) <= 0
             ) {
 
                 return res.status(400).json({
                     status: "error",
-                    message: "Invalid or inactive CompanyId"
+                    message: "CompanyId must be a valid positive integer"
                 });
             }
 
 
-            // ==================================================
-            // CHECK COMPANY EXISTS AND IS ACTIVE
-            // ==================================================
+            // VALIDATE DESIGNATION NAME
 
-            const companyData =
-                await checkCompanyExists(
-                    Number(CompanyId)
-                );
+            if (
+                DesignationName === undefined ||
+                DesignationName === null ||
+                DesignationName.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationName is required"
+                });
+            }
+
+
+            if (typeof DesignationName !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationName must be a string"
+                });
+            }
+
+
+            if (DesignationName.trim().length > 150) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationName must not exceed 150 characters"
+                });
+            }
+
+
+            // VALIDATE DESIGNATION CODE
+        
+
+            if (
+                DesignationCode === undefined ||
+                DesignationCode === null ||
+                DesignationCode.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationCode is required"
+                });
+            }
+
+
+            if (typeof DesignationCode !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationCode must be a string"
+                });
+            }
+
+
+            if (DesignationCode.trim().length > 150) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationCode must not exceed 150 characters"
+                });
+            }
+
+
+            // VALIDATE IS DISABLED
+
+            if (typeof IsDisabled !== "boolean") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "IsDisabled must be true or false"
+                });
+            }
+
+
+            // VALIDATE UPDATED BY USER NAME
+
+            if (
+                UpdateByUserName === undefined ||
+                UpdateByUserName === null ||
+                UpdateByUserName.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "UpdateByUserName is required"
+                });
+            }
+
+
+            if (typeof UpdateByUserName !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "UpdateByUserName must be a string"
+                });
+            }
+
+
+            // CHECK COMPANY
+
+            const companyData = await checkCompanyExists(Number(CompanyId));
 
 
             if (companyData.length === 0) {
@@ -652,259 +525,63 @@ export const editDesignationController = async (req, res) => {
             }
 
 
-            // ==================================================
-            // VALIDATE DESIGNATION NAME
-            // ==================================================
+            // CHECK DUPLICATE DESIGNATION
+            // EXCLUDE CURRENT RECORD
 
-            if (
-                typeof DesignationName !== "string" ||
-                !DesignationName.trim()
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationName is required"
-                });
-            }
-
-
-            if (
-                DesignationName.trim().length > 150
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "DesignationName cannot exceed 150 characters"
-                });
-            }
-
-
-            // ==================================================
-            // VALIDATE DESIGNATION CODE
-            // ==================================================
-
-            if (
-                typeof DesignationCode !== "string" ||
-                !DesignationCode.trim()
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationCode is required"
-                });
-            }
-
-
-            if (
-                DesignationCode.trim().length > 150
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "DesignationCode cannot exceed 150 characters"
-                });
-            }
-
-
-            // ==================================================
-            // VALIDATE IS DISABLED
-            // ==================================================
-
-            if (
-                IsDisabled !== undefined &&
-                typeof IsDisabled !== "boolean"
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "IsDisabled must be true or false"
-                });
-            }
-
-
-            // ==================================================
-            // VALIDATE UPDATED BY USER
-            // ==================================================
-
-            if (
-                typeof UpdateByUserName !== "string" ||
-                !UpdateByUserName.trim()
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "UpdateByUserName is required"
-                });
-            }
-
-
-            // ==================================================
-            // CHECK CURRENT DESIGNATION EXISTS
-            // ==================================================
-
-            const existingRecord =
-                await getDesignationById(
+            const existingDesignation = await checkDesignationExistsForUpdate(
+                    Number(CompanyId),
+                    DesignationName.trim(),
+                    DesignationCode.trim(),
                     Number(CompanyDesignationId)
                 );
 
 
-            if (existingRecord.length === 0) {
+            if (existingDesignation.length > 0) {
 
-                return res.status(404).json({
-                    status: "error",
-                    message: "Designation not found"
-                });
-            }
+                const duplicate = existingDesignation[0];
 
-
-            // ==================================================
-            // CHECK DUPLICATE DESIGNATION
-            //
-            // IMPORTANT:
-            // Current CompanyDesignationId is excluded.
-            //
-            // ACTIVE AND INACTIVE RECORDS BOTH COUNT.
-            // ==================================================
-
-            const duplicateDesignation =
-                await checkDesignationExistsForUpdate(
-                    Number(CompanyDesignationId),
-                    Number(CompanyId),
-                    DesignationName.trim(),
-                    DesignationCode.trim()
-                );
-
-
-            let nameExists = false;
-            let codeExists = false;
-
-
-            for (
-                const designation
-                of duplicateDesignation
-            ) {
-
-                // ==================================================
-                // CHECK DESIGNATION NAME
-                // ==================================================
 
                 if (
-                    typeof designation.DesignationName === "string" &&
-                    designation.DesignationName
-                        .trim()
-                        .toLowerCase() ===
-                    DesignationName
-                        .trim()
-                        .toLowerCase()
+                    duplicate.DesignationName &&
+                    duplicate.DesignationName.trim().toLowerCase() ===
+                    DesignationName.trim().toLowerCase()
                 ) {
 
-                    nameExists = true;
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Designation name already exists for this company"
+                    });
                 }
 
 
-                // ==================================================
-                // CHECK DESIGNATION CODE
-                // ==================================================
-
                 if (
-                    typeof designation.DesignationCode === "string" &&
-                    designation.DesignationCode
-                        .trim()
-                        .toLowerCase() ===
-                    DesignationCode
-                        .trim()
-                        .toLowerCase()
+                    duplicate.DesignationCode &&
+                    duplicate.DesignationCode.trim().toLowerCase() ===
+                    DesignationCode.trim().toLowerCase()
                 ) {
 
-                    codeExists = true;
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Designation code already exists for this company"
+                    });
                 }
             }
 
 
-            // ==================================================
-            // BOTH NAME AND CODE EXIST
-            // ==================================================
-
-            if (
-                nameExists &&
-                codeExists
-            ) {
-
-                return res.status(409).json({
-                    status: "error",
-                    message:
-                        "Designation name and code already exist for this company"
-                });
-            }
-
-
-            // ==================================================
-            // NAME EXISTS
-            // ==================================================
-
-            if (nameExists) {
-
-                return res.status(409).json({
-                    status: "error",
-                    message:
-                        "Designation name already exists for this company"
-                });
-            }
-
-
-            // ==================================================
-            // CODE EXISTS
-            // ==================================================
-
-            if (codeExists) {
-
-                return res.status(409).json({
-                    status: "error",
-                    message:
-                        "Designation code already exists for this company"
-                });
-            }
-
-
-            // ==================================================
             // UPDATE DESIGNATION
-            //
-            // DUPLICATE CHECK HAS PASSED
-            // ==================================================
-
+      
             const result = await editDesignation({
-
-                CompanyDesignationId:
-                    Number(CompanyDesignationId),
-
-                CompanyId:
-                    Number(CompanyId),
-
-                DesignationName:
-                    DesignationName.trim(),
-
-                DesignationCode:
-                    DesignationCode.trim(),
-
-                IsDisabled:
-                    IsDisabled !== undefined
-                        ? IsDisabled
-                        : existingRecord[0].IsDisabled,
-
-                UpdateByUserName:
-                    UpdateByUserName.trim()
+                CompanyDesignationId:Number(CompanyDesignationId),
+                CompanyId: Number(CompanyId),
+                DesignationName: DesignationName.trim(),
+                DesignationCode: DesignationCode.trim(),
+                IsDisabled,
+                UpdateByUserName: UpdateByUserName.trim()
             });
 
+            // NOT FOUND
 
-            // ==================================================
-            // UPDATE FAILED
-            // ==================================================
-
-            if (!result) {
+            if (result === 0) {
 
                 return res.status(404).json({
                     status: "error",
@@ -912,23 +589,16 @@ export const editDesignationController = async (req, res) => {
                 });
             }
 
-
-            // ==================================================
             // SUCCESS
-            // ==================================================
 
             return res.status(200).json({
                 status: "success",
-                message:
-                    "Designation updated successfully",
+                message: "Designation updated successfully",
                 data: result
             });
         }
 
-
-        // ==================================================
         // INVALID FLAG ID
-        // ==================================================
 
         return res.status(400).json({
             status: "error",
@@ -937,24 +607,7 @@ export const editDesignationController = async (req, res) => {
 
     } catch (error) {
 
-        console.error(
-            "Error editing designation:",
-            error
-        );
-
-
-        // ==================================================
-        // POSTGRES UNIQUE VIOLATION
-        // ==================================================
-
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Designation already exists"
-            });
-        }
-
+        // console.error("Error editing designation:", error);
 
         return res.status(500).json({
             status: "error",
@@ -967,21 +620,16 @@ export const editDesignationController = async (req, res) => {
 
 
 // ======================================================
-// TOGGLE DESIGNATION STATUS CONTROLLER
+// TOGGLE DESIGNATION STATUS
 // ======================================================
 
-export const toggleDesignationStatus = async (
-    req,
-    res
-) => {
+export const toggleDesignationStatus = async (req, res) => {
 
     const { flagId } = req.body;
 
     try {
 
-        // ==================================================
         // VALIDATE FLAG ID
-        // ==================================================
 
         if (
             flagId === undefined ||
@@ -996,23 +644,9 @@ export const toggleDesignationStatus = async (
         }
 
 
-        if (
-            !Number.isInteger(Number(flagId)) ||
-            Number(flagId) <= 0
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            });
-        }
-
-
-        // ==================================================
         // FLAG ID 4 - TOGGLE DESIGNATION STATUS
-        // ==================================================
 
-        if (Number(flagId) === 4) {
+        if (parseInt(flagId) === 4) {
 
             const {
                 CompanyDesignationId,
@@ -1021,9 +655,7 @@ export const toggleDesignationStatus = async (
             } = req.body;
 
 
-            // ==================================================
-            // VALIDATE DESIGNATION ID
-            // ==================================================
+            // VALIDATE COMPANY DESIGNATION ID
 
             if (
                 CompanyDesignationId === undefined ||
@@ -1033,80 +665,66 @@ export const toggleDesignationStatus = async (
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyDesignationId is required"
+                    message: "CompanyDesignationId is required"
                 });
             }
 
 
             if (
-                !Number.isInteger(
-                    Number(CompanyDesignationId)
-                ) ||
+                !Number.isInteger(Number(CompanyDesignationId)) ||
                 Number(CompanyDesignationId) <= 0
             ) {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyDesignationId must be a valid positive integer"
+                    message: "CompanyDesignationId must be a valid positive integer"
                 });
             }
 
 
-            // ==================================================
             // VALIDATE IS DISABLED
-            // ==================================================
+    
 
             if (typeof IsDisabled !== "boolean") {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "IsDisabled must be true or false"
+                    message: "IsDisabled must be true or false"
                 });
             }
 
 
-            // ==================================================
-            // VALIDATE UPDATED BY USER
-            // ==================================================
+            // VALIDATE UPDATED BY USER NAME
 
             if (
+                UpdateByUserName === undefined ||
+                UpdateByUserName === null ||
+                UpdateByUserName === "" ||
                 typeof UpdateByUserName !== "string" ||
-                !UpdateByUserName.trim()
+                UpdateByUserName.trim() === ""
             ) {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "UpdateByUserName is required"
+                    message: "UpdateByUserName is required"
                 });
             }
 
 
-            // ==================================================
-            // TOGGLE STATUS
-            // ==================================================
-
-            const designation =
-                await toggleDesignationStatuses({
-
-                    CompanyDesignationId:
-                        Number(CompanyDesignationId),
-
-                    IsDisabled,
-
-                    UpdateByUserName:
-                        UpdateByUserName.trim()
-                });
+            // UPDATE DESIGNATION STATUS
+            
+            const designationData = await toggleDesignationStatuses({
+                CompanyDesignationId: Number(CompanyDesignationId),
+                IsDisabled,
+                UpdateByUserName: UpdateByUserName.trim()
+            });
 
 
-            // ==================================================
-            // DESIGNATION NOT FOUND
-            // ==================================================
+        
+            // DESIGNATION DOES NOT EXIST
+            
 
-            if (!designation) {
+            if (!designationData) {
 
                 return res.status(404).json({
                     status: "error",
@@ -1115,101 +733,56 @@ export const toggleDesignationStatus = async (
             }
 
 
-            // ==================================================
+           
             // SUCCESS
-            // ==================================================
+           
 
             return res.status(200).json({
                 status: "success",
-                message:
-                    "Designation status updated successfully",
-                data: designation
+                message: "Designation status updated successfully"
             });
         }
 
 
-        // ==================================================
         // INVALID FLAG ID
-        // ==================================================
+       
 
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId"
+            message: "Invalid flagId"
         });
 
     } catch (error) {
 
-        console.error(
-            "Error toggling designation status:",
-            error
-        );
+        // console.error("Error toggling designation status:", error);
 
         return res.status(500).json({
             status: "error",
-            message:
-                "Failed to update designation status",
+            message: "Failed to update designation status",
             error: error.message
         });
     }
 };
 
 
+// DELETE DESIGNATION
 
-// ======================================================
-// DELETE DESIGNATION CONTROLLER
-// ======================================================
 
-export const deleteDesignationController = async (
-    req,
-    res
-) => {
+export const deleteDesignationController = async (req, res) => {
 
     const {
         flagId,
         CompanyDesignationId
     } = req.body;
 
-
     try {
 
-        // ==================================================
-        // VALIDATE FLAG ID
-        // ==================================================
-
-        if (
-            flagId === undefined ||
-            flagId === null ||
-            flagId === ""
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        if (
-            !Number.isInteger(Number(flagId)) ||
-            Number(flagId) <= 0
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid flagId"
-            });
-        }
-
-
-        // ==================================================
         // FLAG ID 1 - DELETE DESIGNATION
-        // ==================================================
+      
 
-        if (Number(flagId) === 1) {
+        if (parseInt(flagId) === 1) {
 
-            // ==================================================
-            // VALIDATE DESIGNATION ID
-            // ==================================================
+            // VALIDATE ID
 
             if (
                 CompanyDesignationId === undefined ||
@@ -1219,42 +792,32 @@ export const deleteDesignationController = async (
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyDesignationId is required"
+                    message: "CompanyDesignationId is required"
                 });
             }
 
 
             if (
-                !Number.isInteger(
-                    Number(CompanyDesignationId)
-                ) ||
+                !Number.isInteger(Number(CompanyDesignationId)) ||
                 Number(CompanyDesignationId) <= 0
             ) {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyDesignationId must be a valid positive integer"
+                    message: "CompanyDesignationId must be a valid positive integer"
                 });
             }
 
 
-            // ==================================================
-            // DELETE DESIGNATION
-            // ==================================================
+            // ==========================================
+            // DELETE
+            // ==========================================
 
-            const result =
-                await deleteDesignation(
-                    Number(CompanyDesignationId)
-                );
+            const result = await deleteDesignation(Number(CompanyDesignationId));
 
+            // NOT FOUND
 
-            // ==================================================
-            // DESIGNATION NOT FOUND
-            // ==================================================
-
-            if (!result) {
+            if (result === 0) {
 
                 return res.status(404).json({
                     status: "error",
@@ -1263,22 +826,17 @@ export const deleteDesignationController = async (
             }
 
 
-            // ==================================================
             // SUCCESS
-            // ==================================================
 
             return res.status(200).json({
                 status: "success",
-                message:
-                    "Designation deleted successfully",
+                message: "Designation deleted successfully",
                 data: result
             });
         }
 
 
-        // ==================================================
         // INVALID FLAG ID
-        // ==================================================
 
         return res.status(400).json({
             status: "error",
@@ -1287,15 +845,11 @@ export const deleteDesignationController = async (
 
     } catch (error) {
 
-        console.error(
-            "Error deleting designation:",
-            error
-        );
+        // console.error("Error deleting designation:", error);
 
         return res.status(500).json({
             status: "error",
-            message:
-                "Failed to delete designation",
+            message: "Failed to delete designation",
             error: error.message
         });
     }

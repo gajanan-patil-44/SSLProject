@@ -6,6 +6,30 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/designationCreation/editdesignation
+  body:
+    type: json
+    data: |-
+      // {
+      //   "flagId":1
+      // }
+
+
+
+      // {
+      //   "flagId":2,
+      //   "CompanyDesignationId":2
+      // }
+
+
+      {
+        "flagId":3,
+        "CompanyDesignationId":6,
+        "CompanyId":2,
+        "DesignationName":"Team Lead",
+        "DesignationCode":"juuk09",
+        "IsDisabled":false,
+        "UpdateByUserName":"ks"
+      }
   auth: inherit
 
 settings:

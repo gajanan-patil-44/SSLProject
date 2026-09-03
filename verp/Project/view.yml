@@ -6,6 +6,12 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/projectCreation/view
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":1
+      }
   auth: inherit
 
 settings:

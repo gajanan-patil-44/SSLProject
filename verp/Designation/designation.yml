@@ -6,6 +6,22 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/designationCreation/designation
+  body:
+    type: json
+    data: |-
+      // {
+      //   "flagId":1
+      // }
+
+
+      {
+        "flagId":2,
+        "CompanyId":2,
+        "DesignationName":"gchvhj",
+        "DesignationCode":"ktyuyr3",
+        "IsDisabled":false,
+        "CreatedByUserName":"kavya"
+      }
   auth: inherit
 
 settings:

@@ -2,33 +2,18 @@ import {
     getAllProjects,
     getCompanyProductsForDropdown,
     checkCompanyProductExists,
-    checkProjectData,
+    checkProjectExists,
     addProject,
-    checkProjectExistsForEdit,
-    checkProjectDataForUpdate,
+    getProjectById,
+    checkProjectExistsForUpdate,
     editProject,
     toggleProjectStatuses,
     deleteProject
 } from "../../Models/ProjectModels.js";
 
-// ==========================================
-// VALIDATE POSITIVE INTEGER
-// ==========================================
 
-const isValidPositiveInteger = (value) => {
+// GET ALL PROJECTS
 
-    return (
-        value !== undefined &&
-        value !== null &&
-        value !== "" &&
-        Number.isInteger(Number(value)) &&
-        Number(value) > 0
-    );
-};
-
-// ==========================================
-// VIEW PROJECTS
-// ==========================================
 
 export const getProject = async (req, res) => {
 
@@ -36,61 +21,41 @@ export const getProject = async (req, res) => {
 
     try {
 
-        if (!flagId) {
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        // ==========================================
         // FLAG ID 1 - GET ALL PROJECTS
-        // ==========================================
+
 
         if (parseInt(flagId) === 1) {
 
-            const projects = await getAllProjects();
+            const rows = await getAllProjects();
 
             return res.status(200).json({
-
                 status: "success",
                 message: "Projects fetched successfully",
-                data: projects
-
+                data: rows
             });
         }
 
-        // ==========================================
+
         // INVALID FLAG ID
-        // ==========================================
 
         return res.status(400).json({
-
             status: "error",
             message: "Invalid FlagId."
-
         });
 
     } catch (error) {
 
-        // console.error("Error fetching projects:", error);
-
-
         return res.status(500).json({
-
             status: "error",
             message: "Failed to fetch projects",
             error: error.message
-
         });
     }
 };
 
 
-// ==========================================
-// ADD PROJECT CONTROLLER
-// ==========================================
+// ADD PROJECT / COMPANY PRODUCT DROPDOWN
+
 
 export const projectController = async (req, res) => {
 
@@ -98,35 +63,21 @@ export const projectController = async (req, res) => {
 
     try {
 
-        if (!flagId) {
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        // ==========================================
-        // FLAG ID 1 - COMPANY PRODUCT DROPDOWN
-        // ==========================================
+        // FLAG ID 1 - GET COMPANY PRODUCTS
 
         if (parseInt(flagId) === 1) {
 
             const companyProducts = await getCompanyProductsForDropdown();
 
             return res.status(200).json({
-
                 status: "success",
                 message: "Company products fetched successfully",
                 data: companyProducts
-
             });
         }
 
 
-        // ==========================================
         // FLAG ID 2 - ADD PROJECT
-        // ==========================================
 
         if (parseInt(flagId) === 2) {
 
@@ -140,9 +91,7 @@ export const projectController = async (req, res) => {
             } = req.body;
 
 
-            // ==========================================
-            // COMPANY PRODUCT ID VALIDATION
-            // ==========================================
+            // VALIDATE COMPANY PRODUCT ID
 
             if (
                 CompanyProductId === undefined ||
@@ -151,113 +100,84 @@ export const projectController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "CompanyProductId is required"
-
                 });
             }
 
-
-            if (!isValidPositiveInteger(CompanyProductId)) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "CompanyProductId must be a valid positive integer"
-
-                });
-            }
-
-            // ==========================================
-            // PROJECT NAME VALIDATION
-            // ==========================================
-
-            if (typeof ProjectName !== "string" || !ProjectName.trim()) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectName is required"
-
-                });
-            }
-
-
-            if (ProjectName.trim().length > 255) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectName cannot exceed 255 characters"
-
-                });
-            }
-
-
-            // ==========================================
-            // PROJECT CODE VALIDATION
-            // ==========================================
-
-            if (typeof ProjectCode !== "string" || !ProjectCode.trim()) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectCode is required"
-
-                });
-            }
-
-
-            if (ProjectCode.trim().length > 255) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectCode cannot exceed 255 characters"
-
-                });
-            }
-
-
-            // ==========================================
-            // DESCRIPTION VALIDATION
-            // ==========================================
 
             if (
-                Description !== undefined &&
-                Description !== null &&
-                typeof Description !== "string"
+                !Number.isInteger(Number(CompanyProductId)) ||
+                Number(CompanyProductId) <= 0
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
-                    message: "Description must be a string"
-
+                    message: "CompanyProductId must be a valid positive integer"
                 });
             }
 
 
-            // ==========================================
-            // IS DISABLED VALIDATION
-            // ==========================================
+            // VALIDATE PROJECT NAME
 
-            if (IsDisabled !== undefined && typeof IsDisabled !== "boolean") {
+            if (
+                ProjectName === undefined ||
+                ProjectName === null ||
+                typeof ProjectName !== "string" ||
+                ProjectName.trim() === ""
+            ) {
 
                 return res.status(400).json({
-
                     status: "error",
-                    message: "IsDisabled must be true or false"
-
+                    message: "ProjectName is required"
                 });
             }
 
 
-            // ==========================================
-            // CREATED BY USER ID VALIDATION
-            // ==========================================
+            // VALIDATE PROJECT CODE
+
+            if (
+                ProjectCode === undefined ||
+                ProjectCode === null ||
+                typeof ProjectCode !== "string" ||
+                ProjectCode.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "ProjectCode is required"
+                });
+            }
+
+
+            // VALIDATE DESCRIPTION
+
+            if (
+                Description === undefined ||
+                Description === null ||
+                typeof Description !== "string" ||
+                Description.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Description is required"
+                });
+            }
+
+
+            // VALIDATE IS DISABLED
+
+            if (typeof IsDisabled !== "boolean") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "IsDisabled must be true or false"
+                });
+            }
+
+
+            // VALIDATE CREATED BY USER ID
 
             if (
                 CreatedByUserId === undefined ||
@@ -266,54 +186,45 @@ export const projectController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "CreatedByUserId is required"
-
                 });
             }
 
 
-            if (!isValidPositiveInteger(CreatedByUserId)) {
+            if (
+                !Number.isInteger(Number(CreatedByUserId)) ||
+                Number(CreatedByUserId) <= 0
+            ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "CreatedByUserId must be a valid positive integer"
-
                 });
             }
 
 
-            // ==========================================
             // CHECK COMPANY PRODUCT
-            // ==========================================
 
-            const companyProduct = await checkCompanyProductExists(Number(CompanyProductId));
+            const companyProductData = await checkCompanyProductExists(Number(CompanyProductId));
 
 
-            if (companyProduct.length === 0) {
+            if (companyProductData.length === 0) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "Invalid or inactive CompanyProductId"
-
                 });
             }
 
 
-            // ==========================================
             // CHECK DUPLICATE PROJECT
-            // ==========================================
 
-            const existingProject = await checkProjectData(
-
-                Number(CompanyProductId),
-                ProjectCode.trim(),
-                ProjectName.trim()
-
-            );
+            const existingProject =await checkProjectExists(
+                    Number(CompanyProductId),
+                    ProjectName.trim(),
+                    ProjectCode.trim()
+                );
 
 
             if (existingProject.length > 0) {
@@ -321,98 +232,79 @@ export const projectController = async (req, res) => {
                 const duplicate = existingProject[0];
 
 
-                if (duplicate.ProjectCode.trim().toLowerCase() === ProjectCode.trim().toLowerCase()) {
+                // DUPLICATE PROJECT NAME
+
+                if (
+                    duplicate.ProjectName &&
+                    duplicate.ProjectName.trim().toLowerCase() ===
+                    ProjectName.trim().toLowerCase()
+                ) {
 
                     return res.status(409).json({
-
                         status: "error",
-                        message: "Project code already exists for this company product"
-
+                        message: "Project name already exists for this company product"
                     });
                 }
 
 
-                if (duplicate.ProjectName.trim().toLowerCase() === ProjectName.trim().toLowerCase()) {
+                // DUPLICATE PROJECT CODE
+
+                if (
+                    duplicate.ProjectCode &&
+                    duplicate.ProjectCode.trim().toLowerCase() ===
+                    ProjectCode.trim().toLowerCase()
+                ) {
 
                     return res.status(409).json({
-
                         status: "error",
-                        message: "Project name already exists for this company product"
-
+                        message: "Project code already exists for this company product"
                     });
                 }
             }
 
 
-
-
-            // ==========================================
             // ADD PROJECT
-            // ==========================================
 
             const project = await addProject({
 
                 CompanyProductId: Number(CompanyProductId),
                 ProjectName: ProjectName.trim(),
                 ProjectCode: ProjectCode.trim(),
-                IsDisabled: IsDisabled ?? false,
-                Description: Description?.trim() || null,
+                IsDisabled,
+                Description: Description.trim(),
                 CreatedByUserId: Number(CreatedByUserId)
-
             });
 
 
-            return res.status(201).json({
+            // SUCCESS
 
+            return res.status(201).json({
                 status: "success",
                 message: "Project added successfully",
                 data: project
-
             });
         }
 
 
-        // ==========================================
         // INVALID FLAG ID
-        // ==========================================
 
         return res.status(400).json({
-
             status: "error",
             message: "Invalid FlagId."
-
         });
 
     } catch (error) {
 
-        // console.error("Error processing project:", error);
-
-
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-
-                status: "error",
-                message: "Project already exists"
-
-            });
-        }
-
-
         return res.status(500).json({
-
             status: "error",
             message: "Failed to process project",
             error: error.message
-
         });
     }
 };
 
 
-// ==========================================
-// EDIT PROJECT CONTROLLER
-// ==========================================
+// EDIT PROJECT
 
 export const editProjectController = async (req, res) => {
 
@@ -420,35 +312,21 @@ export const editProjectController = async (req, res) => {
 
     try {
 
-        if (!flagId) {
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        // ==========================================
-        // FLAG ID 1 - COMPANY PRODUCT DROPDOWN
-        // ==========================================
+        // FLAG ID 1 - GET COMPANY PRODUCTS
 
         if (parseInt(flagId) === 1) {
 
             const companyProducts = await getCompanyProductsForDropdown();
 
             return res.status(200).json({
-
                 status: "success",
                 message: "Company products fetched successfully",
                 data: companyProducts
-
             });
         }
 
 
-        // ==========================================
         // FLAG ID 2 - EDIT PROJECT
-        // ==========================================
 
         if (parseInt(flagId) === 2) {
 
@@ -457,14 +335,13 @@ export const editProjectController = async (req, res) => {
                 CompanyProductId,
                 ProjectName,
                 ProjectCode,
+                IsDisabled,
                 Description,
                 UpdatedByUserId
             } = req.body;
 
 
-            // ==========================================
-            // PROJECT ID VALIDATION
-            // ==========================================
+            // VALIDATE PROJECT ID
 
             if (
                 ProjectId === undefined ||
@@ -473,28 +350,25 @@ export const editProjectController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "ProjectId is required"
-
                 });
             }
 
 
-            if (!isValidPositiveInteger(ProjectId)) {
+            if (
+                !Number.isInteger(Number(ProjectId)) ||
+                Number(ProjectId) <= 0
+            ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "ProjectId must be a valid positive integer"
-
                 });
             }
 
 
-            // ==========================================
-            // COMPANY PRODUCT ID VALIDATION
-            // ==========================================
+            // VALIDATE COMPANY PRODUCT ID
 
             if (
                 CompanyProductId === undefined ||
@@ -503,99 +377,84 @@ export const editProjectController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "CompanyProductId is required"
-
                 });
             }
 
-
-            if (!isValidPositiveInteger(CompanyProductId)) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "CompanyProductId must be a valid positive integer"
-
-                });
-            }
-
-
-            // ==========================================
-            // PROJECT NAME VALIDATION
-            // ==========================================
-
-            if (typeof ProjectName !== "string" || !ProjectName.trim()) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectName is required"
-
-                });
-            }
-
-
-            if (ProjectName.trim().length > 255) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectName cannot exceed 255 characters"
-
-                });
-            }
-
-
-            // ==========================================
-            // PROJECT CODE VALIDATION
-            // ==========================================
-
-            if (typeof ProjectCode !== "string" || !ProjectCode.trim()) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectCode is required"
-
-                });
-            }
-
-
-            if (ProjectCode.trim().length > 255) {
-
-                return res.status(400).json({
-
-                    status: "error",
-                    message: "ProjectCode cannot exceed 255 characters"
-
-                });
-            }
-
-
-            // ==========================================
-            // DESCRIPTION VALIDATION
-            // ==========================================
 
             if (
-                Description !== undefined &&
-                Description !== null &&
-                typeof Description !== "string"
+                !Number.isInteger(Number(CompanyProductId)) ||
+                Number(CompanyProductId) <= 0
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
-                    message: "Description must be a string"
-
+                    message: "CompanyProductId must be a valid positive integer"
                 });
             }
 
 
-            // ==========================================
-            // UPDATED BY USER ID VALIDATION
-            // ==========================================
+            // VALIDATE PROJECT NAME
+
+            if (
+                ProjectName === undefined ||
+                ProjectName === null ||
+                typeof ProjectName !== "string" ||
+                ProjectName.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "ProjectName is required"
+                });
+            }
+
+
+            // VALIDATE PROJECT CODE
+
+            if (
+                ProjectCode === undefined ||
+                ProjectCode === null ||
+                typeof ProjectCode !== "string" ||
+                ProjectCode.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "ProjectCode is required"
+                });
+            }
+
+
+            // VALIDATE DESCRIPTION
+
+            if (
+                Description === undefined ||
+                Description === null ||
+                typeof Description !== "string" ||
+                Description.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Description is required"
+                });
+            }
+
+
+            // VALIDATE IS DISABLED
+
+            if (typeof IsDisabled !== "boolean") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "IsDisabled must be true or false"
+                });
+            }
+
+
+            // VALIDATE UPDATED BY USER ID
 
             if (
                 UpdatedByUserId === undefined ||
@@ -604,106 +463,99 @@ export const editProjectController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "UpdatedByUserId is required"
-
                 });
             }
 
 
-            if (!isValidPositiveInteger(UpdatedByUserId)) {
+            if (
+                !Number.isInteger(Number(UpdatedByUserId)) ||
+                Number(UpdatedByUserId) <= 0
+            ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "UpdatedByUserId must be a valid positive integer"
-
                 });
             }
 
 
-            // ==========================================
             // CHECK PROJECT EXISTS
-            // ==========================================
 
-            const projectExists = await checkProjectExistsForEdit(Number(ProjectId));
+            const projectExists =await getProjectById(Number(ProjectId));
 
 
             if (projectExists.length === 0) {
 
                 return res.status(404).json({
-
                     status: "error",
                     message: "Project not found"
-
                 });
             }
 
 
-            // ==========================================
             // CHECK COMPANY PRODUCT
-            // ==========================================
 
-            const companyProduct = await checkCompanyProductExists(Number(CompanyProductId));
+            const companyProductData =await checkCompanyProductExists(Number(CompanyProductId));
 
 
-            if (companyProduct.length === 0) {
+            if (companyProductData.length === 0) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "Invalid or inactive CompanyProductId"
-
                 });
             }
 
 
-            // ==========================================
             // CHECK DUPLICATE PROJECT
-            // ==========================================
+            // EXCLUDE CURRENT PROJECT
 
-            const duplicateProject = await checkProjectDataForUpdate(
-
-                Number(ProjectId),
-                Number(CompanyProductId),
-                ProjectCode.trim(),
-                ProjectName.trim()
-
-            );
+            const existingProject =await checkProjectExistsForUpdate(
+                    Number(CompanyProductId),
+                    ProjectName.trim(),
+                    ProjectCode.trim(),
+                    Number(ProjectId)
+                );
 
 
-            if (duplicateProject.length > 0) {
+            if (existingProject.length > 0) {
 
-                const duplicate = duplicateProject[0];
+                const duplicate = existingProject[0];
 
 
-                if (duplicate.ProjectCode.trim().toLowerCase() === ProjectCode.trim().toLowerCase()) {
+                // DUPLICATE PROJECT NAME
+
+                if (
+                    duplicate.ProjectName &&
+                    duplicate.ProjectName.trim().toLowerCase() ===
+                    ProjectName.trim().toLowerCase()
+                ) {
 
                     return res.status(409).json({
-
                         status: "error",
-                        message: "Project code already exists for this company product"
-
+                        message: "Project name already exists for this company product"
                     });
                 }
 
 
-                if (duplicate.ProjectName.trim().toLowerCase() === ProjectName.trim().toLowerCase()) {
+                // DUPLICATE PROJECT CODE
+
+                if (
+                    duplicate.ProjectCode &&
+                    duplicate.ProjectCode.trim().toLowerCase() ===
+                    ProjectCode.trim().toLowerCase()
+                ) {
 
                     return res.status(409).json({
-
                         status: "error",
-                        message: "Project name already exists for this company product"
-
+                        message: "Project code already exists for this company product"
                     });
                 }
             }
 
-
-            // ==========================================
             // UPDATE PROJECT
-            // ==========================================
 
             const result = await editProject({
 
@@ -711,78 +563,51 @@ export const editProjectController = async (req, res) => {
                 CompanyProductId: Number(CompanyProductId),
                 ProjectName: ProjectName.trim(),
                 ProjectCode: ProjectCode.trim(),
-                Description: Description?.trim() || null,
+                IsDisabled,
+                Description: Description.trim(),
                 UpdatedByUserId: Number(UpdatedByUserId)
-
             });
 
 
-            // ==========================================
             // PROJECT NOT FOUND
-            // ==========================================
 
             if (result === 0) {
 
                 return res.status(404).json({
-
                     status: "error",
                     message: "Project not found"
-
                 });
             }
 
+            // SUCCESS
 
             return res.status(200).json({
-
                 status: "success",
                 message: "Project updated successfully",
                 data: result
-
             });
         }
 
 
-        // ==========================================
         // INVALID FLAG ID
-        // ==========================================
 
         return res.status(400).json({
-
             status: "error",
             message: "Invalid FlagId."
-
         });
 
     } catch (error) {
 
-        // console.error("Error editing project:", error);
-
-
-        if (error.code === "23505") {
-
-            return res.status(409).json({
-
-                status: "error",
-                message: "Project already exists"
-
-            });
-        }
-
-
         return res.status(500).json({
-
             status: "error",
             message: "Failed to edit project",
             error: error.message
-
         });
     }
 };
 
 
-// ==========================================
 // TOGGLE PROJECT STATUS
-// ==========================================
 
 export const toggleProjectStatus = async (req, res) => {
 
@@ -790,7 +615,14 @@ export const toggleProjectStatus = async (req, res) => {
 
     try {
 
-        if (!flagId) {
+        // VALIDATE FLAG ID
+
+        if (
+            flagId === undefined ||
+            flagId === null ||
+            flagId === ""
+        ) {
+
             return res.status(400).json({
                 status: "error",
                 message: "flagId is required"
@@ -798,9 +630,8 @@ export const toggleProjectStatus = async (req, res) => {
         }
 
 
-        // ==========================================
         // FLAG ID 4 - TOGGLE PROJECT STATUS
-        // ==========================================
+
 
         if (parseInt(flagId) === 4) {
 
@@ -811,9 +642,7 @@ export const toggleProjectStatus = async (req, res) => {
             } = req.body;
 
 
-            // ==========================================
-            // PROJECT ID VALIDATION
-            // ==========================================
+            // VALIDATE PROJECT ID
 
             if (
                 ProjectId === undefined ||
@@ -822,43 +651,36 @@ export const toggleProjectStatus = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "ProjectId is required"
-
                 });
             }
 
 
-            if (!isValidPositiveInteger(ProjectId)) {
+            if (
+                !Number.isInteger(Number(ProjectId)) ||
+                Number(ProjectId) <= 0
+            ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "ProjectId must be a valid positive integer"
-
                 });
             }
 
 
-            // ==========================================
-            // IS DISABLED VALIDATION
-            // ==========================================
+            // VALIDATE IS DISABLED
 
             if (typeof IsDisabled !== "boolean") {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "IsDisabled must be true or false"
-
                 });
             }
 
 
-            // ==========================================
-            // UPDATED BY USER ID VALIDATION
-            // ==========================================
+            // VALIDATE UPDATED BY USER ID
 
             if (
                 UpdatedByUserId === undefined ||
@@ -867,93 +689,71 @@ export const toggleProjectStatus = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "UpdatedByUserId is required"
-
                 });
             }
 
 
-            if (!isValidPositiveInteger(UpdatedByUserId)) {
+            if (
+                !Number.isInteger(Number(UpdatedByUserId)) ||
+                Number(UpdatedByUserId) <= 0
+            ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "UpdatedByUserId must be a valid positive integer"
-
                 });
             }
 
 
-            // ==========================================
-            // TOGGLE PROJECT
-            // ==========================================
+            // TOGGLE PROJECT STATUS
 
-            const project = await toggleProjectStatuses({
+            const projectData = await toggleProjectStatuses({
 
-                ProjectId: Number(ProjectId),
-                IsDisabled,
-                UpdatedByUserId: Number(UpdatedByUserId)
-
-            });
+                    ProjectId: Number(ProjectId),
+                    IsDisabled,
+                    UpdatedByUserId: Number(UpdatedByUserId)
+                });
 
 
-            // ==========================================
-            // PROJECT NOT FOUND
-            // ==========================================
-
-            if (!project) {
+            // PROJECT DOES NOT EXIST
+            if (!projectData) {
 
                 return res.status(404).json({
-
                     status: "error",
                     message: "Project not found"
-
                 });
             }
 
+            // SUCCESS
 
             return res.status(200).json({
-
                 status: "success",
-                message: "Project status updated successfully",
-                data: project
-
+                message: "Project status updated successfully"
             });
         }
 
 
-        // ==========================================
         // INVALID FLAG ID
-        // ==========================================
 
         return res.status(400).json({
-
             status: "error",
             message: "Invalid flagId"
-
         });
 
     } catch (error) {
 
-        // console.error("Error toggling project status:", error);
-
-
         return res.status(500).json({
-
             status: "error",
             message: "Failed to update project status",
             error: error.message
-
         });
     }
 };
 
 
-// ==========================================
 // DELETE PROJECT
-// ==========================================
 
 export const deleteProjectController = async (req, res) => {
 
@@ -962,26 +762,14 @@ export const deleteProjectController = async (req, res) => {
         ProjectId
     } = req.body;
 
-
     try {
 
-        if (!flagId) {
-            return res.status(400).json({
-                status: "error",
-                message: "flagId is required"
-            });
-        }
-
-
-        // ==========================================
         // FLAG ID 1 - DELETE PROJECT
-        // ==========================================
 
         if (parseInt(flagId) === 1) {
 
-            // ==========================================
-            // PROJECT ID VALIDATION
-            // ==========================================
+            // VALIDATE PROJECT ID
+   
 
             if (
                 ProjectId === undefined ||
@@ -990,94 +778,63 @@ export const deleteProjectController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "ProjectId is required"
-
                 });
             }
 
 
-            if (!isValidPositiveInteger(ProjectId)) {
+            if (
+                !Number.isInteger(Number(ProjectId)) ||
+                Number(ProjectId) <= 0
+            ) {
 
                 return res.status(400).json({
-
                     status: "error",
                     message: "ProjectId must be a valid positive integer"
-
                 });
             }
 
 
-            // ==========================================
             // DELETE PROJECT
-            // ==========================================
 
             const result = await deleteProject(Number(ProjectId));
 
 
-            // ==========================================
             // PROJECT NOT FOUND
-            // ==========================================
 
             if (result === 0) {
 
                 return res.status(404).json({
-
                     status: "error",
                     message: "Project not found"
-
                 });
             }
 
 
-            return res.status(200).json({
+            // SUCCESS
 
+            return res.status(200).json({
                 status: "success",
                 message: "Project deleted successfully",
                 data: result
-
             });
         }
 
 
-        // ==========================================
         // INVALID FLAG ID
-        // ==========================================
 
         return res.status(400).json({
-
             status: "error",
             message: "Invalid FlagId."
-
         });
 
     } catch (error) {
 
-        // console.error("Error deleting project:", error);
-
-
-        // ==========================================
-        // FOREIGN KEY ERROR
-        // ==========================================
-
-        if (error.code === "23503") {
-
-            return res.status(409).json({
-
-                status: "error",
-                message: "Project cannot be deleted because it is referenced by another record"
-
-            });
-        }
-
-
         return res.status(500).json({
-
             status: "error",
             message: "Failed to delete project",
             error: error.message
-
         });
     }
 };
