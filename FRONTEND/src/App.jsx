@@ -14,6 +14,8 @@ import TicketsView from './pages/Support/TicketsView';
 import ShowcaseView from './pages/UIInterface/ShowcaseView';
 import PagesView from './pages/Pages/PagesView';
 import HelpView from './pages/Help/HelpView';
+import LetterBuilderView from './pages/Documents/LetterBuilderView';
+import RolesView from './pages/UserManagement/RolesView';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -29,6 +31,11 @@ export default function App() {
           
           {/* Main Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
+          
+          {/* User Management & Roles */}
+          <Route path="user-management/roles" element={<RolesView />} />
+          <Route path="master/roles" element={<RolesView />} />
+          <Route path="roles" element={<RolesView />} />
           
           {/* Main Single Segment routes */}
           <Route path="applications" element={<ModuleRenderer />} />
@@ -59,6 +66,9 @@ export default function App() {
           {/* Help & Support Docs */}
           <Route path="help/:subpage" element={<HelpView />} />
           <Route path="help/multilevel/:subid" element={<HelpView />} />
+
+          {/* Documents */}
+          <Route path="documents/letter-builder" element={<LetterBuilderView />} />
 
           {/* Dynamic Metadata routing fallback for other modules */}
           <Route path=":module/:subpage" element={<ModuleRenderer />} />
