@@ -24,7 +24,6 @@ export const getAllCompanies = async () => {
                 "IsDisabled" AS "IsDisabled"
 
             FROM "LKP"."Company"
-            WHERE "IsDisabled" = false
             ORDER BY "CompanyName"
         `);
 

@@ -68,10 +68,10 @@ export const DynamicListPage = ({
     if (!deleteRecord || !deleteDataFn) return;
     setDeleteLoading(true);
     try {
-      const targetKey = deleteRecord.CompanyProductId || deleteRecord.ProductId || deleteRecord.RoleId || deleteRecord.id || deleteRecord.employeeId || deleteRecord.key;
+      const targetKey = deleteRecord.ProjectId || deleteRecord.CompanyDesignationId || deleteRecord.CompanyProductId || deleteRecord.ProductId || deleteRecord.RoleId || deleteRecord.CompanyId || deleteRecord.id || deleteRecord.employeeId || deleteRecord.key;
       await deleteDataFn(deleteRecord);
       setData(prev => prev.filter(item => {
-        const itemKey = item.CompanyProductId || item.ProductId || item.RoleId || item.id || item.employeeId || item.key;
+        const itemKey = item.ProjectId || item.CompanyDesignationId || item.CompanyProductId || item.ProductId || item.RoleId || item.CompanyId || item.id || item.employeeId || item.key;
         return itemKey !== targetKey;
       }));
       setDeleteRecord(null);

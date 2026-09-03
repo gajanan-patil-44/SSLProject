@@ -1,4 +1,4 @@
-// src/routes/apiRoutes.js
+ // src/routes/apiRoutes.js
 
 /**
  * ============================================================================
@@ -78,6 +78,46 @@ export const COMPANY_ROUTES = {
 
 /**
  * ============================================================================
+ * 6. DESIGNATION CREATION ROUTES
+ * ============================================================================
+ */
+export const DESIGNATION_ROUTES = {
+  VIEW: '/verp-service/designationCreation/view',
+  GET_DESIGNATIONS: '/verp-service/designationCreation/view',
+  GET_DESIGNATION: '/verp-service/designationCreation/view',
+  ADD_DESIGNATION: '/verp-service/designationCreation/designation',
+  DESIGNATION: '/verp-service/designationCreation/designation',
+  DROPDOWN_OR_ADD: '/verp-service/designationCreation/designation',
+  EDIT_DESIGNATION: '/verp-service/designationCreation/editdesignation',
+  UPDATE_DESIGNATION: '/verp-service/designationCreation/editdesignation',
+  TOGGLE_DESIGNATION_STATUS: '/verp-service/designationCreation/toggleDesignationStatus',
+  TOGGLE_STATUS: '/verp-service/designationCreation/toggleDesignationStatus',
+  DELETE_DESIGNATION: '/verp-service/designationCreation/deleteDesignation',
+  DELETE: '/verp-service/designationCreation/deleteDesignation'
+};
+
+/**
+ * ============================================================================
+ * 7. PROJECT CREATION ROUTES
+ * ============================================================================
+ */
+export const PROJECT_ROUTES = {
+  VIEW: '/verp-service/projectCreation/view',
+  GET_PROJECTS: '/verp-service/projectCreation/view',
+  GET_PROJECT: '/verp-service/projectCreation/view',
+  ADD_PROJECT: '/verp-service/projectCreation/project',
+  PROJECT: '/verp-service/projectCreation/project',
+  DROPDOWN_OR_ADD: '/verp-service/projectCreation/project',
+  EDIT_PROJECT: '/verp-service/projectCreation/editproject',
+  UPDATE_PROJECT: '/verp-service/projectCreation/editproject',
+  TOGGLE_PROJECT_STATUS: '/verp-service/projectCreation/editproject/toggleProjectStatus',
+  TOGGLE_STATUS: '/verp-service/projectCreation/editproject/toggleProjectStatus',
+  DELETE_PROJECT: '/verp-service/projectCreation/deleteProject',
+  DELETE: '/verp-service/projectCreation/deleteProject'
+};
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -86,7 +126,9 @@ export const API_ROUTES = {
   ROLE: ROLE_ROUTES,
   PRODUCT: PRODUCT_ROUTES,
   COMPANY_PRODUCT: COMPANY_PRODUCT_ROUTES,
-  COMPANY: COMPANY_ROUTES
+  COMPANY: COMPANY_ROUTES,
+  DESIGNATION: DESIGNATION_ROUTES,
+  PROJECT: PROJECT_ROUTES
 };
 
 export default API_ROUTES;

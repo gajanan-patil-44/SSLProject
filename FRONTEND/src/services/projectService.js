@@ -16,7 +16,7 @@ export const projectService = {
    * Get company products dropdown for project creation (flagId: 1)
    */
   getCompanyProductsDropdown: async () => {
-    return apiClient.post(API_ROUTES.PROJECT.DROPDOWN_OR_ADD, {
+    return apiClient.post(API_ROUTES.PROJECT.ADD_PROJECT, {
       flagId: 1
     });
   },
@@ -26,42 +26,65 @@ export const projectService = {
    * @param {Object} data - { CompanyProductId, ProjectName, ProjectCode, IsDisabled, Description, CreatedByUserId }
    */
   addProject: async (data) => {
-    return apiClient.post(API_ROUTES.PROJECT.DROPDOWN_OR_ADD, {
+    return apiClient.post(API_ROUTES.PROJECT.ADD_PROJECT, {
       flagId: 2,
-      ...data
+      CompanyProductId: Number(data.CompanyProductId || data.companyProductId),
+      ProjectName: data.ProjectName || data.projectName || '',
+      ProjectCode: data.ProjectCode || data.projectCode || '',
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
+      Description: data.Description || data.description || '',
+      CreatedByUserId: Number(data.CreatedByUserId ?? data.UserId ?? data.userId ?? 1)
+    });
+  },
+
+  /**
+   * Get company products dropdown for project edit (flagId: 1)
+   */
+  getCompanyProductsForEditDropdown: async () => {
+    return apiClient.post(API_ROUTES.PROJECT.EDIT_PROJECT, {
+      flagId: 1
     });
   },
 
   /**
    * Edit existing project (flagId: 2)
-   * @param {Object} data - { ProjectId, CompanyProductId, ProjectName, ProjectCode, Description, UpdatedByUserId }
+   * @param {Object} data - { ProjectId, CompanyProductId, ProjectName, ProjectCode, IsDisabled, Description, UpdatedByUserId }
    */
   editProject: async (data) => {
     return apiClient.post(API_ROUTES.PROJECT.EDIT_PROJECT, {
       flagId: 2,
-      ...data
+      ProjectId: Number(data.ProjectId ?? data.id),
+      CompanyProductId: Number(data.CompanyProductId || data.companyProductId),
+      ProjectName: data.ProjectName || data.projectName || '',
+      ProjectCode: data.ProjectCode || data.projectCode || '',
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
+      Description: data.Description || data.description || '',
+      UpdatedByUserId: Number(data.UpdatedByUserId ?? data.UserId ?? data.userId ?? 1)
     });
   },
 
   /**
-   * Toggle project status (flagId: 3)
+   * Toggle project status (flagId: 4)
    * @param {Object} data - { ProjectId, IsDisabled, UpdatedByUserId }
    */
   toggleProjectStatus: async (data) => {
     return apiClient.post(API_ROUTES.PROJECT.TOGGLE_STATUS, {
-      flagId: 3,
-      ...data
+      flagId: 4,
+      ProjectId: Number(data.ProjectId ?? data.id),
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled),
+      UpdatedByUserId: Number(data.UpdatedByUserId ?? data.UserId ?? data.userId ?? 1)
     });
   },
 
   /**
-   * Delete project (flagId: 4)
-   * @param {number|string} projectId 
+   * Delete project (flagId: 1)
+   * @param {number|string|Object} idOrData 
    */
-  deleteProject: async (projectId) => {
+  deleteProject: async (idOrData) => {
+    const id = typeof idOrData === 'object' ? (idOrData.ProjectId ?? idOrData.id) : idOrData;
     return apiClient.post(API_ROUTES.PROJECT.DELETE_PROJECT, {
-      flagId: 4,
-      ProjectId: projectId
+      flagId: 1,
+      ProjectId: Number(id)
     });
   }
 };

@@ -1,48 +1,43 @@
 import { pool } from "../Config/db.js";
 
 
-// ==========================================
 // GET ALL PROJECTS
-// ==========================================
 
 export const getAllProjects = async () => {
 
     try {
 
         const query = `
-               SELECT
+            SELECT
                 PR."ProjectId",
                 PR."CompanyProductId",
-
-                CP."CompanyId",
+                C."CompanyId",
                 C."CompanyName",
-
-                CP."ProductId",
+                P."ProductId",
                 P."ProductName",
-
+                P."ProductCode",
                 PR."ProjectName",
+                PR."ProjectCode",
                 PR."Description",
                 PR."IsDisabled",
-                PR."Description",
-
                 PR."CreatedAt",
                 PR."UpdatedAt",
-				U."FirstName" AS "CreatedByUserName"
-                
+                PR."CreatedByUserId",
+                PR."UpdatedByUserId"
+
             FROM "LKP"."Project" PR
 
             INNER JOIN "LKP"."CompanyProduct" CP
-                ON PR."CompanyProductId" = CP."CompanyProductId"
+                ON PR."CompanyProductId" =
+                   CP."CompanyProductId"
 
             INNER JOIN "LKP"."Company" C
-                ON CP."CompanyId" = C."CompanyId"
+                ON CP."CompanyId" =
+                   C."CompanyId"
 
             INNER JOIN "LKP"."Product" P
-                ON CP."ProductId" = P."ProductId"
-				
-			INNER JOIN "DATA"."User" U
-                ON PR."CreatedByUserId" = U."UserId"
-
+                ON CP."ProductId" =
+                   P."ProductId"
 
             ORDER BY
                 PR."CreatedAt" DESC;
@@ -51,112 +46,169 @@ export const getAllProjects = async () => {
 
         const result = await pool.query(query);
 
+
         return result.rows;
 
     } catch (error) {
-
-        // console.error("Error fetching projects:", error);
 
         throw error;
     }
 };
 
 
-// ==========================================
-// GET COMPANY PRODUCT DROPDOWN
-// ==========================================
+// GET COMPANY PRODUCTS FOR DROPDOWN
 
-export const getCompanyProductsForDropdown =async () => {
+export const getCompanyProductsForDropdown = async () => {
 
-        try {
+    try {
 
-            const query = `
-                SELECT
-                    CP."CompanyProductId",
+        const query = `
+            SELECT
+                CP."CompanyProductId",
+                CP."CompanyId",
+                C."CompanyName",
+                CP."ProductId",
+                P."ProductName",
+                P."ProductCode",
+
+                CONCAT(
+                    C."CompanyName",
+                    ' - ',
                     P."ProductName"
-					
-                FROM "LKP"."CompanyProduct" CP
-                INNER JOIN "LKP"."Product" P
-                    ON CP."ProductId" = P."ProductId"
-                WHERE CP."IsDisabled" = false
+                ) AS "CompanyProductName"
+
+            FROM "LKP"."CompanyProduct" CP
+
+            INNER JOIN "LKP"."Company" C
+                ON CP."CompanyId" =
+                   C."CompanyId"
+
+            INNER JOIN "LKP"."Product" P
+                ON CP."ProductId" =
+                   P."ProductId"
+
+            WHERE
+                CP."IsDisabled" = false
+
+                AND C."IsDisabled" = false
+
                 AND P."IsDisabled" = false
 
-                ORDER BY
-                    P."ProductName";
-            `;
+            ORDER BY
+                C."CompanyName",
+                P."ProductName";
+        `;
 
 
-            const result =await pool.query(query);
+        const result = await pool.query(query);
 
 
-            return result.rows;
+        return result.rows;
 
-        } catch (error) {
+    } catch (error) {
 
-            // console.error("Error fetching company products for dropdown:", error);
-
-            throw error;
-        }
-    };
+        throw error;
+    }
+};
 
 
-// ==========================================
-// CHECK COMPANY PRODUCT
-// ==========================================
+// CHECK COMPANY PRODUCT EXISTS AND ACTIVE
 
-export const checkCompanyProductExists =async (CompanyProductId) => {
+export const checkCompanyProductExists = async (CompanyProductId) => {
 
-        try {
+    try {
 
-            const query = `
-                SELECT
-                    CP."CompanyProductId",
-                    CP."CompanyId",
-                    CP."ProductId"
+        const query = `
+            SELECT
+                CP."CompanyProductId",
+                CP."CompanyId",
+                CP."ProductId"
 
-                FROM "LKP"."CompanyProduct" CP
+            FROM "LKP"."CompanyProduct" CP
 
-                INNER JOIN "LKP"."Company" C
-                    ON CP."CompanyId" =
-                       C."CompanyId"
+            INNER JOIN "LKP"."Company" C
+                ON CP."CompanyId" =
+                   C."CompanyId"
 
-                INNER JOIN "LKP"."Product" P
-                    ON CP."ProductId" =
-                       P."ProductId"
+            INNER JOIN "LKP"."Product" P
+                ON CP."ProductId" =
+                   P."ProductId"
 
-                WHERE CP."CompanyProductId" = $1
+            WHERE
+                CP."CompanyProductId" = $1
 
                 AND CP."IsDisabled" = false
+
                 AND C."IsDisabled" = false
+
                 AND P."IsDisabled" = false;
-            `;
+        `;
 
 
-            const values = [CompanyProductId];
+        const values = [CompanyProductId];
 
 
-            const result =await pool.query(query, values);
+        const result =await pool.query(
+                query,
+                values
+            );
 
 
-            return result.rows;
+        return result.rows;
 
-        } catch (error) {
+    } catch (error) {
 
-            // console.error("Error checking company product:", error);
-
-            throw error;
-        }
-    };
+        throw error;
+    }
+};
 
 
-// ==========================================
-// CHECK DUPLICATE PROJECT WHILE ADDING
-// ==========================================
+// GET PROJECT BY ID
 
-export const checkProjectData = async (
+export const getProjectById = async (ProjectId) => {
+
+    try {
+
+        const query = `
+            SELECT
+                "ProjectId",
+                "CompanyProductId",
+                "ProjectName",
+                "ProjectCode",
+                "IsDisabled",
+                "Description"
+
+            FROM "LKP"."Project"
+
+            WHERE "ProjectId" = $1;
+        `;
+
+
+        const values = [ProjectId];
+
+
+        const result = await pool.query(
+                query,
+                values
+            );
+
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+
+// CHECK PROJECT FOR ADD
+
+export const checkProjectExists = async (
     CompanyProductId,
-    ProjectCode,
-    ProjectName
+    ProjectName,
+    ProjectCode
 ) => {
 
     try {
@@ -165,50 +217,51 @@ export const checkProjectData = async (
             SELECT
                 "ProjectId",
                 "CompanyProductId",
-                "ProjectCode",
-                "ProjectName"
+                "ProjectName",
+                "ProjectCode"
 
             FROM "LKP"."Project"
 
-            WHERE "CompanyProductId" = $1
+            WHERE
+                "CompanyProductId" = $1
 
-            AND
-            (
-                LOWER(TRIM("ProjectCode"))
-                    = LOWER(TRIM($2))
+                AND
+                (
+                    LOWER(TRIM("ProjectName")) =
+                        LOWER(TRIM($2))
 
-                OR
+                    OR
 
-                LOWER(TRIM("ProjectName"))
-                    = LOWER(TRIM($3))
-            );
+                    LOWER(TRIM("ProjectCode")) =
+                        LOWER(TRIM($3))
+                );
         `;
 
 
         const values = [
             CompanyProductId,
-            ProjectCode,
-            ProjectName
+            ProjectName,
+            ProjectCode
         ];
 
 
-        const result =await pool.query(query, values);
+        const result = await pool.query(
+                query,
+                values
+            );
 
 
         return result.rows;
 
     } catch (error) {
 
-        // console.error("Error checking duplicate project:", error);
-
         throw error;
     }
 };
 
 
-// ==========================================
+
 // ADD PROJECT
-// ==========================================
 
 export const addProject = async (projectData) => {
 
@@ -259,125 +312,89 @@ export const addProject = async (projectData) => {
             projectData.IsDisabled,
             projectData.Description,
             projectData.CreatedByUserId
-
         ];
 
 
-        const result =await pool.query(query, values);
+        const result = await pool.query(
+                query,
+                values
+            );
+
 
         return result.rows[0];
 
     } catch (error) {
-
-        // console.error("Error adding project:", error);
 
         throw error;
     }
 };
 
 
-// ==========================================
-// CHECK PROJECT EXISTS FOR EDIT
-// ==========================================
 
-export const checkProjectExistsForEdit =async (ProjectId) => {
+// CHECK PROJECT FOR UPDATE
 
-        try {
+export const checkProjectExistsForUpdate = async (
+    CompanyProductId,
+    ProjectName,
+    ProjectCode,
+    ProjectId
+) => {
 
-            const query = `
-                SELECT
-                    "ProjectId",
-                    "CompanyProductId",
-                    "ProjectName",
-                    "ProjectCode",
-                    "IsDisabled",
-                    "Description",
-                    "CreatedAt",
-                    "UpdatedAt",
-                    "CreatedByUserId",
-                    "UpdatedByUserId"
+    try {
 
-                FROM "LKP"."Project"
-                WHERE "ProjectId" = $1;
-            `;
+        const query = `
+            SELECT
+                "ProjectId",
+                "CompanyProductId",
+                "ProjectName",
+                "ProjectCode"
 
+            FROM "LKP"."Project"
 
-            const values = [ProjectId];
+            WHERE
+                "CompanyProductId" = $1
 
+                AND
+                "ProjectId" <> $4
 
-            const result =await pool.query(query, values);
-
-            return result.rows;
-
-        } catch (error) {
-
-            // console.error("Error checking project for edit:", error);
-
-            throw error;
-        }
-    };
-
-
-// ==========================================
-// CHECK DUPLICATE PROJECT FOR UPDATE
-// ==========================================
-
-export const checkProjectDataForUpdate =async (
-        ProjectId,
-        CompanyProductId,
-        ProjectCode,
-        ProjectName
-    ) => {
-
-        try {
-
-            const query = `
-                SELECT
-                    "ProjectId",
-                    "CompanyProductId",
-                    "ProjectCode",
-                    "ProjectName"
-
-                FROM "LKP"."Project"
-                WHERE "CompanyProductId" = $1
-                AND "ProjectId" <> $2
                 AND
                 (
-                    LOWER(TRIM("ProjectCode"))
-                        = LOWER(TRIM($3))
+                    LOWER(TRIM("ProjectName")) =
+                        LOWER(TRIM($2))
 
                     OR
 
-                    LOWER(TRIM("ProjectName"))
-                        = LOWER(TRIM($4))
+                    LOWER(TRIM("ProjectCode")) =
+                        LOWER(TRIM($3))
                 );
-            `;
+        `;
 
 
-            const values = [
-                CompanyProductId,
-                ProjectId,
-                ProjectCode,
-                ProjectName
-            ];
+        const values = [
+            CompanyProductId,
+            ProjectName,
+            ProjectCode,
+            ProjectId
+        ];
 
 
-            const result =await pool.query(query, values);
-
-            return result.rows;
-
-        } catch (error) {
-
-            // console.error("Error checking duplicate project for update:", error);
-
-            throw error;
-        }
-    };
+        const result = await pool.query(
+                query,
+                values
+            );
 
 
-// ==========================================
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+
 // EDIT PROJECT
-// ==========================================
 
 export const editProject = async (projectData) => {
 
@@ -390,11 +407,13 @@ export const editProject = async (projectData) => {
                 "CompanyProductId" = $1,
                 "ProjectName" = $2,
                 "ProjectCode" = $3,
-                "Description" = $4,
+                "IsDisabled" = $4,
+                "Description" = $5,
                 "UpdatedAt" = CURRENT_TIMESTAMP,
-                "UpdatedByUserId" = $5
+                "UpdatedByUserId" = $6
 
-            WHERE "ProjectId" = $6;
+            WHERE
+                "ProjectId" = $7;
         `;
 
 
@@ -402,102 +421,107 @@ export const editProject = async (projectData) => {
             projectData.CompanyProductId,
             projectData.ProjectName,
             projectData.ProjectCode,
+            projectData.IsDisabled,
             projectData.Description,
             projectData.UpdatedByUserId,
             projectData.ProjectId
-
         ];
 
 
-        const result =await pool.query(query, values);
+        const result = await pool.query(
+                query,
+                values
+            );
+
 
         return result.rowCount;
 
     } catch (error) {
-
-        // console.error("Error editing project:", error);
 
         throw error;
     }
 };
 
 
-// ==========================================
 // TOGGLE PROJECT STATUS
-// ==========================================
-
-export const toggleProjectStatuses =async (projectData) => {
-
-        try {
-
-            const query = `
-                UPDATE "LKP"."Project"
-
-                SET
-                    "IsDisabled" = $1,
-                    "UpdatedAt" = CURRENT_TIMESTAMP,
-                    "UpdatedByUserId" = $2
-
-                WHERE "ProjectId" = $3
-
-                RETURNING
-                    "ProjectId",
-                    "CompanyProductId",
-                    "ProjectName",
-                    "ProjectCode",
-                    "IsDisabled",
-                    "Description",
-                    "UpdatedAt",
-                    "UpdatedByUserId";
-            `;
 
 
-            const values = [
-                projectData.IsDisabled,
-                projectData.UpdatedByUserId,
-                projectData.ProjectId
+export const toggleProjectStatuses = async (projectData) => {
 
-            ];
+    try {
+
+        const query = `
+            UPDATE "LKP"."Project"
+
+            SET
+                "IsDisabled" = $1,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserId" = $2
+
+            WHERE
+                "ProjectId" = $3
+
+            RETURNING
+                "ProjectId",
+                "CompanyProductId",
+                "ProjectName",
+                "ProjectCode",
+                "IsDisabled",
+                "Description",
+                "UpdatedAt",
+                "UpdatedByUserId";
+        `;
 
 
-            const result =await pool.query(query, values);
-
-            return result.rows[0];
-
-        } catch (error) {
-
-            // console.error("Error toggling project status:", error);
-
-            throw error;
-        }
-    };
+        const values = [
+            projectData.IsDisabled,
+            projectData.UpdatedByUserId,
+            projectData.ProjectId
+        ];
 
 
-// ==========================================
+        const result = await pool.query(
+                query,
+                values
+            );
+
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
 // DELETE PROJECT
-// ==========================================
 
-export const deleteProject =async (ProjectId) => {
+export const deleteProject = async (ProjectId) => {
 
-        try {
+    try {
 
-            const query = `
-                DELETE FROM "LKP"."Project"
-                WHERE "ProjectId" = $1;
-            `;
+        const query = `
+            DELETE FROM "LKP"."Project"
 
-
-            const values = [ProjectId];
+            WHERE
+                "ProjectId" = $1;
+        `;
 
 
-            const result =await pool.query(query, values);
+        const values = [ProjectId];
 
-            return result.rowCount;
 
-        } catch (error) {
+        const result = await pool.query(
+                query,
+                values
+            );
 
-            // console.error("Error deleting project:", error);
 
-            throw error;
-        }
-    };
+        return result.rowCount;
+
+    } catch (error) {
+
+        throw error;
+    }
+};

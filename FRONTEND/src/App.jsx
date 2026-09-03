@@ -34,6 +34,8 @@ export default function App() {
           {/* Main Single Segment routes */}
           <Route path="roles" element={<ModuleRenderer />} />
           <Route path="companies" element={<ModuleRenderer />} />
+          <Route path="designations" element={<ModuleRenderer />} />
+          <Route path="projects" element={<ModuleRenderer />} />
           <Route path="applications" element={<ModuleRenderer />} />
           <Route path="layouts" element={<ModuleRenderer />} />
 

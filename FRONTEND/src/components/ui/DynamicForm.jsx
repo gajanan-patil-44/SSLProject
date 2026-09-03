@@ -63,11 +63,30 @@ export const DynamicForm = ({
             helpText={field.helpText}
             className={field.gridSpan || "col-span-1"}
           >
-            <Select
-              options={field.options}
-              disabled={field.disabled}
-              error={!!errorMsg}
-              {...register(field.key)}
+            <Controller
+              name={field.key}
+              control={control}
+              render={({ field: { value, onChange, ref, ...rest } }) => {
+                const normalizedValue = (value !== undefined && value !== null) ? String(value) : '';
+                return (
+                  <Select
+                    ref={ref}
+                    options={field.options}
+                    disabled={field.disabled}
+                    error={!!errorMsg}
+                    value={normalizedValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || val === undefined || val === null) {
+                        onChange('');
+                      } else {
+                        onChange(isNaN(Number(val)) ? val : Number(val));
+                      }
+                    }}
+                    {...rest}
+                  />
+                );
+              }}
             />
           </FormField>
         );
@@ -224,13 +243,20 @@ function useFormSchema(fields) {
         validator = z.number({ invalid_type_error: "Must be a number" });
       } else if (field.type === 'checkbox' || field.type === 'switch' || field.type === 'toggle') {
         validator = z.boolean();
+      } else if (field.type === 'select') {
+        validator = z.union([z.string(), z.number()]);
       } else {
         validator = z.string();
       }
 
       if (field.required) {
         if (field.type === 'number') {
-          validator = validator.refine(val => val !== undefined && val !== null, { message: "Required field" });
+          validator = validator.refine(val => val !== undefined && val !== null && !isNaN(val), { message: "Required field" });
+        } else if (field.type === 'select') {
+          validator = validator.refine(
+            val => val !== undefined && val !== null && String(val).trim() !== '' && String(val) !== 'undefined' && String(val) !== 'null',
+            { message: `${field.label || 'Field'} is required` }
+          );
         } else if (field.type === 'checkbox') {
           validator = validator.refine(val => val === true, { message: "Must check this box" });
         } else if (field.type === 'switch' || field.type === 'toggle') {
@@ -244,6 +270,8 @@ function useFormSchema(fields) {
           validator = validator.optional().or(z.literal(''));
         } else if (field.type === 'number') {
           validator = validator.optional().nullable();
+        } else if (field.type === 'select') {
+          validator = validator.optional().nullable().or(z.literal(''));
         } else {
           validator = validator.optional();
         }

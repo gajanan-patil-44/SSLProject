@@ -5,23 +5,40 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/roleCreation/updateRole
+  url: http://192.168.23.76:9004/verp-service/roleCreation/updateRole
   body:
     type: json
     data: |-
+      // {
+      //   "FlagId" :4,
+      //   "CompanyId" :7,
+      //   "RoleId": 5,
+      //   "RoleName": "Officer",
+      //   "Description": "Officer responsible for processing application",
+      //   "RequestUserName": "Praveen",
+      //   "Role_Code": "OFFICER",
+      //   "IsDisabled": false,
+      //   "UpdatedByUserName":"praveen"
+      // }
+
       {
-        "RoleId": 5,
-        "RoleName": "Officer",
-        "Description": "Officer responsible for processing application",
-        "RequestUserName": "Praveen",
-        "Role_Code": "OFFICER",
-        "IsDisabled": false,
-        "UpdatedByUserName":"praveen"
+        "CompanyId": 3,
+        "Description": "qqqqqqq",
+        "FlagId": 4,
+        "IsDisabled": true,
+        "RequestUserName": "admin11",
+        "RoleId": 1,
+        "RoleName": "Super Admin",
+        "Role_Code": "SUPERADMIN",
+        "UpdatedByUserName": "admin11"
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIyLCJFbXBsb3llZUlkIjoiRU1QMTEiLCJMb2dpbk5hbWUiOiJhZG1pbjExIiwiRW1haWwiOiJhZG1pbjExQGV4YW1wbGUuY29tIiwiRGVzaWduYXRpb25JZCI6MSwiaWF0IjoxNzg4MzQzMjkyLCJleHAiOjE3ODgzODY0OTJ9.ArrBlM-WUsF6509-2l5OIxkX-x0V5qrRIQkthHLocYA
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
