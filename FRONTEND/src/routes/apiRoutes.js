@@ -110,8 +110,8 @@ export const PROJECT_ROUTES = {
   DROPDOWN_OR_ADD: '/verp-service/projectCreation/project',
   EDIT_PROJECT: '/verp-service/projectCreation/editproject',
   UPDATE_PROJECT: '/verp-service/projectCreation/editproject',
-  TOGGLE_PROJECT_STATUS: '/verp-service/projectCreation/editproject/toggleProjectStatus',
-  TOGGLE_STATUS: '/verp-service/projectCreation/editproject/toggleProjectStatus',
+  TOGGLE_PROJECT_STATUS: '/verp-service/projectCreation/toggleProjectStatus',
+  TOGGLE_STATUS: '/verp-service/projectCreation/toggleProjectStatus',
   DELETE_PROJECT: '/verp-service/projectCreation/deleteProject',
   DELETE: '/verp-service/projectCreation/deleteProject'
 };

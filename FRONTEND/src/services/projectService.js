@@ -68,11 +68,27 @@ export const projectService = {
    * @param {Object} data - { ProjectId, IsDisabled, UpdatedByUserId }
    */
   toggleProjectStatus: async (data) => {
+    const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
+      try {
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        const s = JSON.parse(localStorage.getItem('erp_session') || '{}');
+        return {
+          userId: Number(s?.UserId ?? u?.UserId ?? u?.id ?? 1),
+          userName: u?.loginName || u?.LoginName || s?.LoginName || s?.loginName || u?.EmployeeId || s?.EmployeeId || 'admin'
+        };
+      } catch { return { userId: 1, userName: 'admin' }; }
+    })() : { userId: 1, userName: 'admin' };
+
+    const userId = Number(data.UpdatedByUserId ?? data.UserId ?? data.userId ?? userState.userId);
+    const userName = data.UpdatedByUserName || data.UpdateByUserName || userState.userName;
+
     return apiClient.post(API_ROUTES.PROJECT.TOGGLE_STATUS, {
       flagId: 4,
       ProjectId: Number(data.ProjectId ?? data.id),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled),
-      UpdatedByUserId: Number(data.UpdatedByUserId ?? data.UserId ?? data.userId ?? 1)
+      UpdatedByUserId: userId,
+      UpdatedByUserName: userName,
+      UpdateByUserName: userName
     });
   },
 
