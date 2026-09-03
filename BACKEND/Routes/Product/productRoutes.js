@@ -1,12 +1,12 @@
 import express from "express";
 import { getProduct, addProducts, updateProduct, toggleProductStatus, deleteProduct } from "../../Controllers/Product/productController.js";
-
+import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 const router = express.Router();
 
-router.post("/getProduct", getProduct);
-router.post("/addProduct", addProducts);
-router.post("/updateProduct", updateProduct);
-router.post("/deleteProduct", deleteProduct);
-router.post("/toggleProductStatus", toggleProductStatus);
+router.post("/getProduct", authenticateToken, getProduct);
+router.post("/addProduct", authenticateToken, addProducts);
+router.post("/updateProduct", authenticateToken, updateProduct);
+router.post("/deleteProduct", authenticateToken, deleteProduct);
+router.post("/toggleProductStatus", authenticateToken, toggleProductStatus);
 
 export default router;

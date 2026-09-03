@@ -7,7 +7,7 @@ import {
     toggleProjectStatus,
     deleteProjectController
 } from "../../Controllers/Projects/projectController.js";
-
+import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
 const router = express.Router();
 

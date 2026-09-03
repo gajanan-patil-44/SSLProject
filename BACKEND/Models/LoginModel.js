@@ -7,32 +7,87 @@ import { pool } from "../Config/db.js";
 
 export const findUserForLogin = async (username) => {
 
-    const loginValue = String(username).trim();
+    // ==========================================================
+    // 1. GET LOGIN FIELDS DYNAMICALLY
+    // ==========================================================
+
+    const loginFieldsResult = await pool.query(`
+        SELECT
+            "LoginFieldName"
+        FROM "DATA"."LoginField"
+        WHERE
+            "IsDisabled" = FALSE
+            AND "LoginFieldName" IS NOT NULL
+            AND TRIM("LoginFieldName") <> ''
+    `);
+
+    const loginFields = loginFieldsResult.rows;
+
+    if (loginFields.length === 0) {
+        return null;
+    }
+
 
     // ==========================================================
-    // 1. USER
+    // CREATE DYNAMIC LOGIN CONDITION
+    // ==========================================================
+
+    const loginConditions = loginFields
+        .map(field => {
+
+            const fieldName =
+                String(field.LoginFieldName).trim();
+
+            return `
+                LOWER(
+                    TRIM(
+                        CAST(u."${fieldName}" AS TEXT)
+                    )
+                )
+                =
+                LOWER(
+                    TRIM($1)
+                )
+            `;
+
+        })
+        .join(" OR ");
+
+
+    // ==========================================================
+    // 2. FIND USER
     // ==========================================================
 
     const userQuery = `
         SELECT
+
             u."UserId",
             u."EmployeeId",
+
             u."FirstName",
             u."MiddleName",
             u."LastName",
+
             u."PhoneNumber",
             u."Email",
+
             u."Password",
             u."LoginName",
+
             u."Photo",
+
             u."DesignationId",
+
             u."IsForcePasswordChange",
             u."IsDisabled",
+
             u."AttemptCount",
             u."IsTempBlocked",
             u."TempBlockedOn",
+
             u."IsBlocked",
             u."BlockedOn",
+
             u."CreatedAt",
             u."UpdatedAt",
 
@@ -40,115 +95,101 @@ export const findUserForLogin = async (username) => {
             d."DesignationCode",
             d."DesignationName",
             d."DesignationLevel",
+
             d."CompanyId" AS "DesignationCompanyId"
 
         FROM "DATA"."User" u
 
         LEFT JOIN "LKP"."CompanyDesignation" d
-            ON d."CompanyDesignationId" = u."DesignationId"
+            ON d."CompanyDesignationId" =
+               u."DesignationId"
 
         WHERE
-            LOWER(TRIM(u."LoginName")) = LOWER($1)
-            OR LOWER(TRIM(u."Email")) = LOWER($1)
-            OR TRIM(u."PhoneNumber") = $1
+
+            (
+                ${loginConditions}
+            )
+
+            AND u."IsDisabled" = FALSE
 
         LIMIT 1
     `;
 
+
     const userResult = await pool.query(
         userQuery,
-        [loginValue]
+        [username]
     );
+
 
     if (userResult.rows.length === 0) {
         return null;
     }
 
+
     const user = userResult.rows[0];
 
 
     // ==========================================================
-    // 2. COMPANY
-    //
-    // User
-    //   ↓
-    // UserCompany
-    //   ↓
-    // Company
+    // 3. COMPANY
     // ==========================================================
 
     const companyQuery = `
-        SELECT
-            uc."CompanyId",
-            c."CompanyCode",
-            c."CompanyName"
+    SELECT
+        uc."CompanyId",
+        c."CompanyName"
+    FROM "DATA"."UserCompany" uc
+    LEFT JOIN "LKP"."Company" c
+        ON c."CompanyId" = uc."CompanyId"
+    WHERE
+        uc."UserId" = $1
+    ORDER BY uc."CompanyId"
+`;
 
-        FROM "DATA"."UserCompany" uc
-
-        INNER JOIN "LKP"."Company" c
-            ON c."CompanyId" = uc."CompanyId"
-
-        WHERE
-            uc."UserId" = $1
-            AND c."IsDisabled" = FALSE
-
-        ORDER BY
-            uc."CompanyId"
-    `;
-
-    const companyResult = await pool.query(
-        companyQuery,
-        [user.UserId]
-    );
-
+const companyResult = await pool.query(companyQuery, [user.UserId]);
 
     // ==========================================================
-    // 3. PRODUCT
-    //
-    // User
-    //   ↓
-    // UserProduct
-    //   ↓
-    // CompanyProduct
-    //   ↓
-    // Product
+    // 4. PRODUCT
     // ==========================================================
 
     const productQuery = `
+        SELECT DISTINCT
 
-    SELECT DISTINCT
+            up."CompanyProductId",
 
-        up."CompanyProductId",
+            cp."CompanyId",
 
-        cp."CompanyId",
+            cp."ProductId",
 
-        cp."ProductId",
+            p."ProductName"
 
-        p."ProductCode",
+        FROM "DATA"."UserProduct" up
 
-        p."ProductName"
+        INNER JOIN "LKP"."CompanyProduct" cp
+            ON cp."CompanyProductId" =
+               up."CompanyProductId"
 
-    FROM "DATA"."UserProduct" up
+        INNER JOIN "LKP"."Product" p
+            ON p."ProductId" =
+               cp."ProductId"
 
-    INNER JOIN "LKP"."CompanyProduct" cp
-        ON cp."CompanyProductId" =
-           up."CompanyProductId"
+        WHERE
 
-    INNER JOIN "LKP"."Product" p
-        ON p."ProductId" =
-           cp."ProductId"
+            up."UserId" = $1
 
-    WHERE
+            AND p."IsDisabled" = FALSE
 
-        up."UserId" = $1
+        ORDER BY
+            cp."CompanyId",
+            up."CompanyProductId"
+    `;
 
-        AND p."IsDisabled" = FALSE
 
-    ORDER BY
-
-        up."CompanyProductId"
-
-`;
+    const productResult =
+        await pool.query(
+            productQuery,
+            [user.UserId]
+        );
 
     const productResult =
         await pool.query(
@@ -157,88 +198,79 @@ export const findUserForLogin = async (username) => {
         );
 
     // ==========================================================
-    // 4. PROJECT
-    //
-    // User
-    //   ↓
-    // UserProject
-    //   ↓
-    // Project
+    // 5. PROJECT
     // ==========================================================
 
     const projectQuery = `
         SELECT DISTINCT
+
             upj."ProjectId",
-            pr."ProjectCode",
+
             pr."ProjectName",
+
             pr."CompanyProductId"
 
         FROM "DATA"."UserProject" upj
 
         INNER JOIN "LKP"."Project" pr
-            ON pr."ProjectId" = upj."ProjectId"
+            ON pr."ProjectId" =
+               upj."ProjectId"
 
         WHERE
+
             upj."UserId" = $1
+
             AND pr."IsDisabled" = FALSE
 
         ORDER BY
             upj."ProjectId"
     `;
 
-    const projectResult = await pool.query(
-        projectQuery,
-        [user.UserId]
-    );
+
+    const projectResult =
+        await pool.query(
+            projectQuery,
+            [user.UserId]
+        );
 
 
     // ==========================================================
-    // 5. ROLE
-    //
-    // User
-    //   ↓
-    // UserRole
-    //   ↓
-    // Role
+    // 6. ROLE
     // ==========================================================
 
     const roleQuery = `
         SELECT DISTINCT
+
             ur."RoleId",
-            r."RoleCode",
+
             r."RoleName"
 
         FROM "DATA"."UserRole" ur
 
         INNER JOIN "LKP"."Role" r
-            ON r."RoleId" = ur."RoleId"
+            ON r."RoleId" =
+               ur."RoleId"
 
         WHERE
+
             ur."UserId" = $1
+
             AND r."IsDisabled" = FALSE
 
         ORDER BY
             ur."RoleId"
     `;
 
-    const roleResult = await pool.query(
-        roleQuery,
-        [user.UserId]
-    );
+
+    const roleResult =
+        await pool.query(
+            roleQuery,
+            [user.UserId]
+        );
 
 
     // ==========================================================
-    // 6. REPORTING MANAGER
-    //
-    // User
-    //   ↓
-    // UserReportingManager
-    //   ↓
-    // ReportingManagerUserId
-    //   ↓
-    // User
-    //   ↓
-    // CompanyDesignation
+    // 7. REPORTING MANAGER
     // ==========================================================
 
     const reportingManagerQuery = `
@@ -290,6 +322,7 @@ export const findUserForLogin = async (username) => {
                manager."DesignationId"
 
         WHERE
+
             urm."UserId" = $1
 
             AND manager."IsDisabled" = FALSE
@@ -299,6 +332,7 @@ export const findUserForLogin = async (username) => {
         ORDER BY
             d."DesignationLevel" ASC
     `;
+
 
     const reportingManagerResult =
         await pool.query(
@@ -331,6 +365,7 @@ export const findUserForLogin = async (username) => {
             reportingManagerResult.rows
 
     };
+
 };
 
 
@@ -354,12 +389,16 @@ export const updateFailedLogin = async (userId) => {
             "AttemptCount"
     `;
 
-    const result = await pool.query(
-        query,
-        [userId]
-    );
+
+    const result =
+        await pool.query(
+            query,
+            [userId]
+        );
+
 
     return result.rows[0]?.AttemptCount || 0;
+
 };
 
 
@@ -373,24 +412,32 @@ export const setTempBlock = async (userId) => {
         UPDATE "DATA"."User"
 
         SET
+
             "IsTempBlocked" = TRUE,
-            "TempBlockedOn" = CURRENT_TIMESTAMP
+
+            "TempBlockedOn" =
+                CURRENT_TIMESTAMP
 
         WHERE
             "UserId" = $1
 
         RETURNING
+
             "UserId",
             "IsTempBlocked",
             "TempBlockedOn"
     `;
 
-    const result = await pool.query(
-        query,
-        [userId]
-    );
+
+    const result =
+        await pool.query(
+            query,
+            [userId]
+        );
+
 
     return result.rows[0] || null;
+
 };
 
 
@@ -404,24 +451,31 @@ export const clearTempBlock = async (userId) => {
         UPDATE "DATA"."User"
 
         SET
+
             "IsTempBlocked" = FALSE,
+
             "TempBlockedOn" = NULL
 
         WHERE
             "UserId" = $1
 
         RETURNING
+
             "UserId",
             "IsTempBlocked",
             "TempBlockedOn"
     `;
 
-    const result = await pool.query(
-        query,
-        [userId]
-    );
+
+    const result =
+        await pool.query(
+            query,
+            [userId]
+        );
+
 
     return result.rows[0] || null;
+
 };
 
 
@@ -435,25 +489,33 @@ export const resetAttempts = async (userId) => {
         UPDATE "DATA"."User"
 
         SET
+
             "AttemptCount" = 0,
+
             "IsTempBlocked" = FALSE,
+
             "TempBlockedOn" = NULL
 
         WHERE
             "UserId" = $1
 
         RETURNING
+
             "UserId",
             "AttemptCount",
             "IsTempBlocked"
     `;
 
-    const result = await pool.query(
-        query,
-        [userId]
-    );
+
+    const result =
+        await pool.query(
+            query,
+            [userId]
+        );
+
 
     return result.rows[0] || null;
+
 };
 
 
@@ -467,22 +529,30 @@ export const setPermanentBlock = async (userId) => {
         UPDATE "DATA"."User"
 
         SET
+
             "IsBlocked" = TRUE,
-            "BlockedOn" = CURRENT_TIMESTAMP
+
+            "BlockedOn" =
+                CURRENT_TIMESTAMP
 
         WHERE
             "UserId" = $1
 
         RETURNING
+
             "UserId",
             "IsBlocked",
             "BlockedOn"
     `;
 
-    const result = await pool.query(
-        query,
-        [userId]
-    );
+
+    const result =
+        await pool.query(
+            query,
+            [userId]
+        );
+
 
     return result.rows[0] || null;
+
 };
