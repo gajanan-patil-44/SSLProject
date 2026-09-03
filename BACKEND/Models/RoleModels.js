@@ -26,7 +26,7 @@ export const getAllRoles = async () => {
         INNER JOIN "LKP"."Company" C
             ON R."CompanyId" = C."CompanyId"
 
-        WHERE R."IsDisabled" = false
+      
 
         ORDER BY R."RoleId";
     `;

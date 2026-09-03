@@ -25,7 +25,6 @@ export const getAllDesignations = async () => {
             FROM "LKP"."CompanyDesignation" cd
             INNER JOIN "LKP"."Company" c
                 ON c."CompanyId" = cd."CompanyId"
-            WHERE cd."IsDisabled" = false
             ORDER BY cd."CompanyDesignationId" ASC
         `;
 

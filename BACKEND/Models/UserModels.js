@@ -4,8 +4,6 @@ import { pool } from "../Config/db.js";
 // ==========================================================
 // USER DROPDOWNS
 // ==========================================================
-
-
 // ==========================================================
 // FLAG ID 1 - GET GENDER
 // ==========================================================
@@ -20,9 +18,7 @@ export const getGenderDropdown = async () => {
         WHERE "IsDisabled" = false
         ORDER BY "GenderName";
     `;
-
     const result = await pool.query(query);
-
     return result.rows;
 };
 
@@ -41,9 +37,7 @@ export const getMaritalStatusDropdown = async () => {
         WHERE "IsDisabled" = false
         ORDER BY "MaritalStatusName";
     `;
-
     const result = await pool.query(query);
-
     return result.rows;
 };
 
@@ -53,7 +47,6 @@ export const getMaritalStatusDropdown = async () => {
 // ==========================================================
 
 export const getDesignationDropdown = async () => {
-
     const query = `
         SELECT
             "CompanyDesignationId",
@@ -62,9 +55,7 @@ export const getDesignationDropdown = async () => {
         WHERE "IsDisabled" = false
         ORDER BY "DesignationName";
     `;
-
     const result = await pool.query(query);
-
     return result.rows;
 };
 
@@ -73,11 +64,7 @@ export const getDesignationDropdown = async () => {
 // =====================================================
 
 
-export const getUserReportingManagerDropdown = async (
-    CompanyId,
-    DesignationId
-) => {
-
+export const getUserReportingManagerDropdown = async (CompanyId, DesignationId) => {
     const query = `
         SELECT
             u."UserId",
@@ -129,19 +116,13 @@ export const getUserReportingManagerDropdown = async (
             "ReportingManagerName" ASC;
     `;
 
-    const result = await pool.query(
-        query,
-        [CompanyId, DesignationId]
-    );
-
+    const result = await pool.query(query, [CompanyId, DesignationId]);
     return result.rows;
 };
 // ==========================================================
 // VALIDATE GENDER
 // ==========================================================
-
 export const checkGenderExists = async (GenderId) => {
-
     const query = `
         SELECT
             "GenderId",
@@ -150,23 +131,15 @@ export const checkGenderExists = async (GenderId) => {
         WHERE "GenderId" = $1
         AND "IsDisabled" = false;
     `;
-
-    const result = await pool.query(
-        query,
-        [GenderId]
-    );
-
+    const result = await pool.query(query, [GenderId]);
     return result.rows;
 };
-
-
 
 // ==========================================================
 // VALIDATE MARITAL STATUS
 // ==========================================================
 
 export const checkMaritalStatusExists = async (MaritalStatusId) => {
-
     const query = `
         SELECT
             "MaritalStatusId",
@@ -175,23 +148,15 @@ export const checkMaritalStatusExists = async (MaritalStatusId) => {
         WHERE "MaritalStatusId" = $1
         AND "IsDisabled" = false;
     `;
-
-    const result = await pool.query(
-        query,
-        [MaritalStatusId]
-    );
-
+    const result = await pool.query(query, [MaritalStatusId]);
     return result.rows;
 };
-
-
 
 // ==========================================================
 // VALIDATE DESIGNATION
 // ==========================================================
 
 export const checkDesignationExists = async (DesignationId) => {
-
     const query = `
         SELECT
             "CompanyDesignationId",
@@ -201,22 +166,15 @@ export const checkDesignationExists = async (DesignationId) => {
         AND "IsDisabled" = false;
     `;
 
-    const result = await pool.query(
-        query,
-        [DesignationId]
-    );
-
+    const result = await pool.query(query, [DesignationId]);
     return result.rows;
 };
-
-
 
 // ==========================================================
 // CHECK LOGIN NAME
 // ==========================================================
 
 export const checkLoginNameExists = async (LoginName) => {
-
     const query = `
         SELECT
             "UserId",
@@ -224,23 +182,15 @@ export const checkLoginNameExists = async (LoginName) => {
         FROM "DATA"."User"
         WHERE "LoginName" = $1;
     `;
-
-    const result = await pool.query(
-        query,
-        [LoginName]
-    );
-
+    const result = await pool.query(query, [LoginName]);
     return result.rows;
 };
-
-
 
 // ==========================================================
 // CHECK EMAIL
 // ==========================================================
 
 export const checkEmailExists = async (Email) => {
-
     const query = `
         SELECT
             "UserId",
@@ -248,23 +198,15 @@ export const checkEmailExists = async (Email) => {
         FROM "DATA"."User"
         WHERE "Email" = $1;
     `;
-
-    const result = await pool.query(
-        query,
-        [Email]
-    );
-
+    const result = await pool.query(query, [Email]);
     return result.rows;
 };
-
-
 
 // ==========================================================
 // CHECK PHONE NUMBER
 // ==========================================================
 
 export const checkPhoneNumberExists = async (PhoneNumber) => {
-
     const query = `
         SELECT
             "UserId",
@@ -272,23 +214,14 @@ export const checkPhoneNumberExists = async (PhoneNumber) => {
         FROM "DATA"."User"
         WHERE "PhoneNumber" = $1;
     `;
-
-    const result = await pool.query(
-        query,
-        [PhoneNumber]
-    );
-
+    const result = await pool.query(query, [PhoneNumber]);
     return result.rows;
 };
-
-
-
 // ==========================================================
 // CHECK EMPLOYEE ID
 // ==========================================================
 
 export const checkEmployeeIdExists = async (EmployeeId) => {
-
     const query = `
         SELECT
             "UserId",
@@ -296,40 +229,20 @@ export const checkEmployeeIdExists = async (EmployeeId) => {
         FROM "DATA"."User"
         WHERE "EmployeeId" = $1;
     `;
-
-    const result = await pool.query(
-        query,
-        [EmployeeId]
-    );
-
+    const result = await pool.query(query, [EmployeeId]);
     return result.rows;
 };
-
-
-
-
 // ==========================================================
 // CREATE USER + USER COMPANY + USER PRODUCT
 // + USER PROJECT + USER ROLE + USER FILE
 // ==========================================================
-
 export const createUser = async (userData) => {
-
     const client = await pool.connect();
-
     try {
-
-        // ==================================================
-        // START TRANSACTION
-        // ==================================================
-
         await client.query("BEGIN");
-
-
         // ==================================================
         // 1. CREATE USER
         // ==================================================
-
         const userQuery = `
             INSERT INTO "DATA"."User"
             (
@@ -352,22 +265,7 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5,
-                $6,
-                $7,
-                $8,
-                $9,
-                $10,
-                $11,
-                $12,
-                $13,
-                $14,
-                CURRENT_TIMESTAMP,
-                $15
+                $1,$2,$3,$4,$5,$6, $7,$8,$9,$10,$11,$12,$13,$14, CURRENT_TIMESTAMP,$15
             )
             RETURNING
                 "UserId",
@@ -401,31 +299,53 @@ export const createUser = async (userData) => {
             userData.Email,
             userData.Password,
             userData.LoginName,
-
-            // Photo path from multer disk storage
+            // Photo buffer
             userData.Photo || null,
-
             userData.CreatedByUserName
         ];
 
-        const userResult = await client.query(
-            userQuery,
-            userValues
-        );
-
+        const userResult = await client.query(userQuery, userValues);
         const user = userResult.rows[0];
+
 
         if (!user) {
             throw new Error("User creation failed");
         }
-
         const UserId = user.UserId;
-
-
         // ==================================================
-        // 2. CREATE USER COMPANY
+        // 2. CREATE USER REPORTING MANAGER
         // ==================================================
 
+        if (userData.ReportingManagerUserId !== null && userData.ReportingManagerUserId !== undefined) {
+            const reportingManagerQuery = `
+                INSERT INTO "DATA"."UserReportingManager"
+                (
+                    "UserId",
+                    "ReportingManagerUserId",
+                    "CompanyId",
+                    "CreatedAt",
+                    "UpdatedAt",
+                    "CreatedByUserId",
+                )
+                VALUES
+                (
+                    $1,$2,$3,CURRENT_TIMESTAMP,$1
+                )
+                RETURNING
+                    "UserReportingManagerId",
+                    "UserId",
+                    "ReportingManagerUserId",
+                    "CompanyId",
+                    "CreatedAt",
+                    "CreatedByUserId"
+            `;
+
+
+            await client.query(reportingManagerQuery, [UserId, Number(userData.ReportingManagerUserId), Number(userData.CompanyId)]);
+        }
+        // ==================================================
+        // 3. CREATE USER COMPANY
+        // ==================================================
         const userCompanyQuery = `
             INSERT INTO "DATA"."UserCompany"
             (
@@ -438,16 +358,10 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1,
-                $2,
-                true,
-                false,
-                CURRENT_TIMESTAMP,
-                $3
+                $1, $2,true,false,CURRENT_TIMESTAMP,$3
             )
             RETURNING "UserCompanyId";
         `;
-
         await client.query(
             userCompanyQuery,
             [
@@ -456,12 +370,9 @@ export const createUser = async (userData) => {
                 UserId
             ]
         );
-
-
         // ==================================================
-        // 3. CREATE USER PRODUCT
+        // 4. CREATE USER PRODUCT
         // ==================================================
-
         const userProductQuery = `
             INSERT INTO "DATA"."UserProduct"
             (
@@ -473,14 +384,11 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1,
-                $2,
-                false,
-                CURRENT_TIMESTAMP,
-                $3
+                $1,$2,false,CURRENT_TIMESTAMP,$3
             )
             RETURNING "UserProductId";
         `;
+
 
         await client.query(
             userProductQuery,
@@ -490,49 +398,36 @@ export const createUser = async (userData) => {
                 UserId
             ]
         );
-
-
+        // =================================================
+        // 5. CREATE USER PROJECT
         // ==================================================
-        // 4. CREATE USER PROJECT
+        const userProjectQuery = `
+            INSERT INTO "DATA"."UserProject"
+            (
+                "UserId",
+                "ProjectId",
+                "IsPrimary",
+                "IsDisabled",
+                "CreatedAt",
+                "CreatedByUserId"
+            )
+            VALUES
+            (
+                $1,$2,true,false,CURRENT_TIMESTAMP,$3
+            )
+            RETURNING "UserProjectId";
+        `;
+
+
+        await client.query(
+            userProjectQuery,
+            [
+                UserId, Number(userData.ProjectId), UserId
+            ]
+        );
         // ==================================================
-
-       // 4. CREATE USER PROJECT
-
-const userProjectQuery = `
-    INSERT INTO "DATA"."UserProject"
-    (
-        "UserId",
-        "ProjectId",
-        "IsPrimary",
-        "IsDisabled",
-        "CreatedAt",
-        "CreatedByUserId"
-    )
-    VALUES
-    (
-        $1,
-        $2,
-        true,
-        false,
-        CURRENT_TIMESTAMP,
-        $3
-    )
-    RETURNING "UserProjectId";
-`;
-
-await client.query(
-    userProjectQuery,
-    [
-        UserId,
-        Number(userData.ProjectId),  // <-- ProjectId = 1
-        UserId
-    ]
-);
-
+        // 6. CREATE USER ROLE
         // ==================================================
-        // 5. CREATE USER ROLE
-        // ==================================================
-
         const userRoleQuery = `
             INSERT INTO "DATA"."UserRole"
             (
@@ -557,6 +452,7 @@ await client.query(
             RETURNING "UserRoleId";
         `;
 
+
         await client.query(
             userRoleQuery,
             [
@@ -568,61 +464,23 @@ await client.query(
                 UserId
             ]
         );
-
-
         // ==================================================
-        // 6. CREATE USER FILES
+        // 7. CREATE USER FILES
         // ==================================================
-
-        /*
-            userData.UserFiles is an ARRAY.
-
-            Example:
-
-            [
-                {
-                    FileTypeId: 1,
-                    FilePath: "uploads/userfiles/resume.pdf"
-                },
-                {
-                    FileTypeId: 2,
-                    FilePath: "uploads/userfiles/certificate.pdf"
-                },
-                {
-                    FileTypeId: 3,
-                    FilePath: "uploads/userfiles/experience.pdf"
-                }
-            ]
-        */
-
-        const userFiles = userData.UserFiles || [];
-
+        const userFiles =
+            userData.UserFiles || [];
         const createdUserFiles = [];
-
-
         // ==================================================
         // INSERT EACH USER FILE
         // ==================================================
-
-        for (const userFile of userFiles) {
-
+        for (const userFile of userFiles
+        ) {
             // ----------------------------------------------
             // VALIDATE FILE TYPE ID
             // ----------------------------------------------
-
-            if (
-                userFile.FileTypeId === undefined ||
-                userFile.FileTypeId === null ||
-                !Number.isInteger(
-                    Number(userFile.FileTypeId)
-                ) ||
-                Number(userFile.FileTypeId) <= 0
-            ) {
-
-                throw new Error(
-                    "Valid FileTypeId is required for every UserFile"
-                );
-
+            if (userFile.FileTypeId === undefined || userFile.FileTypeId === null ||
+                !Number.isInteger(Number(userFile.FileTypeId)) || Number(userFile.FileTypeId) <= 0) {
+                throw new Error("Valid FileTypeId is required for every UserFile");
             }
 
 
@@ -630,14 +488,9 @@ await client.query(
             // VALIDATE FILE PATH
             // ----------------------------------------------
 
-            if (
-                !userFile.FilePath ||
-                String(userFile.FilePath).trim() === ""
-            ) {
+            if (!userFile.FilePath || String(userFile.FilePath).trim() === "") {
 
-                throw new Error(
-                    "FilePath is required for every UserFile"
-                );
+                throw new Error("FilePath is required for every UserFile");
 
             }
 
@@ -678,7 +531,9 @@ await client.query(
 
             const userFileValues = [
 
-                Number(userFile.FileTypeId),
+                Number(
+                    userFile.FileTypeId
+                ),
 
                 UserId,
 
@@ -689,13 +544,16 @@ await client.query(
             ];
 
 
-            const userFileResult = await client.query(
-                userFileQuery,
-                userFileValues
-            );
+            const userFileResult =
+                await client.query(
+                    userFileQuery,
+                    userFileValues
+                );
 
 
-            if (userFileResult.rows.length > 0) {
+            if (
+                userFileResult.rows.length > 0
+            ) {
 
                 createdUserFiles.push(
                     userFileResult.rows[0]
@@ -710,7 +568,9 @@ await client.query(
         // COMMIT TRANSACTION
         // ==================================================
 
-        await client.query("COMMIT");
+        await client.query(
+            "COMMIT"
+        );
 
 
         // ==================================================
@@ -721,7 +581,8 @@ await client.query(
 
             ...user,
 
-            UserFiles: createdUserFiles
+            UserFiles:
+                createdUserFiles
 
         };
 
@@ -732,7 +593,9 @@ await client.query(
         // ROLLBACK TRANSACTION
         // ==================================================
 
-        await client.query("ROLLBACK");
+        await client.query(
+            "ROLLBACK"
+        );
 
         throw error;
 
@@ -746,8 +609,8 @@ await client.query(
         client.release();
 
     }
-};
 
+};
 // ==========================================================
 // FLAG ID 1 - COMPANY
 // ==========================================================

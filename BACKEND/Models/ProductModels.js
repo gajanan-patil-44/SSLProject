@@ -23,7 +23,6 @@ export const getAllProducts = async () => {
 
             FROM "LKP"."Product"
 
-            WHERE "IsDisabled" = false
 
             ORDER BY "ProductId"
         `);

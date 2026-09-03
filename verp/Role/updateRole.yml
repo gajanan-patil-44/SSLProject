@@ -10,16 +10,18 @@ http:
     type: json
     data: |-
       {
-        "FlagId":3,
-        "RoleId": 4,
-        "CompanyId":1,
+        "FlagId":4,
+        "RoleId": 7,
+        "CompanyId":3,
         "RoleName": "Admi",
         "Description": "Officer responsible for processing application",
         "RequestUserName": "Praveen",
         "Role_Code": "123",
         "UpdatedByUserName":"praveen"
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIzLCJFbXBsb3llZUlkIjoiRU1QMTIiLCJMb2dpbk5hbWUiOiJhZG1pbjEyIiwiRW1haWwiOiJhZG1pbjEyQGV4YW1wbGUuY29tIiwiRGVzaWduYXRpb25JZCI6MSwiaWF0IjoxNzg4MzQ4Nzk5LCJleHAiOjE3ODgzOTE5OTl9.AvaD8DvG157lYKgcYAmaHEhq41MKP07jNi51fynR3PI
 
 settings:
   encodeUrl: true

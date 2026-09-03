@@ -133,16 +133,14 @@ export const editCompanyProduct = async (companyProduct) => {
         SET
             "CompanyId" = $1,
             "ProductId" = $2,
-            "IsDisabled" = $3,
             "UpdatedAt" = CURRENT_TIMESTAMP,
-            "UpdatedByUserName" = $4
-        WHERE "CompanyProductId" = $5
+            "UpdatedByUserName" = $3
+        WHERE "CompanyProductId" = $4
     `;
 
     const values = [
         companyProduct.CompanyId,
         companyProduct.ProductId,
-        companyProduct.IsDisabled,
         companyProduct.UpdatedByUserName,
         companyProduct.CompanyProductId
     ];
@@ -165,6 +163,34 @@ export const deleteCompanyProduct = async (CompanyProductId) => {
     `;
 
     const values = [
+        CompanyProductId
+    ];
+
+    const result = await pool.query(query, values);
+
+    return result.rowCount;
+};
+
+
+// ==========================================
+// UPDATE COMPANY PRODUCT STATUS
+// ==========================================
+
+export const updateCompanyProductstatus = async (
+    CompanyProductId,
+    IsDisabled
+) => {
+
+    const query = `
+        UPDATE "LKP"."CompanyProduct"
+        SET
+            "IsDisabled" = $1,
+            "UpdatedAt" = CURRENT_TIMESTAMP
+        WHERE "CompanyProductId" = $2
+    `;
+
+    const values = [
+        IsDisabled,
         CompanyProductId
     ];
 
