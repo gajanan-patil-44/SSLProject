@@ -15,12 +15,12 @@ const applyRoutes = (app) => {
 app.use(backendHelpers.USER_CREATION, UserRoutes);
 app.use(backendHelpers.LOGIN, Login);
 app.use(backendHelpers.ROLES_CREATION, RoleRoutes);
-app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);
-app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);
+app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);  //Done by kavya
+app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);  //Done by kavya
 app.use(backendHelpers.FILE_TYPE,FileTypeRoutes);
 app.use(backendHelpers.COMPANY_PRODUCT_CREATION, CompanyProductRoutes);
-app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);
-app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);
+app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);  //Done by kavya
+app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);  //Done by kavya
 app.use(backendHelpers.BIRTHDAY_EMAILS, BirthdayRoutes);
 };
 

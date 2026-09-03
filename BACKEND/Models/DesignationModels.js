@@ -60,7 +60,7 @@ export const getCompaniesForDropdown = async () => {
                 "CompanyId",
                 "CompanyName"
             FROM "LKP"."Company"
-            WHERE "IsDisabled" = false
+            
             ORDER BY "CompanyName";
         `;
 
