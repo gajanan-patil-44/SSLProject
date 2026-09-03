@@ -6,6 +6,13 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/companyCreation/deleteCompany
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":5,
+        "CompanyId":4
+      }
   auth: inherit
 
 settings:

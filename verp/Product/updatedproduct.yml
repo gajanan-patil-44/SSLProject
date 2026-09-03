@@ -12,8 +12,8 @@ http:
       {
           "flagId": 3,
           "ProductId": 1,
-          "ProductCode": "P001",
-          "ProductName": "Updated Product",
+          "ProductCode": "P0011",
+          "ProductName": "Updated Productt",
           "ProductDescription": "Updated product description",
           "UpdatedByUserName": "Praveen"
       }
