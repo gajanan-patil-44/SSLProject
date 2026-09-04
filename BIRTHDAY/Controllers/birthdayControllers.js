@@ -1,18 +1,16 @@
-import { processBirthdayEmails } from "../../Services/birthdayService.js";
+import { processBirthdayEmails } from "../Services/birthdayService.js";
 
-import { getBirthdayMailLogs, getBirthdayMailLogById } from "../../Models/BirthdayModels.js";
+import { getBirthdayMailLogs, getBirthdayMailLogById } from "../Models/BirthdayModels.js";
 
 
-// ==========================================================
+
 // PROCESS BIRTHDAY EMAILS
-// ==========================================================
 
 export const processBirthdayMailController = async (req, res) => {
 
     try {
 
         const result = await processBirthdayEmails();
-
 
         if (!result.success) {
 
@@ -35,7 +33,7 @@ export const processBirthdayMailController = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Process birthday mail controller error:", error);
+        // console.error("Process birthday mail controller error:", error);
 
 
         return res.status(500).json({
@@ -47,9 +45,7 @@ export const processBirthdayMailController = async (req, res) => {
 };
 
 
-// ==========================================================
 // GET BIRTHDAY MAIL LOGS
-// ==========================================================
 
 export const getBirthdayMailLogsController = async (req, res) => {
 
@@ -68,7 +64,7 @@ export const getBirthdayMailLogsController = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get birthday mail logs controller error:", error);
+        // console.error("Get birthday mail logs controller error:", error);
 
 
         return res.status(500).json({
@@ -80,16 +76,14 @@ export const getBirthdayMailLogsController = async (req, res) => {
 };
 
 
-// ==========================================================
 // GET BIRTHDAY MAIL LOG BY ID
-// ==========================================================
+
 
 export const getBirthdayMailLogController = async (req, res) => {
 
     try {
-
+        
         const { id } = req.params;
-
 
         if (
             !id ||
@@ -128,7 +122,7 @@ export const getBirthdayMailLogController = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Get birthday mail log controller error:", error);
+        // console.error("Get birthday mail log controller error:", error);
 
 
         return res.status(500).json({
