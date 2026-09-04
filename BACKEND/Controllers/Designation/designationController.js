@@ -88,7 +88,6 @@ export const designationController = async (req, res) => {
                 CompanyId,
                 DesignationName,
                 DesignationCode,
-                IsDisabled,
                 CreatedByUserName
             } = req.body;
 
