@@ -5,7 +5,16 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/projectCreation/editproject/toggleProjectStatus
+  url: http://localhost:9004/verp-service/projectCreation/toggleProjectStatus
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":4,
+        "ProjectId":9,
+        "IsDisabled":true,
+        "UpdatedByUserId":1
+      }
   auth: inherit
 
 settings:

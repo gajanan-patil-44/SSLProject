@@ -15,18 +15,13 @@ http:
 
 
 
-      // {
-      //   "flagId":2,
-      //   "CompanyDesignationId":2
-      // }
-
 
       {
-        "flagId":3,
-        "CompanyDesignationId":6,
+        "flagId":2,
+        "CompanyDesignationId":9,
         "CompanyId":2,
-        "DesignationName":"Team Lead",
-        "DesignationCode":"juuk09",
+        "DesignationName":"Managerr",
+        "DesignationCode":"MG00011",
         "IsDisabled":false,
         "UpdateByUserName":"ks"
       }

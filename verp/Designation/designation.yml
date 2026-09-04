@@ -16,11 +16,11 @@ http:
 
       {
         "flagId":2,
-        "CompanyId":2,
-        "DesignationName":"gchvhj",
-        "DesignationCode":"ktyuyr3",
+        "CompanyId":1,
+        "DesignationName":"MANAGERRRr",
+        "DesignationCode":"MG00011",
         "IsDisabled":false,
-        "CreatedByUserName":"kavya"
+        "CreatedByUserName":"kavv"
       }
   auth: inherit
 
