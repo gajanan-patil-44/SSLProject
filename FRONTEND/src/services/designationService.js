@@ -28,11 +28,15 @@ export const designationService = {
   addDesignation: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
       try {
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+        }
         const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-        const s = JSON.parse(localStorage.getItem('erp_session') || '{}');
-        return u?.loginName || u?.LoginName || s?.LoginName || s?.loginName || u?.EmployeeId || s?.EmployeeId || 'admin';
-      } catch { return 'admin'; }
-    })() : 'admin';
+        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+      } catch { return ''; }
+    })() : '';
 
     const userName = data.CreatedByUserName || data.CreateByUserName || data.UpdatedByUserName || data.UpdateByUserName || userState;
 
@@ -62,11 +66,15 @@ export const designationService = {
   editDesignation: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
       try {
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+        }
         const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-        const s = JSON.parse(localStorage.getItem('erp_session') || '{}');
-        return u?.loginName || u?.LoginName || s?.LoginName || s?.loginName || u?.EmployeeId || s?.EmployeeId || 'admin';
-      } catch { return 'admin'; }
-    })() : 'admin';
+        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+      } catch { return ''; }
+    })() : '';
 
     const userName = data.UpdateByUserName || data.UpdatedByUserName || data.CreatedByUserName || userState;
 
@@ -88,11 +96,15 @@ export const designationService = {
   toggleDesignationStatus: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
       try {
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+        }
         const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-        const s = JSON.parse(localStorage.getItem('erp_session') || '{}');
-        return u?.loginName || u?.LoginName || s?.LoginName || s?.loginName || u?.EmployeeId || s?.EmployeeId || 'admin';
-      } catch { return 'admin'; }
-    })() : 'admin';
+        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+      } catch { return ''; }
+    })() : '';
 
     const userName = data.UpdateByUserName || data.UpdatedByUserName || userState;
 

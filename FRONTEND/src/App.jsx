@@ -15,6 +15,7 @@ import ShowcaseView from './pages/UIInterface/ShowcaseView';
 import PagesView from './pages/Pages/PagesView';
 import HelpView from './pages/Help/HelpView';
 import LetterBuilderView from './pages/Documents/LetterBuilderView';
+import UserCreationView from './pages/Master/UserCreationView';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -64,6 +65,9 @@ export default function App() {
           {/* Help & Support Docs */}
           <Route path="help/:subpage" element={<HelpView />} />
           <Route path="help/multilevel/:subid" element={<HelpView />} />
+
+          {/* Master Special Pages */}
+          <Route path="master/user-creation" element={<UserCreationView />} />
 
           {/* Documents */}
           <Route path="documents/letter-builder" element={<LetterBuilderView />} />

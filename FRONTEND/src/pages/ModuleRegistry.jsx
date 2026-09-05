@@ -305,14 +305,32 @@ export const registryConfigs = {
     title: "Company Products",
     description: "Map and manage products associated with registered companies.",
     apiFetch: async () => {
+      let mappingMap = new Map();
+      try {
+        const projDropRes = await api.project.getCompanyProductsDropdown();
+        const projDropItems = Array.isArray(projDropRes?.data) ? projDropRes.data : (Array.isArray(projDropRes) ? projDropRes : []);
+        projDropItems.forEach(item => {
+          if (item.CompanyName && item.ProductName && item.CompanyProductId) {
+            const key = `${String(item.CompanyName).trim().toLowerCase()}___${String(item.ProductName).trim().toLowerCase()}`;
+            mappingMap.set(key, Number(item.CompanyProductId));
+          }
+        });
+      } catch (e) {
+        // Fallback gracefully if dropdown is inaccessible
+      }
+
       const res = await api.companyProduct.getCompanyProducts();
       const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
       return items.map((cp, idx) => {
-        const isDisabled = cp.IsDisabled === true || cp.status === 'Inactive' || cp.status === 'Disabled';
+        const key = `${String(cp.CompanyName || '').trim().toLowerCase()}___${String(cp.ProductName || '').trim().toLowerCase()}`;
+        const matchedId = mappingMap.get(key);
+        const realId = cp.CompanyProductId || matchedId || (idx + 1);
+
+        const isDisabled = cp.IsDisabled === true || String(cp.IsDisabled).toLowerCase() === 'true' || cp.status === 'Inactive' || cp.status === 'Disabled';
         const isEnabled = !isDisabled;
         return {
-          id: cp.CompanyProductId ?? (idx + 1),
-          CompanyProductId: cp.CompanyProductId ?? (idx + 1),
+          id: realId,
+          CompanyProductId: realId,
           CompanyId: cp.CompanyId,
           ProductId: cp.ProductId,
           companyName: cp.CompanyName || '—',
@@ -331,100 +349,127 @@ export const registryConfigs = {
       });
     },
     fetchDropdowns: async (mode = 'add', record = null) => {
-      const dropdownRes = mode === 'edit'
-        ? await api.companyProduct.getDropdownsForEdit(record?.CompanyProductId ?? record?.id)
-        : await api.companyProduct.getDropdowns();
+      try {
+        let companiesList = [];
+        let productsList = [];
 
-      const companiesList = dropdownRes?.companies || dropdownRes?.Companies || [];
-      const productsList = dropdownRes?.products || dropdownRes?.Products || [];
+        if (typeof api.companyProduct?.getDropdowns === 'function') {
+          const dropdownRes = mode === 'edit' && typeof api.companyProduct?.getDropdownsForEdit === 'function'
+            ? await api.companyProduct.getDropdownsForEdit(record?.CompanyProductId ?? record?.id)
+            : await api.companyProduct.getDropdowns();
 
-      const companyOptions = companiesList.map(c => ({
-        value: Number(c.CompanyId),
-        label: `${c.CompanyName} (${c.CompanyCode})`
-      }));
-
-      const productOptions = productsList.map(p => ({
-        value: Number(p.ProductId),
-        label: `${p.ProductName} (${p.ProductCode})`
-      }));
-
-      return [
-        {
-          key: "CompanyId",
-          label: "Company",
-          type: "select",
-          required: true,
-          options: companyOptions,
-          placeholder: "Select Company"
-        },
-        {
-          key: "ProductId",
-          label: "Product",
-          type: "select",
-          required: true,
-          options: productOptions,
-          placeholder: "Select Product"
-        },
-        {
-          key: "Description",
-          label: "Description",
-          type: "textarea",
-          placeholder: "e.g. Primary CRM module deployed for Global Solutions"
+          companiesList = Array.isArray(dropdownRes?.companies) ? dropdownRes.companies : (Array.isArray(dropdownRes?.Companies) ? dropdownRes.Companies : []);
+          productsList = Array.isArray(dropdownRes?.products) ? dropdownRes.products : (Array.isArray(dropdownRes?.Products) ? dropdownRes.Products : []);
         }
-      ];
+
+        // Direct fallback to individual dropdown methods if needed
+        if (companiesList.length === 0 || productsList.length === 0) {
+          const [compRes, prodRes] = await Promise.all([
+            typeof api.companyProduct?.getCompaniesDropdown === 'function' ? api.companyProduct.getCompaniesDropdown() : Promise.resolve([]),
+            typeof api.companyProduct?.getProductsDropdown === 'function' ? api.companyProduct.getProductsDropdown() : Promise.resolve([])
+          ]);
+          if (companiesList.length === 0) {
+            companiesList = Array.isArray(compRes?.data) ? compRes.data : (Array.isArray(compRes) ? compRes : []);
+          }
+          if (productsList.length === 0) {
+            productsList = Array.isArray(prodRes?.data) ? prodRes.data : (Array.isArray(prodRes) ? prodRes : []);
+          }
+        }
+
+        const companyOptions = [
+          { value: '', label: 'Select Company' },
+          ...companiesList.map(c => ({
+            value: Number(c.CompanyId ?? c.id),
+            label: c.CompanyCode ? `${c.CompanyName} (${c.CompanyCode})` : (c.CompanyName || `Company #${c.CompanyId}`)
+          }))
+        ];
+
+        const productOptions = [
+          { value: '', label: 'Select Product' },
+          ...productsList.map(p => ({
+            value: Number(p.ProductId ?? p.id),
+            label: p.ProductCode ? `${p.ProductName} (${p.ProductCode})` : (p.ProductName || `Product #${p.ProductId}`)
+          }))
+        ];
+
+        return [
+          {
+            key: "CompanyId",
+            label: "Company",
+            type: "select",
+            required: true,
+            options: companyOptions,
+            placeholder: "Select Company"
+          },
+          {
+            key: "ProductId",
+            label: "Product",
+            type: "select",
+            required: true,
+            options: productOptions,
+            placeholder: "Select Product"
+          },
+          {
+            key: "Description",
+            label: "Description",
+            type: "textarea",
+            placeholder: "e.g. Primary CRM module deployed for Global Solutions"
+          }
+        ];
+      } catch (err) {
+        console.error("Error in fetchDropdowns for company products:", err);
+        return [];
+      }
     },
     apiCreate: async (formData) => {
-      const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
-      const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
+      const userState = useERPStore.getState().user;
+      const userName = session?.data?.user?.loginName || session?.data?.user?.EmployeeId || userState?.loginName || userState?.EmployeeId || '';
 
       const payload = {
-        flagId: 2,
         CompanyId: Number(formData.CompanyId),
         ProductId: Number(formData.ProductId),
         Description: formData.Description || formData.description || '',
         IsDisabled: false,
-        CreatedByUserId: userId,
-        CreatedByUserName: userName,
-        UpdatedByUserName: userName
+        CreatedByUserName: userName
       };
 
       return await api.companyProduct.addCompanyProduct(payload);
     },
     apiUpdate: async (formData) => {
-      const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
-      const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
+      const userState = useERPStore.getState().user;
+      const userName = session?.data?.user?.loginName || session?.data?.user?.EmployeeId || userState?.loginName || userState?.EmployeeId || '';
       const companyProductId = Number(formData.CompanyProductId ?? formData.id);
 
       const payload = {
-        flagId: 2,
         CompanyProductId: companyProductId,
         CompanyId: Number(formData.CompanyId),
         ProductId: Number(formData.ProductId),
-        Description: formData.Description || formData.description || '',
-        IsDisabled: Boolean(formData.IsDisabled),
-        UpdatedByUserId: userId,
         UpdatedByUserName: userName
       };
 
       return await api.companyProduct.editCompanyProduct(payload);
     },
-    apiToggleStatus: async (record, newIsDisabled) => {
-      const userState = useERPStore.getState().user;
-      const session = useERPStore.getState().session;
-      const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
+    apiDelete: async (record) => {
       const companyProductId = Number(record.CompanyProductId ?? record.id);
-
-      const payload = {
-        flagId: 4,
-        CompanyProductId: companyProductId,
-        IsDisabled: Boolean(newIsDisabled),
-        UpdatedByUserId: userId
-      };
-      return await api.companyProduct.toggleCompanyProductStatus(payload);
+      return await api.companyProduct.deleteCompanyProduct(companyProductId);
+    },
+    apiToggleStatus: async (record, newIsDisabled) => {
+      const companyProductId = Number(record.CompanyProductId ?? record.id);
+      const currentDisabled = Boolean(
+        record.IsDisabled === true ||
+        String(record.IsDisabled).toLowerCase() === 'true' ||
+        record.status === 'Inactive' ||
+        record.status === 'Disabled' ||
+        record.isEnabled === false
+      );
+      const targetIsDisabled = typeof newIsDisabled === 'boolean' ? newIsDisabled : !currentDisabled;
+      const toggleFn = api.companyProduct?.toggleCompanyProductStatus || api.companyProduct?.updateCompanyProductStatus;
+      if (typeof toggleFn === 'function') {
+        return await toggleFn(companyProductId, targetIsDisabled);
+      }
+      throw new Error("api.companyProduct toggle/update status function is not available");
     },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
@@ -842,6 +887,7 @@ registryConfigs.products_products = registryConfigs.master_products;
 registryConfigs.master_product = registryConfigs.master_products;
 
 registryConfigs.company_products = registryConfigs.master_company_products;
+registryConfigs.company_product = registryConfigs.master_company_products;
 registryConfigs.master_company_product = registryConfigs.master_company_products;
 
 registryConfigs.projects = registryConfigs.master_projects;
@@ -879,14 +925,14 @@ export function ModuleRenderer() {
 
   useEffect(() => {
     let isMounted = true;
-    if (config?.fetchDropdowns && (isAddOpen || isEditOpen)) {
+    if (config?.fetchDropdowns) {
       config.fetchDropdowns(isEditOpen ? 'edit' : 'add', selectedRecord).then((fields) => {
-        if (isMounted && fields) {
+        if (isMounted && fields && fields.length > 0) {
           setDynamicFormFields(fields);
         }
+      }).catch((err) => {
+        console.error("Dropdown fetch error:", err);
       });
-    } else if (!isAddOpen && !isEditOpen) {
-      setDynamicFormFields(null);
     }
     return () => {
       isMounted = false;
@@ -989,11 +1035,13 @@ export function ModuleRenderer() {
 
   const baseFormFields = (config.formFields && config.formFields.length > 0 ? config.formFields : activeFormFields);
 
-  const activeAddFields = (isAddOpen && dynamicFormFields)
-    || ((config.addFormFields && config.addFormFields.length > 0) ? config.addFormFields : baseFormFields);
+  const activeAddFields = (dynamicFormFields && dynamicFormFields.length > 0)
+    ? dynamicFormFields
+    : ((config.addFormFields && config.addFormFields.length > 0) ? config.addFormFields : baseFormFields);
 
-  const activeEditFields = (isEditOpen && dynamicFormFields)
-    || ((config.editFormFields && config.editFormFields.length > 0) ? config.editFormFields : baseFormFields);
+  const activeEditFields = (dynamicFormFields && dynamicFormFields.length > 0)
+    ? dynamicFormFields
+    : ((config.editFormFields && config.editFormFields.length > 0) ? config.editFormFields : baseFormFields);
 
   return (
     <>

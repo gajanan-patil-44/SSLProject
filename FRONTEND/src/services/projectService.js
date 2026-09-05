@@ -70,14 +70,22 @@ export const projectService = {
   toggleProjectStatus: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
       try {
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          const u = s?.data?.user;
+          return {
+            userId: Number(u?.UserId ?? u?.id ?? 1),
+            userName: u?.loginName || u?.LoginName || u?.EmployeeId || ''
+          };
+        }
         const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-        const s = JSON.parse(localStorage.getItem('erp_session') || '{}');
         return {
-          userId: Number(s?.UserId ?? u?.UserId ?? u?.id ?? 1),
-          userName: u?.loginName || u?.LoginName || s?.LoginName || s?.loginName || u?.EmployeeId || s?.EmployeeId || 'admin'
+          userId: Number(u?.UserId ?? u?.id ?? 1),
+          userName: u?.loginName || u?.LoginName || u?.EmployeeId || ''
         };
-      } catch { return { userId: 1, userName: 'admin' }; }
-    })() : { userId: 1, userName: 'admin' };
+      } catch { return { userId: 1, userName: '' }; }
+    })() : { userId: 1, userName: '' };
 
     const userId = Number(data.UpdatedByUserId ?? data.UserId ?? data.userId ?? userState.userId);
     const userName = data.UpdatedByUserName || data.UpdateByUserName || userState.userName;

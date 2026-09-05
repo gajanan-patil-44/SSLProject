@@ -118,6 +118,34 @@ export const PROJECT_ROUTES = {
 
 /**
  * ============================================================================
+ * 8. USER CREATION ROUTES
+ * ============================================================================
+ */
+export const USER_ROUTES = {
+  CREATE_USER: '/verp-service/userCreation/createuser',
+  USERDROPDOWNS: '/verp-service/userCreation/userdropdowns',
+  DROPDOWNS: '/verp-service/userCreation/dropdowns',
+  // Old placeholder kept for reference
+  COMPANY_PRODUCT_PROJECT_DROPDOWN: '/verp-service/userCreation/companyProductProjectDropdown',
+  // New confirmed endpoint for company → product → project → role cascade
+  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown'
+};
+
+/**
+ * ============================================================================
+ * 9. FILE TYPE ROUTES
+ * ============================================================================
+ */
+export const FILE_TYPE_ROUTES = {
+  GET_FILE_TYPES: '/verp-service/fileType/getfiletypes',
+  ADD_FILE_TYPE: '/verp-service/fileType/addfiletype',
+  UPDATE_FILE_TYPE: '/verp-service/fileType/updatefiletype',
+  DELETE_FILE_TYPE: '/verp-service/fileType/deletefiletype',
+  UPDATE_STATUS: '/verp-service/fileType/updatefiletypestatus'
+};
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -128,7 +156,10 @@ export const API_ROUTES = {
   COMPANY_PRODUCT: COMPANY_PRODUCT_ROUTES,
   COMPANY: COMPANY_ROUTES,
   DESIGNATION: DESIGNATION_ROUTES,
-  PROJECT: PROJECT_ROUTES
+  PROJECT: PROJECT_ROUTES,
+  USER: USER_ROUTES,
+  FILE_TYPE: FILE_TYPE_ROUTES
 };
 
 export default API_ROUTES;
+

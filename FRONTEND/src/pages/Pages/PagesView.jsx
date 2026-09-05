@@ -26,8 +26,21 @@ export default function PagesView() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('andrew@vishvin-erp.com');
-  const [password, setPassword] = useState('password123');
+
+  // Load remembered credentials if previously saved
+  const getRememberedCredentials = () => {
+    try {
+      const saved = localStorage.getItem('remembered_credentials');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const initialRemembered = getRememberedCredentials();
+  const [rememberMe, setRememberMe] = useState(Boolean(initialRemembered));
+  const [email, setEmail] = useState(initialRemembered?.username || initialRemembered?.email || '');
+  const [password, setPassword] = useState(initialRemembered?.password || '');
   const [chartPeriod, setChartPeriod] = useState('Weekly');
 
   const theme = useERPStore((state) => state.theme);
@@ -57,12 +70,23 @@ export default function PagesView() {
     try {
       const response = await authService.login(email, password);
       if (response?.success) {
+        // Save or clear remembered credentials based on checkbox
+        if (rememberMe) {
+          localStorage.setItem('remembered_credentials', JSON.stringify({
+            username: email,
+            password: password
+          }));
+        } else {
+          localStorage.removeItem('remembered_credentials');
+        }
+
         setAuthData({
           token: response.token?.accessToken,
           user: response.data?.user,
           context: response.data?.context,
           session: response.session,
-          photo: response.photo
+          photo: response.photo,
+          rawResponse: response
         });
         showToast('Login successful! Welcome back.', 'success');
         navigate('/dashboard');
@@ -188,7 +212,14 @@ export default function PagesView() {
                       <input
                         type="checkbox"
                         className="rounded-md accent-[#053742] w-4 h-4 cursor-pointer"
-                        defaultChecked
+                        checked={rememberMe}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setRememberMe(checked);
+                          if (!checked) {
+                            localStorage.removeItem('remembered_credentials');
+                          }
+                        }}
                       />
                       <span className="font-medium">Remember me</span>
                     </label>
@@ -429,7 +460,7 @@ export default function PagesView() {
                     <input
                       type="email"
                       placeholder="Enter your mail"
-                      defaultValue="andrew@vishvin-erp.com"
+                      defaultValue=""
                       className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#053742]"
                       required
                     />

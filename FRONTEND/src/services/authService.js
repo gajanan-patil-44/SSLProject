@@ -2,9 +2,45 @@
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
+export const purgeStorage = () => {
+  try {
+    if (typeof window === 'undefined') return;
+    const allowedKeys = new Set(['session', 'erp_theme', 'erp_sidebar_collapsed', 'erp_lang', 'remembered_credentials']);
+    if (window.localStorage) {
+      const toRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !allowedKeys.has(key)) toRemove.push(key);
+      }
+      toRemove.forEach(k => localStorage.removeItem(k));
+    }
+    if (window.sessionStorage) {
+      const toRemove = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && !allowedKeys.has(key)) toRemove.push(key);
+      }
+      toRemove.forEach(k => sessionStorage.removeItem(k));
+    }
+  } catch {}
+};
+
 export const authService = {
   /**
+   * Helper to get parsed session from storage
+   */
+  getSession: () => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
    * User login with username and password
+   * Stores ONLY the unified login response object
    * @param {string} username 
    * @param {string} password 
    */
@@ -15,13 +51,11 @@ export const authService = {
     });
 
     if (response?.success && response?.token?.accessToken) {
-      localStorage.setItem('erp_token', response.token.accessToken);
-      localStorage.setItem('erp_user', JSON.stringify(response.data?.user || {}));
-      localStorage.setItem('erp_user_context', JSON.stringify(response.data?.context || {}));
-      localStorage.setItem('erp_session', JSON.stringify(response.session || {}));
-      if (response.photo) {
-        localStorage.setItem('erp_photo', response.photo);
-      }
+      // Purge all legacy and mock keys from storage
+      purgeStorage();
+
+      // Store ONLY the unified login response object
+      localStorage.setItem('session', JSON.stringify(response));
     }
 
     return response;
@@ -31,50 +65,43 @@ export const authService = {
    * Logout user and clear stored auth credentials
    */
   logout: () => {
-    localStorage.removeItem('erp_token');
-    localStorage.removeItem('erp_user');
-    localStorage.removeItem('erp_user_context');
-    localStorage.removeItem('erp_session');
-    localStorage.removeItem('erp_photo');
+    localStorage.removeItem('session');
+    sessionStorage.removeItem('session');
+    purgeStorage();
   },
 
   /**
    * Check if user is currently authenticated
    */
   isAuthenticated: () => {
-    return Boolean(localStorage.getItem('erp_token'));
+    const session = authService.getSession();
+    return Boolean(session?.token?.accessToken);
   },
 
   /**
    * Retrieve active stored JWT token
    */
   getToken: () => {
-    return localStorage.getItem('erp_token');
+    const session = authService.getSession();
+    return session?.token?.accessToken || null;
   },
 
   /**
    * Retrieve active user data
    */
   getCurrentUser: () => {
-    const user = localStorage.getItem('erp_user');
-    try {
-      return user ? JSON.parse(user) : null;
-    } catch {
-      return null;
-    }
+    const session = authService.getSession();
+    return session?.data?.user || null;
   },
 
   /**
    * Retrieve current user context (companies, products, projects, roles)
    */
   getUserContext: () => {
-    const context = localStorage.getItem('erp_user_context');
-    try {
-      return context ? JSON.parse(context) : null;
-    } catch {
-      return null;
-    }
+    const session = authService.getSession();
+    return session?.data?.context || null;
   }
 };
 
 export default authService;
+

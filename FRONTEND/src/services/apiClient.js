@@ -18,7 +18,20 @@ const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('erp_token');
+    let token = null;
+    const sessionStr = localStorage.getItem('session') || sessionStorage.getItem('session');
+    if (sessionStr) {
+      try {
+        const sessionObj = JSON.parse(sessionStr);
+        token = sessionObj?.token?.accessToken;
+      } catch (e) {
+        // ignore parse error
+      }
+    }
+    if (!token) {
+      token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -46,6 +59,8 @@ apiClient.interceptors.response.use(
       // If token expired or invalid (not during login endpoint itself)
       const isLoginRequest = error.config?.url?.includes('/login');
       if (!isLoginRequest) {
+        localStorage.removeItem('session');
+        sessionStorage.removeItem('session');
         localStorage.removeItem('erp_token');
         localStorage.removeItem('erp_user');
       }

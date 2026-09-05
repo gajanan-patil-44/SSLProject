@@ -31,6 +31,32 @@ export const companyProductService = {
   },
 
   /**
+   * Get combined dropdowns (companies and products)
+   */
+  getDropdowns: async () => {
+    try {
+      const [companiesRes, productsRes] = await Promise.all([
+        companyProductService.getCompaniesDropdown(),
+        companyProductService.getProductsDropdown()
+      ]);
+      const companies = Array.isArray(companiesRes?.data) ? companiesRes.data : (Array.isArray(companiesRes) ? companiesRes : []);
+      const products = Array.isArray(productsRes?.data) ? productsRes.data : (Array.isArray(productsRes) ? productsRes : []);
+      return { companies, products };
+    } catch (err) {
+      console.error('Error fetching company product dropdowns:', err);
+      return { companies: [], products: [] };
+    }
+  },
+
+  /**
+   * Get dropdowns for edit mode
+   * @param {number|string} companyProductId 
+   */
+  getDropdownsForEdit: async (companyProductId) => {
+    return companyProductService.getDropdowns();
+  },
+
+  /**
    * Add company product mapping (FlagId: 3)
    * @param {Object} data - { CompanyId, ProductId, IsDisabled, CreatedByUserName }
    */
@@ -95,6 +121,13 @@ export const companyProductService = {
       CompanyProductId: Number(id),
       IsDisabled: Boolean(disabledVal)
     });
+  },
+
+  /**
+   * Toggle company product status (alias)
+   */
+  toggleCompanyProductStatus: async (companyProductData, isDisabled) => {
+    return companyProductService.updateCompanyProductStatus(companyProductData, isDisabled);
   }
 };
 
