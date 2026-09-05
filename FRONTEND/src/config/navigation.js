@@ -31,6 +31,11 @@ export const navigationConfig = [
         label: "Roles & Permissions",
         icon: "ShieldCheck",
         path: "/master/roles"
+      },
+      {
+        label: "User Creation",
+        icon: "UserPlus",
+        path: "/master/user-creation"
       }
     ]
   },

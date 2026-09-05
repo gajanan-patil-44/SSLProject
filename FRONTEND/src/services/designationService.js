@@ -26,9 +26,27 @@ export const designationService = {
    * @param {Object} data - { CompanyId, DesignationName, DesignationCode, IsDisabled, CreatedByUserName }
    */
   addDesignation: async (data) => {
-    return apiClient.post(API_ROUTES.DESIGNATION.DROPDOWN_OR_ADD, {
+    const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
+      try {
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+        }
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+      } catch { return ''; }
+    })() : '';
+
+    const userName = data.CreatedByUserName || data.CreateByUserName || data.UpdatedByUserName || data.UpdateByUserName || userState;
+
+    return apiClient.post(API_ROUTES.DESIGNATION.ADD_DESIGNATION, {
       flagId: 2,
-      ...data
+      CompanyId: Number(data.CompanyId),
+      DesignationName: data.DesignationName || data.designationName || '',
+      DesignationCode: data.DesignationCode || data.designationCode || '',
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
+      CreatedByUserName: userName
     });
   },
 
@@ -42,24 +60,32 @@ export const designationService = {
   },
 
   /**
-   * Get designation details by ID (flagId: 2)
-   * @param {number|string} companyDesignationId 
-   */
-  getDesignationById: async (companyDesignationId) => {
-    return apiClient.post(API_ROUTES.DESIGNATION.EDIT_DESIGNATION, {
-      flagId: 2,
-      CompanyDesignationId: companyDesignationId
-    });
-  },
-
-  /**
-   * Edit existing designation (flagId: 3)
+   * Edit existing designation (flagId: 2)
    * @param {Object} data - { CompanyDesignationId, CompanyId, DesignationName, DesignationCode, IsDisabled, UpdateByUserName }
    */
   editDesignation: async (data) => {
+    const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
+      try {
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+        }
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+      } catch { return ''; }
+    })() : '';
+
+    const userName = data.UpdateByUserName || data.UpdatedByUserName || data.CreatedByUserName || userState;
+
     return apiClient.post(API_ROUTES.DESIGNATION.EDIT_DESIGNATION, {
-      flagId: 3,
-      ...data
+      flagId: Number(data.flagId || 2),
+      CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
+      CompanyId: Number(data.CompanyId),
+      DesignationName: data.DesignationName || data.designationName || '',
+      DesignationCode: data.DesignationCode || data.designationCode || '',
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
+      UpdateByUserName: userName
     });
   },
 
@@ -68,20 +94,37 @@ export const designationService = {
    * @param {Object} data - { CompanyDesignationId, IsDisabled, UpdateByUserName }
    */
   toggleDesignationStatus: async (data) => {
+    const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
+      try {
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+        }
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+      } catch { return ''; }
+    })() : '';
+
+    const userName = data.UpdateByUserName || data.UpdatedByUserName || userState;
+
     return apiClient.post(API_ROUTES.DESIGNATION.TOGGLE_STATUS, {
       flagId: 4,
-      ...data
+      CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled),
+      UpdateByUserName: userName
     });
   },
 
   /**
-   * Delete designation (flagId: 5)
-   * @param {number|string} companyDesignationId 
+   * Delete designation (flagId: 1)
+   * @param {number|string|Object} idOrData 
    */
-  deleteDesignation: async (companyDesignationId) => {
+  deleteDesignation: async (idOrData) => {
+    const id = typeof idOrData === 'object' ? (idOrData.CompanyDesignationId ?? idOrData.id) : idOrData;
     return apiClient.post(API_ROUTES.DESIGNATION.DELETE_DESIGNATION, {
-      flagId: 5,
-      CompanyDesignationId: companyDesignationId
+      flagId: 1,
+      CompanyDesignationId: Number(id)
     });
   }
 };

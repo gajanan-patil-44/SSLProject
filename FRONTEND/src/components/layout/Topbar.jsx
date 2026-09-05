@@ -19,6 +19,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useERPStore } from '../../store/useERPStore';
+import { authService } from '../../services';
 import { api } from '../../services/api';
 import { Dropdown, DropdownItem, DropdownDivider } from '../ui/Dropdown';
 import { Avatar, Badge, Input } from '../ui/index';
@@ -35,9 +36,16 @@ export default function Topbar() {
   const language = useERPStore((state) => state.language);
   const setLanguage = useERPStore((state) => state.setLanguage);
   const user = useERPStore((state) => state.user);
+  const logout = useERPStore((state) => state.logout);
   const notifications = useERPStore((state) => state.notifications);
   const markNotificationRead = useERPStore((state) => state.markNotificationRead);
   const clearNotifications = useERPStore((state) => state.clearNotifications);
+
+  const handleLogout = () => {
+    authService.logout();
+    logout();
+    navigate('/pages/auth/login');
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -285,23 +293,23 @@ export default function Topbar() {
         <Dropdown
           trigger={
             <button className="flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 p-1.5 rounded-lg cursor-pointer transition-colors">
-              <Avatar src={user.avatar} name={user.name} size="sm" />
+              <Avatar src={user?.avatar} name={user?.name || 'User'} size="sm" />
               <div className="hidden md:flex flex-col text-left">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">{user.name}</span>
-                <span className="text-[10px] text-slate-400 leading-none">{user.role}</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">{user?.name || 'User'}</span>
+                <span className="text-[10px] text-slate-400 leading-none">{user?.role || ''}</span>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             </button>
           }
         >
           <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex flex-col">
-            <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{user.name}</span>
-            <span className="text-[10px] text-slate-400">{user.email}</span>
+            <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{user?.name || 'User'}</span>
+            <span className="text-[10px] text-slate-400">{user?.email || ''}</span>
           </div>
           <DropdownItem icon={User} onClick={() => navigate('/hrm/employees')}>Profile</DropdownItem>
           <DropdownItem icon={Settings} onClick={() => navigate('/system/settings')}>My Account</DropdownItem>
           <DropdownDivider />
-          <DropdownItem icon={LogOut} danger onClick={() => navigate('/pages/auth/login')}>
+          <DropdownItem icon={LogOut} danger onClick={handleLogout}>
             Logout
           </DropdownItem>
         </Dropdown>

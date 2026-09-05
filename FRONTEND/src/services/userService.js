@@ -4,61 +4,84 @@ import { API_ROUTES } from '../routes/apiRoutes';
 
 export const userService = {
   /**
-   * Get user dropdowns:
-   * FlagId: 1 -> Gender
-   * FlagId: 2 -> Marital Status
-   * FlagId: 3 -> Designation
+   * All user dropdowns via /verp-service/userCreation/userdropdowns:
+   * FlagId: 1 -> Gender            (GenderId, GenderName)
+   * FlagId: 2 -> Marital Status    (MaritalStatusId, MaritalStatusName)
+   * FlagId: 3 -> Designation       (CompanyDesignationId, DesignationName)
    * FlagId: 4 -> Reporting Manager (requires CompanyId and DesignationId)
    */
   getGenderDropdown: async () => {
-    return apiClient.post(API_ROUTES.USER.DROPDOWNS, {
+    return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
       FlagId: 1
     });
   },
 
   getMaritalStatusDropdown: async () => {
-    return apiClient.post(API_ROUTES.USER.DROPDOWNS, {
+    return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
       FlagId: 2
     });
   },
 
   getDesignationDropdown: async () => {
-    return apiClient.post(API_ROUTES.USER.DROPDOWNS, {
+    return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
       FlagId: 3
     });
   },
 
   getReportingManagerDropdown: async (companyId, designationId) => {
-    return apiClient.post(API_ROUTES.USER.DROPDOWNS, {
+    return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
       FlagId: 4,
-      CompanyId: companyId,
-      DesignationId: designationId
+      CompanyId: Number(companyId),
+      DesignationId: Number(designationId)
     });
   },
 
   /**
-   * Company / Product / Project dropdowns for user creation:
-   * FlagId: 1 -> Company
-   * FlagId: 2 -> Product (requires CompanyId)
-   * FlagId: 3 -> Project (requires CompanyProductId)
+   * File Types dropdown via /verp-service/fileType/getfiletypes
+   * FlagId: 1 -> (FileTypeId, FileTypeName, Description)
+   */
+  getFileTypes: async () => {
+    return apiClient.post(API_ROUTES.FILE_TYPE.GET_FILE_TYPES, {
+      FlagId: 1
+    });
+  },
+
+  /**
+   * Company / Product / Project / Role cascade dropdowns
+   * Endpoint: /verp-service/userCreation/companyproductprojectdropdown
+   *
+   * FlagId: 1 → Company list            (CompanyId, CompanyName)
+   * FlagId: 2 → Company Products        (CompanyProductId, ProductName) — requires CompanyId
+   * FlagId: 3 → Projects                (ProjectId, ProjectName)        — requires CompanyProductId
+   * FlagId: 4 → Roles                   (RoleId, RoleName)
    */
   getCompanyDropdown: async () => {
-    return apiClient.post(API_ROUTES.USER.COMPANY_PRODUCT_PROJECT_DROPDOWN, {
+    return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
       FlagId: 1
     });
   },
 
   getProductDropdown: async (companyId) => {
-    return apiClient.post(API_ROUTES.USER.COMPANY_PRODUCT_PROJECT_DROPDOWN, {
+    return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
       FlagId: 2,
-      CompanyId: companyId
+      CompanyId: Number(companyId)
     });
   },
 
   getProjectDropdown: async (companyProductId) => {
-    return apiClient.post(API_ROUTES.USER.COMPANY_PRODUCT_PROJECT_DROPDOWN, {
+    return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
       FlagId: 3,
-      CompanyProductId: companyProductId
+      CompanyProductId: Number(companyProductId)
+    });
+  },
+
+  /**
+   * Roles dropdown via /verp-service/roleCreation/getRole
+   * FlagId: 1 -> (RoleId, RoleName)
+   */
+  getRoleDropdown: async () => {
+    return apiClient.post(API_ROUTES.ROLE.GET_ROLE, {
+      FlagId: 1
     });
   },
 

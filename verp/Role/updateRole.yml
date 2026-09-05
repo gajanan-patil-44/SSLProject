@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/roleCreation/updateRole
+  url: http://192.168.23.76:9004/verp-service/roleCreation/updateRole
   body:
     type: json
     data: |-
@@ -18,12 +18,11 @@ http:
         "IsDisabled": false,
         "UpdatedByUserName":"praveen"
       }
-  auth:
-    type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIzLCJFbXBsb3llZUlkIjoiRU1QMTIiLCJMb2dpbk5hbWUiOiJhZG1pbjEyIiwiRW1haWwiOiJhZG1pbjEyQGV4YW1wbGUuY29tIiwiRGVzaWduYXRpb25JZCI6MSwiaWF0IjoxNzg4MzQ4Nzk5LCJleHAiOjE3ODgzOTE5OTl9.AvaD8DvG157lYKgcYAmaHEhq41MKP07jNi51fynR3PI
+  auth: inherit
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
