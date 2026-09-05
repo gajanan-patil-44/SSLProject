@@ -5,19 +5,21 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/productCreation/updateProduct
+  url: http://192.168.23.76:9004/verp-service/productCreation/updateProduct
   body:
     type: json
     data: |-
       {
           "flagId": 3,
           "ProductId": 1,
-          "ProductCode": "P0011",
-          "ProductName": "Updated Productt",
+          "ProductCode": "P001",
+          "ProductName": "Updated Product",
           "ProductDescription": "Updated product description",
           "UpdatedByUserName": "Praveen"
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODg0MTAxNTIsImV4cCI6MTc4ODQ1MzM1Mn0.poZhS2gtv8po1JfdTyDh6BZNOdnLRd6Ip8QuUUSEQF8
 
 settings:
   encodeUrl: true

@@ -5,17 +5,21 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/roleCreation/deleteRole
+  url: http://192.168.23.76:9004/verp-service/roleCreation/deleteRole
   body:
     type: json
     data: |-
       {
-        "RoleId": 3
+        "RoleId": 3,
+        "FlagId":5
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIyLCJFbXBsb3llZUlkIjoiRU1QMTEiLCJMb2dpbk5hbWUiOiJhZG1pbjExIiwiRW1haWwiOiJhZG1pbjExQGV4YW1wbGUuY29tIiwiRGVzaWduYXRpb25JZCI6MSwiaWF0IjoxNzg4MzQzMjkyLCJleHAiOjE3ODgzODY0OTJ9.ArrBlM-WUsF6509-2l5OIxkX-x0V5qrRIQkthHLocYA
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
