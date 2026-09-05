@@ -78,11 +78,10 @@ export const getBirthdayMailLogsController = async (req, res) => {
 
 // GET BIRTHDAY MAIL LOG BY ID
 
-
 export const getBirthdayMailLogController = async (req, res) => {
 
     try {
-        
+
         const { id } = req.params;
 
         if (
