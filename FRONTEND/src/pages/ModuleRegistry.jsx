@@ -500,41 +500,66 @@ export const registryConfigs = {
     title: "Projects",
     description: "Manage client projects and software assignments.",
     apiFetch: async () => {
-      const res = await api.project.getProjects();
-      const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
-      return items.map((p, idx) => {
-        const isDisabled = p.IsDisabled === true || p.status === 'Inactive' || p.status === 'Disabled';
-        const isEnabled = !isDisabled;
-        return {
-          id: p.ProjectId ?? (idx + 1),
-          ProjectId: p.ProjectId ?? (idx + 1),
-          CompanyProductId: p.CompanyProductId,
-          projectName: p.ProjectName || '—',
-          ProjectName: p.ProjectName || '',
-          projectCode: p.ProjectCode || '—',
-          ProjectCode: p.ProjectCode || '',
-          companyName: p.CompanyName || '—',
-          CompanyName: p.CompanyName || '',
-          productName: p.ProductName || '—',
-          ProductName: p.ProductName || '',
-          description: p.Description || p.ProjectDescription || '—',
-          Description: p.Description || p.ProjectDescription || '',
-          status: isDisabled ? "Inactive" : "Active",
-          IsDisabled: Boolean(isDisabled),
-          isEnabled: isEnabled,
-          raw: p
-        };
-      });
+      try {
+        const [res, compRes] = await Promise.all([
+          api.project.getProjects(),
+          api.project.getCompanyProductsDropdown().catch(() => ({ data: [] }))
+        ]);
+        const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : []));
+        const compList = Array.isArray(compRes?.data) ? compRes.data : (Array.isArray(compRes) ? compRes : (Array.isArray(compRes?.data?.data) ? compRes.data.data : []));
+
+        return items.map((p, idx) => {
+          const isDisabled = p.IsDisabled === true || p.status === 'Inactive' || p.status === 'Disabled';
+          const isEnabled = !isDisabled;
+          const matchedCp = compList.find(c => Number(c.CompanyProductId) === Number(p.CompanyProductId));
+          const prodName = p.ProductName || matchedCp?.ProductName || '—';
+          const compName = p.CompanyName || matchedCp?.CompanyName || '—';
+
+          return {
+            id: p.ProjectId ?? (idx + 1),
+            ProjectId: p.ProjectId ?? (idx + 1),
+            CompanyProductId: p.CompanyProductId !== undefined ? Number(p.CompanyProductId) : (matchedCp?.CompanyProductId ? Number(matchedCp.CompanyProductId) : ''),
+            projectName: p.ProjectName || p.projectName || '—',
+            ProjectName: p.ProjectName || p.projectName || '',
+            projectCode: p.ProjectCode || p.projectCode || '—',
+            ProjectCode: p.ProjectCode || p.projectCode || '',
+            companyName: compName,
+            CompanyName: compName === '—' ? '' : compName,
+            productName: prodName,
+            ProductName: prodName === '—' ? '' : prodName,
+            description: p.Description || p.description || p.ProjectDescription || '—',
+            Description: p.Description || p.description || p.ProjectDescription || '',
+            status: isDisabled ? "Inactive" : "Active",
+            IsDisabled: Boolean(isDisabled),
+            isEnabled: isEnabled,
+            raw: p
+          };
+        });
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        return [];
+      }
     },
     fetchDropdowns: async (mode = 'add', record = null) => {
-      const companyProductsList = mode === 'edit'
-        ? await api.project.getCompanyProductsForEditDropdown()
-        : await api.project.getCompanyProductsDropdown();
+      let options = [];
+      try {
+        const res = mode === 'edit'
+          ? await api.project.getCompanyProductsForEditDropdown()
+          : await api.project.getCompanyProductsDropdown();
 
-      const options = companyProductsList.map(cp => ({
-        value: Number(cp.CompanyProductId),
-        label: `${cp.CompanyName} - ${cp.ProductName}`
-      }));
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : []));
+
+        options = list.map(cp => {
+          const id = Number(cp.CompanyProductId || cp.id);
+          const label = cp.CompanyName ? `${cp.CompanyName} - ${cp.ProductName}` : (cp.ProductName || `Company Product #${id}`);
+          return {
+            value: id,
+            label: label
+          };
+        });
+      } catch (err) {
+        console.error("Error fetching project dropdowns:", err);
+      }
 
       return [
         {
@@ -599,7 +624,7 @@ export const registryConfigs = {
         CompanyProductId: Number(formData.CompanyProductId),
         ProjectName: formData.ProjectName || formData.projectName || '',
         ProjectCode: formData.ProjectCode || formData.projectCode || '',
-        IsDisabled: Boolean(formData.IsDisabled),
+        IsDisabled: typeof formData.IsDisabled === 'boolean' ? formData.IsDisabled : Boolean(formData.isDisabled),
         Description: formData.Description || formData.description || '',
         UpdatedByUserId: userId,
         UpdatedByUserName: userName,
@@ -667,8 +692,6 @@ export const registryConfigs = {
           DesignationCode: d.DesignationCode || '',
           companyName: d.CompanyName || '—',
           CompanyName: d.CompanyName || '',
-          description: d.Description || '—',
-          Description: d.Description || '',
           status: isDisabled ? "Inactive" : "Active",
           IsDisabled: Boolean(isDisabled),
           isEnabled: isEnabled,
@@ -705,12 +728,6 @@ export const registryConfigs = {
           type: "text",
           required: true,
           placeholder: "e.g. Software Engineer"
-        },
-        {
-          key: "Description",
-          label: "Description",
-          type: "textarea",
-          placeholder: "e.g. Full-stack software engineering role"
         }
       ];
     },
@@ -726,7 +743,7 @@ export const registryConfigs = {
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
         IsDisabled: false,
-        Description: formData.Description || formData.description || '',
+        Description: '',
         CreatedByUserName: userName,
         CreatedByUserId: userId
       };
@@ -747,7 +764,7 @@ export const registryConfigs = {
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
         IsDisabled: Boolean(formData.IsDisabled),
-        Description: formData.Description || formData.description || '',
+        Description: '',
         UpdateByUserName: userName,
         UpdatedByUserName: userName,
         UpdatedByUserId: userId
@@ -782,14 +799,12 @@ export const registryConfigs = {
       { id: 'designationCode', header: 'Designation Code', accessorKey: 'designationCode', key: 'designationCode', cell: ({ row }) => <span className="font-semibold text-primary">{row.original.designationCode}</span> },
       { id: 'designationName', header: 'Designation Name', accessorKey: 'designationName', key: 'designationName', cell: ({ row }) => <span className="font-bold">{row.original.designationName}</span> },
       { id: 'companyName', header: 'Company', accessorKey: 'companyName', key: 'companyName' },
-      { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
     formFields: [
       { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "DesignationCode", label: "Designation Code", type: "text", required: true, placeholder: "e.g. DES-SE" },
-      { key: "DesignationName", label: "Designation Name", type: "text", required: true, placeholder: "e.g. Software Engineer" },
-      { key: "Description", label: "Description", type: "textarea", placeholder: "e.g. Role description..." }
+      { key: "DesignationName", label: "Designation Name", type: "text", required: true, placeholder: "e.g. Software Engineer" }
     ]
   },
 
@@ -942,6 +957,8 @@ export function ModuleRenderer() {
       }).catch((err) => {
         console.error("Dropdown fetch error:", err);
       });
+    } else {
+      setDynamicFormFields(null);
     }
     return () => {
       isMounted = false;
@@ -972,6 +989,7 @@ export function ModuleRenderer() {
   }
 
   const handleAddClick = async () => {
+    setSelectedRecord(null);
     if (config?.fetchDropdowns) {
       try {
         const fields = await config.fetchDropdowns('add', null);
@@ -981,6 +999,8 @@ export function ModuleRenderer() {
       } catch (err) {
         console.error("Dropdown error on add:", err);
       }
+    } else {
+      setDynamicFormFields(null);
     }
     setIsAddOpen(true);
   };
@@ -1065,6 +1085,7 @@ export function ModuleRenderer() {
   return (
     <>
       <DynamicListPage
+        key={`list_${path}`}
         title={config.title}
         description={config.description}
         columns={config.columns}
@@ -1104,6 +1125,8 @@ export function ModuleRenderer() {
             } catch (err) {
               console.error("Dropdown error on edit:", err);
             }
+          } else {
+            setDynamicFormFields(null);
           }
           setSelectedRecord(editDefaults);
           setIsEditOpen(true);
@@ -1113,12 +1136,14 @@ export function ModuleRenderer() {
 
       {isAddOpen && (
         <Modal
+          key={`add_modal_${path}`}
           isOpen={isAddOpen}
           onClose={() => setIsAddOpen(false)}
           title={`Add New ${config.title.endsWith('ies') ? config.title.slice(0, -3) + 'y' : config.title.slice(0, -1)}`}
           size="lg"
         >
           <DynamicFormPage
+            key={`add_form_${path}`}
             title=""
             fields={activeAddFields}
             defaultValues={{}}
@@ -1130,6 +1155,7 @@ export function ModuleRenderer() {
 
       {isViewOpen && selectedRecord && (
         <Modal
+          key={`view_modal_${path}_${selectedRecord.id || selectedRecord.CompanyProductId || selectedRecord.ProductId || selectedRecord.CompanyId || 'view'}`}
           isOpen={isViewOpen}
           onClose={() => {
             setIsViewOpen(false);
@@ -1140,44 +1166,19 @@ export function ModuleRenderer() {
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              {Object.entries(selectedRecord).map(([key, val]) => {
-                if (
-                  typeof val === 'object' ||
-                  key === 'image' ||
-                  key === 'id' ||
-                  key === 'avatar' ||
-                  key === 'raw' ||
-                  key === 'IsDisabled' ||
-                  key === 'isEnabled' ||
-                  key === 'ProductId' ||
-                  key === 'ProductCode' ||
-                  key === 'ProductName' ||
-                  key === 'ProductDescription' ||
-                  key === 'RoleId' ||
-                  key === 'RoleCode' ||
-                  key === 'RoleName' ||
-                  key === 'RoleDescription' ||
-                  key === 'CompanyId' ||
-                  key === 'CompanyName' ||
-                  key === 'CompanyProductId' ||
-                  key === 'CompanyDesignationId' ||
-                  key === 'DesignationName' ||
-                  key === 'DesignationCode' ||
-                  key === 'ProjectId' ||
-                  key === 'ProjectName' ||
-                  key === 'ProjectCode' ||
-                  key === 'CreatedByUserId' ||
-                  key === 'UpdatedByUserId' ||
-                  key === 'CreatedAt' ||
-                  key === 'UpdatedAt'
-                ) return null;
-                return (
-                  <div key={key} className="border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <span className="text-slate-400 capitalize font-medium">{key.replace(/([A-Z])/g, ' $1')}</span>
-                    <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{String(val)}</p>
-                  </div>
-                );
-              })}
+              {(config.columns || [])
+                .filter(c => c.id !== 'actions' && c.id !== 'id' && c.key !== 'id' && c.id !== 'action')
+                .map(c => {
+                  const key = c.accessorKey || c.id || c.key;
+                  const label = typeof c.header === 'string' ? c.header : key.replace(/([A-Z])/g, ' $1');
+                  const val = selectedRecord[key] ?? selectedRecord[key.charAt(0).toUpperCase() + key.slice(1)] ?? selectedRecord[key.toLowerCase()] ?? '—';
+                  return (
+                    <div key={key} className="border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <span className="text-slate-400 capitalize font-medium">{label}</span>
+                      <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{String(val || '—')}</p>
+                    </div>
+                  );
+                })}
             </div>
             <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button variant="outline" size="sm" onClick={() => setIsViewOpen(false)}>
@@ -1190,6 +1191,7 @@ export function ModuleRenderer() {
 
       {isEditOpen && selectedRecord && (
         <Modal
+          key={`edit_modal_${path}_${selectedRecord.id || selectedRecord.CompanyProductId || selectedRecord.ProductId || selectedRecord.CompanyId || 'edit'}`}
           isOpen={isEditOpen}
           onClose={() => {
             setIsEditOpen(false);
@@ -1199,6 +1201,7 @@ export function ModuleRenderer() {
           size="lg"
         >
           <DynamicFormPage
+            key={`edit_form_${path}_${selectedRecord.id || selectedRecord.CompanyProductId || selectedRecord.ProductId || selectedRecord.CompanyId || 'edit'}`}
             title=""
             fields={activeEditFields}
             defaultValues={selectedRecord}

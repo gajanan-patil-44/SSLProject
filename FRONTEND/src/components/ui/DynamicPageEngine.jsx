@@ -144,7 +144,7 @@ export const DynamicFormPage = ({
         }
       />
 
-      <Card className="max-w-4xl mx-auto">
+      <Card className="w-full">
         <DynamicForm
           fields={fields}
           schema={schema}
