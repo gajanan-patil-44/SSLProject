@@ -28,10 +28,10 @@ export default function App() {
         <Route path="/" element={<AppLayout />}>
           {/* Index Redirect */}
           <Route index element={<Navigate to="/dashboard" replace />} />
-          
+
           {/* Main Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
-          
+
           {/* Main Single Segment routes */}
           <Route path="roles" element={<ModuleRenderer />} />
           <Route path="companies" element={<ModuleRenderer />} />

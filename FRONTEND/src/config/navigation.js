@@ -13,8 +13,8 @@ export const navigationConfig = [
         path: "/master/products"
       },
       {
-        label: "Company Products",
-        icon: "Link",
+        label: "Company Product",
+        icon: "Boxes",
         path: "/master/company-products"
       },
       {

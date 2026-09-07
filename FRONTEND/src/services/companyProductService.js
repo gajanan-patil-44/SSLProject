@@ -4,98 +4,87 @@ import { API_ROUTES } from '../routes/apiRoutes';
 
 export const companyProductService = {
   /**
-   * View all company product mappings (FlagId: 1)
+   * View all company products (FlagId: 1)
+   * Endpoint: /verp-service/companyProductCreation/view
+   * Payload: { "FlagId": 1 }
    */
-  getCompanyProducts: async () => {
-    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.GET_COMPANY_PRODUCTS, {
-      FlagId: 1
+  getCompanyProducts: async (flagId = 1) => {
+    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.VIEW, {
+      FlagId: flagId
     });
   },
 
   /**
-   * Get companies dropdown (FlagId: 1)
+   * Get Companies Dropdown (FlagId: 1)
+   * Endpoint: /verp-service/companyProductCreation/companyProduct
+   * Payload: { "FlagId": 1 }
    */
   getCompaniesDropdown: async () => {
-    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.DROPDOWN_OR_ADD, {
+    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.COMPANY_PRODUCT, {
       FlagId: 1
     });
   },
 
   /**
-   * Get products dropdown (FlagId: 2)
+   * Get Products Dropdown (FlagId: 2)
+   * Endpoint: /verp-service/companyProductCreation/companyProduct
+   * Payload: { "FlagId": 2 }
    */
   getProductsDropdown: async () => {
-    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.DROPDOWN_OR_ADD, {
+    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.COMPANY_PRODUCT, {
       FlagId: 2
     });
   },
 
   /**
-   * Get combined dropdowns (companies and products)
-   */
-  getDropdowns: async () => {
-    try {
-      const [companiesRes, productsRes] = await Promise.all([
-        companyProductService.getCompaniesDropdown(),
-        companyProductService.getProductsDropdown()
-      ]);
-      const companies = Array.isArray(companiesRes?.data) ? companiesRes.data : (Array.isArray(companiesRes) ? companiesRes : []);
-      const products = Array.isArray(productsRes?.data) ? productsRes.data : (Array.isArray(productsRes) ? productsRes : []);
-      return { companies, products };
-    } catch (err) {
-      console.error('Error fetching company product dropdowns:', err);
-      return { companies: [], products: [] };
-    }
-  },
-
-  /**
-   * Get dropdowns for edit mode
-   * @param {number|string} companyProductId 
-   */
-  getDropdownsForEdit: async (companyProductId) => {
-    return companyProductService.getDropdowns();
-  },
-
-  /**
-   * Add company product mapping (FlagId: 3)
-   * @param {Object} data - { CompanyId, ProductId, IsDisabled, CreatedByUserName }
+   * Add / Create Company Product (FlagId: 3)
+   * Endpoint: /verp-service/companyProductCreation/companyProduct
+   * Payload: { "FlagId": 3, "CompanyId": ..., "ProductId": ..., "IsDisabled": ..., "CreatedByUserName": "" }
    */
   addCompanyProduct: async (data) => {
-    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.ADD_COMPANY_PRODUCT, {
+    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.COMPANY_PRODUCT, {
       FlagId: 3,
       CompanyId: Number(data.CompanyId),
       ProductId: Number(data.ProductId),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
-      CreatedByUserName: data.CreatedByUserName || ''
+      CreatedByUserName: String(data.CreatedByUserName || 'admin')
     });
   },
 
   /**
-   * Edit company product mapping (FlagId: 3)
-   * @param {Object} data - { CompanyProductId, CompanyId, ProductId, IsDisabled, UpdatedByUserName }
+   * Edit / Update Company Product (FlagId: 3)
+   * Endpoint: /verp-service/companyProductCreation/editcompanyproduct
+   * Payload: { "FlagId": 3, "CompanyProductId": ..., "CompanyId": ..., "ProductId": ..., "IsDisabled": ..., "UpdatedByUserName": "" }
    */
+  updateCompanyProduct: async (data) => {
+    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.EDIT_COMPANY_PRODUCT, {
+      FlagId: 3,
+      CompanyProductId: Number(data.CompanyProductId || data.id),
+      CompanyId: Number(data.CompanyId),
+      ProductId: Number(data.ProductId),
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
+      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || 'admin')
+    });
+  },
+
   editCompanyProduct: async (data) => {
     return apiClient.post(API_ROUTES.COMPANY_PRODUCT.EDIT_COMPANY_PRODUCT, {
       FlagId: 3,
-      CompanyProductId: Number(data.CompanyProductId ?? data.id),
+      CompanyProductId: Number(data.CompanyProductId || data.id),
       CompanyId: Number(data.CompanyId),
       ProductId: Number(data.ProductId),
-      IsDisabled: typeof data.IsDisabled === 'boolean'
-        ? data.IsDisabled
-        : (data.IsDisabled === 'true' || data.IsDisabled === 'Inactive' || data.IsDisabled === 'Disabled' || false),
-      UpdatedByUserName: data.UpdatedByUserName || ''
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
+      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || 'admin')
     });
   },
 
   /**
-   * Delete company product mapping (FlagId: 1)
-   * @param {number|string|Object} companyProductData 
+   * Delete Company Product (FlagId: 1)
+   * Endpoint: /verp-service/companyProductCreation/deleteCompanyProduct
+   * Payload: { "FlagId": 1, "CompanyProductId": ... }
    */
-  deleteCompanyProduct: async (companyProductData) => {
-    const id = typeof companyProductData === 'object'
-      ? (companyProductData.CompanyProductId ?? companyProductData.id)
-      : companyProductData;
-
+  deleteCompanyProduct: async (companyProductId) => {
+    const id = typeof companyProductId === 'object' ? (companyProductId.CompanyProductId || companyProductId.id) : companyProductId;
     return apiClient.post(API_ROUTES.COMPANY_PRODUCT.DELETE_COMPANY_PRODUCT, {
       FlagId: 1,
       CompanyProductId: Number(id)
@@ -103,31 +92,16 @@ export const companyProductService = {
   },
 
   /**
-   * Update company product status (FlagId: 1)
-   * @param {number|string|Object} companyProductData 
-   * @param {boolean} isDisabled 
+   * Toggle / Update Company Product Status (FlagId: 1)
+   * Endpoint: /verp-service/companyProductCreation/updateCompanyProductstatus
+   * Payload: { "FlagId": 1, "CompanyProductId": ..., "IsDisabled": ... }
    */
-  updateCompanyProductStatus: async (companyProductData, isDisabled) => {
-    const id = typeof companyProductData === 'object'
-      ? (companyProductData.CompanyProductId ?? companyProductData.id)
-      : companyProductData;
-
-    const disabledVal = typeof isDisabled === 'boolean'
-      ? isDisabled
-      : (typeof companyProductData === 'object' && companyProductData.IsDisabled !== undefined ? Boolean(companyProductData.IsDisabled) : false);
-
+  toggleCompanyProductStatus: async (data) => {
     return apiClient.post(API_ROUTES.COMPANY_PRODUCT.UPDATE_STATUS, {
       FlagId: 1,
-      CompanyProductId: Number(id),
-      IsDisabled: Boolean(disabledVal)
+      CompanyProductId: Number(data.CompanyProductId || data.id),
+      IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.isDisabled)
     });
-  },
-
-  /**
-   * Toggle company product status (alias)
-   */
-  toggleCompanyProductStatus: async (companyProductData, isDisabled) => {
-    return companyProductService.updateCompanyProductStatus(companyProductData, isDisabled);
   }
 };
 

@@ -68,12 +68,8 @@ export const DynamicListPage = ({
     if (!deleteRecord || !deleteDataFn) return;
     setDeleteLoading(true);
     try {
-      const targetKey = deleteRecord.ProjectId || deleteRecord.CompanyDesignationId || deleteRecord.CompanyProductId || deleteRecord.ProductId || deleteRecord.RoleId || deleteRecord.CompanyId || deleteRecord.id || deleteRecord.employeeId || deleteRecord.key;
       await deleteDataFn(deleteRecord);
-      setData(prev => prev.filter(item => {
-        const itemKey = item.ProjectId || item.CompanyDesignationId || item.CompanyProductId || item.ProductId || item.RoleId || item.CompanyId || item.id || item.employeeId || item.key;
-        return itemKey !== targetKey;
-      }));
+      await loadData();
       setDeleteRecord(null);
     } catch (e) {
       console.error("Failed to delete record:", e);
@@ -216,8 +212,8 @@ export const DynamicDetailPage = ({
                       {field.type === 'currency'
                         ? `$${(data[field.key] || 0).toLocaleString()}`
                         : field.type === 'date'
-                        ? new Date(data[field.key]).toLocaleDateString()
-                        : String(data[field.key] !== undefined && data[field.key] !== null ? data[field.key] : 'N/A')}
+                          ? new Date(data[field.key]).toLocaleDateString()
+                          : String(data[field.key] !== undefined && data[field.key] !== null ? data[field.key] : 'N/A')}
                     </span>
                   </div>
                 ))}
