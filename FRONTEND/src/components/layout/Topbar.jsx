@@ -1,16 +1,12 @@
-// src/components/layout/Topbar.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
   ChevronDown,
   Globe,
-  Languages,
   LogOut,
-  Mail,
   Menu,
   Moon,
-  Search,
   Sun,
   User,
   Settings,
@@ -20,17 +16,14 @@ import {
 } from 'lucide-react';
 import { useERPStore } from '../../store/useERPStore';
 import { authService } from '../../services';
-import { api } from '../../services/api';
 import { Dropdown, DropdownItem, DropdownDivider } from '../ui/Dropdown';
-import { Avatar, Badge, Input } from '../ui/index';
+import { Avatar } from '../ui/index';
 
 export default function Topbar() {
   const navigate = useNavigate();
   const theme = useERPStore((state) => state.theme);
   const setTheme = useERPStore((state) => state.setTheme);
   const toggleSidebar = useERPStore((state) => state.toggleSidebar);
-  const toggleSidebarCollapsed = useERPStore((state) => state.toggleSidebarCollapsed);
-  const sidebarCollapsed = useERPStore((state) => state.sidebarCollapsed);
   const activeCompany = useERPStore((state) => state.activeCompany);
   const setActiveCompany = useERPStore((state) => state.setActiveCompany);
   const language = useERPStore((state) => state.language);
@@ -47,73 +40,8 @@ export default function Topbar() {
     navigate('/pages/auth/login');
   };
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
-
-  // Global search implementation
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    const performSearch = async () => {
-      try {
-        const [emps, prods, custs, projs, tix] = await Promise.all([
-          api.getEmployees(),
-          api.getProducts(),
-          api.getCustomers(),
-          api.getProjects(),
-          api.getTickets()
-        ]);
-
-        const query = searchQuery.toLowerCase();
-        const results = [];
-
-        // Search Employees
-        emps.filter(e => e.name.toLowerCase().includes(query) || e.department.toLowerCase().includes(query)).forEach(e => {
-          results.push({ type: 'Employee', title: e.name, subtitle: `${e.designation} (${e.department})`, path: `/hrm/employees` });
-        });
-
-        // Search Products
-        prods.filter(p => p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)).forEach(p => {
-          results.push({ type: 'Product', title: p.name, subtitle: `SKU: ${p.sku} - $${p.price}`, path: `/inventory/products` });
-        });
-
-        // Search Customers
-        custs.filter(c => c.name.toLowerCase().includes(query) || c.company.toLowerCase().includes(query)).forEach(c => {
-          results.push({ type: 'Customer', title: c.name, subtitle: c.company, path: `/sales/customers` });
-        });
-
-        // Search Projects
-        projs.filter(p => p.name.toLowerCase().includes(query)).forEach(p => {
-          results.push({ type: 'Project', title: p.name, subtitle: `${p.status} - Progress: ${p.progress}%`, path: `/projects/projects` });
-        });
-
-        // Search Tickets
-        tix.filter(t => t.id.toLowerCase().includes(query) || t.subject.toLowerCase().includes(query)).forEach(t => {
-          results.push({ type: 'Ticket', title: t.subject, subtitle: `ID: ${t.id} - ${t.status}`, path: `/support/tickets` });
-        });
-
-        setSearchResults(results.slice(0, 6)); // cap results
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    const timer = setTimeout(performSearch, 150);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
-  const handleSearchResultClick = (path) => {
-    navigate(path);
-    setSearchQuery('');
-    setShowSearchDropdown(false);
   };
 
   const unreadNotifications = notifications.filter(n => !n.read);
@@ -148,61 +76,8 @@ export default function Topbar() {
         </Dropdown>
       </div>
 
-      {/* Global Search Center */}
-      <div className="hidden sm:block relative w-full max-w-xs md:max-w-md mx-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input
-            type="text"
-            placeholder="Search employees, products, orders, tickets..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setShowSearchDropdown(true);
-            }}
-            onFocus={() => setShowSearchDropdown(true)}
-            className="pl-9 pr-4 py-1.5 text-xs h-9 bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/80"
-          />
-        </div>
-
-        {/* Search Results Dropdown */}
-        {showSearchDropdown && searchResults.length > 0 && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setShowSearchDropdown(false)}></div>
-            <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 max-h-80 overflow-y-auto">
-              <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 text-[10px] font-bold text-slate-400 uppercase">
-                Search Results ({searchResults.length})
-              </div>
-              {searchResults.map((res, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleSearchResultClick(res.path)}
-                  className="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer flex flex-col gap-0.5 text-xs transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{res.title}</span>
-                    <Badge variant={res.type === 'Employee' ? 'primary' : res.type === 'Product' ? 'secondary' : 'neutral'} className="text-[9px] px-1 py-0.2">
-                      {res.type}
-                    </Badge>
-                  </div>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">{res.subtitle}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-
       {/* Right Icons Panel */}
       <div className="flex items-center gap-1">
-        {/* Search toggle for mobile */}
-        <button
-          onClick={() => navigate('/pages/utilities')}
-          className="sm:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-pointer"
-        >
-          <Search className="w-4.5 h-4.5" />
-        </button>
-
         {/* Light/Dark Toggle */}
         <button
           onClick={toggleTheme}
