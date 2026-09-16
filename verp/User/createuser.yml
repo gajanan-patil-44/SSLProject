@@ -11,7 +11,7 @@ http:
     data:
       - name: EmployeeId
         type: text
-        value: EMP1
+        value: EMP5
       - name: FirstName
         type: text
         value: luffy
@@ -23,7 +23,7 @@ http:
         value: xavier
       - name: PhoneNumber
         type: text
-        value: "9999989999"
+        value: "9999889888"
       - name: AltPhoneNumber
         type: text
         value: ""
@@ -41,10 +41,10 @@ http:
         value: "1"
       - name: Email
         type: text
-        value: admin1@example.com
+        value: admin5@example.com
       - name: LoginName
         type: text
-        value: admin1
+        value: admin5
       - name: Photo
         type: file
         value:
@@ -52,7 +52,7 @@ http:
         contentType: image/jpeg
       - name: Password
         type: text
-        value: admin1@123
+        value: admin5@123
       - name: CreatedByUserName
         type: text
         value: admin
@@ -92,6 +92,12 @@ http:
         value:
           - C:\Users\hithi\Downloads\C Hithin kuamr_ KLE Tech University.pdf
         contentType: application/pdf
+      - name: ReportingManagerUserId
+        type: text
+        value: "1"
+      - name: DateOfJoining
+        type: text
+        value: 2024-08-12
   auth: inherit
 
 settings:

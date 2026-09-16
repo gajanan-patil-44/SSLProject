@@ -9,6 +9,7 @@ export const getAllCompanyProducts = async () => {
 
     const query = `
         SELECT
+        "CompanyProductId",
             C."CompanyName",
             P."ProductName",
             CP."IsDisabled",
@@ -30,6 +31,7 @@ export const getCompaniesForDropdown = async () => {
 
     const query = `
         SELECT
+            
             "CompanyId",
             "CompanyName"
         FROM "LKP"."Company"

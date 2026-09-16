@@ -1,12 +1,8 @@
 import express from "express";
-
 import {userDropdownController,createUserController,companyProductProjectDropdownController} from "../../Controllers/User/UserController.js";
-
 import {uploadUserPhoto} from "../../MiddleWare/Uploads.js";
 
 const router = express.Router();
-
-
 // ==========================================
 // USER DROPDOWNS
 // FlagId 1 = Gender

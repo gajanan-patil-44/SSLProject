@@ -12,6 +12,7 @@ import {
     getCompanyDropdown,
     getProductDropdown,
     getProjectDropdown,
+    getRoleDropdown,
     getUserReportingManagerDropdown
 
 } from "../../Models/UserModels.js";
@@ -444,8 +445,7 @@ export const createUserController = async (req, res) => {
         // ==========================================================
         return res.status(201).json({
             status: "success",
-            message: "User created successfully",
-            data: result
+            message: "User created successfully"
         });
 
     } catch (error) {
@@ -524,12 +524,25 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 data: result
             });
         }
+
+         // ==================================================
+        // FLAG ID 4 - ROLE
+        // ==================================================
+        if (parseInt(FlagId) === 4) {
+            const result = await getRoleDropdown();
+
+            return res.status(200).json({
+                status: "success",
+                message: "Role data fetched successfully",
+                data: result
+            });
+        }
         // ==================================================
         // INVALID FLAG
         // ==================================================
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId. Use 1, 2 or 3"
+            message: "Invalid FlagId. Use 1, 2, 3 or 4"
         });
     } catch (error) {
         console.error("Company Product Project Dropdown Error:", error);

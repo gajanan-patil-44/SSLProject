@@ -694,3 +694,18 @@ export const getProjectDropdown = async (CompanyProductId) => {
 
     return result.rows;
 };
+
+export const getRoleDropdown = async () => {
+    const query = `
+        SELECT
+            "RoleId",
+            "RoleName"
+        FROM "LKP"."Role"
+        WHERE "IsDisabled" = false
+        ORDER BY "RoleName" ASC
+    `;
+
+    const result = await pool.query(query);
+
+    return result.rows;
+};
