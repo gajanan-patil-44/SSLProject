@@ -22,7 +22,7 @@ app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);  //Done by kavya
 app.use(backendHelpers.COMPANY_CREATION, CompanyRoute);  //Done by kavya
 app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);  //Done by kavya
 app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);  //Done by kavya
-app.use(backendHelpers.BIRTHDAY_EMAILS, BirthdayRoutes);
+app.use(backendHelpers.BIRTHDAY_EMAILS, BirthdayRoutes);   //Done by kavya
 };
 
 export default applyRoutes;
