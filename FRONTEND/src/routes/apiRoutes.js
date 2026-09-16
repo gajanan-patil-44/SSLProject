@@ -46,24 +46,6 @@ export const PRODUCT_ROUTES = {
 
 /**
  * ============================================================================
- * 4. COMPANY PRODUCT ROUTES
- * ============================================================================
- */
-export const COMPANY_PRODUCT_ROUTES = {
-  VIEW: '/verp-service/companyProductCreation/view',
-  GET_COMPANY_PRODUCTS: '/verp-service/companyProductCreation/view',
-  ADD_COMPANY_PRODUCT: '/verp-service/companyProductCreation/companyProduct',
-  COMPANY_PRODUCT: '/verp-service/companyProductCreation/companyProduct',
-  DROPDOWN_OR_ADD: '/verp-service/companyProductCreation/companyProduct',
-  EDIT_COMPANY_PRODUCT: '/verp-service/companyProductCreation/editcompanyproduct',
-  UPDATE_COMPANY_PRODUCT: '/verp-service/companyProductCreation/editcompanyproduct',
-  DELETE_COMPANY_PRODUCT: '/verp-service/companyProductCreation/deleteCompanyProduct',
-  UPDATE_STATUS: '/verp-service/companyProductCreation/updateCompanyProductstatus',
-  TOGGLE_STATUS: '/verp-service/companyProductCreation/updateCompanyProductstatus'
-};
-
-/**
- * ============================================================================
  * 5. COMPANY CREATION ROUTES
  * ============================================================================
  */
@@ -74,6 +56,26 @@ export const COMPANY_ROUTES = {
   UPDATE_COMPANY: '/verp-service/companyCreation/updateCompany',
   TOGGLE_COMPANY_STATUS: '/verp-service/companyCreation/toggleCompanyStatus',
   TOGGLE_STATUS: '/verp-service/companyCreation/toggleCompanyStatus'
+};
+
+/**
+ * ============================================================================
+ * 5.1. COMPANY PRODUCT CREATION ROUTES
+ * ============================================================================
+ */
+export const COMPANY_PRODUCT_ROUTES = {
+  VIEW: '/verp-service/companyProductCreation/view',
+  GET_COMPANY_PRODUCTS: '/verp-service/companyProductCreation/view',
+  GET_COMPANY_PRODUCT: '/verp-service/companyProductCreation/view',
+  COMPANY_PRODUCT: '/verp-service/companyProductCreation/companyProduct',
+  DROPDOWN: '/verp-service/companyProductCreation/companyProduct',
+  DROPDOWN_OR_ADD: '/verp-service/companyProductCreation/companyProduct',
+  EDIT_COMPANY_PRODUCT: '/verp-service/companyProductCreation/editcompanyproduct',
+  UPDATE_COMPANY_PRODUCT: '/verp-service/companyProductCreation/editcompanyproduct',
+  DELETE_COMPANY_PRODUCT: '/verp-service/companyProductCreation/deleteCompanyProduct',
+  DELETE: '/verp-service/companyProductCreation/deleteCompanyProduct',
+  UPDATE_STATUS: '/verp-service/companyProductCreation/updateCompanyProductstatus',
+  TOGGLE_STATUS: '/verp-service/companyProductCreation/updateCompanyProductstatus'
 };
 
 /**
@@ -153,8 +155,8 @@ export const API_ROUTES = {
   AUTH: AUTH_ROUTES,
   ROLE: ROLE_ROUTES,
   PRODUCT: PRODUCT_ROUTES,
-  COMPANY_PRODUCT: COMPANY_PRODUCT_ROUTES,
   COMPANY: COMPANY_ROUTES,
+  COMPANY_PRODUCT: COMPANY_PRODUCT_ROUTES,
   DESIGNATION: DESIGNATION_ROUTES,
   PROJECT: PROJECT_ROUTES,
   USER: USER_ROUTES,

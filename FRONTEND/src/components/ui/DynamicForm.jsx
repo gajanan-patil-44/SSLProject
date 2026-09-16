@@ -16,7 +16,7 @@ export const DynamicForm = ({
   loading = false,
   gridCols = 2 // Number of columns for form layout
 }) => {
-  
+
   // 1. Programmatically build a Zod validation schema if not supplied
   const validationSchema = schema || useFormSchema(fields);
 
@@ -25,11 +25,16 @@ export const DynamicForm = ({
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors }
   } = useForm({
     resolver: zodResolver(validationSchema),
     defaultValues
   });
+
+  React.useEffect(() => {
+    reset(defaultValues || {});
+  }, [defaultValues, reset]);
 
   // Render a single form field control
   const renderField = (field) => {
@@ -71,6 +76,7 @@ export const DynamicForm = ({
                 return (
                   <Select
                     ref={ref}
+                    placeholder={field.placeholder || `Select ${field.label || 'option'}`}
                     options={field.options}
                     disabled={field.disabled}
                     error={!!errorMsg}
@@ -228,7 +234,7 @@ export const DynamicForm = ({
 function useFormSchema(fields) {
   return React.useMemo(() => {
     const shape = {};
-    
+
     // Flatten fields if nested in sections
     const flatFields = fields.some(f => f.section)
       ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
@@ -238,42 +244,62 @@ function useFormSchema(fields) {
       let validator = z.any();
 
       if (field.type === 'email') {
-        validator = z.string().email({ message: "Invalid email address" });
-      } else if (field.type === 'number') {
-        validator = z.number({ invalid_type_error: "Must be a number" });
-      } else if (field.type === 'checkbox' || field.type === 'switch' || field.type === 'toggle') {
-        validator = z.boolean();
-      } else if (field.type === 'select') {
-        validator = z.union([z.string(), z.number()]);
-      } else {
-        validator = z.string();
-      }
-
-      if (field.required) {
-        if (field.type === 'number') {
-          validator = validator.refine(val => val !== undefined && val !== null && !isNaN(val), { message: "Required field" });
-        } else if (field.type === 'select') {
-          validator = validator.refine(
-            val => val !== undefined && val !== null && String(val).trim() !== '' && String(val) !== 'undefined' && String(val) !== 'null',
-            { message: `${field.label || 'Field'} is required` }
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().min(1, { message: `${field.label || 'Email'} is required` }).email({ message: "Invalid email address" })
           );
-        } else if (field.type === 'checkbox') {
-          validator = validator.refine(val => val === true, { message: "Must check this box" });
-        } else if (field.type === 'switch' || field.type === 'toggle') {
-          validator = validator.optional();
         } else {
-          validator = validator.min(1, { message: `${field.label || 'Field'} is required` });
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().email({ message: "Invalid email address" }).optional().or(z.literal(''))
+          );
+        }
+      } else if (field.type === 'number') {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === '' || val === undefined || val === null) ? undefined : Number(val),
+            z.number({ required_error: `${field.label || 'Field'} is required`, invalid_type_error: "Must be a number" })
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === '' || val === undefined || val === null) ? null : Number(val),
+            z.number({ invalid_type_error: "Must be a number" }).optional().nullable()
+          );
+        }
+      } else if (field.type === 'checkbox' || field.type === 'switch' || field.type === 'toggle') {
+        if (field.required && field.type === 'checkbox') {
+          validator = z.preprocess(val => Boolean(val), z.boolean().refine(val => val === true, { message: "Must check this box" }));
+        } else {
+          validator = z.preprocess(val => (val === undefined || val === null) ? false : Boolean(val), z.boolean().optional());
+        }
+      } else if (field.type === 'select') {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null || String(val).trim() === '' || String(val) === 'undefined' || String(val) === 'null') ? '' : (isNaN(Number(val)) ? String(val) : Number(val)),
+            z.union([
+              z.string().min(1, { message: `${field.label || 'Field'} is required` }),
+              z.number({ required_error: `${field.label || 'Field'} is required` })
+            ])
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === undefined || val === null || String(val).trim() === '' || String(val) === 'undefined' || String(val) === 'null') ? '' : (isNaN(Number(val)) ? String(val) : Number(val)),
+            z.union([z.string(), z.number()]).optional().nullable().or(z.literal(''))
+          );
         }
       } else {
-        // Optional handling
-        if (field.type === 'email') {
-          validator = validator.optional().or(z.literal(''));
-        } else if (field.type === 'number') {
-          validator = validator.optional().nullable();
-        } else if (field.type === 'select') {
-          validator = validator.optional().nullable().or(z.literal(''));
+        // text, textarea, and general inputs
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().min(1, { message: `${field.label || 'Field'} is required` })
+          );
         } else {
-          validator = validator.optional();
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().optional().nullable().or(z.literal(''))
+          );
         }
       }
 

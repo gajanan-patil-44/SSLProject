@@ -1,6 +1,5 @@
-// src/App.jsx
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 
 // Direct custom pages imports
@@ -20,6 +19,12 @@ import UserCreationView from './pages/Master/UserCreationView';
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
 
+// Keyed wrapper ensures complete component remount on route changes
+function KeyedModuleRenderer() {
+  const location = useLocation();
+  return <ModuleRenderer key={location.pathname} />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -28,17 +33,17 @@ export default function App() {
         <Route path="/" element={<AppLayout />}>
           {/* Index Redirect */}
           <Route index element={<Navigate to="/dashboard" replace />} />
-          
+
           {/* Main Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
-          
+
           {/* Main Single Segment routes */}
-          <Route path="roles" element={<ModuleRenderer />} />
-          <Route path="companies" element={<ModuleRenderer />} />
-          <Route path="designations" element={<ModuleRenderer />} />
-          <Route path="projects" element={<ModuleRenderer />} />
-          <Route path="applications" element={<ModuleRenderer />} />
-          <Route path="layouts" element={<ModuleRenderer />} />
+          <Route path="roles" element={<KeyedModuleRenderer />} />
+          <Route path="companies" element={<KeyedModuleRenderer />} />
+          <Route path="designations" element={<KeyedModuleRenderer />} />
+          <Route path="projects" element={<KeyedModuleRenderer />} />
+          <Route path="applications" element={<KeyedModuleRenderer />} />
+          <Route path="layouts" element={<KeyedModuleRenderer />} />
 
           {/* HRM Special Pages */}
           <Route path="hrm/employees" element={<EmployeesView />} />
@@ -73,8 +78,8 @@ export default function App() {
           <Route path="documents/letter-builder" element={<LetterBuilderView />} />
 
           {/* Dynamic Metadata routing fallback for other modules */}
-          <Route path=":module/:subpage" element={<ModuleRenderer />} />
-          <Route path=":module/:subpage/:subid" element={<ModuleRenderer />} />
+          <Route path=":module/:subpage" element={<KeyedModuleRenderer />} />
+          <Route path=":module/:subpage/:subid" element={<KeyedModuleRenderer />} />
 
           {/* 404 Fallback routing */}
           <Route path="*" element={<Navigate to="/pages/error/404" replace />} />
