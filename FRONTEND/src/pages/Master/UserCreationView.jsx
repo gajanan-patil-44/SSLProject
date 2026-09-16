@@ -550,7 +550,7 @@ export default function UserCreationView() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full">
 
       {/* Page Header */}
       <PageHeader
@@ -863,7 +863,7 @@ export default function UserCreationView() {
               title="Account Credentials"
               subtitle="Configure system credentials for the user to authenticate into the ERP."
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
 
               {/* Email */}
               <Field label="Email Address" required error={errors.Email}>
@@ -1015,7 +1015,7 @@ export default function UserCreationView() {
               title="Profile Photo"
               subtitle="Upload an avatar or professional picture for user identity card and profile."
             />
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 max-w-2xl bg-slate-50/50 dark:bg-slate-800/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 w-full bg-slate-50/50 dark:bg-slate-800/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
               {/* Avatar preview */}
               <div className="shrink-0">
                 {photo ? (

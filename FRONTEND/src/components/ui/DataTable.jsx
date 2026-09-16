@@ -52,7 +52,7 @@ export const DataTable = ({
   // Prepend Selection Column if bulk actions are enabled
   const tableColumns = useMemo(() => {
     const cols = [...columns];
-    
+
     // Add actions column if handlers are provided
     if (onViewClick || onEditClick || onDeleteClick || onToggleStatusClick) {
       cols.push({
@@ -132,13 +132,13 @@ export const DataTable = ({
   // Export to CSV
   const handleExportCSV = () => {
     if (data.length === 0) return;
-    
+
     // Header row
     const headers = columns.filter(c => c.key).map(c => c.label || c.key);
     const keys = columns.filter(c => c.key).map(c => c.key);
-    
+
     const csvRows = [headers.join(',')];
-    
+
     // Content rows
     data.forEach(row => {
       const values = keys.map(key => {
@@ -149,7 +149,7 @@ export const DataTable = ({
       });
       csvRows.push(values.join(','));
     });
-    
+
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -184,7 +184,7 @@ export const DataTable = ({
               className="pl-9 h-9"
             />
           </div>
-          
+
           {/* Refresh & Filters */}
           {onRefresh && (
             <IconButton
@@ -282,9 +282,9 @@ export const DataTable = ({
                         {header.isPlaceholder
                           ? null
                           : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                         {header.column.getIsSorted() === 'asc' && ' 🔼'}
                         {header.column.getIsSorted() === 'desc' && ' 🔽'}
                       </div>
