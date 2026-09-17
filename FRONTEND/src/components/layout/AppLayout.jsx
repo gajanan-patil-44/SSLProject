@@ -1,6 +1,5 @@
-// src/components/layout/AppLayout.jsx
 import React, { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useERPStore } from '../../store/useERPStore';
@@ -10,6 +9,7 @@ import ToastContainer from '../ui/Toast';
 export default function AppLayout() {
   const { pathname } = useLocation();
   const theme = useERPStore((state) => state.theme);
+  const isAuthenticated = useERPStore((state) => state.isAuthenticated);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -35,6 +35,11 @@ export default function AppLayout() {
         <ToastContainer />
       </div>
     );
+  }
+
+  // Guard protected routes
+  if (!isAuthenticated) {
+    return <Navigate to="/pages/auth/login" replace state={{ from: pathname }} />;
   }
 
   return (

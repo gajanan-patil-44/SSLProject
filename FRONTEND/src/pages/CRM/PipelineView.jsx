@@ -1,6 +1,6 @@
-// src/pages/CRM/PipelineView.jsx
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import { useERPStore } from '../../store/useERPStore';
 import {
   PageHeader,
   Card,
@@ -23,6 +23,7 @@ const PIPELINE_STAGES = [
 ];
 
 export default function PipelineView() {
+  const showToast = useERPStore((state) => state.showToast);
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -68,6 +69,7 @@ export default function PipelineView() {
     if (!cardId) return;
 
     setContacts(prev => prev.map(c => c.id === cardId ? { ...c, stage: targetStage } : c));
+    showToast(`Deal stage updated to ${targetStage}`, 'success');
     
     // Simulate updating backend cache
     try {
@@ -89,9 +91,10 @@ export default function PipelineView() {
       const res = await api.createContact(newDeal);
       setContacts(prev => [{ ...res, value: newDeal.value }, ...prev]);
       setIsAddOpen(false);
-      alert("Deal registered in pipeline!");
+      showToast(res?.message || 'Deal registered in pipeline successfully!', 'success');
     } catch (e) {
       console.error(e);
+      showToast(e?.message || 'Failed to register deal.', 'error');
     }
   };
 
@@ -103,6 +106,7 @@ export default function PipelineView() {
     const nextStage = stages[nextIdx];
     
     setContacts(prev => prev.map(c => c.id === dealId ? { ...c, stage: nextStage } : c));
+    showToast(`Deal transitioned to ${nextStage}`, 'info');
   };
 
   const formFields = [

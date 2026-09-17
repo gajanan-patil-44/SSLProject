@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button, PageHeader } from '../../components/ui/index';
 import { userService } from '../../services/userService';
+import { useERPStore } from '../../store/useERPStore';
 
 // ─── Helper to retrieve logged-in session details ───────────────────────────
 const getSessionAuth = () => {
@@ -498,6 +499,7 @@ export default function UserCreationView() {
     try {
       setSubmitting(true);
       const res = await userService.createUser(fd);
+      const successMsg = res?.message || 'User created successfully!';
 
       // Capture summary of created user for celebration badge
       const summary = {
@@ -510,13 +512,16 @@ export default function UserCreationView() {
         designation: designations.find(d => String(d.value) === String(form.DesignationId))?.label || '—',
       };
       setCreatedUserSummary(summary);
-      setResult({ ok: true, msg: res?.message || 'User created successfully!' });
+      setResult({ ok: true, msg: successMsg });
+      useERPStore.getState().showToast(successMsg, 'success');
 
       // Cleanly reset everything: form fields, file inputs, dropdown cascades, and reset stepper back to Step 1 (0%)
       resetAllState(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      setResult({ ok: false, msg: err?.message || 'Failed to create user. Please try again.' });
+      const errMsg = err?.message || 'Failed to create user. Please try again.';
+      setResult({ ok: false, msg: errMsg });
+      useERPStore.getState().showToast(errMsg, 'error');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSubmitting(false);
