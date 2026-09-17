@@ -1,0 +1,25 @@
+info:
+  name: toggleDesignationStatus
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/designationCreation/toggleDesignationStatus
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":4,
+        "CompanyDesignationId":7,
+        "IsDisabled":true,
+        "UpdateByUserName":"kjavya"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

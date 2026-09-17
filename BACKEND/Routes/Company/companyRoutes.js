@@ -6,7 +6,9 @@ import {
     toggleCompanyStatus,
     deleteCompany
 } from "../../Controllers/Company/companyController.js";
+
 import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
+
 const router = express.Router();
 
 router.post("/getCompany", authenticateToken, getCompany);

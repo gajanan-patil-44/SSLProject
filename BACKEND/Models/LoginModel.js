@@ -185,12 +185,17 @@ const companyResult = await pool.query(companyQuery, [user.UserId]);
     `;
 
 
+    // const productResult =
+    //     await pool.query(
+    //         productQuery,
+    //         [user.UserId]
+    //     );
+
     const productResult =
         await pool.query(
             productQuery,
             [user.UserId]
         );
-
 
     // ==========================================================
     // 5. PROJECT
@@ -513,33 +518,26 @@ export const resetAttempts = async (userId) => {
 
 };
 
-
 // ==========================================================
 // PERMANENT BLOCK
 // ==========================================================
 
 export const setPermanentBlock = async (userId) => {
-
     const query = `
         UPDATE "DATA"."User"
-
         SET
-
             "IsBlocked" = TRUE,
-
-            "BlockedOn" =
-                CURRENT_TIMESTAMP
-
-        WHERE
-            "UserId" = $1
-
+            "BlockedOn" =CURRENT_TIMESTAMP,
+            "BlockCount" = COALESCE("BlockCount", 0) + 1,
+            "AttemptCount" = 5
+        WHERE "UserId" = $1
         RETURNING
-
             "UserId",
             "IsBlocked",
-            "BlockedOn"
+            "BlockedOn",
+            "BlockCount",
+            "AttemptCount"
     `;
-
 
     const result =
         await pool.query(
@@ -547,7 +545,5 @@ export const setPermanentBlock = async (userId) => {
             [userId]
         );
 
-
     return result.rows[0] || null;
-
 };

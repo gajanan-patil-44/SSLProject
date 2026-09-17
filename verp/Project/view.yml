@@ -1,16 +1,16 @@
 info:
-  name: getCompanyForRole
+  name: /view
   type: http
-  seq: 6
+  seq: 1
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/roleCreation/companyexists
+  url: http://localhost:9004/verp-service/projectCreation/view
   body:
     type: json
     data: |-
       {
-        "FlagId":3
+        "flagId":1
       }
   auth:
     type: bearer
@@ -21,4 +21,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: true
+  forwardAuthorizationHeader: false

@@ -1,16 +1,17 @@
 info:
-  name: getRoles
+  name: deleteproduct
   type: http
-  seq: 5
+  seq: 4
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/roleCreation/getRole
+  url: http://localhost:9004/verp-service/productCreation/deleteProduct
   body:
     type: json
     data: |-
       {
-      "FlagId":1
+          "flagId": 5,
+          "ProductId": 1
       }
   auth:
     type: bearer

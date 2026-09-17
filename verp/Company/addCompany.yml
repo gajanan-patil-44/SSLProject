@@ -1,27 +1,29 @@
 info:
   name: addCompany
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/companyCreation/addCompany
+  url: http://192.168.23.76:9004/verp-service/companyCreation/addCompany
   body:
     type: json
     data: |2-
       
           {
             "flagId": 2,
-              "CompanyName": "vishvinTech",
-              "CompanyCode": "vishvin001",
+              "CompanyName": " Tech",
+              "CompanyCode": "ABC_003",
               "CreatedByUserName": "hithin",
               "UpdatedByUserName": "hithin",
               "IsDisabled": false,
-              "Email": "vishvin@technology.com",
+              "Email": "c@technology.com",
               "PhoneNumber": "8876543260",
               "Address": "Bangalore, Karnataka"
           }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODg0MTAxNTIsImV4cCI6MTc4ODQ1MzM1Mn0.poZhS2gtv8po1JfdTyDh6BZNOdnLRd6Ip8QuUUSEQF8
 
 settings:
   encodeUrl: true

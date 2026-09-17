@@ -1,0 +1,25 @@
+info:
+  name: active/inactiveProduct
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/productCreation/toggleProductStatus
+  body:
+    type: json
+    data: |-
+      {
+        "flagId": 4,
+        "ProductId": 1,
+        "IsDisabled": true,
+        "UpdatedByUserName": "praveenn"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

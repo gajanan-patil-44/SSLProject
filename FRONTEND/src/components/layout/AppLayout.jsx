@@ -48,7 +48,7 @@ export default function AppLayout() {
         <Topbar />
 
         {/* Inner Page Viewport */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto max-w-[1600px] w-full mx-auto animate-fade-in">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full animate-fade-in">
           <Outlet />
         </main>
 

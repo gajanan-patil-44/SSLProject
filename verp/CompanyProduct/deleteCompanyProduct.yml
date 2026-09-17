@@ -5,13 +5,17 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/companyProductCreation/deleteCompanyProduct
+  url: http://192.168.23.76:9004/verp-service/companyProductCreation/deleteCompanyProduct
   body:
     type: json
     data: |-
       {
           "FlagId": 1,
+<<<<<<< HEAD
           "CompanyProductId": 10
+=======
+          "CompanyProductId": 7
+>>>>>>> ecd18af59e9298262738d9e3f6288e2d27c53e37
       }
   auth: inherit
 
