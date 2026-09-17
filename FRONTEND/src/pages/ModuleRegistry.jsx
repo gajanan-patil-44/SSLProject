@@ -932,6 +932,7 @@ export function ModuleRenderer() {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
+  const showToast = useERPStore((state) => state.showToast);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -1010,11 +1011,12 @@ export function ModuleRenderer() {
       try {
         await config.apiCreate(data);
         setRefreshKey(prev => prev + 1);
+        setIsAddOpen(false);
       } catch (err) {
         console.error("Error creating record:", err);
+        // Modal stays open so the user can change fields or cancel!
       }
     }
-    setIsAddOpen(false);
   };
 
   const handleEditSubmit = async (data) => {
@@ -1022,12 +1024,13 @@ export function ModuleRenderer() {
       try {
         await config.apiUpdate({ ...selectedRecord, ...data });
         setRefreshKey(prev => prev + 1);
+        setIsEditOpen(false);
+        setSelectedRecord(null);
       } catch (err) {
         console.error("Error updating record:", err);
+        // Modal stays open so the user can change fields or cancel!
       }
     }
-    setIsEditOpen(false);
-    setSelectedRecord(null);
   };
 
   // Guarantee form fields are always populated for Add and Edit modals
