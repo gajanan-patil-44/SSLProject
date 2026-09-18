@@ -76,6 +76,8 @@ const normalizedInitialUser = initialUser ? {
 
 const firstCompany = initialContext?.companies?.[0]?.name || '';
 
+const initialMenu = initialSession?.data?.userMenu || initialSession?.data?.menu || initialSession?.userMenu || null;
+
 export const useERPStore = create((set) => ({
   theme: localStorage.getItem('erp_theme') || 'light',
   sidebarOpen: false,
@@ -88,10 +90,13 @@ export const useERPStore = create((set) => ({
   isAuthenticated: Boolean(initialToken),
   user: normalizedInitialUser,
   userContext: initialContext || null,
+  userMenu: initialMenu,
   session: initialSessionMeta,
   userPhoto: initialPhoto,
 
-  setAuthData: ({ token, user, context, session, photo, rawResponse }) => {
+  setUserMenu: (menu) => set({ userMenu: menu }),
+
+  setAuthData: ({ token, user, context, session, photo, rawResponse, userMenu }) => {
     let displayName = 'User';
     if (user?.name) {
       if (typeof user.name === 'string') {
@@ -115,6 +120,7 @@ export const useERPStore = create((set) => ({
     };
 
     const firstCompanyName = context?.companies?.[0]?.name || 'Falcon LLP';
+    const dynamicMenu = userMenu || rawResponse?.data?.userMenu || rawResponse?.data?.menu || rawResponse?.userMenu || null;
 
     // Purge any legacy individual storage items
     const legacyKeys = [
@@ -139,6 +145,7 @@ export const useERPStore = create((set) => ({
       isAuthenticated: Boolean(token),
       user: normalizedUser,
       userContext: context || null,
+      userMenu: dynamicMenu,
       session: session || null,
       userPhoto: photo || null,
       activeCompany: firstCompanyName
@@ -165,6 +172,7 @@ export const useERPStore = create((set) => ({
       isAuthenticated: false,
       user: null,
       userContext: null,
+      userMenu: null,
       session: null,
       userPhoto: null,
       activeCompany: ''
