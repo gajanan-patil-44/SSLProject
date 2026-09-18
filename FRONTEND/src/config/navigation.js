@@ -36,6 +36,11 @@ export const navigationConfig = [
         label: "User Creation",
         icon: "UserPlus",
         path: "/master/user-creation"
+      },
+      {
+        label: "Manage Page",
+        icon: "Layers",
+        path: "/master/manage-page"
       }
     ]
   },
