@@ -2,7 +2,6 @@ import { pool } from "../Config/db.js";
 
 // GET MAIL STATUS IDs
 
-
 export const getMailStatusIds = async () => {
 
     const query = `

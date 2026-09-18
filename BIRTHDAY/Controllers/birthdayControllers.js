@@ -1,7 +1,6 @@
-import { processBirthdayEmails } from "../Services/birthdayService.js";
+import { processBirthdayEmails } from "../../Birthday/Services/birthdayService.js";
 
-import { getBirthdayMailLogs, getBirthdayMailLogById } from "../Models/BirthdayModels.js";
-
+import { getBirthdayMailLogs, getBirthdayMailLogById } from "../../Birthday/Models/BirthdayModels.js";
 
 
 // PROCESS BIRTHDAY EMAILS

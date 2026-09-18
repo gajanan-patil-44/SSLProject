@@ -10,9 +10,7 @@ import {
 import transporter from "../Config/email.js";
 
 
-// ==========================================================
 // VALIDATE EMAIL
-// ==========================================================
 
 const isValidEmail = (email) => {
 
@@ -26,9 +24,7 @@ const isValidEmail = (email) => {
 };
 
 
-// ==========================================================
 // GET FULL EMPLOYEE NAME
-// ==========================================================
 
 const getEmployeeName = (employee) => {
 
@@ -48,9 +44,7 @@ const getEmployeeName = (employee) => {
 };
 
 
-// ==========================================================
 // CREATE EMAIL CONTENT
-// ==========================================================
 
 const createBirthdayMailContent = (employee) => {
 
@@ -156,9 +150,7 @@ Team Vishvin
 };
 
 
-// ==========================================================
 // PROCESS BIRTHDAY EMAILS
-// ==========================================================
 
 export const processBirthdayEmails = async () => {
 
@@ -169,9 +161,7 @@ export const processBirthdayEmails = async () => {
 
     try {
 
-        // --------------------------------------------------
         // GET MAIL STATUS MASTER DATA
-        // --------------------------------------------------
 
         const mailStatuses = await getMailStatusIds();
 
@@ -204,9 +194,7 @@ export const processBirthdayEmails = async () => {
         }
 
 
-        // --------------------------------------------------
         // GET TODAY'S BIRTHDAY USERS
-        // --------------------------------------------------
 
         const employees = await getTodaysBirthdayUsers();
 
@@ -234,9 +222,7 @@ export const processBirthdayEmails = async () => {
         let emailsSkipped = 0;
 
 
-        // --------------------------------------------------
         // PROCESS EACH EMPLOYEE
-        // --------------------------------------------------
 
         for (const employee of employees) {
 
@@ -248,9 +234,7 @@ export const processBirthdayEmails = async () => {
                 const employeeName = getEmployeeName(employee) || "Employee";
 
 
-                // ------------------------------------------
                 // VALIDATE EMAIL
-                // ------------------------------------------
 
                 if (
                     !employee.Email ||
@@ -268,16 +252,12 @@ export const processBirthdayEmails = async () => {
                 const recipientEmail = employee.Email.trim();
 
 
-                // ------------------------------------------
                 // CREATE EMAIL
-                // ------------------------------------------
 
                 const mailContent = createBirthdayMailContent(employee);
 
 
-                // ------------------------------------------
                 // IF ALREADY SENT TODAY, SKIP
-                // ------------------------------------------
 
                 if (employee.MailStatusId === sentStatusId) {
 
@@ -289,9 +269,7 @@ export const processBirthdayEmails = async () => {
                 }
 
 
-                // ------------------------------------------
                 // CREATE OR UPDATE LOG
-                // ------------------------------------------
 
                 if (!birthdayMailLogId) {
 
@@ -320,9 +298,7 @@ export const processBirthdayEmails = async () => {
                 }
 
 
-                // ------------------------------------------
                 // SEND EMAIL
-                // ------------------------------------------
 
                 const mailOptions = {
 
@@ -337,9 +313,7 @@ export const processBirthdayEmails = async () => {
                 await transporter.sendMail(mailOptions);
 
 
-                // ------------------------------------------
                 // UPDATE LOG = SENT
-                // ------------------------------------------
 
                 await updateBirthdayMailLogSuccess({
 
@@ -360,9 +334,7 @@ export const processBirthdayEmails = async () => {
                 console.error(`Birthday email failed for UserId ${employee.UserId}:`, error.message);
 
 
-                // ------------------------------------------
                 // UPDATE LOG = FAILED
-                // ------------------------------------------
 
                 try {
 

@@ -1,9 +1,7 @@
 import { pool } from "../Config/db.js";
 
 
-// ==========================================
 // GET ALL ACTIVE COMPANIES
-// ==========================================
 
 export const getAllCompanies = async () => {
 
@@ -31,7 +29,7 @@ export const getAllCompanies = async () => {
 
     } catch (error) {
 
-        console.error("Error fetching companies:", error);
+        // console.error("Error fetching companies:", error);
 
         throw error;
     }
@@ -70,16 +68,14 @@ export const checkCompanyExists = async (
 
     } catch (error) {
 
-        console.error("Error checking company existence:", error);
+        // console.error("Error checking company existence:", error);
 
         throw error;
     }
 };
 
 
-// ==========================================
 // ADD COMPANY
-// ==========================================
 
 export const addCompany = async (companyData) => {
 
@@ -130,7 +126,7 @@ export const addCompany = async (companyData) => {
 
     } catch (error) {
 
-        console.error("Error adding company:", error);
+        // console.error("Error adding company:", error);
 
         throw error;
     }
@@ -166,7 +162,7 @@ export const checkCompanyExistsForUpdate = async (
 
     } catch (error) {
 
-        console.error("Error checking company for update:", error);
+        // console.error("Error checking company for update:", error);
 
         throw error;
     }
@@ -211,16 +207,14 @@ export const updateCompanies = async (companyData) => {
 
     } catch (error) {
 
-        console.error("Error updating company:", error);
+        // console.error("Error updating company:", error);
 
         throw error;
     }
 };
 
 
-// ==========================================
 // TOGGLE COMPANY STATUS
-// ==========================================
 
 export const toggleCompanyStatuses = async (companyData) => {
 
@@ -248,7 +242,7 @@ export const toggleCompanyStatuses = async (companyData) => {
 
     } catch (error) {
 
-        console.error("Error toggling company status:", error);
+        // console.error("Error toggling company status:", error);
 
         throw error;
     }
@@ -256,10 +250,7 @@ export const toggleCompanyStatuses = async (companyData) => {
 
 
 
-
-// ==========================================
 // DELETE / DISABLE COMPANY
-// ==========================================
 
 export const deleteCompanies = async (companyData) => {
 
@@ -280,7 +271,7 @@ export const deleteCompanies = async (companyData) => {
 
     } catch (error) {
 
-        console.error("Error deleting company:", error);
+        // console.error("Error deleting company:", error);
 
         throw error;
     }

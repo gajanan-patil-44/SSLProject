@@ -11,9 +11,7 @@ import {
 } from "../../Models/DesignationModels.js";
 
 
-// ======================================================
 // GET ALL DESIGNATIONS
-// ======================================================
 
 export const getDesignation = async (req, res) => {
 
@@ -316,9 +314,7 @@ export const designationController = async (req, res) => {
 
 
 
-// ======================================================
 // EDIT DESIGNATION
-// ======================================================
 
 export const editDesignationController = async (req, res) => {
 
@@ -619,9 +615,7 @@ export const editDesignationController = async (req, res) => {
 
 
 
-// ======================================================
 // TOGGLE DESIGNATION STATUS
-// ======================================================
 
 export const toggleDesignationStatus = async (req, res) => {
 
@@ -684,7 +678,6 @@ export const toggleDesignationStatus = async (req, res) => {
 
             // VALIDATE IS DISABLED
     
-
             if (typeof IsDisabled !== "boolean") {
 
                 return res.status(400).json({
@@ -723,7 +716,6 @@ export const toggleDesignationStatus = async (req, res) => {
         
             // DESIGNATION DOES NOT EXIST
             
-
             if (!designationData) {
 
                 return res.status(404).json({
@@ -732,11 +724,9 @@ export const toggleDesignationStatus = async (req, res) => {
                 });
             }
 
-
            
             // SUCCESS
            
-
             return res.status(200).json({
                 status: "success",
                 message: "Designation status updated successfully"
@@ -746,7 +736,6 @@ export const toggleDesignationStatus = async (req, res) => {
 
         // INVALID FLAG ID
        
-
         return res.status(400).json({
             status: "error",
             message: "Invalid flagId"
@@ -809,9 +798,7 @@ export const deleteDesignationController = async (req, res) => {
             }
 
 
-            // ==========================================
             // DELETE
-            // ==========================================
 
             const result = await deleteDesignation(Number(CompanyDesignationId));
 

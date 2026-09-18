@@ -3,7 +3,6 @@ import { pool } from "../Config/db.js";
 
 // GET ALL DESIGNATIONS
 
-
 export const getAllDesignations = async () => {
 
     try {
@@ -35,7 +34,6 @@ export const getAllDesignations = async () => {
 
         const result = await pool.query(query);
 
-
         return result.rows;
 
     } catch (error) {
@@ -49,7 +47,6 @@ export const getAllDesignations = async () => {
 
 
 // GET COMPANIES FOR DROPDOWN
-
 
 export const getCompaniesForDropdown = async () => {
 
@@ -98,7 +95,6 @@ export const checkCompanyExists = async (CompanyId) => {
 
         const values = [CompanyId];
 
-
         const result = await pool.query(
             query,
             values
@@ -117,7 +113,6 @@ export const checkCompanyExists = async (CompanyId) => {
 
 
 // CHECK DESIGNATION FOR ADD
-
 
 export const checkDesignationExists = async (
     CompanyId,
@@ -350,7 +345,6 @@ export const editDesignation = async (designationData) => {
 
 
 // TOGGLE DESIGNATION STATUS
-
 
 export const toggleDesignationStatuses = async (designationData) => {
 
