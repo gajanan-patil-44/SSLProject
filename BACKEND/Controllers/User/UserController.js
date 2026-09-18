@@ -18,7 +18,7 @@ import {
 import { readFile } from "fs/promises";
 import {processUserFilesUsingWorker} from "../../Helpers/userFileWorkerHelper.js";
 
-import { getAllUserDetails,editUserdetails } from "../../Models/userDetails/User.js";
+import { getAllUserDetails, editUserdetails } from "../../Models/userDetails/User.js";
 // =====================================================
 // USER DROPDOWNS
 // FlagId 1 = Gender
@@ -546,29 +546,74 @@ export const companyProductProjectDropdownController = async (req, res) => {
     }
 };
 
-export const getAllUserDetailsController=async(req,res)=>{
-    const{flagId}=req.body
+export const getAllUserDetailsController = async (req, res) => {
+    const { flagId } = req.body
     try {
-        if(Number(flagId)!==1){
-            return res.status(400).json({status:false,message:"Please Enter Valid FlagId"})
+        if (Number(flagId) !== 1) {
+            return res.status(400).json({ status: false, message: "Please Enter Valid FlagId" })
         }
-    const result=await getAllUserDetails();
-    return res.status(200).json({
-        status:true,
-        message:"UserDetails Fetched Successfully",
-        data:result
-    })
+        const result = await getAllUserDetails();
+        return res.status(200).json({
+            status: true,
+            message: "UserDetails Fetched Successfully",
+            data: result
+        })
     } catch (error) {
         return res.status(500).json({
-            status:false,
-            message:"Internal Server Error",
-            error:error.message
+            status: false,
+            message: "Internal Server Error",
+            error: error.message
         })
     }
 }
 
-export const editUserdetailsController=async(req,res)=>{
-     const {
+export const editUserdetailsController = async (req, res) => {
+
+    const {
+        UserId,
+        flagId,
+        employeeId,
+        firstName,
+        middleName,
+        lastName,
+        phoneNumber,
+        dateOfBirth,
+        genderId,
+        maritalStatusId,
+        designationId,
+        email,
+        loginName,
+        altPhoneNumber,
+        dateOfJoining,
+        updatedByUserName
+    } = req.body;
+
+    try {
+
+
+        if (Number(flagId) !== 2) {
+
+            return res.status(400).json({
+                status: false,
+                message: "Please Enter Valid FlagId"
+            });
+
+        }
+
+
+        if (!UserId) {
+
+            return res.status(400).json({
+                status: false,
+                message: "UserId is required"
+            });
+
+        }
+
+        const result = await editUserdetails({
+
+            UserId,
+
             employeeId,
             firstName,
             middleName,
@@ -582,39 +627,38 @@ export const editUserdetailsController=async(req,res)=>{
             loginName,
             altPhoneNumber,
             dateOfJoining,
-            updatedByUserName,
-            flagId
-        } = req.body;
-    try {
+            updatedByUserName
 
-        if(Number(flagId)!==2){
-            return res.status(400).json({status:false,message:"Plesae Enter Valid FlagId"})
+        });
+
+
+        if (!result) {
+
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+
         }
 
-        const result=await editUserdetails({ employeeId,
-            firstName,
-            middleName,
-            lastName,
-            phoneNumber,
-            dateOfBirth,
-            genderId,
-            maritalStatusId,
-            designationId,
-            email,
-            loginName,
-            altPhoneNumber,
-            dateOfJoining,
-            updatedByUserName
+        return res.status(200).json({
+            status: true,
+            message: "User Details Updated Successfully",
+            data: result
         });
-    return res.status({status:true,message:"User Details Updated Succesffully",data:result})
-        
+
     } catch (error) {
+
+        console.error("Edit User Details Error:", error);
+
         return res.status(500).json({
-            status:false,
-            message:"Internal Server Error",
-            error:error.message
-        })
+            status: false,
+            message: "Internal Server Error",
+            error: error.message
+        });
+
     }
+
 }
 
 // ======================================================
@@ -1056,3 +1100,4 @@ export const getRole = async (req, res) => {
         });
     }
 };
+

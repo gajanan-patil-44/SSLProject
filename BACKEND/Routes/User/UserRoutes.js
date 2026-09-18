@@ -23,7 +23,8 @@ router.post("/companyproductprojectdropdown", authenticateToken,companyProductPr
 
 ///////\|/
 router.post("/getAllUserDetails",authenticateToken,getAllUserDetailsController)
-router.post("/editUserdetails",authenticateToken,editUserdetailsController)
+router.patch("/editUserdetails",authenticateToken,editUserdetailsController)
+
 
 // ==========================================
 router.post("/getGender", authenticateToken, getGender);
