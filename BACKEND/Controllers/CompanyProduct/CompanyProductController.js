@@ -1,4 +1,4 @@
-import {getAllCompanyProducts,getCompaniesForDropdown,getProductsForDropdown,addCompanyProduct,checkCompanyProductData,editCompanyProduct,deleteCompanyProduct} from "../../Models/CompanyProductModels.js";
+import {getAllCompanyProducts,getCompaniesForDropdown,getProductsForDropdown,addCompanyProduct,checkCompanyProductData,editCompanyProduct,deleteCompanyProduct,updateCompanyProductstatus} from "../../Models/CompanyProductModels.js";
 
 
 // ==========================================
@@ -275,7 +275,6 @@ export const editCompanyProductController = async (req, res) => {
                 CompanyProductId,
                 CompanyId,
                 ProductId,
-                IsDisabled,
                 UpdatedByUserName
             } = req.body;
 
@@ -319,19 +318,7 @@ export const editCompanyProductController = async (req, res) => {
             }
 
 
-            // ==========================================
-            // VALIDATE IS DISABLED
-            // ==========================================
-
-            if (typeof IsDisabled !== "boolean") {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "IsDisabled must be true or false"
-                });
-            }
-
-
+    
             // ==========================================
             // VALIDATE UPDATED USER
             // ==========================================
@@ -373,7 +360,6 @@ export const editCompanyProductController = async (req, res) => {
                 CompanyProductId,
                 CompanyId,
                 ProductId,
-                IsDisabled,
                 UpdatedByUserName
             });
 
@@ -493,6 +479,88 @@ export const deleteCompanyProductController = async (req, res) => {
         return res.status(500).json({
             status: "error",
             message: "Failed to delete company product",
+            error: error.message
+        });
+    }
+};
+
+
+export const updateCompanyProductstatusController = async (req, res) => {
+
+    const {FlagId,CompanyProductId,IsDisabled} = req.body;
+
+    try {
+
+        if (parseInt(FlagId) === 1) {
+
+
+            // ---------------------------------------------
+            // VALIDATE COMPANY PRODUCT ID
+            // ---------------------------------------------
+
+            if (!CompanyProductId) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyProductId is required"
+                });
+            }
+
+
+            // ---------------------------------------------
+            // VALIDATE IS DISABLED
+            // ---------------------------------------------
+
+            if (typeof IsDisabled !== "boolean") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "IsDisabled must be true or false"
+                });
+            }
+
+
+            // ---------------------------------------------
+            // UPDATE STATUS
+            // ---------------------------------------------
+
+            const result = await updateCompanyProductstatus(
+                CompanyProductId,
+                IsDisabled
+            );
+
+
+            if (result === 0) {
+
+                return res.status(404).json({
+                    status: "error",
+                    message: "Company product not found"
+                });
+            }
+
+
+            return res.status(200).json({
+                status: "success",
+                message: IsDisabled
+                    ? "Company product disabled successfully"
+                    : "Company product enabled successfully",
+                data: result
+            });
+        }
+
+
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid FlagId."
+        });
+
+    } catch (error) {
+
+        console.error("Error updating company product status:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to update company product status",
             error: error.message
         });
     }

@@ -13,6 +13,7 @@ import {
   IconButton
 } from '../../components/ui/index';
 import { Eye, ArrowLeft, Send, User, MessageSquare, AlertCircle, Clock } from 'lucide-react';
+import { useERPStore } from '../../store/useERPStore';
 
 export default function TicketsView() {
   const [tickets, setTickets] = useState([]);
@@ -71,6 +72,7 @@ export default function TicketsView() {
       setTickets(prev => prev.map(t => t.id === selectedTicket.id ? updated : t));
       api.updateTicket(selectedTicket.id, { status: 'In Progress' });
     }
+    useERPStore.getState().showToast("Reply sent to client successfully!", "success");
   };
 
   const handleAddNote = () => {
@@ -80,6 +82,7 @@ export default function TicketsView() {
       { text: internalNote, author: 'Andrew Admin (Admin)', time: 'Just now' }
     ]);
     setInternalNote('');
+    useERPStore.getState().showToast("Internal note appended to ticket.", "info");
   };
 
   const updateTicketPriority = async (id, priority) => {
@@ -87,6 +90,7 @@ export default function TicketsView() {
     setSelectedTicket(updated);
     setTickets(prev => prev.map(t => t.id === id ? updated : t));
     await api.updateTicket(id, { priority });
+    useERPStore.getState().showToast(`Ticket priority updated to ${priority}`, "success");
   };
 
   const updateTicketStatus = async (id, status) => {

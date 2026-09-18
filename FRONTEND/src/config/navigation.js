@@ -13,8 +13,8 @@ export const navigationConfig = [
         path: "/master/products"
       },
       {
-        label: "Company Products",
-        icon: "Link",
+        label: "Company Product",
+        icon: "Boxes",
         path: "/master/company-products"
       },
       {
@@ -31,6 +31,16 @@ export const navigationConfig = [
         label: "Roles & Permissions",
         icon: "ShieldCheck",
         path: "/master/roles"
+      },
+      {
+        label: "User Creation",
+        icon: "UserPlus",
+        path: "/master/user-creation"
+      },
+      {
+        label: "Manage Page",
+        icon: "Layers",
+        path: "/master/manage-page"
       }
     ]
   },

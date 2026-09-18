@@ -11,19 +11,19 @@ http:
     data:
       - name: EmployeeId
         type: text
-        value: EMP11
+        value: EMP1
       - name: FirstName
         type: text
-        value: LALALA
+        value: luffy
       - name: MiddleName
         type: text
-        value: YO
+        value: d
       - name: LastName
         type: text
         value: xavier
       - name: PhoneNumber
         type: text
-        value: "8888888888"
+        value: "9999989999"
       - name: AltPhoneNumber
         type: text
         value: ""
@@ -41,10 +41,10 @@ http:
         value: "1"
       - name: Email
         type: text
-        value: admin11@example.com
+        value: admin1@example.com
       - name: LoginName
         type: text
-        value: admin11
+        value: admin1
       - name: Photo
         type: file
         value:
@@ -52,7 +52,7 @@ http:
         contentType: image/jpeg
       - name: Password
         type: text
-        value: admin11@123
+        value: admin1@123
       - name: CreatedByUserName
         type: text
         value: admin

@@ -16,7 +16,7 @@ export const DynamicForm = ({
   loading = false,
   gridCols = 2 // Number of columns for form layout
 }) => {
-  
+
   // 1. Programmatically build a Zod validation schema if not supplied
   const validationSchema = schema || useFormSchema(fields);
 
@@ -25,11 +25,16 @@ export const DynamicForm = ({
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors }
   } = useForm({
     resolver: zodResolver(validationSchema),
     defaultValues
   });
+
+  React.useEffect(() => {
+    reset(defaultValues || {});
+  }, [defaultValues, reset]);
 
   // Render a single form field control
   const renderField = (field) => {
@@ -63,11 +68,31 @@ export const DynamicForm = ({
             helpText={field.helpText}
             className={field.gridSpan || "col-span-1"}
           >
-            <Select
-              options={field.options}
-              disabled={field.disabled}
-              error={!!errorMsg}
-              {...register(field.key)}
+            <Controller
+              name={field.key}
+              control={control}
+              render={({ field: { value, onChange, ref, ...rest } }) => {
+                const normalizedValue = (value !== undefined && value !== null) ? String(value) : '';
+                return (
+                  <Select
+                    ref={ref}
+                    placeholder={field.placeholder || `Select ${field.label || 'option'}`}
+                    options={field.options}
+                    disabled={field.disabled}
+                    error={!!errorMsg}
+                    value={normalizedValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || val === undefined || val === null) {
+                        onChange('');
+                      } else {
+                        onChange(isNaN(Number(val)) ? val : Number(val));
+                      }
+                    }}
+                    {...rest}
+                  />
+                );
+              }}
             />
           </FormField>
         );
@@ -90,9 +115,10 @@ export const DynamicForm = ({
           </div>
         );
 
+      case 'toggle':
       case 'switch':
         return (
-          <div key={field.key} className={`flex items-center pt-5 ${field.gridSpan || "col-span-1"}`}>
+          <div key={field.key} className={`flex flex-col justify-center pt-2 ${field.gridSpan || "col-span-1"}`}>
             <Controller
               name={field.key}
               control={control}
@@ -105,6 +131,7 @@ export const DynamicForm = ({
                 />
               )}
             />
+            {field.helpText && <span className="text-xs text-slate-400 mt-1">{field.helpText}</span>}
           </div>
         );
 
@@ -207,7 +234,7 @@ export const DynamicForm = ({
 function useFormSchema(fields) {
   return React.useMemo(() => {
     const shape = {};
-    
+
     // Flatten fields if nested in sections
     const flatFields = fields.some(f => f.section)
       ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
@@ -217,31 +244,62 @@ function useFormSchema(fields) {
       let validator = z.any();
 
       if (field.type === 'email') {
-        validator = z.string().email({ message: "Invalid email address" });
-      } else if (field.type === 'number') {
-        validator = z.number({ invalid_type_error: "Must be a number" });
-      } else if (field.type === 'checkbox' || field.type === 'switch') {
-        validator = z.boolean();
-      } else {
-        validator = z.string();
-      }
-
-      if (field.required) {
-        if (field.type === 'number') {
-          validator = validator.refine(val => val !== undefined && val !== null, { message: "Required field" });
-        } else if (field.type === 'checkbox' || field.type === 'switch') {
-          validator = validator.refine(val => val === true, { message: "Must check this box" });
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().min(1, { message: `${field.label || 'Email'} is required` }).email({ message: "Invalid email address" })
+          );
         } else {
-          validator = validator.min(1, { message: `${field.label || 'Field'} is required` });
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().email({ message: "Invalid email address" }).optional().or(z.literal(''))
+          );
+        }
+      } else if (field.type === 'number') {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === '' || val === undefined || val === null) ? undefined : Number(val),
+            z.number({ required_error: `${field.label || 'Field'} is required`, invalid_type_error: "Must be a number" })
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === '' || val === undefined || val === null) ? null : Number(val),
+            z.number({ invalid_type_error: "Must be a number" }).optional().nullable()
+          );
+        }
+      } else if (field.type === 'checkbox' || field.type === 'switch' || field.type === 'toggle') {
+        if (field.required && field.type === 'checkbox') {
+          validator = z.preprocess(val => Boolean(val), z.boolean().refine(val => val === true, { message: "Must check this box" }));
+        } else {
+          validator = z.preprocess(val => (val === undefined || val === null) ? false : Boolean(val), z.boolean().optional());
+        }
+      } else if (field.type === 'select') {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null || String(val).trim() === '' || String(val) === 'undefined' || String(val) === 'null') ? '' : (isNaN(Number(val)) ? String(val) : Number(val)),
+            z.union([
+              z.string().min(1, { message: `${field.label || 'Field'} is required` }),
+              z.number({ required_error: `${field.label || 'Field'} is required` })
+            ])
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === undefined || val === null || String(val).trim() === '' || String(val) === 'undefined' || String(val) === 'null') ? '' : (isNaN(Number(val)) ? String(val) : Number(val)),
+            z.union([z.string(), z.number()]).optional().nullable().or(z.literal(''))
+          );
         }
       } else {
-        // Optional handling
-        if (field.type === 'email') {
-          validator = validator.optional().or(z.literal(''));
-        } else if (field.type === 'number') {
-          validator = validator.optional().nullable();
+        // text, textarea, and general inputs
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().min(1, { message: `${field.label || 'Field'} is required` })
+          );
         } else {
-          validator = validator.optional();
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val),
+            z.string().optional().nullable().or(z.literal(''))
+          );
         }
       }
 

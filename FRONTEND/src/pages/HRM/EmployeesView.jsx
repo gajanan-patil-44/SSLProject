@@ -17,6 +17,7 @@ import { Tabs } from '../../components/ui/Tabs';
 import { Modal } from '../../components/ui/Modal';
 import { DynamicForm } from '../../components/ui/DynamicForm';
 import { Eye, Edit, Trash2, ArrowLeft, Plus, Check, X, ShieldAlert, Award } from 'lucide-react';
+import { useERPStore } from '../../store/useERPStore';
 
 export default function EmployeesView() {
   const location = useLocation();
@@ -56,9 +57,10 @@ export default function EmployeesView() {
       const newEmp = await api.createEmployee(data);
       setEmployees(prev => [newEmp, ...prev]);
       setIsAddOpen(false);
-      alert("Employee registered successfully!");
+      useERPStore.getState().showToast("Employee registered successfully!", "success");
     } catch (e) {
       console.error(e);
+      useERPStore.getState().showToast(e?.message || "Failed to register employee.", "error");
     }
   };
 
@@ -68,9 +70,10 @@ export default function EmployeesView() {
       setEmployees(prev => prev.map(e => e.id === editEmp.id ? updated : e));
       setIsEditOpen(false);
       setEditEmp(null);
-      alert("Employee updated successfully!");
+      useERPStore.getState().showToast("Employee updated successfully!", "success");
     } catch (e) {
       console.error(e);
+      useERPStore.getState().showToast(e?.message || "Failed to update employee.", "error");
     }
   };
 
@@ -79,8 +82,10 @@ export default function EmployeesView() {
       try {
         await api.deleteEmployee(emp.id);
         setEmployees(prev => prev.filter(e => e.id !== emp.id));
+        useERPStore.getState().showToast("Employee deleted successfully!", "success");
       } catch (e) {
         console.error(e);
+        useERPStore.getState().showToast(e?.message || "Failed to delete employee.", "error");
       }
     }
   };

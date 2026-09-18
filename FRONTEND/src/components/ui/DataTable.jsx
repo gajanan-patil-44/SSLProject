@@ -25,7 +25,7 @@ import {
   Edit,
   Grid3X3
 } from 'lucide-react';
-import { Button, IconButton, Input, Select, Badge } from './index';
+import { Button, IconButton, Input, Select, Badge, Switch } from './index';
 import { Dropdown, DropdownItem } from './Dropdown';
 
 export const DataTable = ({
@@ -35,6 +35,7 @@ export const DataTable = ({
   onViewClick,
   onEditClick,
   onDeleteClick,
+  onToggleStatusClick,
   searchPlaceholder = "Search records...",
   searchKey = "",
   actions,
@@ -51,48 +52,63 @@ export const DataTable = ({
   // Prepend Selection Column if bulk actions are enabled
   const tableColumns = useMemo(() => {
     const cols = [...columns];
-    
+
     // Add actions column if handlers are provided
-    if (onViewClick || onEditClick || onDeleteClick) {
+    if (onViewClick || onEditClick || onDeleteClick || onToggleStatusClick) {
       cols.push({
         id: 'actions',
         header: 'Actions',
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1.5">
-            {onViewClick && (
-              <IconButton
-                icon={Eye}
-                size="sm"
-                variant="ghost"
-                onClick={() => onViewClick(row.original)}
-                title="View details"
-              />
-            )}
-            {onEditClick && (
-              <IconButton
-                icon={Edit}
-                size="sm"
-                variant="ghost"
-                onClick={() => onEditClick(row.original)}
-                title="Edit record"
-              />
-            )}
-            {onDeleteClick && (
-              <IconButton
-                icon={Trash2}
-                size="sm"
-                variant="ghost"
-                className="text-red-500 hover:text-red-700"
-                onClick={() => onDeleteClick(row.original)}
-                title="Delete record"
-              />
-            )}
-          </div>
-        )
+        cell: ({ row }) => {
+          const rec = row.original;
+          const isDisabled = rec.IsDisabled === true || rec.status === 'Inactive' || rec.status === 'Disabled';
+          const isEnabled = rec.isEnabled !== undefined ? rec.isEnabled : !isDisabled;
+
+          return (
+            <div className="flex items-center justify-end gap-2">
+              {onToggleStatusClick && (
+                <div className="flex items-center mr-1" title={isEnabled ? "Active - Click to Disable" : "Disabled - Click to Enable"}>
+                  <Switch
+                    checked={isEnabled}
+                    onChange={() => onToggleStatusClick(rec)}
+                    size="sm"
+                  />
+                </div>
+              )}
+              {onViewClick && (
+                <IconButton
+                  icon={Eye}
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onViewClick(row.original)}
+                  title="View details"
+                />
+              )}
+              {onEditClick && (
+                <IconButton
+                  icon={Edit}
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onEditClick(row.original)}
+                  title="Edit record"
+                />
+              )}
+              {onDeleteClick && (
+                <IconButton
+                  icon={Trash2}
+                  size="sm"
+                  variant="ghost"
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => onDeleteClick(row.original)}
+                  title="Delete record"
+                />
+              )}
+            </div>
+          );
+        }
       });
     }
     return cols;
-  }, [columns, onViewClick, onEditClick, onDeleteClick]);
+  }, [columns, onViewClick, onEditClick, onDeleteClick, onToggleStatusClick]);
 
   const table = useReactTable({
     data,
@@ -116,13 +132,13 @@ export const DataTable = ({
   // Export to CSV
   const handleExportCSV = () => {
     if (data.length === 0) return;
-    
+
     // Header row
     const headers = columns.filter(c => c.key).map(c => c.label || c.key);
     const keys = columns.filter(c => c.key).map(c => c.key);
-    
+
     const csvRows = [headers.join(',')];
-    
+
     // Content rows
     data.forEach(row => {
       const values = keys.map(key => {
@@ -133,7 +149,7 @@ export const DataTable = ({
       });
       csvRows.push(values.join(','));
     });
-    
+
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -168,7 +184,7 @@ export const DataTable = ({
               className="pl-9 h-9"
             />
           </div>
-          
+
           {/* Refresh & Filters */}
           {onRefresh && (
             <IconButton
@@ -266,9 +282,9 @@ export const DataTable = ({
                         {header.isPlaceholder
                           ? null
                           : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                         {header.column.getIsSorted() === 'asc' && ' 🔼'}
                         {header.column.getIsSorted() === 'desc' && ' 🔽'}
                       </div>

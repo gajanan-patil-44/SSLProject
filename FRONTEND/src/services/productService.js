@@ -19,7 +19,14 @@ export const productService = {
   addProduct: async (productData) => {
     return apiClient.post(API_ROUTES.PRODUCT.ADD_PRODUCT, {
       flagId: 2,
-      ...productData
+      ProductCode: productData.ProductCode || productData.productCode || '',
+      ProductName: productData.ProductName || productData.productName || '',
+      ProductDescription: productData.ProductDescription ?? productData.Description ?? productData.description ?? '',
+      IsDisabled: typeof productData.IsDisabled === 'boolean'
+        ? productData.IsDisabled
+        : (productData.IsDisabled === 'true' || productData.IsDisabled === 'Inactive' || productData.IsDisabled === 'Disabled' || productData.status === 'Inactive' || false),
+      CreatedByUserName: productData.CreatedByUserName || '',
+      UpdatedByUserName: productData.UpdatedByUserName || ''
     });
   },
 
@@ -30,7 +37,11 @@ export const productService = {
   updateProduct: async (productData) => {
     return apiClient.post(API_ROUTES.PRODUCT.UPDATE_PRODUCT, {
       flagId: 3,
-      ...productData
+      ProductId: Number(productData.ProductId ?? productData.id),
+      ProductCode: productData.ProductCode || productData.productCode || '',
+      ProductName: productData.ProductName || productData.productName || '',
+      ProductDescription: productData.ProductDescription ?? productData.Description ?? productData.description ?? '',
+      UpdatedByUserName: productData.UpdatedByUserName || ''
     });
   },
 
@@ -39,20 +50,30 @@ export const productService = {
    * @param {Object} statusData 
    */
   toggleProductStatus: async (statusData) => {
+    const isDisabled = typeof statusData.IsDisabled === 'boolean'
+      ? statusData.IsDisabled
+      : (statusData.IsDisabled === 'true' || statusData.IsDisabled === 'Inactive' || statusData.IsDisabled === 'Disabled' || statusData.status === 'Inactive');
+
     return apiClient.post(API_ROUTES.PRODUCT.TOGGLE_STATUS, {
       flagId: 4,
-      ...statusData
+      ProductId: Number(statusData.ProductId ?? statusData.id),
+      IsDisabled: Boolean(isDisabled),
+      UpdatedByUserName: statusData.UpdatedByUserName || ''
     });
   },
 
   /**
    * Delete / Disable product (flagId: 5)
-   * @param {Object} deleteData 
+   * @param {number|string|Object} productData 
    */
-  deleteProduct: async (deleteData) => {
+  deleteProduct: async (productData) => {
+    const productId = typeof productData === 'object' 
+      ? (productData.ProductId ?? productData.id) 
+      : productData;
+
     return apiClient.post(API_ROUTES.PRODUCT.DELETE_PRODUCT, {
       flagId: 5,
-      ...deleteData
+      ProductId: Number(productId)
     });
   }
 };

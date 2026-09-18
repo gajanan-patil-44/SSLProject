@@ -15,6 +15,7 @@ export default function Sidebar() {
   const toggleSidebarCollapsed = useERPStore((state) => state.toggleSidebarCollapsed);
   const sidebarOpen = useERPStore((state) => state.sidebarOpen);
   const setSidebarOpen = useERPStore((state) => state.setSidebarOpen);
+  const userMenu = useERPStore((state) => state.userMenu);
   
   // Track open nested menus
   const [openMenus, setOpenMenus] = useState({});
@@ -85,7 +86,7 @@ export default function Sidebar() {
 
       {/* Scrollable Navigation */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
-        {navigationConfig.map((section, sIdx) => (
+        {(Array.isArray(userMenu) && userMenu.length > 0 ? userMenu : navigationConfig).map((section, sIdx) => (
           <div key={sIdx} className="space-y-1.5">
             {/* Section Title */}
             {!sidebarCollapsed ? (

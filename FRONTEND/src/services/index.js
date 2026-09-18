@@ -6,8 +6,10 @@ export { default as productService } from './productService';
 export { default as roleService } from './roleService';
 export { default as designationService } from './designationService';
 export { default as projectService } from './projectService';
-export { default as companyProductService } from './companyProductService';
 export { default as fileTypeService } from './fileTypeService';
 export { default as userService } from './userService';
 export { default as birthdayService } from './birthdayService';
+export { default as companyProductService } from './companyProductService';
+export { default as pageService } from './pageService';
 export * from './api';
+

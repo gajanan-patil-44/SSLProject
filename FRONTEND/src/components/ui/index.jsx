@@ -127,13 +127,25 @@ export const Textarea = forwardRef(({ className = '', error, ...props }, ref) =>
   );
 });
 
-export const Select = forwardRef(({ options = [], className = '', error, ...props }, ref) => {
+export const Select = forwardRef(({ options = [], placeholder, className = '', error, ...props }, ref) => {
+  const hasEmptyOption = options.some(opt => opt.value === '' || opt.value === undefined || opt.value === null);
+
   return (
     <select
       ref={ref}
       className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary transition-all disabled:opacity-50 disabled:bg-slate-50 cursor-pointer ${error ? 'border-red-500' : ''} ${className}`}
       {...props}
     >
+      {!hasEmptyOption && placeholder && (
+        <option value="">
+          {placeholder}
+        </option>
+      )}
+      {!hasEmptyOption && !placeholder && (
+        <option value="">
+          Select...
+        </option>
+      )}
       {options.map((opt) => (
         <option key={opt.value} value={opt.value} disabled={opt.disabled}>
           {opt.label}
