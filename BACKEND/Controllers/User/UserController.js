@@ -679,7 +679,7 @@ export const getMaritalStatus = async (req, res) => {
                 message: "flagId is required"
             });
         }
-
+    
         if (parseInt(flagId) == 1) {
 
             const rows = await getAllMaritalStatuses();
