@@ -421,11 +421,10 @@ export const createUserController = async (req, res) => {
             String(userData.ReportingManagerUserId).trim() !== ""
         ) {
             userData.ReportingManagerUserId = Number(userData.ReportingManagerUserId);
-            if (!Number.isInteger(userData.ReportingManagerUserId) || userData.ReportingManagerUserId <= 0 ) 
-                {
+            if (!Number.isInteger(userData.ReportingManagerUserId) || userData.ReportingManagerUserId <= 0) {
                 return res.status(400).json({
                     status: "error",
-                    message:"ReportingManagerUserId must be a valid number"
+                    message: "ReportingManagerUserId must be a valid number"
                 });
             }
 
@@ -438,77 +437,52 @@ export const createUserController = async (req, res) => {
         userData.CompanyId = Number(userData.CompanyId);
         userData.CompanyProductId = Number(userData.CompanyProductId);
         userData.ProjectId = Number(userData.ProjectId);
-        userData.RoleId =Number(userData.RoleId);
+        userData.RoleId = Number(userData.RoleId);
         userData.GenderId = Number(userData.GenderId);
         userData.MaritalStatusId = Number(userData.MaritalStatusId);
         userData.DesignationId = Number(userData.DesignationId);
-
         // ==========================================================
         // NUMERIC VALIDATION
         // ==========================================================
-
         const numericFields = [
-
             ["CompanyId", userData.CompanyId],
-
             ["CompanyProductId", userData.CompanyProductId],
-
             ["ProjectId", userData.ProjectId],
-
             ["RoleId", userData.RoleId],
-
             ["GenderId", userData.GenderId],
-
             ["MaritalStatusId", userData.MaritalStatusId],
-
             ["DesignationId", userData.DesignationId]
 
         ];
 
         for (const [field, value] of numericFields) {
 
-            if (
-                !Number.isInteger(value) ||
-                value <= 0
-            ) {
-
+            if (!Number.isInteger(value) || value <= 0) {
                 return res.status(400).json({
                     status: "error",
                     message:
                         `${field} must be a valid number`
                 });
-
             }
         }
-
         // ==========================================================
         // EMAIL VALIDATION
         // ==========================================================
-
-        const emailRegex =
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if (!emailRegex.test(userData.Email)) {
-
             return res.status(400).json({
                 status: "error",
                 message: "Invalid email format"
             });
 
         }
-
         // ==========================================================
         // PHONE VALIDATION
         // ==========================================================
-
-        userData.PhoneNumber =
-            String(userData.PhoneNumber).trim();
-
-        const phoneRegex =
-            /^[0-9]{10,12}$/;
-
+        userData.PhoneNumber = String(userData.PhoneNumber).trim();
+        const phoneRegex = /^[0-9]{10,12}$/;
         if (!phoneRegex.test(userData.PhoneNumber)) {
-
             return res.status(400).json({
                 status: "error",
                 message: "Invalid phone number"
@@ -525,117 +499,71 @@ export const createUserController = async (req, res) => {
             userData.AltPhoneNumber !== null &&
             String(userData.AltPhoneNumber).trim() !== ""
         ) {
-
-            userData.AltPhoneNumber =
-                String(userData.AltPhoneNumber).trim();
-
-            if (
-                !phoneRegex.test(
-                    userData.AltPhoneNumber
-                )
-            ) {
-
+            userData.AltPhoneNumber = String(userData.AltPhoneNumber).trim();
+            if (!phoneRegex.test(userData.AltPhoneNumber)) {
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "Invalid alternate phone number"
+                    message: "Invalid alternate phone number"
                 });
-
             }
 
         } else {
-
             userData.AltPhoneNumber = null;
-
         }
-
         // ==========================================================
         // DUPLICATE EMAIL
         // ==========================================================
-
-        const emailExists =
-            await checkEmailExists(userData.Email);
-
+        const emailExists = await checkEmailExists(userData.Email);
         if (emailExists.length > 0) {
-
             return res.status(409).json({
                 status: "error",
                 message: "Email already exists"
             });
-
         }
-
         // ==========================================================
         // DUPLICATE LOGIN NAME
         // ==========================================================
-
-        const loginNameExists =
-            await checkLoginNameExists(
-                userData.LoginName
-            );
-
+        const loginNameExists = await checkLoginNameExists(userData.LoginName);
         if (loginNameExists.length > 0) {
-
             return res.status(409).json({
                 status: "error",
                 message: "Login name already exists"
             });
 
         }
-
         // ==========================================================
         // DUPLICATE PHONE
         // ==========================================================
-
-        const phoneExists =
-            await checkPhoneNumberExists(
-                userData.PhoneNumber
-            );
-
+        const phoneExists = await checkPhoneNumberExists(userData.PhoneNumber);
         if (phoneExists.length > 0) {
-
             return res.status(409).json({
                 status: "error",
                 message: "Phone number already exists"
             });
-
         }
-
         // ==========================================================
         // DUPLICATE EMPLOYEE ID
         // ==========================================================
-
         const employeeExists =
             await checkEmployeeIdExists(
                 String(userData.EmployeeId).trim()
             );
 
         if (employeeExists.length > 0) {
-
             return res.status(409).json({
                 status: "error",
                 message: "Employee ID already exists"
             });
 
         }
-
         // ==========================================================
         // HASH PASSWORD
         // ==========================================================
-
-        userData.Password =
-            await bcrypt.hash(
-                userData.Password,
-                10
-            );
-
+        userData.Password = await bcrypt.hash(userData.Password, 10);
         // ==========================================================
         // VALIDATE DATE OF JOINING
         // ==========================================================
-
-        const joiningDate =
-            new Date(userData.DateOfJoining);
-
+        const joiningDate = new Date(userData.DateOfJoining);
         if (isNaN(joiningDate.getTime())) {
             return res.status(400).json({
                 status: "error",
@@ -655,7 +583,7 @@ export const createUserController = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Create User Error:",error );
+        console.error("Create User Error:", error);
         return res.status(500).json({
             status: "error",
             message: "Failed to create user",
@@ -733,7 +661,7 @@ export const companyProductProjectDropdownController = async (req, res) => {
             });
         }
 
-         // ==================================================
+        // ==================================================
         // FLAG ID 4 - ROLE
         // ==================================================
         if (parseInt(FlagId) === 4) {
