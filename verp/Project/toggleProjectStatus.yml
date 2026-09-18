@@ -6,6 +6,18 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/projectCreation/toggleProjectStatus
+<<<<<<< HEAD
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":4,
+        "ProjectId":9,
+        "IsDisabled":true,
+        "UpdatedByUserId":1
+      }
+=======
+>>>>>>> 05c9a2417e1af158af849b4ca801a7b5b710a490
   auth: inherit
 
 settings:

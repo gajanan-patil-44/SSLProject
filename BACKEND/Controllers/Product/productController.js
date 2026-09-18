@@ -9,9 +9,7 @@ import {
 } from "../../Models/ProductModels.js";
 
 
-// ==========================================
 // GET ALL ACTIVE PRODUCTS
-// ==========================================
 
 export const getProduct = async (req, res) => {
     const { flagId } = req.body;
@@ -43,7 +41,7 @@ export const getProduct = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error fetching products:", error);
+        // console.error("Error fetching products:", error);
 
         return res.status(500).json({
             status: "error",
@@ -54,9 +52,7 @@ export const getProduct = async (req, res) => {
 };
 
 
-// ==========================================
 // ADD PRODUCT
-// ==========================================
 
 export const addProducts = async (req, res) => {
 
@@ -130,7 +126,7 @@ export const addProducts = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error adding product:", error);
+        // console.error("Error adding product:", error);
 
         return res.status(500).json({
             status: "error",
@@ -141,9 +137,7 @@ export const addProducts = async (req, res) => {
 };
 
 
-// ==========================================
 // UPDATE PRODUCT
-// ==========================================
 
 export const updateProduct = async (req, res) => {
 
@@ -226,7 +220,7 @@ export const updateProduct = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error updating product:", error);
+        // console.error("Error updating product:", error);
 
         return res.status(500).json({
             status: "error",
@@ -238,11 +232,7 @@ export const updateProduct = async (req, res) => {
 
 
 
-
-
-// ==========================================
 // TOGGLE PRODUCT STATUS
-// ==========================================
 
 export const toggleProductStatus = async (req, res) => {
 
@@ -291,7 +281,7 @@ export const toggleProductStatus = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error toggling product status:", error);
+        // console.error("Error toggling product status:", error);
 
         return res.status(500).json({
             status: "error",
@@ -302,9 +292,8 @@ export const toggleProductStatus = async (req, res) => {
 };
 
 
-// ==========================================
+
 // DELETE / DISABLE PRODUCT
-// ==========================================
 
 export const deleteProduct = async (req, res) => {
     const { flagId } = req.body;
@@ -340,7 +329,7 @@ export const deleteProduct = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error disabling product:", error);
+        // console.error("Error disabling product:", error);
 
         return res.status(500).json({
             status: "error",

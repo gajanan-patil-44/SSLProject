@@ -4,7 +4,7 @@ import cors from "cors";
 import "dotenv/config";
 import applyRoutes from "./Helpers/appRoutes.js";
 import startServer from "./Config/ServerConnect/serverConfig.js";
-import startBirthdayJob from "./Jobs/birthdayJobs.js";
+
 
 
 const app = express();
@@ -17,5 +17,4 @@ app.get("/", (req, res) => {
 });
 
 applyRoutes(app);
-startBirthdayJob();
 startServer(app);

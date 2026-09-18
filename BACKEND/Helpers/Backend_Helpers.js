@@ -8,4 +8,4 @@ export const FILE_TYPE="/verp-service/fileType"
 
 export const DESIGNATION_CREATION="/verp-service/designationCreation"
 export const PROJECT_CREATION="/verp-service/projectCreation"
-export const BIRTHDAY_EMAILS="/verp-service/birthdayEmails"
+

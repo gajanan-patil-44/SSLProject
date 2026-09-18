@@ -19,7 +19,9 @@ http:
           "PhoneNumber": "9876543210",
           "Address": "Bangalore, Karnataka"
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODk2MjE4NTAsImV4cCI6MTc4OTY2NTA1MH0.jzLs7EffuCZfedWXGMPiHs2qEPzM5QNxeCAFQ1bS-9A
 
 settings:
   encodeUrl: true
