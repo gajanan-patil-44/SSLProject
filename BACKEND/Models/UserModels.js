@@ -318,13 +318,12 @@ export const createUser = async (userData) => {
         }
         const UserId = user.UserId;
         // ==================================================
-// 2. CREATE USER REPORTING MANAGER
-// ==================================================
+        // 2. CREATE USER REPORTING MANAGER
+        // ==================================================
 
-if ( userData.ReportingManagerUserId !== null &&  userData.ReportingManagerUserId !== undefined)
-    {
+        if (userData.ReportingManagerUserId !== null && userData.ReportingManagerUserId !== undefined) {
 
-    const reportingManagerQuery = `
+            const reportingManagerQuery = `
         INSERT INTO "DATA"."UserReportingManager"
         (
             "UserId",
@@ -345,16 +344,16 @@ if ( userData.ReportingManagerUserId !== null &&  userData.ReportingManagerUserI
             "CreatedByUserId";
     `;
 
-    await client.query(
-        reportingManagerQuery,
-        [
-            UserId,
-            Number(userData.ReportingManagerUserId),
-            Number(userData.CompanyId),
-            UserId
-        ]
-    );
-}
+            await client.query(
+                reportingManagerQuery,
+                [
+                    UserId,
+                    Number(userData.ReportingManagerUserId),
+                    Number(userData.CompanyId),
+                    UserId
+                ]
+            );
+        }
         // ==================================================
         // 3. CREATE USER COMPANY
         // ==================================================
@@ -694,3 +693,12 @@ export const getProjectDropdown = async (CompanyProductId) => {
 
     return result.rows;
 };
+
+
+
+
+
+
+
+
+
