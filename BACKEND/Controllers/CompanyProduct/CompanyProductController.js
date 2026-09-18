@@ -492,12 +492,6 @@ export const updateCompanyProductstatusController = async (req, res) => {
     try {
 
         if (parseInt(FlagId) === 1) {
-
-
-            // ---------------------------------------------
-            // VALIDATE COMPANY PRODUCT ID
-            // ---------------------------------------------
-
             if (!CompanyProductId) {
 
                 return res.status(400).json({
@@ -505,12 +499,6 @@ export const updateCompanyProductstatusController = async (req, res) => {
                     message: "CompanyProductId is required"
                 });
             }
-
-
-            // ---------------------------------------------
-            // VALIDATE IS DISABLED
-            // ---------------------------------------------
-
             if (typeof IsDisabled !== "boolean") {
 
                 return res.status(400).json({
@@ -518,8 +506,6 @@ export const updateCompanyProductstatusController = async (req, res) => {
                     message: "IsDisabled must be true or false"
                 });
             }
-
-
             // ---------------------------------------------
             // UPDATE STATUS
             // ---------------------------------------------
@@ -529,7 +515,6 @@ export const updateCompanyProductstatusController = async (req, res) => {
                 IsDisabled
             );
 
-
             if (result === 0) {
 
                 return res.status(404).json({
@@ -537,8 +522,6 @@ export const updateCompanyProductstatusController = async (req, res) => {
                     message: "Company product not found"
                 });
             }
-
-
             return res.status(200).json({
                 status: "success",
                 message: IsDisabled
@@ -547,8 +530,6 @@ export const updateCompanyProductstatusController = async (req, res) => {
                 data: result
             });
         }
-
-
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."

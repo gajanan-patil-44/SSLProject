@@ -237,12 +237,17 @@ export const checkEmployeeIdExists = async (EmployeeId) => {
 // + USER PROJECT + USER ROLE + USER FILE
 // ==========================================================
 export const createUser = async (userData) => {
+
     const client = await pool.connect();
+
     try {
+
         await client.query("BEGIN");
+
         // ==================================================
         // 1. CREATE USER
         // ==================================================
+
         const userQuery = `
             INSERT INTO "DATA"."User"
             (
@@ -253,7 +258,6 @@ export const createUser = async (userData) => {
                 "PhoneNumber",
                 "AltPhoneNumber",
                 "DateOfBirth",
-
                 "GenderId",
                 "MaritalStatusId",
                 "DesignationId",
@@ -264,11 +268,26 @@ export const createUser = async (userData) => {
                 "CreatedAt",
                 "CreatedByUserName",
                 "DateOfJoining"
-        
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6, $7,$8,$9,$10,$11,$12,$13,$14, CURRENT_TIMESTAMP,$15,$16
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13,
+                $14,
+                CURRENT_TIMESTAMP,
+                $15,
+                $16
             )
             RETURNING
                 "UserId",
@@ -286,9 +305,8 @@ export const createUser = async (userData) => {
                 "LoginName",
                 "CreatedAt",
                 "CreatedByUserName",
-                "DateOfJoining"
+                "DateOfJoining";
         `;
-
         const userValues = [
             userData.EmployeeId,
             userData.FirstName,
@@ -303,16 +321,13 @@ export const createUser = async (userData) => {
             userData.Email,
             userData.Password,
             userData.LoginName,
-            // Photo buffer
             userData.Photo || null,
             userData.CreatedByUserName,
             userData.DateOfJoining
         ];
+        const userResult = await client.query(userQuery,userValues);
 
-        const userResult = await client.query(userQuery, userValues);
         const user = userResult.rows[0];
-
-
         if (!user) {
             throw new Error("User creation failed");
         }
@@ -357,6 +372,7 @@ export const createUser = async (userData) => {
         // ==================================================
         // 3. CREATE USER COMPANY
         // ==================================================
+
         const userCompanyQuery = `
             INSERT INTO "DATA"."UserCompany"
             (
@@ -369,21 +385,34 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1, $2,true,false,CURRENT_TIMESTAMP,$3
+                $1,
+                $2,
+                true,
+                false,
+                CURRENT_TIMESTAMP,
+                $3
             )
-            RETURNING "UserCompanyId";
+            RETURNING
+                "UserCompanyId";
         `;
-        await client.query(
-            userCompanyQuery,
-            [
-                UserId,
-                Number(userData.CompanyId),
-                UserId
-            ]
-        );
+
+        const userCompanyResult =
+            await client.query(
+                userCompanyQuery,
+                [
+                    UserId,
+                    Number(userData.CompanyId),
+                    UserId
+                ]
+            );
+
+        userCompanyId = userCompanyResult.rows[0].UserCompanyId;
+
+
         // ==================================================
         // 4. CREATE USER PRODUCT
         // ==================================================
+
         const userProductQuery = `
             INSERT INTO "DATA"."UserProduct"
             (
@@ -395,21 +424,19 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1,$2,false,CURRENT_TIMESTAMP,$3
+                $1,
+                $2,
+                false,
+                CURRENT_TIMESTAMP,
+                $3
             )
-            RETURNING "UserProductId";
+            RETURNING
+                "UserProductId";
         `;
 
-
-        await client.query(
-            userProductQuery,
-            [
-                UserId,
-                Number(userData.CompanyProductId),
-                UserId
-            ]
-        );
-        // =================================================
+        const userProductResult = await client.query(userProductQuery,[UserId,Number(userData.CompanyProductId),UserId]);
+        userProductId =userProductResult.rows[0].UserProductId;
+        // ==================================================
         // 5. CREATE USER PROJECT
         // ==================================================
         const userProjectQuery = `
@@ -424,19 +451,19 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1,$2,true,false,CURRENT_TIMESTAMP,$3
+                $1,
+                $2,
+                true,
+                false,
+                CURRENT_TIMESTAMP,
+                $3
             )
-            RETURNING "UserProjectId";
+            RETURNING
+                "UserProjectId";
         `;
-
-
-        await client.query(
-            userProjectQuery,
-            [
-                UserId, Number(userData.ProjectId), UserId
-            ]
-        );
-        // ==================================================
+        const userProjectResult = await client.query(userProjectQuery,[UserId,Number(userData.ProjectId), UserId]);
+        userProjectId =userProjectResult.rows[0].UserProjectId;
+        // =================================================
         // 6. CREATE USER ROLE
         // ==================================================
         const userRoleQuery = `
@@ -460,56 +487,166 @@ export const createUser = async (userData) => {
                 CURRENT_TIMESTAMP,
                 $6
             )
-            RETURNING "UserRoleId";
+            RETURNING
+                "UserRoleId";
         `;
-
-
-        await client.query(
-            userRoleQuery,
-            [
-                UserId,
-                Number(userData.RoleId),
-                Number(userData.CompanyId),
-                Number(userData.CompanyProductId),
-                Number(userData.ProjectId),
-                UserId
-            ]
-        );
+        const userRoleResult = await client.query(userRoleQuery,
+                [
+                    UserId,
+                    Number(userData.RoleId),
+                    Number(userData.CompanyId),
+                    Number(userData.CompanyProductId),
+                    Number(userData.ProjectId),
+                    UserId
+                ]
+            );
+        userRoleId = userRoleResult.rows[0].UserRoleId;
         // ==================================================
-        // 7. CREATE USER FILES
+        // 7. CREATE USER DETAILS
         // ==================================================
-        const userFiles =
-            userData.UserFiles || [];
+        const userDetailsQuery = `
+            INSERT INTO "DATA"."UserDetails"
+            (
+                "UserId",
+                "EmployeeId",
+                "FirstName",
+                "MiddleName",
+                "LastName",
+                "PhoneNumber",
+                "DateOfBirth",
+                "GenderId",
+                "MaritalStatusId",
+                "DesignationId",
+                "Email",
+                "LoginName",
+                "AltPhoneNumber",
+                "DateOfJoining",
+                "FileTypeId",
+                "UserCompanyId",
+                "UserProductId",
+                "UserProjectId",
+                "UserReportingManagerId",
+                "UserRoleId",
+                "IsDisabled",
+                "CreatedAt",
+                "UpdatedAt",
+                "CreatedByUserId"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13,
+                $14,
+                $15,
+                $16,
+                $17,
+                $18,
+                $19,
+                $20,
+                false,
+                CURRENT_TIMESTAMP,
+                NULL,
+                $21
+            )
+            RETURNING
+                "UserDetailsId",
+                "UserId",
+                "EmployeeId",
+                "FirstName",
+                "MiddleName",
+                "LastName",
+                "PhoneNumber",
+                "DateOfBirth",
+                "GenderId",
+                "MaritalStatusId",
+                "DesignationId",
+                "Email",
+                "LoginName",
+                "AltPhoneNumber",
+                "DateOfJoining",
+                "FileTypeId",
+                "UserCompanyId",
+                "UserProductId",
+                "UserProjectId",
+                "UserReportingManagerId",
+                "UserRoleId",
+                "IsDisabled",
+                "CreatedAt",
+                "UpdatedAt",
+                "CreatedByUserId";
+        `;
+        // ==================================================
+        // FILE TYPE
+        // ==================================================
+        let fileTypeId = null;
+        if (userData.UserFiles && userData.UserFiles.length > 0) 
+            {
+            fileTypeId = Number(userData.UserFiles[0].FileTypeId);
+        }
+
+        const userDetailsValues = [
+            UserId,
+            userData.EmployeeId,
+            userData.FirstName,
+            userData.MiddleName || null,
+            userData.LastName || null,
+            userData.PhoneNumber,
+            userData.DateOfBirth,
+            userData.GenderId,
+            userData.MaritalStatusId,
+            userData.DesignationId,
+            userData.Email,
+            userData.LoginName,
+            userData.AltPhoneNumber || null,
+            userData.DateOfJoining,
+            fileTypeId,
+            userCompanyId,
+            userProductId,
+            userProjectId,
+            userReportingManagerId,
+            userRoleId,
+            UserId
+        ];
+        const userDetailsResult = await client.query(userDetailsQuery,userDetailsValues);
+        const userDetails = userDetailsResult.rows[0];
+        // ==================================================
+        // 8. CREATE USER FILES
+        // ==================================================
+        const userFiles = userData.UserFiles || [];
         const createdUserFiles = [];
-        // ==================================================
-        // INSERT EACH USER FILE
-        // ==================================================
-        for (const userFile of userFiles
-        ) {
+        for (const userFile of userFiles) 
+            {
             // ----------------------------------------------
             // VALIDATE FILE TYPE ID
             // ----------------------------------------------
-            if (userFile.FileTypeId === undefined || userFile.FileTypeId === null ||
-                !Number.isInteger(Number(userFile.FileTypeId)) || Number(userFile.FileTypeId) <= 0) {
+            if (
+                userFile.FileTypeId === undefined ||
+                userFile.FileTypeId === null || !Number.isInteger(Number(userFile.FileTypeId)) || Number(userFile.FileTypeId) <= 0)
+                 {
                 throw new Error("Valid FileTypeId is required for every UserFile");
             }
-
-
             // ----------------------------------------------
             // VALIDATE FILE PATH
             // ----------------------------------------------
-
-            if (!userFile.FilePath || String(userFile.FilePath).trim() === "") {
-
+            if (
+                !userFile.FilePath || String(userFile.FilePath).trim() === "")
+                 {
                 throw new Error("FilePath is required for every UserFile");
-
             }
-
-
             // ----------------------------------------------
             // INSERT USER FILE
             // ----------------------------------------------
-
             const userFileQuery = `
                 INSERT INTO "DATA"."UserFile"
                 (
@@ -539,86 +676,30 @@ export const createUser = async (userData) => {
                     "CreatedByUserId";
             `;
 
-
             const userFileValues = [
-
-                Number(
-                    userFile.FileTypeId
-                ),
-
-                UserId,
-
-                userFile.FilePath,
-
-                UserId
-
+                Number(userFile.FileTypeId),
+                UserId,userFile.FilePath,UserId
             ];
 
+            const userFileResult = await client.query(userFileQuery,userFileValues);
 
-            const userFileResult =
-                await client.query(
-                    userFileQuery,
-                    userFileValues
-                );
-
-
-            if (
-                userFileResult.rows.length > 0
-            ) {
-
-                createdUserFiles.push(
-                    userFileResult.rows[0]
-                );
-
+            if (userFileResult.rows.length > 0) {
+                createdUserFiles.push(userFileResult.rows[0]);
             }
-
         }
-
-
-        // ==================================================
-        // COMMIT TRANSACTION
-        // ==================================================
-
-        await client.query(
-            "COMMIT"
-        );
-
-
-        // ==================================================
-        // RETURN RESULT
-        // ==================================================
-
+        await client.query("COMMIT");
         return {
-
             ...user,
-
-            UserFiles:
-                createdUserFiles
-
+            UserDetails:userDetails,
+            UserFiles:createdUserFiles
         };
 
 
     } catch (error) {
-
-        // ==================================================
-        // ROLLBACK TRANSACTION
-        // ==================================================
-
-        await client.query(
-            "ROLLBACK"
-        );
-
+        await client.query("ROLLBACK");
         throw error;
-
-
     } finally {
-
-        // ==================================================
-        // RELEASE DATABASE CONNECTION
-        // ==================================================
-
         client.release();
-
     }
 
 };
@@ -690,9 +771,22 @@ export const getProjectDropdown = async (CompanyProductId) => {
     const result = await pool.query(query, [
         CompanyProductId
     ]);
-
     return result.rows;
 };
+
+export const getRoleDropdown = async () => {
+    const query = `
+        SELECT
+            "RoleId",
+            "RoleName"
+        FROM "LKP"."Role"
+        WHERE "IsDisabled" = false
+        ORDER BY "RoleName" ASC
+    `;
+    const result = await pool.query(query);
+    return result.rows;
+};
+
 
 
 
