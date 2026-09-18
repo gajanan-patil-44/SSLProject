@@ -1,13 +1,12 @@
 import * as backendHelpers from "../Helpers/Backend_Helpers.js";
 
-import UserRoutes from "../Routes/User/userRoutes.js";
+import UserRoutes from "../Routes/User/UserRoutes.js";
 import RoleRoutes from "../Routes/Role/roleRoutes.js";
 import ProductRoute from "../Routes/Product/productRoutes.js";
 import CompanyRoute from "../Routes/Company/companyRoutes.js";
 import FileTypeRoutes from "../Routes/FileType/fileTypeRoute.js";
 import DesignationRoutes from "../Routes/Designation/designationRoutes.js";
 import ProjectRoutes from "../Routes/Projects/projectRoutes.js"
-import BirthdayRoutes from "../Routes/Birthday/birthdayRoutes.js";
 import CompanyProductRoutes from "../Routes/CompanyProduct/CompanyProduct.js"
 import Login from "../Routes/Login/login.js"
 import ManagePagesRoutes from "../Routes/ManagePages/Managepages.js"
@@ -25,6 +24,7 @@ app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);  //Done by kavy
 app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);  //Done by kavya
 app.use(backendHelpers.BIRTHDAY_EMAILS, BirthdayRoutes);
 app.use(backendHelpers.MANAGE_PAGES, ManagePagesRoutes);  //Done by kavya
+
 };
 
 export default applyRoutes;
