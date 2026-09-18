@@ -148,6 +148,20 @@ export const FILE_TYPE_ROUTES = {
 
 /**
  * ============================================================================
+ * 10. PAGE MANAGEMENT ROUTES
+ * ============================================================================
+ */
+export const PAGE_ROUTES = {
+  GET_PAGES: '/verp-service/pageCreation/getPages',
+  GET_PAGE: '/verp-service/pageCreation/getPage',
+  ADD_PAGE: '/verp-service/pageCreation/addPage',
+  UPDATE_PAGE: '/verp-service/pageCreation/updatePage',
+  DELETE_PAGE: '/verp-service/pageCreation/deletePage',
+  UPDATE_STATUS: '/verp-service/pageCreation/updatePageStatus'
+};
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -160,7 +174,8 @@ export const API_ROUTES = {
   DESIGNATION: DESIGNATION_ROUTES,
   PROJECT: PROJECT_ROUTES,
   USER: USER_ROUTES,
-  FILE_TYPE: FILE_TYPE_ROUTES
+  FILE_TYPE: FILE_TYPE_ROUTES,
+  PAGE: PAGE_ROUTES
 };
 
 export default API_ROUTES;

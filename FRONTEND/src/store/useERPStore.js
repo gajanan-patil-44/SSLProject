@@ -1,11 +1,45 @@
 // src/store/useERPStore.js
 import { create } from 'zustand';
 
+// Helper to check if a JWT token has expired
+const isTokenExpired = (token) => {
+  if (!token || typeof token !== 'string') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (payload.exp && typeof payload.exp === 'number') {
+      return Date.now() >= payload.exp * 1000;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+
 // Safe parse helper for session
 const safeParseSession = () => {
   try {
     const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const token = parsed?.token?.accessToken || localStorage.getItem('erp_token');
+    if (token && isTokenExpired(token)) {
+      localStorage.removeItem('session');
+      sessionStorage.removeItem('session');
+      localStorage.removeItem('erp_token');
+      localStorage.removeItem('erp_user');
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -42,6 +76,8 @@ const normalizedInitialUser = initialUser ? {
 
 const firstCompany = initialContext?.companies?.[0]?.name || '';
 
+const initialMenu = initialSession?.data?.userMenu || initialSession?.data?.menu || initialSession?.userMenu || null;
+
 export const useERPStore = create((set) => ({
   theme: localStorage.getItem('erp_theme') || 'light',
   sidebarOpen: false,
@@ -54,10 +90,13 @@ export const useERPStore = create((set) => ({
   isAuthenticated: Boolean(initialToken),
   user: normalizedInitialUser,
   userContext: initialContext || null,
+  userMenu: initialMenu,
   session: initialSessionMeta,
   userPhoto: initialPhoto,
 
-  setAuthData: ({ token, user, context, session, photo, rawResponse }) => {
+  setUserMenu: (menu) => set({ userMenu: menu }),
+
+  setAuthData: ({ token, user, context, session, photo, rawResponse, userMenu }) => {
     let displayName = 'User';
     if (user?.name) {
       if (typeof user.name === 'string') {
@@ -81,6 +120,7 @@ export const useERPStore = create((set) => ({
     };
 
     const firstCompanyName = context?.companies?.[0]?.name || 'Falcon LLP';
+    const dynamicMenu = userMenu || rawResponse?.data?.userMenu || rawResponse?.data?.menu || rawResponse?.userMenu || null;
 
     // Purge any legacy individual storage items
     const legacyKeys = [
@@ -105,6 +145,7 @@ export const useERPStore = create((set) => ({
       isAuthenticated: Boolean(token),
       user: normalizedUser,
       userContext: context || null,
+      userMenu: dynamicMenu,
       session: session || null,
       userPhoto: photo || null,
       activeCompany: firstCompanyName
@@ -131,6 +172,7 @@ export const useERPStore = create((set) => ({
       isAuthenticated: false,
       user: null,
       userContext: null,
+      userMenu: null,
       session: null,
       userPhoto: null,
       activeCompany: ''
@@ -138,14 +180,27 @@ export const useERPStore = create((set) => ({
   },
 
   toasts: [],
-  showToast: (message, type = 'success') => {
-    const id = Date.now();
-    set((state) => ({ toasts: [...state.toasts, { id, message, type }] }));
-    setTimeout(() => {
-      set((state) => ({ toasts: state.toasts.filter(t => t.id !== id) }));
-    }, 4000);
+  showToast: (message, type = 'success', title = null) => {
+    if (!message || typeof message !== 'string') return;
+    const cleanMsg = message.trim();
+    if (!cleanMsg) return;
+
+    const now = Date.now();
+    const currentToasts = useERPStore.getState().toasts || [];
+    
+    // Ignore duplicate triggers for the same message within 2 seconds
+    const isDuplicate = currentToasts.some(
+      (t) => t.message === cleanMsg && (now - (t.createdAt || 0)) < 2000
+    );
+    if (isDuplicate) return;
+
+    const id = now + Math.random();
+    // Only 1 single active card at any time in the center of the screen!
+    set({
+      toasts: [{ id, message: cleanMsg, type, title, createdAt: now }]
+    });
   },
-  removeToast: (id) => set((state) => ({ toasts: state.toasts.filter(t => t.id !== id) })),
+  removeToast: (id) => set((state) => ({ toasts: (state.toasts || []).filter(t => t.id !== id) })),
   notifications: [
     { id: 1, text: "New leave request from Evelyn Hayes", time: "5m ago", type: "leave", read: false },
     { id: 2, text: "Low stock alert: Product 'iPhone 15 Pro' is low", time: "15m ago", type: "stock", read: false },
