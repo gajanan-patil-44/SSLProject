@@ -1,0 +1,32 @@
+info:
+  name: designation
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/designationCreation/designation
+  body:
+    type: json
+    data: |-
+      // {
+      //   "flagId":1
+      // }
+
+
+      {
+        "flagId":2,
+        "CompanyId":1,
+        "DesignationName":"MANAGERRRr",
+        "DesignationCode":"MG00011",
+        "IsDisabled":false,
+        "CreatedByUserName":"kavv"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

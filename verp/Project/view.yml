@@ -12,7 +12,9 @@ http:
       {
         "flagId":1
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODg3NjI2NDIsImV4cCI6MTc4ODgwNTg0Mn0.dkTCQ97ez90EraA5-Frx21DX2O2f4RUF0XLmBjJDKF0
 
 settings:
   encodeUrl: true
