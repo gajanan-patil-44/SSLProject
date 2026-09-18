@@ -109,24 +109,24 @@ export default function Dashboard() {
   ];
 
   const handleExport = () => {
-    alert("Exporting dashboard snapshot report to CSV...");
+    useERPStore.getState().showToast("Exporting dashboard snapshot report to CSV...", "info");
   };
 
   const handleCreateEmployeeSubmit = async (formData) => {
     try {
       await api.createEmployee(formData);
       setIsAddEmployeeOpen(false);
-      alert(`Employee "${formData.name}" onboarded successfully!`);
+      useERPStore.getState().showToast(`Employee "${formData.name}" onboarded successfully!`, "success");
       navigate('/hrm/employees');
     } catch (err) {
       console.error(err);
-      alert("Failed to onboard employee. Please check required fields.");
+      useERPStore.getState().showToast("Failed to onboard employee. Please check required fields.", "error");
     }
   };
 
   const handlePostJobSubmit = (formData) => {
     setIsPostJobOpen(false);
-    alert(`Job opening "${formData.title}" published successfully!`);
+    useERPStore.getState().showToast(`Job opening "${formData.title}" published successfully!`, "success");
     navigate('/hrm/recruitment');
   };
 

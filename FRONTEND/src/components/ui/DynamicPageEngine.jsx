@@ -1,10 +1,10 @@
-// src/components/ui/DynamicPageEngine.jsx
 import React, { useState, useEffect } from 'react';
 import { DataTable } from './DataTable';
 import { PageHeader, Card, Button } from './index';
 import { ConfirmDialog } from './Modal';
 import { DynamicForm } from './DynamicForm';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { useERPStore } from '../../store/useERPStore';
 
 // ==========================================
 // 1. Dynamic List Page Engine
