@@ -10,4 +10,6 @@ export { default as fileTypeService } from './fileTypeService';
 export { default as userService } from './userService';
 export { default as birthdayService } from './birthdayService';
 export { default as companyProductService } from './companyProductService';
+export { default as pageService } from './pageService';
 export * from './api';
+

@@ -11,6 +11,7 @@ import {
 } from '../../components/ui/index';
 import { CalendarDays, Clock, MapPin, Check, LogOut } from 'lucide-react';
 import { DataTable } from '../../components/ui/DataTable';
+import { useERPStore } from '../../store/useERPStore';
 
 export default function AttendanceView() {
   const [logs, setLogs] = useState([]);
@@ -54,9 +55,10 @@ export default function AttendanceView() {
     try {
       await api.saveAttendanceRecord(record);
       setLogs(prev => [record, ...prev.filter(l => l.employeeId !== "EMP-001")]);
-      alert(`Success! Checked-in at ${timeStr}`);
+      useERPStore.getState().showToast(`Success! Checked-in at ${timeStr}`, 'success');
     } catch (e) {
       console.error(e);
+      useERPStore.getState().showToast(e?.message || "Failed to record check-in.", "error");
     }
   };
 
@@ -77,9 +79,10 @@ export default function AttendanceView() {
     try {
       await api.saveAttendanceRecord(record);
       setLogs(prev => [record, ...prev.filter(l => l.employeeId !== "EMP-001")]);
-      alert(`Success! Checked-out at ${timeStr}`);
+      useERPStore.getState().showToast(`Success! Checked-out at ${timeStr}`, 'success');
     } catch (e) {
       console.error(e);
+      useERPStore.getState().showToast(e?.message || "Failed to record check-out.", "error");
     }
   };
 

@@ -13,6 +13,7 @@ import { Check, X, CalendarRange, Plus } from 'lucide-react';
 import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import { DynamicForm } from '../../components/ui/DynamicForm';
+import { useERPStore } from '../../store/useERPStore';
 
 export default function LeaveView() {
   const [leaves, setLeaves] = useState([]);
@@ -39,9 +40,10 @@ export default function LeaveView() {
     try {
       await api.approveLeave(id);
       setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: 'Approved' } : l));
-      alert("Leave request approved!");
+      useERPStore.getState().showToast("Leave request approved successfully!", "success");
     } catch (e) {
       console.error(e);
+      useERPStore.getState().showToast(e?.message || "Failed to approve leave request.", "error");
     }
   };
 
@@ -49,9 +51,10 @@ export default function LeaveView() {
     try {
       await api.rejectLeave(id);
       setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: 'Rejected' } : l));
-      alert("Leave request rejected!");
+      useERPStore.getState().showToast("Leave request rejected.", "warning");
     } catch (e) {
       console.error(e);
+      useERPStore.getState().showToast(e?.message || "Failed to reject leave request.", "error");
     }
   };
 
@@ -66,9 +69,10 @@ export default function LeaveView() {
       const res = await api.createLeaveRequest(req);
       setLeaves(prev => [res, ...prev]);
       setIsAddOpen(false);
-      alert("Leave request submitted!");
+      useERPStore.getState().showToast(res?.message || "Leave request submitted successfully!", "success");
     } catch (e) {
       console.error(e);
+      useERPStore.getState().showToast(e?.message || "Failed to submit leave request.", "error");
     }
   };
 

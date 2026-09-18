@@ -11,6 +11,7 @@ import {
 } from '../../components/ui/index';
 import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, DollarSign, Wallet } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
+import { useERPStore } from '../../store/useERPStore';
 
 export default function POSView() {
   const [products, setProducts] = useState([]);
@@ -83,7 +84,7 @@ export default function POSView() {
 
   const handleCheckout = () => {
     if (cart.length === 0) {
-      alert("Cart is empty!");
+      useERPStore.getState().showToast("Cart is empty! Please add products before checkout.", "warning");
       return;
     }
     const receipt = {
@@ -99,6 +100,7 @@ export default function POSView() {
     setLastReceipt(receipt);
     setIsReceiptOpen(true);
     setCart([]); // Reset cart
+    useERPStore.getState().showToast(`Order #${receipt.orderId} processed successfully!`, "success");
   };
 
   return (
