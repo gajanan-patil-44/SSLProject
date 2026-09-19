@@ -4,6 +4,9 @@ import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
 import { getAllUserDetailsController,editUserdetailsController } from "../../Controllers/User/useEditController.js";
 
+import {getGender, getMaritalStatus, getDesignation, getCompany, getReportingManager, getCompanyProduct, getProject, getRole} from "../../Controllers/User/useEditController.js";
+
+
 router.post("/getAllUserDetails",authenticateToken,getAllUserDetailsController)
 router.patch("/editUserdetails",authenticateToken,editUserdetailsController);
 
