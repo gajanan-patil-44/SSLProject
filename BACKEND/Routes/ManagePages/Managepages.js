@@ -10,8 +10,8 @@ import {
 
 const router = express.Router();
 
-router.get("/dropdown", getManagePageDropdown);
-router.get("/view",getManagePages );
+router.post("/dropdown", getManagePageDropdown);
+router.post("/view",getManagePages );
 router.patch("/status",updateManagePageStatus);
 router.post("/add", addPage);
 
