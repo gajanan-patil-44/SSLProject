@@ -15,7 +15,9 @@ http:
           "Description": "Excel spreadsheet file",
           "CreatedByUserName": "admin"
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODg3ODAxNDEsImV4cCI6MTc4ODgyMzM0MX0.WHp5lOem_h7jvcksr7gGr9bJiVQ7oJfc51UeWf-HDQ0
 
 settings:
   encodeUrl: true

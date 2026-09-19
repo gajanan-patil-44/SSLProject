@@ -14,7 +14,6 @@ import {
 
 // GET ALL PROJECTS
 
-
 export const getProject = async (req, res) => {
 
     const { flagId } = req.body;
@@ -22,7 +21,6 @@ export const getProject = async (req, res) => {
     try {
 
         // FLAG ID 1 - GET ALL PROJECTS
-
 
         if (parseInt(flagId) === 1) {
 
@@ -55,7 +53,6 @@ export const getProject = async (req, res) => {
 
 
 // ADD PROJECT / COMPANY PRODUCT DROPDOWN
-
 
 export const projectController = async (req, res) => {
 

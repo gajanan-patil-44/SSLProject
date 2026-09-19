@@ -11,7 +11,11 @@ http:
     data: |-
       {
           "FlagId": 1,
+<<<<<<< HEAD
+          "CompanyProductId": 10
+=======
           "CompanyProductId": 7
+>>>>>>> ecd18af59e9298262738d9e3f6288e2d27c53e37
       }
   auth: inherit
 

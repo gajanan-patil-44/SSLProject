@@ -4,7 +4,7 @@ import {
     processBirthdayMailController,
     getBirthdayMailLogsController,
     getBirthdayMailLogController
-} from "../../Controllers/Birthday/birthdayController.js";
+} from "../Controllers/birthdayControllers.js";
 
 
 const router = express.Router();
