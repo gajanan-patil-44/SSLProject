@@ -25,14 +25,14 @@ router.patch("/editUserdetails",authenticateToken,editUserdetailsController)
 
 
 // // ==========================================
-router.post("/getGender", authenticateToken, getGender);
-router.post("/getMaritalStatus", authenticateToken, getMaritalStatus);
-router.post("/getDesignation", authenticateToken, getDesignation);
-router.post("/getCompany", authenticateToken, getCompany);
-router.post("/getReportingManager", authenticateToken, getReportingManager);
-router.post("/getCompanyProduct", authenticateToken, getCompanyProduct);
-router.post("/getProject", authenticateToken, getProject);
-router.post("/getRole", authenticateToken, getRole);
+// router.post("/getGender", authenticateToken, getGender);
+// router.post("/getMaritalStatus", authenticateToken, getMaritalStatus);
+// router.post("/getDesignation", authenticateToken, getDesignation);
+// router.post("/getCompany", authenticateToken, getCompany);
+// router.post("/getReportingManager", authenticateToken, getReportingManager);
+// router.post("/getCompanyProduct", authenticateToken, getCompanyProduct);
+// router.post("/getProject", authenticateToken, getProject);
+// router.post("/getRole", authenticateToken, getRole);
 
 
 
