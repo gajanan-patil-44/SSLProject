@@ -1,5 +1,4 @@
 
-// src/components/layout/Sidebar.jsx
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
@@ -8,6 +7,170 @@ import { navigationConfig } from '../../config/navigation';
 import { ChevronRight, ChevronDown, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Tooltip } from '../ui/index';
 import logo from '../../assets/vite.svg';
+
+// Robust icon alias mapping for backend icon names
+const ICON_MAP = {
+  dashboard: Icons.LayoutDashboard,
+  'layout-dashboard': Icons.LayoutDashboard,
+  layoutdashboard: Icons.LayoutDashboard,
+  admin: Icons.ShieldCheck,
+  billing: Icons.Receipt,
+  settings: Icons.Settings,
+  'user-management': Icons.Users,
+  usermanagement: Icons.Users,
+  'user_management': Icons.Users,
+  user: Icons.User,
+  users: Icons.Users,
+  'user-creation': Icons.UserPlus,
+  usercreation: Icons.UserPlus,
+  userplus: Icons.UserPlus,
+  reports: Icons.BarChart3,
+  report: Icons.BarChart3,
+  barchart: Icons.BarChart3,
+  products: Icons.Package,
+  product: Icons.Package,
+  package: Icons.Package,
+  companies: Icons.Building2,
+  company: Icons.Building2,
+  building: Icons.Building2,
+  'company-products': Icons.Boxes,
+  companyproducts: Icons.Boxes,
+  boxes: Icons.Boxes,
+  projects: Icons.FolderKanban,
+  project: Icons.FolderKanban,
+  folder: Icons.Folder,
+  designations: Icons.Briefcase,
+  designation: Icons.Briefcase,
+  roles: Icons.Shield,
+  role: Icons.Shield,
+  'manage-page': Icons.Layers,
+  managepage: Icons.Layers,
+  layers: Icons.Layers,
+};
+
+const resolveIcon = (iconName) => {
+  if (!iconName || typeof iconName !== 'string') return Icons.Layers;
+  const clean = iconName.trim().toLowerCase();
+  if (ICON_MAP[clean]) return ICON_MAP[clean];
+  if (Icons[iconName]) return Icons[iconName];
+
+  // Try PascalCase: e.g. "layout-dashboard" -> "LayoutDashboard"
+  const pascal = iconName
+    .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
+    .replace(/^(.)/, (c) => c.toUpperCase());
+  if (Icons[pascal]) return Icons[pascal];
+
+  return Icons.Layers;
+};
+
+const renderIcon = (iconName, className = "w-4 h-4 shrink-0") => {
+  const IconComp = resolveIcon(iconName);
+  return <IconComp className={className} />;
+};
+
+// Title Case formatter (e.g. "company products" -> "Company Products")
+const formatTitle = (str) => {
+  if (!str) return '';
+  return str
+    .split(/[\s_-]+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// Recursively format page items from API menuPage
+const formatPageNode = (page) => {
+  const rawName = page.PageName || page.name || page.label || '';
+  const rawUrl = page.PageUrl || page.url || page.path || '';
+  const rawIcon = page.PageIcon || page.icon || page.IconName || '';
+  const order = Number(page.OrderNo ?? page.order ?? 0);
+
+  const children = Array.isArray(page.children)
+    ? page.children.map(formatPageNode).sort((a, b) => a.order - b.order)
+    : [];
+
+  return {
+    id: page.PageId || page.id || rawUrl,
+    label: formatTitle(rawName),
+    path: rawUrl,
+    icon: rawIcon,
+    order: order,
+    children: children
+  };
+};
+
+// Normalize menu into sections with title & items
+const normalizeNavigation = (menuData) => {
+  if (!Array.isArray(menuData) || menuData.length === 0) {
+    return navigationConfig;
+  }
+
+  // Already section-based configuration (e.g. navigationConfig format)
+  if (menuData[0]?.title && Array.isArray(menuData[0]?.items)) {
+    return menuData;
+  }
+
+  // Raw page array from backend menuPage
+  const formattedItems = menuData
+    .map(formatPageNode)
+    .sort((a, b) => a.order - b.order);
+
+  // Group top-level items by module extracted from URL (e.g. /master/companies -> MASTER)
+  const sectionsMap = new Map();
+
+  formattedItems.forEach(item => {
+    let sectionTitle = 'MENU';
+    if (item.path && item.path.startsWith('/')) {
+      const segment = item.path.split('/')[1];
+      if (segment && segment.toLowerCase() !== 'dashboard') {
+        sectionTitle = segment.toUpperCase();
+      }
+    }
+    if (!sectionsMap.has(sectionTitle)) {
+      sectionsMap.set(sectionTitle, []);
+    }
+    sectionsMap.get(sectionTitle).push(item);
+  });
+
+  const sections = [];
+
+  // Check if Dashboard is already present in any branch
+  const hasDashboard = (items) => items.some(it => 
+    it.path === '/dashboard' || (it.children && hasDashboard(it.children))
+  );
+
+  if (!hasDashboard(formattedItems)) {
+    sections.push({
+      title: 'MAIN',
+      items: [
+        {
+          id: 'dashboard',
+          label: 'Dashboard',
+          icon: 'dashboard',
+          path: '/dashboard',
+          children: []
+        }
+      ]
+    });
+  }
+
+  sectionsMap.forEach((items, title) => {
+    sections.push({
+      title,
+      items
+    });
+  });
+
+  return sections;
+};
+
+// Check if current item or any of its descendants is active
+const isItemOrChildActive = (item, currentPath) => {
+  if (item.path && item.path === currentPath) return true;
+  if (Array.isArray(item.children) && item.children.length > 0) {
+    return item.children.some(child => isItemOrChildActive(child, currentPath));
+  }
+  return false;
+};
 
 export default function Sidebar() {
   const location = useLocation();
@@ -20,24 +183,133 @@ export default function Sidebar() {
   // Track open nested menus
   const [openMenus, setOpenMenus] = useState({});
 
-  const toggleSubmenu = (label) => {
+  const toggleSubmenu = (key) => {
     setOpenMenus(prev => ({
       ...prev,
-      [label]: !prev[label]
+      [key]: !prev[key]
     }));
   };
 
-  const renderIcon = (iconName, className = "w-4 h-4 shrink-0") => {
-    const IconComp = Icons[iconName] || Icons.HelpCircle;
-    return <IconComp className={className} />;
-  };
+  const sections = normalizeNavigation(userMenu);
 
-  const isItemActive = (item) => {
-    if (location.pathname === item.path) return true;
-    if (item.children) {
-      return item.children.some(child => location.pathname === child.path);
-    }
-    return false;
+  // Recursive menu item renderer
+  const renderMenuItem = (item, level = 0, keyPrefix = '') => {
+    const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+    const isDirectActive = location.pathname === item.path;
+    const isBranchActive = isItemOrChildActive(item, location.pathname);
+    const itemKey = item.id ? String(item.id) : (item.path || item.label || keyPrefix);
+    
+    // Automatically open branch if active, or use toggle state
+    const isOpen = openMenus[itemKey] !== undefined ? openMenus[itemKey] : isBranchActive;
+
+    const paddingLeft = level === 0 ? 'px-3' : level === 1 ? 'pl-2.5 pr-2' : 'pl-2 pr-2';
+    const fontSize = level === 0 ? 'text-xs' : 'text-[11.5px]';
+
+    const linkClass = (isActive) => `
+      flex items-center justify-between ${paddingLeft} py-2 rounded-lg ${fontSize} font-semibold transition-all duration-150 group cursor-pointer w-full
+      ${isActive
+        ? 'bg-primary dark:bg-slate-800 text-white font-bold shadow-xs'
+        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'}
+    `;
+
+    const rowContent = (
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        {renderIcon(
+          item.icon,
+          `${level === 0 ? 'w-4.5 h-4.5' : 'w-3.5 h-3.5'} shrink-0 ${
+            isDirectActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+          }`
+        )}
+        {!sidebarCollapsed && (
+          <span className="truncate">{item.label}</span>
+        )}
+      </div>
+    );
+
+    return (
+      <div key={itemKey} className="space-y-0.5">
+        {sidebarCollapsed ? (
+          <Tooltip content={item.label} position="right">
+            {item.path ? (
+              <NavLink
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={linkClass(isDirectActive)}
+              >
+                {rowContent}
+              </NavLink>
+            ) : (
+              <div className={linkClass(isDirectActive)}>
+                {rowContent}
+              </div>
+            )}
+          </Tooltip>
+        ) : (
+          <div className="relative flex items-center">
+            {item.path ? (
+              <NavLink
+                to={item.path}
+                onClick={() => {
+                  if (window.innerWidth < 768) setSidebarOpen(false);
+                  if (hasChildren) {
+                    setOpenMenus(prev => ({ ...prev, [itemKey]: true }));
+                  }
+                }}
+                className={linkClass(isDirectActive)}
+              >
+                {rowContent}
+                {item.badge && (
+                  <span className={`px-1.5 py-0.5 text-[9px] rounded-md font-bold mr-1 ${
+                    isDirectActive ? 'bg-white/20 text-white' : 'bg-secondary/10 text-secondary'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
+              </NavLink>
+            ) : (
+              <button
+                type="button"
+                onClick={() => toggleSubmenu(itemKey)}
+                className={linkClass(isDirectActive)}
+              >
+                {rowContent}
+              </button>
+            )}
+
+            {/* Submenu toggle button when children exist */}
+            {hasChildren && !sidebarCollapsed && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleSubmenu(itemKey);
+                }}
+                className={`p-1.5 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors ml-0.5 ${
+                  isDirectActive ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title={isOpen ? 'Collapse' : 'Expand'}
+              >
+                {isOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5" />
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Recursive child list */}
+        {hasChildren && isOpen && !sidebarCollapsed && (
+          <div className="pl-3.5 ml-4 border-l border-slate-200 dark:border-slate-800 space-y-0.5 py-0.5 mt-0.5">
+            {item.children.map((child, idx) =>
+              renderMenuItem(child, level + 1, `${itemKey}-${idx}`)
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const SidebarContent = (
@@ -86,7 +358,7 @@ export default function Sidebar() {
 
       {/* Scrollable Navigation */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
-        {(Array.isArray(userMenu) && userMenu.length > 0 ? userMenu : navigationConfig).map((section, sIdx) => (
+        {sections.map((section, sIdx) => (
           <div key={sIdx} className="space-y-1.5">
             {/* Section Title */}
             {!sidebarCollapsed ? (
@@ -99,90 +371,7 @@ export default function Sidebar() {
 
             {/* Section Items */}
             <div className="space-y-1">
-              {section.items.map((item, iIdx) => {
-                const hasChildren = item.children && item.children.length > 0;
-                const active = isItemActive(item);
-                const isOpen = openMenus[item.label] || active;
-
-                const linkClass = (isActive) => `
-                  flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 group cursor-pointer
-                  ${isActive 
-                    ? 'bg-primary dark:bg-slate-800 text-white font-bold shadow-xs' 
-                    : 'text-slate-705 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'}
-                `;
-
-                // If collapsed, use tooltips
-                const ItemLink = (
-                  <div className="relative">
-                    {hasChildren ? (
-                      <button
-                        onClick={() => toggleSubmenu(item.label)}
-                        className={`w-full ${linkClass(active)}`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          {renderIcon(item.icon, `w-4.5 h-4.5 shrink-0 ${active ? 'text-white' : 'text-slate-405 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`)}
-                          {!sidebarCollapsed && <span>{item.label}</span>}
-                        </div>
-                        {!sidebarCollapsed && (
-                          isOpen ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                        )}
-                      </button>
-                    ) : (
-                      <NavLink
-                        to={item.path}
-                        onClick={() => setSidebarOpen(false)}
-                        className={({ isActive }) => linkClass(isActive)}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          {renderIcon(item.icon, `w-4.5 h-4.5 shrink-0 ${active ? 'text-white' : 'text-slate-405 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`)}
-                          {!sidebarCollapsed && <span>{item.label}</span>}
-                        </div>
-                        {!sidebarCollapsed && item.badge && (
-                          <span className={`px-1.5 py-0.5 text-[9px] rounded-md font-bold ${active ? 'bg-white/20 text-white' : 'bg-secondary/10 text-secondary'}`}>
-                            {item.badge}
-                          </span>
-                        )}
-                      </NavLink>
-                    )}
-                  </div>
-                );
-
-                return (
-                  <div key={iIdx} className="space-y-0.5">
-                    {sidebarCollapsed ? (
-                      <Tooltip content={item.label} position="right">
-                        {ItemLink}
-                      </Tooltip>
-                    ) : (
-                      ItemLink
-                    )}
-
-                    {/* Submenu Children */}
-                    {hasChildren && isOpen && !sidebarCollapsed && (
-                      <div className="pl-9 space-y-0.5 border-l border-slate-100 dark:border-slate-800 ml-5 py-1">
-                        {item.children.map((child, cIdx) => {
-                          const childActive = location.pathname === child.path;
-                          return (
-                            <NavLink
-                              key={cIdx}
-                              to={child.path}
-                              onClick={() => setSidebarOpen(false)}
-                              className={`
-                                flex items-center justify-between py-1.5 px-3 rounded-md text-[11px] font-semibold transition-all duration-100 cursor-pointer
-                                ${childActive
-                                  ? 'text-secondary font-bold'
-                                  : 'text-slate-500 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}
-                              `}
-                            >
-                              <span>{child.label}</span>
-                            </NavLink>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {section.items.map((item, iIdx) => renderMenuItem(item, 0, `s${sIdx}-i${iIdx}`))}
             </div>
           </div>
         ))}

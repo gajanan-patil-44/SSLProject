@@ -152,12 +152,10 @@ export const FILE_TYPE_ROUTES = {
  * ============================================================================
  */
 export const PAGE_ROUTES = {
-  GET_PAGES: '/verp-service/pageCreation/getPages',
-  GET_PAGE: '/verp-service/pageCreation/getPage',
-  ADD_PAGE: '/verp-service/pageCreation/addPage',
-  UPDATE_PAGE: '/verp-service/pageCreation/updatePage',
-  DELETE_PAGE: '/verp-service/pageCreation/deletePage',
-  UPDATE_STATUS: '/verp-service/pageCreation/updatePageStatus'
+  VIEW: '/verp-service/managePages/view',
+  DROPDOWN: '/verp-service/managePages/dropdown',
+  STATUS: '/verp-service/managePages/status',
+  ADD: '/verp-service/managePages/add'
 };
 
 /**
