@@ -19,20 +19,8 @@ import {
   Check,
   ChevronDown
 } from 'lucide-react';
-import { pageService, INITIAL_PAGES_DATA } from '../../services/pageService';
+import { pageService } from '../../services/pageService';
 import { useERPStore } from '../../store/useERPStore';
-
-// Available roles for multi-select
-const AVAILABLE_ROLES = [
-  'Admin',
-  'Manager',
-  'User',
-  'HR',
-  'Accountant',
-  'Cashier',
-  'Supervisor',
-  'Developer'
-];
 
 export default function ManagePageView() {
   const showToast = useERPStore((state) => state.showToast);
@@ -60,7 +48,7 @@ export default function ManagePageView() {
     OrderChanged: false,
     OrderPosition: 'IsBefore', // 'IsBefore' | 'IsAfter'
     OrderRelativePage: '',
-    Roles: ['Admin', 'Manager'],
+    Roles: ['Super Admin'],
     IsActive: true
   });
   const [formErrors, setFormErrors] = useState({});
@@ -78,19 +66,20 @@ export default function ManagePageView() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch Pages Data
+  // Fetch Pages Data from live API
   const loadPages = async () => {
     setLoading(true);
     try {
-      const response = await pageService.getPages();
+      const response = await pageService.getPages(1);
       if (response?.data && Array.isArray(response.data)) {
         setPages(response.data);
       } else {
-        setPages(INITIAL_PAGES_DATA);
+        setPages([]);
       }
     } catch (err) {
       console.error('Failed to load pages:', err);
-      setPages(INITIAL_PAGES_DATA);
+      setPages([]);
+      showToast(err?.message || 'Failed to load pages from server', 'error');
     } finally {
       setLoading(false);
     }
@@ -100,30 +89,217 @@ export default function ManagePageView() {
     loadPages();
   }, []);
 
-  // Distinct MainPage options
-  const mainPageOptions = useMemo(() => {
-    const defaultMains = ['Dashboard', 'Applications', 'Layouts', 'Documents', 'Inventory', 'Sales', 'Master'];
-    const dynamicMains = pages
-      .filter((p) => p.PageType === 'MainPage' || !p.ParentPage || p.ParentPage === '-')
-      .map((p) => p.PageName);
-    return Array.from(new Set([...defaultMains, ...dynamicMains])).filter(Boolean);
-  }, [pages]);
+  // Dropdowns fetched with FlagId 1, 2, 3
+  const [rolesDropdownList, setRolesDropdownList] = useState([]);
+  const [mainPagesDropdownList, setMainPagesDropdownList] = useState([]);
+  const [parentPagesDropdownList, setParentPagesDropdownList] = useState([]);
+  const [childPagesDropdown, setChildPagesDropdown] = useState([]);
+  const [loadingChildDropdown, setLoadingChildDropdown] = useState(false);
 
-  // Distinct ParentPage options
+  // Refs to prevent duplicate/infinite API hits
+  const lastFetchedParentMainId = useRef(null);
+  const lastFetchedChildKey = useRef(null);
+
+  // 1. Load Roles (FlagId: 1) and MainPages (FlagId: 2) once when Modal is opened
+  useEffect(() => {
+    if (!isAddEditOpen) {
+      lastFetchedParentMainId.current = null;
+      lastFetchedChildKey.current = null;
+      return;
+    }
+
+    let isMounted = true;
+    const loadInitialModalData = async () => {
+      try {
+        const [rolesRes, mainsRes] = await Promise.all([
+          rolesDropdownList.length === 0 ? pageService.getRolesDropdown() : Promise.resolve(rolesDropdownList),
+          mainPagesDropdownList.length === 0 ? pageService.getMainPagesDropdown() : Promise.resolve(mainPagesDropdownList)
+        ]);
+
+        if (isMounted) {
+          if (Array.isArray(rolesRes) && rolesRes.length > 0 && rolesDropdownList.length === 0) {
+            setRolesDropdownList(rolesRes);
+          }
+          if (Array.isArray(mainsRes) && mainsRes.length > 0 && mainPagesDropdownList.length === 0) {
+            setMainPagesDropdownList(mainsRes);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading modal dropdowns:', err);
+      }
+    };
+
+    loadInitialModalData();
+    return () => {
+      isMounted = false;
+    };
+  }, [isAddEditOpen]);
+
+  // 2. Fetch ParentPages (FlagId: 3) for ParentPage mode
+  useEffect(() => {
+    if (!isAddEditOpen || formData.PageType !== 'ParentPage') return;
+
+    let isMounted = true;
+    const loadParentPageDropdown = async () => {
+      try {
+        const mainPageFromView = 
+          (formData.SelectedMainPage && pages.find((p) => p.PageName === formData.SelectedMainPage)) ||
+          (selectedPage && selectedPage.ParentPage && pages.find((p) => p.PageName === selectedPage.ParentPage)) ||
+          (selectedPage && pages.find((p) => String(p.PageId) === String(selectedPage.ParentPageId || selectedPage.PageId))) ||
+          pages.find((p) => p.PageType === 'MainPage' || !p.ParentPage || p.ParentPage === '-' || p.ParentPage === '—') ||
+          mainPagesDropdownList[0];
+
+        const mainPageId = mainPageFromView?.PageId ?? selectedPage?.ParentPageId ?? selectedPage?.PageId;
+
+        if (lastFetchedParentMainId.current === `parent_${mainPageId}`) return;
+        lastFetchedParentMainId.current = `parent_${mainPageId}`;
+
+        const parentsRes = await pageService.getParentPagesDropdown(mainPageId ? { mainPageId: Number(mainPageId) } : {});
+        if (isMounted && Array.isArray(parentsRes)) {
+          setParentPagesDropdownList(parentsRes);
+        }
+      } catch (err) {
+        console.error('Error loading parent dropdown:', err);
+      }
+    };
+
+    loadParentPageDropdown();
+    return () => {
+      isMounted = false;
+    };
+  }, [isAddEditOpen, formData.PageType, formData.SelectedMainPage, selectedPage, pages, mainPagesDropdownList]);
+
+  // 3. Cascade fetch for ChildPage: When SelectedMainPage or SelectedParentPage changes
+  useEffect(() => {
+    if (!isAddEditOpen || formData.PageType !== 'ChildPage') return;
+
+    let isMounted = true;
+    const fetchCascadeDropdown = async () => {
+      try {
+        if (!formData.SelectedMainPage) {
+          if (isMounted) setParentPagesDropdownList([]);
+          lastFetchedParentMainId.current = null;
+          return;
+        }
+
+        // Look up in mainPagesDropdownList (FlagId 2 response: { PageId: 1, PageName: "DMS" })
+        const selectedMain = mainPagesDropdownList.find(
+          (p) => (p.PageName || p.pageName || p.MainPage || p.mainPage || p.name) === formData.SelectedMainPage || String(p.PageId || p.pageId || p.id) === String(formData.SelectedMainPage)
+        ) || pages.find(
+          (p) => p.PageName === formData.SelectedMainPage || String(p.PageId) === String(formData.SelectedMainPage)
+        );
+
+        const mainPageId = selectedMain?.PageId ?? selectedMain?.pageId ?? selectedMain?.id ?? (Number(formData.SelectedMainPage) || undefined);
+
+        // Fetch parent pages under this main page: { FlagId: 3, mainPageId: <PageId> }
+        if (mainPageId && lastFetchedParentMainId.current !== `child_main_${mainPageId}`) {
+          lastFetchedParentMainId.current = `child_main_${mainPageId}`;
+          const parentsRes = await pageService.getParentPagesDropdown({ mainPageId: Number(mainPageId) });
+          if (isMounted && Array.isArray(parentsRes)) {
+            setParentPagesDropdownList(parentsRes);
+          }
+        }
+
+        // If order change is enabled and parent page is selected, fetch child pages
+        if (formData.OrderChanged && (formData.SelectedParentPage || formData.SelectedMainPage)) {
+          const selectedParent = parentPagesDropdownList.find(
+            (p) => (p.PageName || p.pageName || p.ParentPage || p.parentPage || p.name) === formData.SelectedParentPage || String(p.PageId || p.pageId || p.ParentPageId) === String(formData.SelectedParentPage)
+          ) || pages.find(
+            (p) => p.PageName === formData.SelectedParentPage || String(p.PageId) === String(formData.SelectedParentPage)
+          );
+
+          const parentPageId = selectedParent?.PageId ?? selectedParent?.parentPageId ?? selectedParent?.ParentPageId ?? selectedParent?.id ?? (Number(formData.SelectedParentPage) || undefined);
+
+          const childKey = `${mainPageId}_${parentPageId}`;
+          if (lastFetchedChildKey.current !== childKey) {
+            lastFetchedChildKey.current = childKey;
+            setLoadingChildDropdown(true);
+            const data = await pageService.getParentPagesDropdown({
+              mainPageId: mainPageId ? Number(mainPageId) : undefined,
+              parentPageId: parentPageId ? Number(parentPageId) : undefined
+            });
+            if (isMounted) {
+              setChildPagesDropdown(Array.isArray(data) ? data : []);
+              setLoadingChildDropdown(false);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load cascade dropdown:', err);
+        if (isMounted) {
+          setChildPagesDropdown([]);
+          setLoadingChildDropdown(false);
+        }
+      }
+    };
+
+    fetchCascadeDropdown();
+    return () => {
+      isMounted = false;
+    };
+  }, [isAddEditOpen, formData.PageType, formData.SelectedMainPage, formData.SelectedParentPage, formData.OrderChanged, pages, mainPagesDropdownList]);
+
+  // Dynamic distinct roles from live backend data and FlagId 1 dropdown
+  const availableRoles = useMemo(() => {
+    const rolesFromApi = rolesDropdownList.map((r) => {
+      if (typeof r === 'string') return r.trim();
+      return (r.RoleName || r.roleName || r.Role || r.role || r.name || '').trim();
+    }).filter(Boolean);
+
+    const rolesFromData = pages.flatMap((p) => {
+      if (Array.isArray(p.Roles)) {
+        return p.Roles.map((r) => typeof r === 'object' && r ? (r.RoleName || r.roleName || '') : String(r)).filter(Boolean);
+      }
+      return [];
+    });
+
+    const defaultRoles = ['Super Admin', 'Admin', 'Manager', 'User', 'HR', 'Accountant', 'Cashier', 'Supervisor', 'Developer'];
+    return Array.from(new Set([...rolesFromApi, ...rolesFromData, ...defaultRoles])).filter(Boolean);
+  }, [rolesDropdownList, pages]);
+
+  // Distinct MainPage options from live backend data and FlagId 2 dropdown
+  const mainPageOptions = useMemo(() => {
+    const mainsFromApi = mainPagesDropdownList.map((m) => {
+      if (typeof m === 'string') return m.trim();
+      return (m.PageName || m.pageName || m.MainPage || m.mainPage || m.name || '').trim();
+    }).filter(Boolean);
+
+    const dynamicMains = pages
+      .filter((p) => p.PageType === 'MainPage' || !p.ParentPage || p.ParentPage === '-' || p.ParentPage === '—')
+      .map((p) => (p.PageName || '').trim())
+      .filter(Boolean);
+
+    return Array.from(new Set([...mainsFromApi, ...dynamicMains])).filter(Boolean);
+  }, [mainPagesDropdownList, pages]);
+
+  // Distinct ParentPage options from live backend data and FlagId 3 dropdown
   const parentPageOptions = useMemo(() => {
-    const defaultParents = ['Administration', 'Reports', 'Master', 'Inventory', 'Sales', 'HRM', 'CRM', 'Support'];
+    const parentsFromApi = parentPagesDropdownList.map((p) => {
+      if (typeof p === 'string') return p.trim();
+      return (p.PageName || p.pageName || p.ParentPage || p.parentPage || p.name || '').trim();
+    }).filter(Boolean);
+
     const dynamicParents = pages
-      .filter((p) => p.PageType === 'ParentPage' || (p.ParentPage && p.ParentPage !== '-'))
-      .map((p) => p.ParentPage || p.PageName);
-    return Array.from(new Set([...defaultParents, ...dynamicParents])).filter(Boolean);
-  }, [pages]);
+      .map((p) => (p.ParentPage && p.ParentPage !== '-' && p.ParentPage !== '—' ? p.ParentPage : p.PageName)?.trim())
+      .filter(Boolean);
+
+    return Array.from(new Set([...parentsFromApi, ...dynamicParents])).filter(Boolean);
+  }, [parentPagesDropdownList, pages]);
 
   // ChildPage options (pages that are child pages)
   const childPageOptions = useMemo(() => {
-    return pages
-      .filter((p) => p.PageType === 'ChildPage' || (p.ParentPage && p.ParentPage !== '-'))
-      .map((p) => p.PageName);
-  }, [pages]);
+    const childsFromApi = childPagesDropdown.map((c) => {
+      if (typeof c === 'string') return c.trim();
+      return (c.PageName || c.pageName || c.ChildPage || c.childPage || c.name || '').trim();
+    }).filter(Boolean);
+
+    const dynamicChilds = pages
+      .filter((p) => p.PageType === 'ChildPage' || (p.ParentPage && p.ParentPage !== '-' && p.ParentPage !== '—'))
+      .map((p) => (p.PageName || '').trim())
+      .filter(Boolean);
+
+    return Array.from(new Set([...childsFromApi, ...dynamicChilds])).filter(Boolean);
+  }, [childPagesDropdown, pages]);
 
   // Open Add Modal
   const handleOpenAddModal = () => {
@@ -139,7 +315,7 @@ export default function ManagePageView() {
       OrderChanged: false,
       OrderPosition: 'IsBefore',
       OrderRelativePage: '',
-      Roles: ['Admin', 'Manager'],
+      Roles: ['Super Admin'],
       IsActive: true
     });
     setFormErrors({});
@@ -153,18 +329,18 @@ export default function ManagePageView() {
     setSelectedPage(page);
     setFormData({
       PageName: page.PageName || '',
-      PageURL: page.PageURL || '',
+      PageURL: page.PageUrl || page.PageURL || '',
       IconName: page.IconName || '',
       PageType: page.PageType || 'MainPage',
-      SelectedMainPage: page.ParentPage && page.ParentPage !== '-' ? page.ParentPage : (page.SelectedMainPage || ''),
-      SelectedParentPage: page.ParentPage && page.ParentPage !== '-' ? page.ParentPage : (page.SelectedParentPage || ''),
+      SelectedMainPage: page.ParentPage && page.ParentPage !== '-' && page.ParentPage !== '—' ? page.ParentPage : (page.SelectedMainPage || ''),
+      SelectedParentPage: page.ParentPage && page.ParentPage !== '-' && page.ParentPage !== '—' ? page.ParentPage : (page.SelectedParentPage || ''),
       OrderChanged: Boolean(page.OrderChanged),
       OrderPosition: page.OrderPosition || 'IsBefore',
       OrderRelativePage: page.OrderRelativePage || page.OrderPageId || '',
       Roles: Array.isArray(page.Roles) && page.Roles.length > 0 
         ? page.Roles 
-        : (page.RoleName ? page.RoleName.split(',').map(r => r.trim()) : ['Admin']),
-      IsActive: page.IsActive !== false && page.Status !== 'INACTIVE'
+        : (page.RoleName ? page.RoleName.split(',').map(r => r.trim()) : ['Super Admin']),
+      IsActive: page.IsDisabled !== true && page.Status !== 'INACTIVE' && page.IsActive !== false
     });
     setFormErrors({});
     setIsRoleDropdownOpen(false);
@@ -180,10 +356,11 @@ export default function ManagePageView() {
   // Toggle Status via Switch
   const handleToggleStatus = async (record) => {
     try {
-      const currentActive = record.IsActive !== false && record.Status !== 'INACTIVE';
-      const newActive = !currentActive;
-      await pageService.updateStatus(record.PageId, newActive);
-      showToast(`Page status updated to ${newActive ? 'Active' : 'Inactive'}.`, 'success');
+      const isCurrentlyDisabled = record.IsDisabled === true || record.Status === 'INACTIVE' || record.IsActive === false;
+      const newDisabledState = !isCurrentlyDisabled; // true if turning inactive, false if turning active
+
+      await pageService.updateStatus(record.PageId, newDisabledState);
+      showToast(`Page status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
       await loadPages();
     } catch (err) {
       console.error('Failed to toggle status:', err);
@@ -270,35 +447,93 @@ export default function ManagePageView() {
     }
 
     try {
-      let resolvedParentPage = '-';
+      // 1. Resolve RoleIds from selected Roles
+      const roleIds = (formData.Roles || []).map((roleName) => {
+        const found = rolesDropdownList.find(
+          (r) => (r.RoleName || r.roleName || r.Role || r.name) === roleName || String(r.RoleId || r.roleId || r.id) === String(roleName)
+        );
+        return found?.RoleId ?? found?.roleId ?? found?.id ?? 1;
+      });
+
+      // 2. Resolve ParentPageId based on PageType
+      let resolvedParentPageId = null;
+      let resolvedParentPageName = '-';
+
       if (formData.PageType === 'ParentPage') {
-        resolvedParentPage = formData.SelectedParentPage;
+        const foundParent = 
+          parentPagesDropdownList.find((p) => (p.PageName || p.pageName || p.ParentPage || p.name) === formData.SelectedParentPage || String(p.PageId || p.pageId) === String(formData.SelectedParentPage)) ||
+          mainPagesDropdownList.find((p) => (p.PageName || p.pageName || p.MainPage || p.name) === formData.SelectedParentPage || String(p.PageId || p.pageId) === String(formData.SelectedParentPage)) ||
+          pages.find((p) => p.PageName === formData.SelectedParentPage || String(p.PageId) === String(formData.SelectedParentPage));
+        
+        resolvedParentPageId = foundParent?.PageId ?? foundParent?.pageId ?? (Number(formData.SelectedParentPage) || 1);
+        resolvedParentPageName = formData.SelectedParentPage;
       } else if (formData.PageType === 'ChildPage') {
-        resolvedParentPage = formData.SelectedParentPage || formData.SelectedMainPage || 'Administration';
+        const foundParent = 
+          parentPagesDropdownList.find((p) => (p.PageName || p.pageName || p.ParentPage || p.name) === formData.SelectedParentPage || String(p.PageId || p.pageId || p.ParentPageId) === String(formData.SelectedParentPage)) ||
+          pages.find((p) => p.PageName === formData.SelectedParentPage || String(p.PageId) === String(formData.SelectedParentPage));
+        
+        resolvedParentPageId = foundParent?.PageId ?? foundParent?.parentPageId ?? foundParent?.ParentPageId ?? (Number(formData.SelectedParentPage) || 1);
+        resolvedParentPageName = formData.SelectedParentPage || formData.SelectedMainPage || 'Administration';
       }
 
-      const payload = {
-        PageId: modalMode === 'edit' ? selectedPage.PageId : Date.now(),
-        PageName: formData.PageName.trim(),
-        PageURL: formData.PageURL.trim(),
-        IconName: formData.IconName.trim(),
-        PageType: formData.PageType,
-        ParentPage: resolvedParentPage,
-        SelectedMainPage: formData.SelectedMainPage,
-        SelectedParentPage: formData.SelectedParentPage,
-        Roles: formData.Roles,
-        RoleName: formData.Roles.join(', '),
-        OrderChanged: formData.OrderChanged,
-        OrderPosition: formData.OrderPosition,
-        OrderRelativePage: formData.OrderRelativePage,
-        IsActive: formData.IsActive
-      };
+      // 3. Resolve TargetPageId if Order Changed
+      let resolvedTargetPageId = null;
+      if (formData.OrderChanged && formData.OrderRelativePage) {
+        const foundTarget = (mainPagesDropdownList.concat(parentPagesDropdownList, childPagesDropdown, pages)).find(
+          (p) => (p.PageName || p.pageName || p.name) === formData.OrderRelativePage || String(p.PageId || p.pageId) === String(formData.OrderRelativePage)
+        );
+        resolvedTargetPageId = foundTarget?.PageId ?? foundTarget?.pageId ?? (Number(formData.OrderRelativePage) || 2);
+      }
+
+      // 4. Resolve username
+      const currentUser = useERPStore.getState().user;
+      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || 'admin';
 
       if (modalMode === 'add') {
-        await pageService.addPage(payload);
+        const addPayload = {
+          FlagId: 1,
+          PageName: formData.PageName.trim(),
+          PageUrl: formData.PageURL.trim(),
+          PageIcon: formData.IconName.trim(),
+          PageType: formData.PageType,
+          ...(resolvedParentPageId !== null ? { ParentPageId: Number(resolvedParentPageId) } : {}),
+          RoleIds: roleIds.length > 0 ? roleIds : [1],
+          IsChangeOrder: Boolean(formData.OrderChanged),
+          ...(formData.OrderChanged ? {
+            OrderType: formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER',
+            TargetPageId: resolvedTargetPageId ? Number(resolvedTargetPageId) : 2
+          } : {}),
+          CreatedByUserName: userName
+        };
+
+        await pageService.addPage(addPayload);
         showToast('Page created successfully!', 'success');
       } else {
-        await pageService.updatePage(payload);
+        const updatePayload = {
+          PageId: selectedPage.PageId,
+          PageName: formData.PageName.trim(),
+          PageURL: formData.PageURL.trim(),
+          PageUrl: formData.PageURL.trim(),
+          IconName: formData.IconName.trim(),
+          PageIcon: formData.IconName.trim(),
+          PageType: formData.PageType,
+          ParentPage: resolvedParentPageName,
+          ...(resolvedParentPageId !== null ? { ParentPageId: Number(resolvedParentPageId) } : {}),
+          Roles: formData.Roles,
+          RoleIds: roleIds.length > 0 ? roleIds : [1],
+          RoleName: formData.Roles.join(', '),
+          OrderChanged: formData.OrderChanged,
+          IsChangeOrder: Boolean(formData.OrderChanged),
+          ...(formData.OrderChanged ? {
+            OrderType: formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER',
+            TargetPageId: resolvedTargetPageId ? Number(resolvedTargetPageId) : 2
+          } : {}),
+          OrderPosition: formData.OrderPosition,
+          OrderRelativePage: formData.OrderRelativePage,
+          IsActive: formData.IsActive
+        };
+
+        await pageService.updatePage(updatePayload);
         showToast('Page updated successfully!', 'success');
       }
 
@@ -313,10 +548,14 @@ export default function ManagePageView() {
   // DataTable Column Definitions
   const columns = useMemo(() => [
     {
-      id: 'id',
+      id: 'SlNo',
       header: '#',
-      accessorKey: 'PageId',
-      cell: ({ row }) => <span className="font-semibold text-slate-500">{row.index + 1}</span>
+      accessorKey: 'SlNo',
+      cell: ({ row }) => (
+        <span className="font-semibold text-slate-500">
+          {row.original.SlNo ?? (row.index + 1)}
+        </span>
+      )
     },
     {
       id: 'PageName',
@@ -334,17 +573,17 @@ export default function ManagePageView() {
       accessorKey: 'IconName',
       cell: ({ row }) => (
         <span className="font-mono text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-          {row.original.IconName}
+          {row.original.IconName || '—'}
         </span>
       )
     },
     {
-      id: 'PageURL',
+      id: 'PageUrl',
       header: 'PAGE URL',
-      accessorKey: 'PageURL',
+      accessorKey: 'PageUrl',
       cell: ({ row }) => (
         <span className="font-mono text-xs text-blue-600 dark:text-blue-400">
-          {row.original.PageURL}
+          {row.original.PageUrl || row.original.PageURL || '—'}
         </span>
       )
     },
@@ -353,8 +592,18 @@ export default function ManagePageView() {
       header: 'PARENT PAGE',
       accessorKey: 'ParentPage',
       cell: ({ row }) => (
-        <span className="text-slate-600 dark:text-slate-300">
+        <span className="text-slate-600 dark:text-slate-300 font-medium">
           {row.original.ParentPage || '—'}
+        </span>
+      )
+    },
+    {
+      id: 'OrderNo',
+      header: 'ORDER NO',
+      accessorKey: 'OrderNo',
+      cell: ({ row }) => (
+        <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+          {row.original.OrderNo || '—'}
         </span>
       )
     },
@@ -363,13 +612,26 @@ export default function ManagePageView() {
       header: 'ROLE NAME',
       accessorKey: 'RoleName',
       cell: ({ row }) => {
-        const roles = Array.isArray(row.original.Roles) 
-          ? row.original.Roles 
-          : (row.original.RoleName ? row.original.RoleName.split(',').map(r => r.trim()) : []);
+        let roles = [];
+        if (Array.isArray(row.original.Roles)) {
+          roles = row.original.Roles.map((r) =>
+            typeof r === 'object' && r !== null ? (r.RoleName || r.roleName || '') : String(r)
+          ).filter(Boolean);
+        } else if (row.original.RoleName) {
+          roles = row.original.RoleName.split(',').map((r) => r.trim()).filter(Boolean);
+        }
+
+        if (roles.length === 0) {
+          roles = ['Super Admin'];
+        }
+
         return (
           <div className="flex flex-wrap gap-1">
             {roles.map((r, i) => (
-              <span key={i} className="px-2 py-0.5 text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700">
+              <span
+                key={i}
+                className="px-2 py-0.5 text-[11px] font-medium bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800"
+              >
                 {r}
               </span>
             ))}
@@ -382,7 +644,8 @@ export default function ManagePageView() {
       header: 'STATUS',
       accessorKey: 'Status',
       cell: ({ row }) => {
-        const isActive = row.original.IsActive !== false && row.original.Status !== 'INACTIVE';
+        const isDisabled = row.original.IsDisabled === true || row.original.Status === 'INACTIVE' || row.original.IsActive === false;
+        const isActive = !isDisabled;
         return <StatusBadge status={isActive ? 'Active' : 'Inactive'} />;
       }
     }
@@ -642,7 +905,7 @@ export default function ManagePageView() {
                 )}
               </div>
 
-              {/* Do you want to change order? Checkbox */}
+              {/* Do you want to change order.? Checkbox */}
               <div>
                 <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
                   <input
@@ -651,7 +914,7 @@ export default function ManagePageView() {
                     onChange={(e) => setFormData({ ...formData, OrderChanged: e.target.checked })}
                     className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
                   />
-                  <span>Do you want to change order?</span>
+                  <span>Do you want to change order.?</span>
                 </label>
               </div>
 
@@ -724,7 +987,13 @@ export default function ManagePageView() {
                   <select
                     value={formData.SelectedMainPage}
                     onChange={(e) => {
-                      setFormData({ ...formData, SelectedMainPage: e.target.value });
+                      const newMain = e.target.value;
+                      setFormData({
+                        ...formData,
+                        SelectedMainPage: newMain,
+                        SelectedParentPage: '',
+                        OrderRelativePage: ''
+                      });
                       if (formErrors.SelectedMainPage) setFormErrors({ ...formErrors, SelectedMainPage: null });
                     }}
                     className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
@@ -754,7 +1023,12 @@ export default function ManagePageView() {
                   <select
                     value={formData.SelectedParentPage}
                     onChange={(e) => {
-                      setFormData({ ...formData, SelectedParentPage: e.target.value });
+                      const newParent = e.target.value;
+                      setFormData({
+                        ...formData,
+                        SelectedParentPage: newParent,
+                        OrderRelativePage: ''
+                      });
                       if (formErrors.SelectedParentPage) setFormErrors({ ...formErrors, SelectedParentPage: null });
                     }}
                     className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
@@ -775,7 +1049,7 @@ export default function ManagePageView() {
                 )}
               </div>
 
-              {/* Do you want to change order? Checkbox */}
+              {/* Do you want to change order.? Checkbox */}
               <div>
                 <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
                   <input
@@ -784,7 +1058,7 @@ export default function ManagePageView() {
                     onChange={(e) => setFormData({ ...formData, OrderChanged: e.target.checked })}
                     className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
                   />
-                  <span>Do you want to change order?</span>
+                  <span>Do you want to change order.?</span>
                 </label>
               </div>
 
@@ -884,7 +1158,7 @@ export default function ManagePageView() {
               {/* Dropdown Options */}
               {isRoleDropdownOpen && (
                 <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 py-1.5 z-50 max-h-48 overflow-y-auto animate-in fade-in duration-100">
-                  {AVAILABLE_ROLES.map((role) => {
+                  {availableRoles.map((role) => {
                     const isSelected = formData.Roles.includes(role);
                     return (
                       <div
@@ -944,34 +1218,48 @@ export default function ManagePageView() {
             <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800">
               <div>
                 <span className="text-xs text-slate-400 uppercase font-semibold block">Page Name</span>
-                <span className="font-bold text-slate-800 dark:text-white text-base">{selectedPage.PageName}</span>
+                <span className="font-bold text-slate-800 dark:text-white text-base">{selectedPage.PageName || '—'}</span>
               </div>
               <div>
                 <span className="text-xs text-slate-400 uppercase font-semibold block">Status</span>
-                <StatusBadge status={selectedPage.IsActive !== false && selectedPage.Status !== 'INACTIVE' ? 'Active' : 'Inactive'} />
+                <StatusBadge status={selectedPage.IsDisabled === true || selectedPage.Status === 'INACTIVE' || selectedPage.IsActive === false ? 'Inactive' : 'Active'} />
               </div>
               <div>
                 <span className="text-xs text-slate-400 uppercase font-semibold block">Page URL</span>
-                <span className="font-mono text-xs text-blue-600 dark:text-blue-400">{selectedPage.PageURL}</span>
+                <span className="font-mono text-xs text-blue-600 dark:text-blue-400 break-all">{selectedPage.PageUrl || selectedPage.PageURL || '—'}</span>
               </div>
               <div>
                 <span className="text-xs text-slate-400 uppercase font-semibold block">Icon Name</span>
-                <span className="font-mono text-xs text-slate-700 dark:text-slate-300">{selectedPage.IconName}</span>
+                <span className="font-mono text-xs text-slate-700 dark:text-slate-300">{selectedPage.IconName || '—'}</span>
               </div>
               <div>
-                <span className="text-xs text-slate-400 uppercase font-semibold block">Page Type</span>
-                <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedPage.PageType || 'MainPage'}</span>
+                <span className="text-xs text-slate-400 uppercase font-semibold block">Order No</span>
+                <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">{selectedPage.OrderNo || '—'}</span>
               </div>
               <div>
                 <span className="text-xs text-slate-400 uppercase font-semibold block">Parent Page</span>
-                <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedPage.ParentPage || '—'}</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">
+                  {selectedPage.ParentPage || '—'}
+                  {selectedPage.ParentPageId ? ` (ID: ${selectedPage.ParentPageId})` : ''}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 uppercase font-semibold block">Page ID</span>
+                <span className="font-mono text-xs text-slate-700 dark:text-slate-300">{selectedPage.PageId || selectedPage.id || '—'}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-400 uppercase font-semibold block">Sl No</span>
+                <span className="font-mono text-xs text-slate-700 dark:text-slate-300">{selectedPage.SlNo || '—'}</span>
               </div>
             </div>
 
             <div>
               <span className="text-xs text-slate-400 uppercase font-semibold block mb-1.5">Assigned Roles</span>
               <div className="flex flex-wrap gap-1.5">
-                {(Array.isArray(selectedPage.Roles) ? selectedPage.Roles : (selectedPage.RoleName ? selectedPage.RoleName.split(',').map(r => r.trim()) : ['Admin'])).map((r, idx) => (
+                {(Array.isArray(selectedPage.Roles)
+                  ? selectedPage.Roles.map((r) => (typeof r === 'object' && r !== null ? (r.RoleName || r.roleName || '') : String(r))).filter(Boolean)
+                  : (selectedPage.RoleName ? selectedPage.RoleName.split(',').map((r) => r.trim()) : ['Super Admin'])
+                ).map((r, idx) => (
                   <span key={idx} className="px-2.5 py-1 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800">
                     {r}
                   </span>
