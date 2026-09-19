@@ -180,6 +180,25 @@ export default function Sidebar() {
   const setSidebarOpen = useERPStore((state) => state.setSidebarOpen);
   const userMenu = useERPStore((state) => state.userMenu);
   
+  // Directly read session from storage to guarantee menu is refreshed on browser reload
+  const sessionMenu = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed?.data?.menuPage || parsed?.menuPage || parsed?.data?.userMenu || parsed?.userMenu || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Sync store if store is empty but storage has menu
+  React.useEffect(() => {
+    if (!userMenu && sessionMenu) {
+      useERPStore.getState().setUserMenu(sessionMenu);
+    }
+  }, [userMenu, sessionMenu]);
+
   // Track open nested menus
   const [openMenus, setOpenMenus] = useState({});
 
@@ -190,7 +209,7 @@ export default function Sidebar() {
     }));
   };
 
-  const sections = normalizeNavigation(userMenu);
+  const sections = normalizeNavigation(userMenu || sessionMenu);
 
   // Recursive menu item renderer
   const renderMenuItem = (item, level = 0, keyPrefix = '') => {
@@ -328,13 +347,19 @@ export default function Sidebar() {
           </button>
         ) : (
           <>
-            <div className="flex items-center gap-3">
+            <div 
+              onClick={() => {
+                window.location.href = '/dashboard';
+              }}
+              className="flex items-center gap-3 cursor-pointer group"
+              title="Refresh & Go to Main Page"
+            >
               {/* Logo Icon */}
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/10 dark:from-teal-500/30 dark:to-emerald-500/20 flex items-center justify-center p-1.5 shrink-0 border border-teal-500/30 shadow-sm shadow-teal-500/10">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/10 dark:from-teal-500/30 dark:to-emerald-500/20 flex items-center justify-center p-1.5 shrink-0 border border-teal-500/30 shadow-sm shadow-teal-500/10 group-hover:scale-105 transition-transform">
                 <img src={logo} alt="Vishvin ERP Logo" className="w-full h-full object-contain filter drop-shadow-sm" />
               </div>
               <div className="flex flex-col">
-                <span className="font-black text-lg tracking-tight text-slate-900 dark:text-slate-50 leading-tight">
+                <span className="font-black text-lg tracking-tight text-slate-900 dark:text-slate-50 leading-tight group-hover:text-primary transition-colors">
                   Vishvin ERP
                 </span>
                 <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 tracking-wider uppercase">
