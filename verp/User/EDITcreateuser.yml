@@ -1,0 +1,111 @@
+info:
+  name: EDITcreateuser
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: http://localhost:9004/verp-service/userCreation/edituser
+  body:
+    type: multipart-form
+    data:
+      - name: EmployeeId
+        type: text
+        value: EMP1
+      - name: FirstName
+        type: text
+        value: htihin
+      - name: MiddleName
+        type: text
+        value: kumar
+      - name: LastName
+        type: text
+        value: chitriki
+      - name: PhoneNumber
+        type: text
+        value: "99998843488"
+      - name: AltPhoneNumber
+        type: text
+        value: "7838432135"
+      - name: DateOfBirth
+        type: text
+        value: 2004-08-12
+      - name: GenderId
+        type: text
+        value: "1"
+      - name: MaritalStatusId
+        type: text
+        value: "1"
+      - name: DesignationId
+        type: text
+        value: "1"
+      - name: Email
+        type: text
+        value: admin10@example.com
+      - name: LoginName
+        type: text
+        value: MAX
+      - name: Photo
+        type: file
+        value:
+          - C:\Users\hithi\Downloads\TbkZyKS-one-peice-wallpaper.jpg
+        contentType: image/jpeg
+      - name: Password
+        type: text
+        value: admin1@123
+      - name: CreatedByUserName
+        type: text
+        value: admin
+      - name: CompanyId
+        type: text
+        value: "1"
+      - name: CompanyProductId
+        type: text
+        value: "1"
+      - name: ProjectId
+        type: text
+        value: "1"
+      - name: RoleId
+        type: text
+        value: "1"
+      - name: FileTypeId
+        type: text
+        value: "1"
+      - name: UserFile
+        type: file
+        value:
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\about_kle_img.png
+        contentType: image/png
+      - name: FileTypeId
+        type: text
+        value: "1"
+      - name: UserFile
+        type: file
+        value:
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\360_F_297585768_NgXBDqvgVxNqW5j4OVZs3GguyIz8t0O6.jpg
+        contentType: image/jpeg
+      - name: FileTypeId
+        type: text
+        value: "2"
+      - name: UserFile
+        type: file
+        value:
+          - C:\Users\hithi\Downloads\C Hithin kuamr_ KLE Tech University.pdf
+        contentType: application/pdf
+      - name: ReportingManagerUserId
+        type: text
+        value: "1"
+      - name: DateOfJoining
+        type: text
+        value: 2024-08-12
+      - name: UserId
+        type: text
+        value: "1"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
