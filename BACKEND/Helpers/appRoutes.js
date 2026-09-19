@@ -10,6 +10,7 @@ import ProjectRoutes from "../Routes/Projects/projectRoutes.js"
 import CompanyProductRoutes from "../Routes/CompanyProduct/CompanyProduct.js"
 import Login from "../Routes/Login/login.js"
 import ManagePagesRoutes from "../Routes/ManagePages/Managepages.js"
+import Usereditroute from "../Routes/Useredit/UserEditRoute.js"
 
 const applyRoutes = (app) => {
 app.use(backendHelpers.USER_CREATION, UserRoutes);   // written by  hithin
@@ -24,6 +25,7 @@ app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);  //Done by kavy
 app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);  //Done by kavya
 app.use(backendHelpers.BIRTHDAY_EMAILS, BirthdayRoutes);
 app.use(backendHelpers.MANAGE_PAGES, ManagePagesRoutes);  //Done by kavya
+app.use(backendHelpers.USER_EDIT,Usereditroute)
 
 };
 
