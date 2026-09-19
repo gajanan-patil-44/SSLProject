@@ -3,9 +3,7 @@ import cron from "node-cron";
 import { processBirthdayEmails} from "../Services/birthdayService.js";
 
 
-// ==========================================================
 // START BIRTHDAY JOB
-// ==========================================================
 
 const startBirthdayJob = () => {
 

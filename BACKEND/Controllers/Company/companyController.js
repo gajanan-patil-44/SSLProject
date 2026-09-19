@@ -9,9 +9,8 @@ import {
 } from "../../Models/CompanyModels.js";
 
 
-// ==========================================
+
 // GET ALL ACTIVE COMPANIES
-// ==========================================
 
 export const getCompany = async (req, res) => {
     const { flagId } = req.body;
@@ -24,7 +23,6 @@ export const getCompany = async (req, res) => {
                 message: "flagId is required"
             });
         }
-
 
 
         if (parseInt(flagId) == 1) {
@@ -45,7 +43,7 @@ export const getCompany = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error fetching companies:", error);
+        // console.error("Error fetching companies:", error);
 
         return res.status(500).json({
             status: "error",
@@ -56,9 +54,7 @@ export const getCompany = async (req, res) => {
 };
 
 
-// ==========================================
 // ADD COMPANY
-// ==========================================
 
 export const addCompanies = async (req, res) => {
 
@@ -77,6 +73,7 @@ export const addCompanies = async (req, res) => {
         // flagId 2 = Add Company
         if (parseInt(flagId) === 2) {
             const companyData = req.body;
+
             // Check Company Name and Company Code
             const existingCompany = await checkCompanyExists(
                 companyData.CompanyName,
@@ -119,7 +116,6 @@ export const addCompanies = async (req, res) => {
 
             }
 
-
             // Add Company
             const company = await addCompany(companyData);
 
@@ -137,7 +133,7 @@ export const addCompanies = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error adding company:", error);
+        // console.error("Error adding company:", error);
 
         return res.status(500).json({
             status: "error",
@@ -148,9 +144,7 @@ export const addCompanies = async (req, res) => {
 };
 
 
-// ==========================================
 // UPDATE COMPANY
-// ==========================================
 
 export const updateCompany = async (req, res) => {
 
@@ -234,7 +228,7 @@ export const updateCompany = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error updating company:", error);
+        // console.error("Error updating company:", error);
 
         return res.status(500).json({
             status: "error",
@@ -245,9 +239,7 @@ export const updateCompany = async (req, res) => {
 };
 
 
-// ==========================================
 // TOGGLE COMPANY STATUS
-// ==========================================
 
 export const toggleCompanyStatus = async (req, res) => {
 
@@ -293,7 +285,7 @@ export const toggleCompanyStatus = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error toggling company status:", error);
+        // console.error("Error toggling company status:", error);
 
         return res.status(500).json({
             status: "error",
@@ -303,9 +295,7 @@ export const toggleCompanyStatus = async (req, res) => {
     }
 };
 
-// ==========================================
 // DELETE / DISABLE COMPANY
-// ==========================================
 
 export const deleteCompany = async (req, res) => {
     const { flagId } = req.body;
@@ -341,7 +331,7 @@ export const deleteCompany = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error disabling company:", error);
+        // console.error("Error disabling company:", error);
 
         return res.status(500).json({
             status: "error",

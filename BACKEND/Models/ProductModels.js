@@ -1,9 +1,7 @@
 import { pool } from "../Config/db.js";
 
 
-// ==========================================
 // GET ALL ACTIVE PRODUCTS
-// ==========================================
 
 export const getAllProducts = async () => {
 
@@ -30,7 +28,7 @@ export const getAllProducts = async () => {
 
     } catch (error) {
 
-        console.error("Error fetching products:", error);
+        // console.error("Error fetching products:", error);
 
         throw error;
     }
@@ -62,16 +60,14 @@ export const checkProductExists = async (ProductName, ProductCode) => {
 
     } catch (error) {
 
-        console.error("Error checking product existence:", error);
+        // console.error("Error checking product existence:", error);
 
         throw error;
     }
 };
 
 
-// ==========================================
 // ADD PRODUCT
-// ==========================================
 
 export const addProduct = async (productData) => {
 
@@ -116,7 +112,7 @@ export const addProduct = async (productData) => {
 
     } catch (error) {
 
-        console.error("Error adding product:", error);
+        // console.error("Error adding product:", error);
 
         throw error;
     }
@@ -153,19 +149,14 @@ export const checkProductExistsForUpdate = async (
 
     } catch (error) {
 
-        console.error(
-            "Error checking product for update:",
-            error
-        );
+        // console.error("Error checking product for update:", error);
 
         throw error;
     }
 };
 
 
-// ==========================================
 // UPDATE PRODUCT
-// ==========================================
 
 export const updateProducts = async (productData) => {
 
@@ -198,7 +189,7 @@ export const updateProducts = async (productData) => {
 
     } catch (error) {
 
-        console.error("Error updating product:", error);
+        // console.error("Error updating product:", error);
 
         throw error;
     }
@@ -206,9 +197,7 @@ export const updateProducts = async (productData) => {
 
 
 
-// ==========================================
 // TOGGLE PRODUCT STATUS
-// ==========================================
 
 export const toggleProductStatuses = async (productData) => {
 
@@ -236,7 +225,7 @@ export const toggleProductStatuses = async (productData) => {
 
     } catch (error) {
 
-        console.error("Error toggling product status:", error);
+        // console.error("Error toggling product status:", error);
 
         throw error;
     }
@@ -244,9 +233,7 @@ export const toggleProductStatuses = async (productData) => {
 
 
 
-// ==========================================
 // DELETE / DISABLE PRODUCT
-// ==========================================
 
 export const deleteProducts = async (productData) => {
 
@@ -267,8 +254,9 @@ export const deleteProducts = async (productData) => {
 
     } catch (error) {
 
-        console.error("Error deleting product:", error);
+        // console.error("Error deleting product:", error);
 
         throw error;
     }
 };
+
