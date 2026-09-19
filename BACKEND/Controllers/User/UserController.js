@@ -18,16 +18,21 @@ import {
 
 } from "../../Models/UserModels.js";
 import { readFile } from "fs/promises";
-import {
-    processUserFilesUsingWorker
-} from "../../Helpers/userFileWorkerHelper.js";
+import {processUserFilesUsingWorker} from "../../Helpers/userFileWorkerHelper.js";
 
+import { getAllUserDetails, editUserdetails } from "../../Models/userEditDetails/UserEdit.js";
 // =====================================================
 // USER DROPDOWNS
 // FlagId 1 = Gender
 // FlagId 2 = Marital Status
 // FlagId 3 = Designation
 // =====================================================
+
+
+
+//import {getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompanies, getAllReportingManagers, getAllCompanyProducts, getAllProjects, getAllRoles} from "../../Models/UserModels.js";
+
+
 
 export const userDropdownController = async (req, res) => {
 
@@ -689,3 +694,12 @@ export const companyProductProjectDropdownController = async (req, res) => {
         });
     }
 };
+
+
+
+
+
+
+
+
+

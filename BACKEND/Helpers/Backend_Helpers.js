@@ -10,3 +10,6 @@ export const DESIGNATION_CREATION="/verp-service/designationCreation"
 export const PROJECT_CREATION="/verp-service/projectCreation"
 export const BIRTHDAY_EMAILS="/verp-service/birthdayEmails"
 export const MANAGE_PAGES="/verp-service/managePages"
+
+export const USER_EDIT="/verp-service/userEdit"
+

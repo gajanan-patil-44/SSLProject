@@ -333,58 +333,42 @@ export const createUser = async (userData) => {
         }
         const UserId = user.UserId;
         // ==================================================
-        // VARIABLES FOR GENERATED IDs
-        // ==================================================
-        let userReportingManagerId = null;
-        let userCompanyId = null;
-        let userProductId = null;
-        let userProjectId = null;
-        let userRoleId = null;
-        // ==================================================
         // 2. CREATE USER REPORTING MANAGER
         // ==================================================
 
-        if (
-            userData.ReportingManagerUserId !== null &&
-            userData.ReportingManagerUserId !== undefined
-        ) {
+        if (userData.ReportingManagerUserId !== null && userData.ReportingManagerUserId !== undefined) {
 
             const reportingManagerQuery = `
-                INSERT INTO "DATA"."UserReportingManager"
-                (
-                    "UserId",
-                    "ReportingManagerUserId",
-                    "CompanyId",
-                    "CreatedAt",
-                    "CreatedByUserId"
-                )
-                VALUES
-                (
-                    $1,
-                    $2,
-                    $3,
-                    CURRENT_TIMESTAMP,
-                    $4
-                )
-                RETURNING
-                    "UserReportingManagerId";
-            `;
+        INSERT INTO "DATA"."UserReportingManager"
+        (
+            "UserId",
+            "ReportingManagerUserId",
+            "CompanyId",
+            "CreatedAt",
+            "CreatedByUserId"
+        )
+        VALUES
+        ($1,$2,$3,CURRENT_TIMESTAMP,$4)
+        
+        RETURNING
+            "UserReportingManagerId",
+            "UserId",
+            "ReportingManagerUserId",
+            "CompanyId",
+            "CreatedAt",
+            "CreatedByUserId";
+    `;
 
-            const reportingManagerResult =
-                await client.query(
-                    reportingManagerQuery,
-                    [
-                        UserId,
-                        Number( userData.ReportingManagerUserId),
-                        Number( userData.CompanyId),
-                        UserId
-                    ]
-                );
-
-            userReportingManagerId = reportingManagerResult.rows[0].UserReportingManagerId;
+            await client.query(
+                reportingManagerQuery,
+                [
+                    UserId,
+                    Number(userData.ReportingManagerUserId),
+                    Number(userData.CompanyId),
+                    UserId
+                ]
+            );
         }
-
-
         // ==================================================
         // 3. CREATE USER COMPANY
         // ==================================================
@@ -802,5 +786,277 @@ export const getRoleDropdown = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
+
+
+
+
+
+// ======================================================
+// GET ALL GENDERS
+// ======================================================
+
+export const getAllGenders = async () => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                "GenderId" AS "GenderId",
+                "GenderName" AS "GenderName"
+
+            FROM "LKP"."Gender"
+
+            WHERE "IsDisabled" = false
+
+            ORDER BY "GenderName"
+        `);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+// ======================================================
+// GET ALL MARITAL STATUSES
+// ======================================================
+
+export const getAllMaritalStatuses = async () => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                "MaritalStatusId" AS "MaritalStatusId",
+                "MaritalStatusName" AS "MaritalStatusName"
+
+            FROM "LKP"."MaritalStatus"
+
+            WHERE "IsDisabled" = false
+
+            ORDER BY "MaritalStatusName"
+        `);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+// ======================================================
+// GET ALL DESIGNATIONS
+// ======================================================
+
+export const getAllDesignations = async (CompanyId) => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                cd."CompanyDesignationId" AS "CompanyDesignationId",
+                cd."DesignationName" AS "DesignationName",
+                cd."DesignationCode" AS "DesignationCode",
+                cd."CompanyId" AS "CompanyId"
+
+            FROM "LKP"."CompanyDesignation" cd
+
+            WHERE cd."IsDisabled" = false
+            AND cd."CompanyId" = $1
+
+            ORDER BY cd."DesignationName"
+        `, [CompanyId]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+// ======================================================
+// GET ALL COMPANIES
+// ======================================================
+
+export const getAllCompanies = async () => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                "CompanyId" AS "CompanyId",
+                "CompanyName" AS "CompanyName",
+                "CompanyCode" AS "CompanyCode"
+
+            FROM "LKP"."Company"
+
+            WHERE "IsDisabled" = false
+
+            ORDER BY "CompanyName"
+        `);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+// ======================================================
+// GET ALL REPORTING MANAGERS
+// ======================================================
+
+export const getAllReportingManagers = async (CompanyId) => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT DISTINCT
+                urm."ReportingManagerUserId" AS "ReportingManagerUserId",
+                CONCAT_WS(
+                    ' ',
+                    manager."FirstName",
+                    manager."MiddleName",
+                    manager."LastName"
+                ) AS "ReportingManagerName"
+
+            FROM "DATA"."UserReportingManager" urm
+
+            INNER JOIN "DATA"."User" manager
+                ON manager."UserId" = urm."ReportingManagerUserId"
+
+            WHERE urm."CompanyId" = $1
+            AND urm."IsDisabled" = false
+            AND manager."IsDisabled" = false
+
+            ORDER BY "ReportingManagerName"
+        `, [CompanyId]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+// ======================================================
+// GET ALL COMPANY PRODUCTS
+// ======================================================
+
+export const getAllCompanyProducts = async (CompanyId) => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                cp."CompanyProductId" AS "CompanyProductId",
+                cp."CompanyId" AS "CompanyId",
+                cp."ProductId" AS "ProductId",
+                p."ProductName" AS "ProductName",
+                p."ProductCode" AS "ProductCode"
+
+            FROM "LKP"."CompanyProduct" cp
+
+            INNER JOIN "LKP"."Product" p
+                ON p."ProductId" = cp."ProductId"
+
+            WHERE cp."CompanyId" = $1
+            AND cp."IsDisabled" = false
+            AND p."IsDisabled" = false
+
+            ORDER BY p."ProductName"
+        `, [CompanyId]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+// ======================================================
+// GET ALL PROJECTS
+// ======================================================
+
+export const getAllProjects = async (CompanyProductId) => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                p."ProjectId" AS "ProjectId",
+                p."CompanyProductId" AS "CompanyProductId",
+                p."ProjectName" AS "ProjectName",
+                p."ProjectCode" AS "ProjectCode"
+
+            FROM "LKP"."Project" p
+
+            INNER JOIN "LKP"."CompanyProduct" cp
+                ON cp."CompanyProductId" = p."CompanyProductId"
+
+            WHERE p."CompanyProductId" = $1
+            AND p."IsDisabled" = false
+            AND cp."IsDisabled" = false
+
+            ORDER BY p."ProjectName"
+        `, [CompanyProductId]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+// ======================================================
+// GET ALL ROLES
+// ======================================================
+
+export const getAllRoles = async (CompanyId) => {
+
+    try {
+
+        const result = await pool.query(`
+            SELECT
+                "RoleId" AS "RoleId",
+                "RoleCode" AS "RoleCode",
+                "RoleName" AS "RoleName",
+                "RoleDescription" AS "RoleDescription",
+                "CompanyId" AS "CompanyId"
+
+            FROM "LKP"."Role"
+
+            WHERE "CompanyId" = $1
+            AND "IsDisabled" = false
+
+            ORDER BY "RoleName"
+        `, [CompanyId]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+
+
 
 

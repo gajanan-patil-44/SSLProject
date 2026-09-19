@@ -1,6 +1,5 @@
-// ==========================================================
+
 // EMAIL VALIDATION
-// ==========================================================
 
 export const isValidEmail = (email) => {
 
@@ -14,9 +13,7 @@ export const isValidEmail = (email) => {
 };
 
 
-// ==========================================================
 // EMPLOYEE NAME
-// ==========================================================
 
 export const getEmployeeName = (employee) => {
 
@@ -37,9 +34,7 @@ export const getEmployeeName = (employee) => {
 };
 
 
-// ==========================================================
 // YEARS OF SERVICE
-// ==========================================================
 
 export const calculateYearsOfService = (dateOfJoining) => {
 

@@ -86,6 +86,7 @@ export default function PagesView() {
           context: response.data?.context,
           session: response.session,
           photo: response.photo,
+          userMenu: response.data?.menuPage || response.menuPage || response.data?.userMenu || response.userMenu || null,
           rawResponse: response
         });
         showToast('Login successful! Welcome back.', 'success');
