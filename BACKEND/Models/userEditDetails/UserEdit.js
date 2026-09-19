@@ -216,6 +216,8 @@ export const getAllUserDetails = async () => {
 
 export const editUserdetails = async ({
     UserId,
+
+    
     employeeId,
     firstName,
     middleName,
@@ -229,56 +231,364 @@ export const editUserdetails = async ({
     loginName,
     altPhoneNumber,
     dateOfJoining,
-    updatedByUserName
+    updatedByUserName,
+
+    
+    UserCompanyId,
+    companyId,
+    isPrimaryCompany,
+
+   
+    UserProductId,
+    companyProductId,
+
+    
+    UserProjectId,
+    projectId,
+    isPrimary,
+
+    
+    UserRoleId,
+    roleId,
+    roleCompanyId,
+    roleCompanyProductId,
+    roleProjectId,
+
+    
+    UserReportingManagerId,
+    reportingManagerUserId,
+    reportingManagerCompanyId
 }) => {
 
-    const query = `
-        UPDATE "DATA"."User"
-        SET
-            "EmployeeId" = COALESCE($1, "EmployeeId"),
-            "FirstName" = COALESCE($2, "FirstName"),
-            "MiddleName" = COALESCE($3, "MiddleName"),
-            "LastName" = COALESCE($4, "LastName"),
-            "PhoneNumber" = COALESCE($5, "PhoneNumber"),
-            "DateOfBirth" = COALESCE($6, "DateOfBirth"),
-            "GenderId" = COALESCE($7, "GenderId"),
-            "MaritalStatusId" = COALESCE($8, "MaritalStatusId"),
-            "DesignationId" = COALESCE($9, "DesignationId"),
-            "Email" = COALESCE($10, "Email"),
-            "LoginName" = COALESCE($11, "LoginName"),
-            "AltPhoneNumber" = COALESCE($12, "AltPhoneNumber"),
-            "DateOfJoining" = COALESCE($13, "DateOfJoining"),
-            "UpdatedAt" = CURRENT_TIMESTAMP,
-            "UpdatedByUserName" = COALESCE($14, "UpdatedByUserName")
+    const client = await pool.connect();
 
-        WHERE "UserId" = $15
+    try {
 
-        RETURNING 
-        "UserId",
-        "FirstName";
-    `;
+        await client.query("BEGIN");
 
-    const values = [
-        employeeId,
-        firstName,
-        middleName,
-        lastName,
-        phoneNumber,
-        dateOfBirth,
-        genderId,
-        maritalStatusId,
-        designationId,
-        email,
-        loginName,
-        altPhoneNumber,
-        dateOfJoining,
-        updatedByUserName,
-        UserId
-    ];
+        const userQuery = `
+            UPDATE "DATA"."User"
+            SET
+                "EmployeeId" =
+                    COALESCE($1, "EmployeeId"),
 
-    const result = await pool.query(query, values);
+                "FirstName" =
+                    COALESCE($2, "FirstName"),
 
-    return result.rows[0];
+                "MiddleName" =
+                    COALESCE($3, "MiddleName"),
+
+                "LastName" =
+                    COALESCE($4, "LastName"),
+
+                "PhoneNumber" =
+                    COALESCE($5, "PhoneNumber"),
+
+                "DateOfBirth" =
+                    COALESCE($6, "DateOfBirth"),
+
+                "GenderId" =
+                    COALESCE($7, "GenderId"),
+
+                "MaritalStatusId" =
+                    COALESCE($8, "MaritalStatusId"),
+
+                "DesignationId" =
+                    COALESCE($9, "DesignationId"),
+
+                "Email" =
+                    COALESCE($10, "Email"),
+
+                "LoginName" =
+                    COALESCE($11, "LoginName"),
+
+                "AltPhoneNumber" =
+                    COALESCE($12, "AltPhoneNumber"),
+
+                "DateOfJoining" =
+                    COALESCE($13, "DateOfJoining"),
+
+                "UpdatedAt" =
+                    CURRENT_TIMESTAMP,
+
+                "UpdatedByUserName" =
+                    COALESCE($14, "UpdatedByUserName")
+
+            WHERE "UserId" = $15
+
+            RETURNING
+                "UserId",
+                "FirstName";
+        `;
+
+
+        await client.query(
+            userQuery,
+            [
+                employeeId,
+                firstName,
+                middleName,
+                lastName,
+                phoneNumber,
+                dateOfBirth,
+                genderId,
+                maritalStatusId,
+                designationId,
+                email,
+                loginName,
+                altPhoneNumber,
+                dateOfJoining,
+                updatedByUserName,
+                UserId
+            ]
+        );
+
+
+        if (UserCompanyId) {
+
+            const userCompanyQuery = `
+                UPDATE "DATA"."UserCompany"
+                SET
+                    "CompanyId" =
+                        COALESCE($1, "CompanyId"),
+
+                    "IsPrimaryCompany" =
+                        COALESCE($2, "IsPrimaryCompany"),
+
+                    "UpdatedAt" =
+                        CURRENT_TIMESTAMP,
+
+                    "UpdatedByUserId" =
+                        COALESCE(
+                            $3,
+                            "UpdatedByUserId"
+                        )
+
+                WHERE "UserCompanyId" = $4
+                AND "UserId" = $5;
+            `;
+
+
+            await client.query(
+                userCompanyQuery,
+                [
+                    companyId,
+                    isPrimaryCompany,
+                    UserId,
+                    UserCompanyId,
+                    UserId
+                ]
+            );
+        }
+
+
+       
+
+        if (UserProductId) {
+
+            const userProductQuery = `
+                UPDATE "DATA"."UserProduct"
+                SET
+                    "CompanyProductId" =
+                        COALESCE(
+                            $1,
+                            "CompanyProductId"
+                        ),
+
+                    "UpdatedAt" =
+                        CURRENT_TIMESTAMP,
+
+                    "UpdatedByUserId" =
+                        COALESCE(
+                            $2,
+                            "UpdatedByUserId"
+                        )
+
+                WHERE "UserProductId" = $3
+                AND "UserId" = $4;
+            `;
+
+
+            await client.query(
+                userProductQuery,
+                [
+                    companyProductId,
+                    UserId,
+                    UserProductId,
+                    UserId
+                ]
+            );
+        }
+
+
+        if (UserProjectId) {
+
+            const userProjectQuery = `
+                UPDATE "DATA"."UserProject"
+                SET
+                    "ProjectId" =
+                        COALESCE(
+                            $1,
+                            "ProjectId"
+                        ),
+
+                    "IsPrimary" =
+                        COALESCE(
+                            $2,
+                            "IsPrimary"
+                        ),
+
+                    "UpdatedAt" =
+                        CURRENT_TIMESTAMP,
+
+                    "UpdatedByUserId" =
+                        COALESCE(
+                            $3,
+                            "UpdatedByUserId"
+                        )
+
+                WHERE "UserProjectId" = $4
+                AND "UserId" = $5;
+            `;
+
+
+            await client.query(
+                userProjectQuery,
+                [
+                    projectId,
+                    isPrimary,
+                    UserId,
+                    UserProjectId,
+                    UserId
+                ]
+            );
+        }
+
+
+        if (UserRoleId) {
+
+            const userRoleQuery = `
+                UPDATE "DATA"."UserRole"
+                SET
+                    "RoleId" =
+                        COALESCE(
+                            $1,
+                            "RoleId"
+                        ),
+
+                    "CompanyId" =
+                        COALESCE(
+                            $2,
+                            "CompanyId"
+                        ),
+
+                    "CompanyProductId" =
+                        COALESCE(
+                            $3,
+                            "CompanyProductId"
+                        ),
+
+                    "ProjectId" =
+                        COALESCE(
+                            $4,
+                            "ProjectId"
+                        ),
+
+                    "UpdatedAt" =
+                        CURRENT_TIMESTAMP,
+
+                    "UpdatedByUserId" =
+                        COALESCE(
+                            $5,
+                            "UpdatedByUserId"
+                        )
+
+                WHERE "UserRoleId" = $6
+                AND "UserId" = $7;
+            `;
+
+
+            await client.query(
+                userRoleQuery,
+                [
+                    roleId,
+                    roleCompanyId,
+                    roleCompanyProductId,
+                    roleProjectId,
+                    UserId,
+                    UserRoleId,
+                    UserId
+                ]
+            );
+        }
+
+
+       
+        if (UserReportingManagerId) {
+
+            const reportingManagerQuery = `
+                UPDATE "DATA"."UserReportingManager"
+                SET
+                    "ReportingManagerUserId" =
+                        COALESCE(
+                            $1,
+                            "ReportingManagerUserId"
+                        ),
+
+                    "CompanyId" =
+                        COALESCE(
+                            $2,
+                            "CompanyId"
+                        ),
+
+                    "UpdatedAt" =
+                        CURRENT_TIMESTAMP,
+
+                    "UpdatedByUserId" =
+                        COALESCE(
+                            $3,
+                            "UpdatedByUserId"
+                        )
+
+                WHERE "UserReportingManagerId" = $4
+                AND "UserId" = $5;
+            `;
+
+
+            await client.query(
+                reportingManagerQuery,
+                [
+                    reportingManagerUserId,
+                    reportingManagerCompanyId,
+                    UserId,
+                    UserReportingManagerId,
+                    UserId
+                ]
+            );
+        }
+
+
+       
+
+        await client.query("COMMIT");
+
+
+        return {
+            UserId
+        };
+
+
+    } catch (error) {
+
+        await client.query("ROLLBACK");
+
+        throw error;
+
+    } finally {
+
+        client.release();
+
+    }
 };
 
 
