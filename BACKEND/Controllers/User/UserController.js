@@ -563,7 +563,7 @@ export const getAllUserDetailsController = async (req, res) => {
     }
 }
 
-export const editUserdetailsController = async (req, res) => {
+export const editUserdetailsController     = async (req, res) => {
 
     const {
         UserId,
