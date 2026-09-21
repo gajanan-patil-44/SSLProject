@@ -8,7 +8,7 @@ import {
   Input
 } from '../../components/ui/index';
 import { DataTable } from '../../components/ui/DataTable';
-import { Modal, ConfirmDialog } from '../../components/ui/Modal';
+import { Modal } from '../../components/ui/Modal';
 import {
   Search,
   Plus,
@@ -34,8 +34,6 @@ export default function ManagePageView() {
   const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit'
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedPage, setSelectedPage] = useState(null);
-  const [deleteRecord, setDeleteRecord] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -673,7 +671,6 @@ export default function ManagePageView() {
         onAddClick={handleOpenAddModal}
         onViewClick={handleOpenViewModal}
         onEditClick={handleOpenEditModal}
-        onDeleteClick={(row) => setDeleteRecord(row)}
         onToggleStatusClick={handleToggleStatus}
         searchPlaceholder="Search pages..."
       />
@@ -1269,18 +1266,6 @@ export default function ManagePageView() {
           </div>
         )}
       </Modal>
-
-      {/* Delete Confirmation Dialog */}
-      {deleteRecord && (
-        <ConfirmDialog
-          isOpen={!!deleteRecord}
-          onClose={() => setDeleteRecord(null)}
-          onConfirm={handleDeleteConfirm}
-          loading={deleteLoading}
-          title="Delete Page"
-          message={`Are you sure you want to delete the page "${deleteRecord.PageName}"? This action cannot be undone.`}
-        />
-      )}
     </div>
   );
 }

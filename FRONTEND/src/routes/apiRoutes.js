@@ -130,7 +130,9 @@ export const USER_ROUTES = {
   // Old placeholder kept for reference
   COMPANY_PRODUCT_PROJECT_DROPDOWN: '/verp-service/userCreation/companyProductProjectDropdown',
   // New confirmed endpoint for company → product → project → role cascade
-  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown'
+  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown',
+  GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
+  EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails'
 };
 
 /**
@@ -160,6 +162,24 @@ export const PAGE_ROUTES = {
 
 /**
  * ============================================================================
+ * 11. USER EDIT & MANAGE ROUTES
+ * ============================================================================
+ */
+export const USER_EDIT_ROUTES = {
+  GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
+  EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
+  GET_GENDER: '/verp-service/userEdit/getGender',
+  GET_MARITAL_STATUS: '/verp-service/userEdit/getMaritalStatus',
+  GET_DESIGNATION: '/verp-service/userEdit/getDesignation',
+  GET_COMPANY: '/verp-service/userEdit/getCompany',
+  GET_REPORTING_MANAGER: '/verp-service/userEdit/getReportingManager',
+  GET_COMPANY_PRODUCT: '/verp-service/userEdit/getCompanyProduct',
+  GET_PROJECT: '/verp-service/userEdit/getProject',
+  GET_ROLE: '/verp-service/userEdit/getRole'
+};
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -172,9 +192,11 @@ export const API_ROUTES = {
   DESIGNATION: DESIGNATION_ROUTES,
   PROJECT: PROJECT_ROUTES,
   USER: USER_ROUTES,
+  USER_EDIT: USER_EDIT_ROUTES,
   FILE_TYPE: FILE_TYPE_ROUTES,
   PAGE: PAGE_ROUTES
 };
 
 export default API_ROUTES;
+
 
