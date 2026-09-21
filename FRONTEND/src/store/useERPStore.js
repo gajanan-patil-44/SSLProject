@@ -76,7 +76,12 @@ const normalizedInitialUser = initialUser ? {
 
 const firstCompany = initialContext?.companies?.[0]?.name || '';
 
-const initialMenu = initialSession?.data?.userMenu || initialSession?.data?.menu || initialSession?.userMenu || null;
+const initialMenu = initialSession?.data?.menuPage 
+  || initialSession?.menuPage 
+  || initialSession?.data?.userMenu 
+  || initialSession?.data?.menu 
+  || initialSession?.userMenu 
+  || null;
 
 export const useERPStore = create((set) => ({
   theme: localStorage.getItem('erp_theme') || 'light',
@@ -120,7 +125,13 @@ export const useERPStore = create((set) => ({
     };
 
     const firstCompanyName = context?.companies?.[0]?.name || 'Falcon LLP';
-    const dynamicMenu = userMenu || rawResponse?.data?.userMenu || rawResponse?.data?.menu || rawResponse?.userMenu || null;
+    const dynamicMenu = userMenu 
+      || rawResponse?.data?.menuPage 
+      || rawResponse?.menuPage 
+      || rawResponse?.data?.userMenu 
+      || rawResponse?.data?.menu 
+      || rawResponse?.userMenu 
+      || null;
 
     // Purge any legacy individual storage items
     const legacyKeys = [

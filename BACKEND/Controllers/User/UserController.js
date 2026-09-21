@@ -30,7 +30,7 @@ import { getAllUserDetails, editUserdetails } from "../../Models/userEditDetails
 
 
 
-import {getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompanies, getAllReportingManagers, getAllCompanyProducts, getAllProjects, getAllRoles} from "../../Models/UserModels.js";
+//import {getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompanies, getAllReportingManagers, getAllCompanyProducts, getAllProjects, getAllRoles} from "../../Models/UserModels.js";
 
 
 

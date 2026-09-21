@@ -10,6 +10,7 @@ import fileTypeService from './fileTypeService';
 import userService from './userService';
 import birthdayService from './birthdayService';
 import companyProductService from './companyProductService';
+import pageService from './pageService';
 
 export const api = {
   auth: authService,
@@ -22,6 +23,7 @@ export const api = {
   fileType: fileTypeService,
   user: userService,
   birthday: birthdayService,
+  page: pageService,
   client: apiClient
 };
 
