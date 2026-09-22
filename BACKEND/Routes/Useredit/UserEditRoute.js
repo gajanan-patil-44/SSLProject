@@ -4,7 +4,7 @@ import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
 import { getAllUserDetailsController,editUserdetailsController } from "../../Controllers/User/useEditController.js";
 
-import {getGender, getMaritalStatus, getDesignation, getCompany, getReportingManager, getCompanyProduct, getProject, getRole} from "../../Controllers/User/useEditController.js";
+import {getGender, getMaritalStatus, getDesignation, getCompany, getReportingManager, getCompanyProduct, getProject, getRole, toggleUserStatus} from "../../Controllers/User/useEditController.js";
 
 
 router.post("/getAllUserDetails",authenticateToken,getAllUserDetailsController)
@@ -20,5 +20,6 @@ router.post("/getReportingManager", authenticateToken, getReportingManager);
 router.post("/getCompanyProduct", authenticateToken, getCompanyProduct);
 router.post("/getProject", authenticateToken, getProject);
 router.post("/getRole", authenticateToken, getRole);
+router.post("/toggleUserStatus", authenticateToken, toggleUserStatus)
 
 export default router;

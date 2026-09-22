@@ -319,9 +319,7 @@ export const insertPage = async (
             "ParentPageId",
             "OrderNo",
             "CreatedAt",
-            "UpdatedAt",
-            "CreatedByUserName",
-            "UpdatedByUserName"
+            "CreatedByUserName"
         )
         VALUES
         (
@@ -332,8 +330,6 @@ export const insertPage = async (
             $4,
             $5,
             CURRENT_TIMESTAMP,
-            CURRENT_TIMESTAMP,
-            $6,
             $6
         )
         RETURNING
@@ -378,9 +374,7 @@ export const insertPageRole = async (
             "IsDisabled",
             "IsAllocated",
             "CreatedAt",
-            "UpdatedAt",
-            "CreatedByUserName",
-            "UpdatedByUserName"
+            "CreatedByUserName"
         )
         VALUES
         (
@@ -389,9 +383,9 @@ export const insertPageRole = async (
             false,
             true,
             CURRENT_TIMESTAMP,
-            CURRENT_TIMESTAMP,
-            $3,
+            
             $3
+            
         );
         `,
         [
@@ -400,4 +394,220 @@ export const insertPageRole = async (
             createdByUserName
         ]
     );
+};
+
+// ==========================================================
+// GET ALL PAGES
+// ==========================================================
+
+export const getAllPages = async () => {
+
+    const query = `
+        SELECT
+            p."PageId",
+            p."PageName",
+            p."PageIcon",
+            p."PageUrl",
+            p."ParentPageId",
+            p."IsDisabled",
+            p."OrderNo",
+
+            parent."PageName"
+                AS "ParentPageName",
+
+            json_agg(
+                json_build_object(
+                    'RoleId',
+                    r."RoleId",
+
+                    'RoleName',
+                    r."RoleName"
+                )
+                ORDER BY
+                    r."RoleName"
+            )
+            FILTER (
+                WHERE r."RoleId" IS NOT NULL
+            )
+            AS "Roles"
+
+        FROM
+            "DATA"."Page" p
+
+        LEFT JOIN
+            "DATA"."Page" parent
+
+            ON parent."PageId" =
+               p."ParentPageId"
+
+        LEFT JOIN
+            "DATA"."PageRole" pr
+
+            ON pr."PageId" =
+               p."PageId"
+
+            AND pr."IsDisabled" = FALSE
+
+            AND pr."IsAllocated" = TRUE
+
+        LEFT JOIN
+            "LKP"."Role" r
+
+            ON r."RoleId" =
+               pr."RoleId"
+
+            AND r."IsDisabled" = FALSE
+
+        GROUP BY
+
+            p."PageId",
+            p."PageName",
+            p."PageIcon",
+            p."PageUrl",
+            p."ParentPageId",
+            p."IsDisabled",
+            p."OrderNo",
+            parent."PageName"
+
+        ORDER BY
+
+            p."OrderNo" ASC,
+
+            p."PageId" ASC
+    `;
+
+
+    const result =
+        await pool.query(query);
+
+
+    return result.rows;
+};
+
+
+// ==========================================================
+// UPDATE PAGE STATUS
+// ==========================================================
+
+export const updatePageStatus = async (
+    PageId,
+    IsDisabled
+) => {
+
+    const query = `
+        UPDATE "DATA"."Page"
+
+        SET
+            "IsDisabled" = $1,
+            "UpdatedAt" = CURRENT_TIMESTAMP
+
+        WHERE
+            "PageId" = $2
+
+        RETURNING
+            "PageId",
+            "IsDisabled"
+    `;
+
+
+    const result =
+        await pool.query(
+            query,
+            [
+                IsDisabled,
+                PageId
+            ]
+        );
+
+
+    return result.rows[0] || null;
+};
+
+
+// =========================================================
+// UPDATE PAGE AND PAGE ROLES
+// =========================================================
+
+export const updatePage = async (
+    client,
+    PageId,
+    PageName,
+    PageUrl,
+    PageIcon,
+    ParentPageId,
+    OrderNo,
+    UpdatedByUserName,
+    PageRoles
+) => {
+
+    // =====================================================
+    // UPDATE PAGE
+    // =====================================================
+
+    const pageResult = await client.query(
+        `
+        UPDATE "DATA"."Page"
+        SET
+            "PageName" = $1,
+            "PageUrl" = $2,
+            "PageIcon" = $3,
+            "ParentPageId" = $4,
+            "OrderNo" = $5,
+            "UpdatedAt" = CURRENT_TIMESTAMP,
+            "UpdatedByUserName" = $6
+        WHERE
+            "PageId" = $7
+            AND COALESCE("IsDisabled", false) = false
+        RETURNING
+            "PageId",
+            "PageName",
+            "PageUrl",
+            "PageIcon",
+            "ParentPageId",
+            "OrderNo";
+        `,
+        [
+            PageName,
+            PageUrl,
+            PageIcon,
+            ParentPageId,
+            OrderNo,
+            UpdatedByUserName,
+            PageId
+        ]
+    );
+
+
+    // =====================================================
+    // UPDATE EXISTING PAGE ROLES
+    // =====================================================
+
+    for (const role of PageRoles) {
+
+        await client.query(
+            `
+            UPDATE "DATA"."PageRole"
+            SET
+                "RoleId" = $1,
+                "IsDisabled" = $2,
+                "IsAllocated" = $3,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $4
+            WHERE
+                "PageRoleId" = $5
+                AND "PageId" = $6;
+            `,
+            [
+                role.RoleId,
+                role.IsDisabled,
+                role.IsAllocated,
+                UpdatedByUserName,
+                role.PageRoleId,
+                PageId
+            ]
+        );
+    }
+
+
+    return pageResult.rows[0] || null;
 };

@@ -1,15 +1,32 @@
 import React, { useEffect } from 'react';
-import { Outlet, useLocation, Navigate } from 'react-router-dom';
+import { Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useERPStore } from '../../store/useERPStore';
 import ToastContainer from '../ui/Toast';
 
-
 export default function AppLayout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const theme = useERPStore((state) => state.theme);
   const isAuthenticated = useERPStore((state) => state.isAuthenticated);
+
+  // Determine if it is a full-page view (like login, signup, errors)
+  const isAuthOrErrorPage = pathname.includes('/pages/auth/') || pathname.includes('/pages/error/');
+
+  // Redirect to main page (/dashboard) on browser page refresh
+  useEffect(() => {
+    try {
+      const navEntries = performance.getEntriesByType('navigation');
+      const isReload = navEntries && navEntries.length > 0 
+        ? navEntries[0].type === 'reload' 
+        : (performance.navigation && performance.navigation.type === 1);
+
+      if (isReload && pathname !== '/dashboard' && !isAuthOrErrorPage) {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch {}
+  }, []);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -24,9 +41,6 @@ export default function AppLayout() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
-
-  // Determine if it is a full-page view (like login, signup, errors)
-  const isAuthOrErrorPage = pathname.includes('/pages/auth/') || pathname.includes('/pages/error/');
 
   if (isAuthOrErrorPage) {
     return (

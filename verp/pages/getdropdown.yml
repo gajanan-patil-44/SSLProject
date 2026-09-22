@@ -1,0 +1,24 @@
+info:
+  name: getdropdown
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: http://localhost:9004/verp-service/managePages/dropdown
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 3,
+        "mainPageId":1
+      //   "parentPageId":5
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

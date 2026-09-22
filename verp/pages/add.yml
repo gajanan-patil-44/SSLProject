@@ -4,13 +4,23 @@ info:
   seq: 2
 
 http:
-  method: GET
-  url: http://localhost:9004/verp-service/managePages/dropdown
+  method: POST
+  url: http://localhost:9004/verp-service/managePages/add
   body:
     type: json
     data: |-
       {
-          "FlagId": 4
+        "FlagId":1,
+        "PageName": "User Management",
+        "PageUrl": "#",
+        "PageIcon": "user-management",
+        "PageType": "MainPage",
+        "ParentPageId": null,
+        "RoleIds": [1],
+        "IsChangeOrder": false,
+      //   "OrderType": "BEFORE",
+      //   "TargetPageId": 2,
+        "CreatedByUserName": "admin"
       }
   auth: inherit
 

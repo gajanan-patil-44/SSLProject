@@ -95,6 +95,109 @@ export const userService = {
         'Content-Type': 'multipart/form-data'
       }
     });
+  },
+
+  /**
+   * Get all user details with full nested associations
+   * Endpoint: /verp-service/userEdit/getAllUserDetails
+   * @param {number} flagId default 1
+   */
+  getAllUserDetails: async (flagId = 1) => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_ALL_USER_DETAILS, {
+      flagId: Number(flagId),
+      FlagId: Number(flagId)
+    });
+  },
+
+  /**
+   * Edit user details
+   * Endpoint: /verp-service/userEdit/editUserdetails
+   * @param {Object} userData
+   */
+  editUserDetails: async (userData) => {
+    return apiClient.patch(API_ROUTES.USER_EDIT.EDIT_USER_DETAILS, {
+      flagId: 2,
+      ...userData
+    });
+  },
+
+  /**
+   * Toggle user status
+   * Endpoint: /verp-service/userEdit/toggleUserStatus
+   * @param {Object} statusData { flagId, IsDisabled, UpdatedByUserName, UserId }
+   */
+  toggleUserStatus: async (statusData) => {
+    const payload = {
+      flagId: Number(statusData.flagId ?? 1),
+      IsDisabled: Boolean(statusData.IsDisabled),
+      UpdatedByUserName: statusData.UpdatedByUserName || '',
+      UserId: Number(statusData.UserId ?? statusData.userId ?? statusData.id)
+    };
+
+    return apiClient.post(API_ROUTES.USER_EDIT.TOGGLE_USER_STATUS, payload);
+  },
+
+  /**
+   * ==========================================================================
+   * User Edit Dropdown Routes (/verp-service/userEdit/...)
+   * ==========================================================================
+   */
+  getEditGender: async () => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_GENDER, {
+      flagId: 1
+    });
+  },
+
+  getEditMaritalStatus: async () => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_MARITAL_STATUS, {
+      flagId: 1
+    });
+  },
+
+  getEditCompany: async () => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_COMPANY, {
+      flagId: 1
+    });
+  },
+
+  getEditDesignation: async (companyId) => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_DESIGNATION, {
+      flagId: 1,
+      CompanyId: Number(companyId),
+      companyId: Number(companyId)
+    });
+  },
+
+  getEditReportingManager: async (companyId) => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_REPORTING_MANAGER, {
+      flagId: 1,
+      CompanyId: Number(companyId),
+      companyId: Number(companyId)
+    });
+  },
+
+  getEditCompanyProduct: async (companyId) => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_COMPANY_PRODUCT, {
+      flagId: 1,
+      CompanyId: Number(companyId),
+      companyId: Number(companyId)
+    });
+  },
+
+  getEditProject: async (companyProductId) => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_PROJECT, {
+      flagId: 1,
+      CompanyProductId: Number(companyProductId),
+      companyProductId: Number(companyProductId)
+    });
+  },
+
+  getEditRole: async (companyId) => {
+    return apiClient.post(API_ROUTES.USER_EDIT.GET_ROLE, {
+      flagId: 1,
+      CompanyId: Number(companyId),
+      companyId: Number(companyId)
+    });
   }
 };
 

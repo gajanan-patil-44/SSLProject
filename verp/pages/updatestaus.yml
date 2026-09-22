@@ -1,0 +1,24 @@
+info:
+  name: updatestaus
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/managePages/status
+  body:
+    type: json
+    data: |-
+      {
+        "FlagId":2,
+        "PageId": 11,
+        "IsDisabled":true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

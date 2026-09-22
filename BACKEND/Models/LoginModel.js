@@ -201,43 +201,28 @@ export const findUserForLogin = async (username) => {
     // ==========================================================
     // MENU PAGE
     // ==========================================================
-    const menuPageQuery = `
-        SELECT DISTINCT
-            p."PageId",
-            p."PageName",
-            p."PageUrl",
-            p."PageIcon",
-            p."ParentPageId",
-            p."OrderNo"
-        FROM "DATA"."Page" p
-        INNER JOIN "DATA"."PageRole" pr
-            ON pr."PageId" = p."PageId"
-        INNER JOIN "DATA"."UserRole" ur
-            ON ur."RoleId" = pr."RoleId"
-        INNER JOIN "LKP"."Role" r
-            ON r."RoleId" = ur."RoleId"
-        WHERE
-            ur."UserId" = $1
-            AND COALESCE(
-                pr."IsDisabled",
-                FALSE
-            ) = FALSE
-            AND COALESCE(
-                pr."IsAllocated",
-                TRUE
-            ) = TRUE
-            AND COALESCE(
-                p."IsDisabled",
-                FALSE
-            ) = FALSE
-            AND COALESCE(
-                r."IsDisabled",
-                FALSE
-            ) = FALSE
-        ORDER BY
-            p."OrderNo" ASC,
-            p."PageId" ASC
-    `;
+   const menuPageQuery = `
+    SELECT DISTINCT
+        p."PageId",
+        p."PageName",
+        p."PageUrl",
+        p."PageIcon",
+        p."ParentPageId",
+        p."OrderNo"
+    FROM "DATA"."Page" p
+    INNER JOIN "DATA"."PageRole" pr
+        ON pr."PageId" = p."PageId"
+    INNER JOIN "DATA"."UserRole" ur
+        ON ur."RoleId" = pr."RoleId"
+    INNER JOIN "LKP"."Role" r
+        ON r."RoleId" = ur."RoleId"
+    WHERE
+        ur."UserId" = $1
+        AND COALESCE(pr."IsDisabled", FALSE) = FALSE
+        AND COALESCE(pr."IsAllocated", TRUE) = TRUE
+        AND COALESCE(p."IsDisabled", FALSE) = FALSE
+        AND COALESCE(r."IsDisabled", FALSE) = FALSE
+`;
 
     const menuPageResult = await pool.query(menuPageQuery,[user.UserId]);
     // ==========================================================

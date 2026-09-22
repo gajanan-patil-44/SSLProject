@@ -890,4 +890,34 @@ export const getAllRoles = async (CompanyId) => {
 
 
 
+export const toggleUserStatuses = async (userData) => {
 
+    try {
+
+        const query = `
+            UPDATE "DATA"."User"
+            SET
+                "IsDisabled" = $1,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $2
+            WHERE "UserId" = $3
+            RETURNING *;
+        `;
+
+        const values = [
+            userData.IsDisabled,
+            userData.UpdatedByUserName,
+            userData.UserId
+        ];
+
+        const result = await pool.query(query, values);
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        // console.error("Error toggling user status:", error);
+
+        throw error;
+    }
+};

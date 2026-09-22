@@ -2,13 +2,18 @@ import express from "express";
 
 import {
     getManagePageDropdown,
-    addPage
+    getManagePages ,
+    updateManagePageStatus,
+    addPage,
+    editPage
 } from "../../Controllers/ManagePages/ManagePagesController.js";
 
 
 const router = express.Router();
 
-router.get("/dropdown", getManagePageDropdown);
+router.post("/dropdown", getManagePageDropdown);
+router.post("/view",getManagePages );
+router.patch("/status",updateManagePageStatus);
 router.post("/add", addPage);
-
+router.post("/edit",editPage);
 export default router;
