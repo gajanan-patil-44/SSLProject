@@ -5,14 +5,12 @@ info:
 
 http:
   method: GET
-  url: http://localhost:9004/verp-service/managePages/dropdown
+  url: http://localhost:9004/verp-service/managePages/view
   body:
     type: json
     data: |-
       {
-          "FlagId": 4,
-        "mainPageId":1,
-        "parentPageId":5
+        "FlagId":1
       }
   auth: inherit
 
