@@ -132,10 +132,7 @@ export const checkMainPage = async (
 // CHECK PARENT PAGE
 // =========================================================
 
-export const checkParentPage = async (
-    client,
-    pageId
-) => {
+export const checkParentPage = async (client,pageId) => {
 
     const result = await client.query(
         `
@@ -157,10 +154,7 @@ export const checkParentPage = async (
 // GET PAGE
 // =========================================================
 
-export const getPageById = async (
-    client,
-    pageId
-) => {
+export const getPageById = async (client,pageId) => {
 
     const result = await client.query(
         `
@@ -184,9 +178,7 @@ export const getPageById = async (
 // GET NEXT MAIN PAGE ORDER
 // =========================================================
 
-export const getNextMainPageOrder = async (
-    client
-) => {
+export const getNextMainPageOrder = async (client) => {
 
     const result = await client.query(`
         SELECT
@@ -203,10 +195,7 @@ export const getNextMainPageOrder = async (
 // GET NEXT SIBLING ORDER
 // =========================================================
 
-export const getNextChildOrder = async (
-    client,
-    parentPageId
-) => {
+export const getNextChildOrder = async (client,parentPageId) => {
 
     const result = await client.query(
         `
@@ -220,8 +209,6 @@ export const getNextChildOrder = async (
 
     return result.rows[0].MaxOrder;
 };
-
-
 // =========================================================
 // SHIFT MAIN PAGE ORDER
 // =========================================================
@@ -229,11 +216,7 @@ export const getNextChildOrder = async (
 // Moves complete main-page hierarchy.
 // =========================================================
 
-export const shiftMainPageOrders = async (
-    client,
-    targetOrder,
-    change
-) => {
+export const shiftMainPageOrders = async (client,targetOrder,change) => {
 
     await client.query(
         `
@@ -251,20 +234,13 @@ export const shiftMainPageOrders = async (
         [change, targetOrder]
     );
 };
-
-
 // =========================================================
 // SHIFT SIBLING PAGE ORDERS
 // =========================================================
 // Used for Parent / Child BEFORE / AFTER.
 // =========================================================
 
-export const shiftSiblingPageOrders = async (
-    client,
-    parentPageId,
-    targetOrder,
-    change
-) => {
+export const shiftSiblingPageOrders = async (client,parentPageId,targetOrder,change) => {
 
     await client.query(
         `
@@ -287,16 +263,11 @@ export const shiftSiblingPageOrders = async (
         ]
     );
 };
-
-
 // =========================================================
 // INSERT PAGE
 // =========================================================
 
-export const insertPage = async (
-    client,
-    pageData
-) => {
+export const insertPage = async (client,pageData) => {
 
     const {
         PageName,
@@ -352,18 +323,11 @@ export const insertPage = async (
 
     return result.rows[0];
 };
-
-
 // =========================================================
 // INSERT PAGE ROLE
 // =========================================================
 
-export const insertPageRole = async (
-    client,
-    pageId,
-    roleId,
-    createdByUserName
-) => {
+export const insertPageRole = async (client,pageId,roleId,createdByUserName) => {
 
     await client.query(
         `
@@ -395,7 +359,6 @@ export const insertPageRole = async (
         ]
     );
 };
-
 // ==========================================================
 // GET ALL PAGES
 // ==========================================================
@@ -483,16 +446,11 @@ export const getAllPages = async () => {
 
     return result.rows;
 };
-
-
 // ==========================================================
 // UPDATE PAGE STATUS
 // ==========================================================
 
-export const updatePageStatus = async (
-    PageId,
-    IsDisabled
-) => {
+export const updatePageStatus = async (PageId,IsDisabled) => {
 
     const query = `
         UPDATE "DATA"."Page"
@@ -525,7 +483,7 @@ export const updatePageStatus = async (
 
 
 // =========================================================
-// UPDATE PAGE AND PAGE ROLES
+// UPDATE PAGE + PAGE ROLES
 // =========================================================
 
 export const updatePage = async (
@@ -536,16 +494,15 @@ export const updatePage = async (
     PageIcon,
     ParentPageId,
     OrderNo,
-    UpdatedByUserName,
-    PageRoles
+    RoleIds,
+    UpdatedByUserName
 ) => {
 
     // =====================================================
     // UPDATE PAGE
     // =====================================================
 
-    const pageResult = await client.query(
-        `
+    const pageQuery = `
         UPDATE "DATA"."Page"
         SET
             "PageName" = $1,
@@ -557,7 +514,7 @@ export const updatePage = async (
             "UpdatedByUserName" = $6
         WHERE
             "PageId" = $7
-            AND COALESCE("IsDisabled", false) = false
+            AND COALESCE("IsDisabled", FALSE) = FALSE
         RETURNING
             "PageId",
             "PageName",
@@ -565,7 +522,10 @@ export const updatePage = async (
             "PageIcon",
             "ParentPageId",
             "OrderNo";
-        `,
+    `;
+
+    const pageResult = await client.query(
+        pageQuery,
         [
             PageName,
             PageUrl,
@@ -577,37 +537,37 @@ export const updatePage = async (
         ]
     );
 
+    const updatedPage = pageResult.rows[0] || null;
+
+    if (!updatedPage) {
+        return null;
+    }
 
     // =====================================================
-    // UPDATE EXISTING PAGE ROLES
+    // UPDATE PAGE ROLES
     // =====================================================
 
-    for (const role of PageRoles) {
+    for (const RoleId of RoleIds) {
 
         await client.query(
             `
             UPDATE "DATA"."PageRole"
             SET
-                "RoleId" = $1,
-                "IsDisabled" = $2,
-                "IsAllocated" = $3,
+                "IsDisabled" = FALSE,
+                "IsAllocated" = TRUE,
                 "UpdatedAt" = CURRENT_TIMESTAMP,
-                "UpdatedByUserName" = $4
+                "UpdatedByUserName" = $3
             WHERE
-                "PageRoleId" = $5
-                AND "PageId" = $6;
+                "PageId" = $1
+                AND "RoleId" = $2;
             `,
             [
-                role.RoleId,
-                role.IsDisabled,
-                role.IsAllocated,
-                UpdatedByUserName,
-                role.PageRoleId,
-                PageId
+                PageId,
+                RoleId,
+                UpdatedByUserName
             ]
         );
     }
 
-
-    return pageResult.rows[0] || null;
+    return updatedPage;
 };

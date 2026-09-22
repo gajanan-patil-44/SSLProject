@@ -779,6 +779,7 @@ export const addPage = async (req, res) => {
         }
     }
 };
+
 // =========================================================
 // EDIT PAGE
 // =========================================================
@@ -796,16 +797,15 @@ export const editPage = async (req, res) => {
             PageIcon,
             PageType,
             ParentPageId,
+            RoleIds,
             IsChangeOrder,
             OrderType,
             TargetPageId,
-            UpdatedByUserName,
-            PageRoles
+            UpdatedByUserName
         } = req.body;
 
-
         // =====================================================
-        // FLAG ID
+        // FLAG 2 - EDIT PAGE
         // =====================================================
 
         if (parseInt(FlagId) !== 2) {
@@ -816,77 +816,193 @@ export const editPage = async (req, res) => {
             });
         }
 
-
         // =====================================================
-        // PAGE ID
+        // BASIC VALIDATION
         // =====================================================
 
         const pageId = parseInt(PageId);
 
+        if (isNaN(pageId) || pageId <= 0) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid PageId"
+            });
+        }
+
+        if (!PageName) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "PageName is required"
+            });
+        }
+
+        if (!PageUrl) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "PageUrl is required"
+            });
+        }
+
+        if (!PageIcon) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "PageIcon is required"
+            });
+        }
+
+        if (!UpdatedByUserName) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "UpdatedByUserName is required"
+            });
+        }
+
+        // =====================================================
+        // PAGETYPE
+        // PageType is used ONLY in controller
+        // =====================================================
+
         if (
-            isNaN(pageId) ||
-            pageId <= 0
+            PageType !== PAGE_TYPES.MAIN &&
+            PageType !== PAGE_TYPES.PARENT &&
+            PageType !== PAGE_TYPES.CHILD
         ) {
 
             return res.status(400).json({
                 status: "error",
-                message: "Valid PageId is required"
+                message:
+                    "Invalid PageType. Allowed values are MainPage, ParentPage, ChildPage"
             });
         }
 
-
         // =====================================================
-        // PAGE TYPE
+        // ROLE IDS
         // =====================================================
 
-        if (
-            PageType !== "MainPage" &&
-            PageType !== "ParentPage" &&
-            PageType !== "ChildPage"
-        ) {
+        if (!Array.isArray(RoleIds) || RoleIds.length === 0) {
 
             return res.status(400).json({
                 status: "error",
-                message: "Invalid PageType"
+                message: "At least one RoleId is required"
             });
         }
 
+        const uniqueRoleIds = [
+            ...new Set(
+                RoleIds.map(roleId => parseInt(roleId))
+            )
+        ];
 
-        // =====================================================
-        // PAGE ROLES
-        // =====================================================
+        for (const roleId of uniqueRoleIds) {
 
-        if (!Array.isArray(PageRoles)) {
+            if (isNaN(roleId) || roleId <= 0) {
 
-            return res.status(400).json({
-                status: "error",
-                message: "PageRoles must be an array"
-            });
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid RoleId"
+                });
+            }
         }
 
+        // =====================================================
+        // ORDER INCREMENT
+        // SAME AS ADD
+        // =====================================================
+
+        let orderIncrement = 0;
+
+        if (PageType === PAGE_TYPES.MAIN) {
+
+            orderIncrement = 1.000;
+        }
+        else if (PageType === PAGE_TYPES.PARENT) {
+
+            orderIncrement = 0.100;
+        }
+        else if (PageType === PAGE_TYPES.CHILD) {
+
+            orderIncrement = 0.010;
+        }
 
         // =====================================================
-        // DATABASE CONNECTION
+        // CHANGE ORDER VALIDATION
+        // =====================================================
+
+        const changeOrder =
+            IsChangeOrder === true ||
+            IsChangeOrder === "true";
+
+        let orderType = null;
+        let targetPageId = null;
+
+        if (changeOrder) {
+
+            if (!OrderType) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "OrderType is required when IsChangeOrder is true"
+                });
+            }
+
+            orderType = String(OrderType).toUpperCase();
+
+            if (
+                orderType !== "BEFORE" &&
+                orderType !== "AFTER"
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "OrderType must be BEFORE or AFTER"
+                });
+            }
+
+            targetPageId = parseInt(TargetPageId);
+
+            if (
+                isNaN(targetPageId) ||
+                targetPageId <= 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid TargetPageId"
+                });
+            }
+        }
+
+        // =====================================================
+        // START TRANSACTION
         // =====================================================
 
         client = await pool.connect();
 
         await client.query("BEGIN");
 
+        transactionStarted = true;
 
         // =====================================================
-        // GET CURRENT PAGE
+        // GET EXISTING PAGE
         // =====================================================
 
-        const currentPage = await getPageById(
+        const existingPage = await getPageById(
             client,
             pageId
         );
 
-
-        if (!currentPage) {
+        if (!existingPage) {
 
             await client.query("ROLLBACK");
+
+            transactionStarted = false;
 
             return res.status(404).json({
                 status: "error",
@@ -894,83 +1010,56 @@ export const editPage = async (req, res) => {
             });
         }
 
-
         // =====================================================
-        // DEFAULT VALUES
+        // VARIABLES
         // =====================================================
 
-        let newParentPageId =
-            currentPage.ParentPageId;
-
-        let newOrderNo =
-            Number(currentPage.OrderNo);
-
+        let pageParentId = null;
+        let orderNo = Number(existingPage.OrderNo);
 
         // =====================================================
         // MAIN PAGE
         // =====================================================
 
-        if (PageType === "MainPage") {
+        if (PageType === PAGE_TYPES.MAIN) {
 
-            // MainPage must have NULL ParentPageId
-            newParentPageId = null;
+            if (
+                ParentPageId !== null &&
+                ParentPageId !== undefined &&
+                ParentPageId !== ""
+            ) {
 
+                await client.query("ROLLBACK");
 
-            // =================================================
+                transactionStarted = false;
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "ParentPageId must be null for MainPage"
+                });
+            }
+
+            pageParentId = null;
+
+            // -------------------------------------------------
             // CHANGE MAIN PAGE ORDER
-            // =================================================
+            // -------------------------------------------------
 
-            if (IsChangeOrder === true) {
-
-                if (
-                    OrderType !== "BEFORE" &&
-                    OrderType !== "AFTER"
-                ) {
-
-                    await client.query("ROLLBACK");
-
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "OrderType must be BEFORE or AFTER"
-                    });
-                }
-
-
-                const targetPageId =
-                    parseInt(TargetPageId);
-
-
-                if (
-                    isNaN(targetPageId) ||
-                    targetPageId <= 0
-                ) {
-
-                    await client.query("ROLLBACK");
-
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "Valid TargetPageId is required"
-                    });
-                }
-
+            if (changeOrder) {
 
                 if (targetPageId === pageId) {
 
                     await client.query("ROLLBACK");
 
+                    transactionStarted = false;
+
                     return res.status(400).json({
                         status: "error",
                         message:
-                            "Page cannot be its own target"
+                            "TargetPageId cannot be the same as PageId"
                     });
                 }
-
-
-                // =================================================
-                // GET TARGET PAGE
-                // =================================================
 
                 const targetPage =
                     await getPageById(
@@ -978,187 +1067,135 @@ export const editPage = async (req, res) => {
                         targetPageId
                     );
 
-
                 if (!targetPage) {
 
                     await client.query("ROLLBACK");
 
-                    return res.status(404).json({
+                    transactionStarted = false;
+
+                    return res.status(400).json({
                         status: "error",
-                        message:
-                            "Target page not found"
+                        message: "Target Page not found"
                     });
                 }
 
-
-                // =================================================
-                // TARGET MUST BE MAIN PAGE
-                // =================================================
-                // MainPage = ParentPageId IS NULL
-                // =================================================
-
-                if (targetPage.ParentPageId !== null) {
+                if (
+                    targetPage.ParentPageId !== null &&
+                    targetPage.ParentPageId !== undefined
+                ) {
 
                     await client.query("ROLLBACK");
+
+                    transactionStarted = false;
 
                     return res.status(400).json({
                         status: "error",
                         message:
-                            "TargetPageId must be a MainPage"
+                            "TargetPageId must belong to a MainPage"
                     });
                 }
 
+                const targetOrder =
+                    Number(targetPage.OrderNo);
 
-                // =================================================
-                // BEFORE
-                // =================================================
+                if (orderType === "BEFORE") {
 
-                if (OrderType === "BEFORE") {
+                    orderNo =
+                        Number(targetOrder.toFixed(3));
 
-                    newOrderNo =
-                        Number(targetPage.OrderNo);
+                    await shiftMainPageOrders(
+                        client,
+                        targetOrder,
+                        orderIncrement
+                    );
+
                 }
-
-
-                // =================================================
-                // AFTER
-                // =================================================
-
                 else {
 
-                    newOrderNo =
-                        Number(targetPage.OrderNo) + 1;
+                    orderNo =
+                        Number(
+                            (
+                                targetOrder +
+                                orderIncrement
+                            ).toFixed(3)
+                        );
+
+                    await shiftMainPageOrders(
+                        client,
+                        orderNo,
+                        orderIncrement
+                    );
                 }
-
-
-                // =================================================
-                // SHIFT MAIN PAGE ORDER
-                // =================================================
-
-                await shiftMainPageOrders(
-                    client,
-                    newOrderNo,
-                    1
-                );
             }
         }
-
 
         // =====================================================
         // PARENT PAGE
         // =====================================================
 
-        else if (PageType === "ParentPage") {
+        else if (PageType === PAGE_TYPES.PARENT) {
 
-            newParentPageId =
+            const mainPageId =
                 parseInt(ParentPageId);
 
-
             if (
-                isNaN(newParentPageId) ||
-                newParentPageId <= 0
+                isNaN(mainPageId) ||
+                mainPageId <= 0
             ) {
 
                 await client.query("ROLLBACK");
 
+                transactionStarted = false;
+
                 return res.status(400).json({
                     status: "error",
                     message:
-                        "Valid ParentPageId is required"
+                        "Valid ParentPageId is required for ParentPage"
                 });
             }
-
-
-            // =================================================
-            // GET MAIN PAGE
-            // =================================================
 
             const mainPage =
-                await getPageById(
+                await checkMainPage(
                     client,
-                    newParentPageId
+                    mainPageId
                 );
 
-
-            if (!mainPage) {
-
-                await client.query("ROLLBACK");
-
-                return res.status(404).json({
-                    status: "error",
-                    message:
-                        "Parent page not found"
-                });
-            }
-
-
-            // =================================================
-            // PARENT PAGE MUST BE MAIN PAGE
-            // =================================================
-
-            if (mainPage.ParentPageId !== null) {
+            if (
+                !mainPage ||
+                mainPage.length === 0
+            ) {
 
                 await client.query("ROLLBACK");
+
+                transactionStarted = false;
 
                 return res.status(400).json({
                     status: "error",
                     message:
-                        "ParentPageId must refer to a MainPage"
+                        "ParentPageId must refer to a valid MainPage"
                 });
             }
 
+            pageParentId = mainPageId;
 
-            // =================================================
-            // CHANGE PARENT PAGE ORDER
-            // =================================================
+            // -------------------------------------------------
+            // CHANGE PARENT ORDER
+            // -------------------------------------------------
 
-            if (IsChangeOrder === true) {
-
-                if (
-                    OrderType !== "BEFORE" &&
-                    OrderType !== "AFTER"
-                ) {
-
-                    await client.query("ROLLBACK");
-
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "OrderType must be BEFORE or AFTER"
-                    });
-                }
-
-
-                const targetPageId =
-                    parseInt(TargetPageId);
-
-
-                if (
-                    isNaN(targetPageId) ||
-                    targetPageId <= 0
-                ) {
-
-                    await client.query("ROLLBACK");
-
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "Valid TargetPageId is required"
-                    });
-                }
-
+            if (changeOrder) {
 
                 if (targetPageId === pageId) {
 
                     await client.query("ROLLBACK");
 
+                    transactionStarted = false;
+
                     return res.status(400).json({
                         status: "error",
                         message:
-                            "Page cannot be its own target"
+                            "TargetPageId cannot be the same as PageId"
                     });
                 }
-
 
                 const targetPage =
                     await getPageById(
@@ -1166,63 +1203,26 @@ export const editPage = async (req, res) => {
                         targetPageId
                     );
 
-
                 if (!targetPage) {
 
                     await client.query("ROLLBACK");
 
-                    return res.status(404).json({
-                        status: "error",
-                        message:
-                            "Target page not found"
-                    });
-                }
-
-
-                // Target must be a ParentPage
-                // Therefore it must have a parent,
-                // and that parent must be a MainPage.
-
-                if (targetPage.ParentPageId === null) {
-
-                    await client.query("ROLLBACK");
+                    transactionStarted = false;
 
                     return res.status(400).json({
                         status: "error",
-                        message:
-                            "TargetPageId must be a ParentPage"
+                        message: "Target Page not found"
                     });
                 }
-
-
-                const targetMainPage =
-                    await getPageById(
-                        client,
-                        targetPage.ParentPageId
-                    );
-
-
-                if (
-                    !targetMainPage ||
-                    targetMainPage.ParentPageId !== null
-                ) {
-
-                    await client.query("ROLLBACK");
-
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "TargetPageId must be a ParentPage under the selected MainPage"
-                    });
-                }
-
 
                 if (
                     Number(targetPage.ParentPageId) !==
-                    Number(newParentPageId)
+                    mainPageId
                 ) {
 
                     await client.query("ROLLBACK");
+
+                    transactionStarted = false;
 
                     return res.status(400).json({
                         status: "error",
@@ -1231,155 +1231,122 @@ export const editPage = async (req, res) => {
                     });
                 }
 
+                const targetOrder =
+                    Number(targetPage.OrderNo);
 
-                // =================================================
-                // BEFORE
-                // =================================================
+                if (orderType === "BEFORE") {
 
-                if (OrderType === "BEFORE") {
+                    orderNo =
+                        Number(targetOrder.toFixed(3));
 
-                    newOrderNo =
-                        Number(targetPage.OrderNo);
+                    await shiftSiblingPageOrders(
+                        client,
+                        mainPageId,
+                        targetOrder,
+                        orderIncrement
+                    );
 
                 }
-
-
-                // =================================================
-                // AFTER
-                // =================================================
-
                 else {
 
-                    newOrderNo =
-                        Number(targetPage.OrderNo) + 0.1;
+                    orderNo =
+                        Number(
+                            (
+                                targetOrder +
+                                orderIncrement
+                            ).toFixed(3)
+                        );
+
+                    await shiftSiblingPageOrders(
+                        client,
+                        mainPageId,
+                        orderNo,
+                        orderIncrement
+                    );
                 }
-
-
-                await shiftSiblingPageOrders(
-                    client,
-                    newParentPageId,
-                    newOrderNo,
-                    0.1
-                );
             }
         }
-
 
         // =====================================================
         // CHILD PAGE
         // =====================================================
 
-        else if (PageType === "ChildPage") {
+        else if (PageType === PAGE_TYPES.CHILD) {
 
-            newParentPageId =
+            const parentPageId =
                 parseInt(ParentPageId);
 
-
             if (
-                isNaN(newParentPageId) ||
-                newParentPageId <= 0
+                isNaN(parentPageId) ||
+                parentPageId <= 0
             ) {
 
                 await client.query("ROLLBACK");
 
+                transactionStarted = false;
+
                 return res.status(400).json({
                     status: "error",
                     message:
-                        "Valid ParentPageId is required"
+                        "Valid ParentPageId is required for ChildPage"
                 });
             }
-
-
-            // =================================================
-            // GET PARENT PAGE
-            // =================================================
 
             const parentPage =
                 await getPageById(
                     client,
-                    newParentPageId
+                    parentPageId
                 );
-
 
             if (!parentPage) {
 
                 await client.query("ROLLBACK");
 
-                return res.status(404).json({
-                    status: "error",
-                    message:
-                        "Parent page not found"
-                });
-            }
-
-
-            // =================================================
-            // PARENT PAGE MUST HAVE A MAIN PAGE
-            // =================================================
-
-            if (parentPage.ParentPageId === null) {
-
-                await client.query("ROLLBACK");
+                transactionStarted = false;
 
                 return res.status(400).json({
                     status: "error",
                     message:
-                        "ParentPageId must refer to a ParentPage"
+                        "ParentPageId not found"
                 });
             }
 
+            if (
+                parentPage.ParentPageId === null ||
+                parentPage.ParentPageId === undefined
+            ) {
 
-            // =================================================
-            // CHANGE CHILD PAGE ORDER
-            // =================================================
+                await client.query("ROLLBACK");
 
-            if (IsChangeOrder === true) {
+                transactionStarted = false;
 
-                if (
-                    OrderType !== "BEFORE" &&
-                    OrderType !== "AFTER"
-                ) {
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "ParentPageId must refer to a valid ParentPage"
+                });
+            }
 
-                    await client.query("ROLLBACK");
+            pageParentId = parentPageId;
 
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "OrderType must be BEFORE or AFTER"
-                    });
-                }
+            // -------------------------------------------------
+            // CHANGE CHILD ORDER
+            // -------------------------------------------------
 
-
-                const targetPageId =
-                    parseInt(TargetPageId);
-
-
-                if (
-                    isNaN(targetPageId) ||
-                    targetPageId <= 0
-                ) {
-
-                    await client.query("ROLLBACK");
-
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "Valid TargetPageId is required"
-                    });
-                }
-
+            if (changeOrder) {
 
                 if (targetPageId === pageId) {
 
                     await client.query("ROLLBACK");
 
+                    transactionStarted = false;
+
                     return res.status(400).json({
                         status: "error",
                         message:
-                            "Page cannot be its own target"
+                            "TargetPageId cannot be the same as PageId"
                     });
                 }
-
 
                 const targetPage =
                     await getPageById(
@@ -1387,39 +1354,26 @@ export const editPage = async (req, res) => {
                         targetPageId
                     );
 
-
                 if (!targetPage) {
 
                     await client.query("ROLLBACK");
 
-                    return res.status(404).json({
-                        status: "error",
-                        message:
-                            "Target page not found"
-                    });
-                }
-
-
-                // ChildPage must have ParentPageId
-                if (targetPage.ParentPageId === null) {
-
-                    await client.query("ROLLBACK");
+                    transactionStarted = false;
 
                     return res.status(400).json({
                         status: "error",
-                        message:
-                            "TargetPageId must be a ChildPage"
+                        message: "Target Page not found"
                     });
                 }
 
-
-                // Target must belong to same ParentPage
                 if (
                     Number(targetPage.ParentPageId) !==
-                    Number(newParentPageId)
+                    parentPageId
                 ) {
 
                     await client.query("ROLLBACK");
+
+                    transactionStarted = false;
 
                     return res.status(400).json({
                         status: "error",
@@ -1428,69 +1382,70 @@ export const editPage = async (req, res) => {
                     });
                 }
 
+                const targetOrder =
+                    Number(targetPage.OrderNo);
 
-                // =================================================
-                // BEFORE
-                // =================================================
+                if (orderType === "BEFORE") {
 
-                if (OrderType === "BEFORE") {
+                    orderNo =
+                        Number(targetOrder.toFixed(3));
 
-                    newOrderNo =
-                        Number(targetPage.OrderNo);
+                    await shiftSiblingPageOrders(
+                        client,
+                        parentPageId,
+                        targetOrder,
+                        orderIncrement
+                    );
 
                 }
-
-
-                // =================================================
-                // AFTER
-                // =================================================
-
                 else {
 
-                    newOrderNo =
-                        Number(targetPage.OrderNo) + 0.01;
+                    orderNo =
+                        Number(
+                            (
+                                targetOrder +
+                                orderIncrement
+                            ).toFixed(3)
+                        );
+
+                    await shiftSiblingPageOrders(
+                        client,
+                        parentPageId,
+                        orderNo,
+                        orderIncrement
+                    );
                 }
-
-
-                await shiftSiblingPageOrders(
-                    client,
-                    newParentPageId,
-                    newOrderNo,
-                    0.01
-                );
             }
         }
 
-
         // =====================================================
-        // UPDATE PAGE + EXISTING PAGE ROLES
+        // UPDATE PAGE + PAGE ROLES
         // =====================================================
 
-        const updatedPage =
-            await updatePage(
-                client,
-                pageId,
-                PageName,
-                PageUrl,
-                PageIcon,
-                newParentPageId,
-                newOrderNo,
-                UpdatedByUserName,
-                PageRoles
-            );
-
+        const updatedPage = await updatePage(
+            client,
+            pageId,
+            PageName,
+            PageUrl,
+            PageIcon,
+            pageParentId,
+            orderNo,
+            uniqueRoleIds,
+            UpdatedByUserName
+        );
 
         if (!updatedPage) {
 
             await client.query("ROLLBACK");
 
-            return res.status(400).json({
+            transactionStarted = false;
+
+            return res.status(404).json({
                 status: "error",
                 message:
                     "Page update failed"
             });
         }
-
 
         // =====================================================
         // COMMIT
@@ -1498,38 +1453,40 @@ export const editPage = async (req, res) => {
 
         await client.query("COMMIT");
 
+        transactionStarted = false;
 
         return res.status(200).json({
             status: "success",
             message:
                 "Page updated successfully",
-            data: updatedPage
+            data: {
+                ...updatedPage,
+                RoleIds: uniqueRoleIds
+            }
         });
 
-    }
-    catch (error) {
+    } catch (error) {
 
-        if (client) {
-
+        if (
+            client &&
+            transactionStarted
+        ) {
             await client.query("ROLLBACK");
         }
 
-
         console.error(
-            "Edit Page Error:",
+            "editPage error:",
             error
         );
-
 
         return res.status(500).json({
             status: "error",
             message:
-                "Failed to update page",
-            error:
-                error.message
+                "Failed to edit page",
+            error: error.message
         });
-    }
-    finally {
+
+    } finally {
 
         if (client) {
             client.release();
