@@ -25,11 +25,16 @@ export const getAllUserDetailsController = async (req, res) => {
     }
 }
 
-export const editUserdetailsController     = async (req, res) => {
+
+export const editUserdetailsController = async (req, res) => {
 
     const {
         UserId,
         flagId,
+
+        // =========================
+        // USER DETAILS
+        // =========================
         employeeId,
         firstName,
         middleName,
@@ -43,11 +48,52 @@ export const editUserdetailsController     = async (req, res) => {
         loginName,
         altPhoneNumber,
         dateOfJoining,
-        updatedByUserName
+        updatedByUserName,
+
+        // =========================
+        // USER COMPANY
+        // =========================
+        UserCompanyId,
+        companyId,
+        isPrimaryCompany,
+
+        // =========================
+        // USER PRODUCT
+        // =========================
+        UserProductId,
+        companyProductId,
+
+        // =========================
+        // USER PROJECT
+        // =========================
+        UserProjectId,
+        projectId,
+        isPrimary,
+
+        // =========================
+        // USER ROLE
+        // =========================
+        UserRoleId,
+        roleId,
+        roleCompanyId,
+        roleCompanyProductId,
+        roleProjectId,
+
+        // =========================
+        // REPORTING MANAGER
+        // =========================
+        UserReportingManagerId,
+        reportingManagerUserId,
+        reportingManagerCompanyId
+
     } = req.body;
+
 
     try {
 
+        // =========================
+        // FLAG VALIDATION
+        // =========================
 
         if (Number(flagId) !== 2) {
 
@@ -59,6 +105,10 @@ export const editUserdetailsController     = async (req, res) => {
         }
 
 
+        // =========================
+        // USER ID VALIDATION
+        // =========================
+
         if (!UserId) {
 
             return res.status(400).json({
@@ -68,10 +118,15 @@ export const editUserdetailsController     = async (req, res) => {
 
         }
 
+
+        // =========================
+        // CALL SERVICE
+        // =========================
+
         const result = await editUserdetails({
 
+            // USER
             UserId,
-
             employeeId,
             firstName,
             middleName,
@@ -85,10 +140,40 @@ export const editUserdetailsController     = async (req, res) => {
             loginName,
             altPhoneNumber,
             dateOfJoining,
-            updatedByUserName
+            updatedByUserName,
+
+            // USER COMPANY
+            UserCompanyId,
+            companyId,
+            isPrimaryCompany,
+
+            // USER PRODUCT
+            UserProductId,
+            companyProductId,
+
+            // USER PROJECT
+            UserProjectId,
+            projectId,
+            isPrimary,
+
+            // USER ROLE
+            UserRoleId,
+            roleId,
+            roleCompanyId,
+            roleCompanyProductId,
+            roleProjectId,
+
+            // REPORTING MANAGER
+            UserReportingManagerId,
+            reportingManagerUserId,
+            reportingManagerCompanyId
 
         });
 
+
+        // =========================
+        // USER NOT FOUND
+        // =========================
 
         if (!result) {
 
@@ -99,11 +184,17 @@ export const editUserdetailsController     = async (req, res) => {
 
         }
 
+
+        // =========================
+        // SUCCESS
+        // =========================
+
         return res.status(200).json({
             status: true,
             message: "User Details Updated Successfully",
             data: result
         });
+
 
     } catch (error) {
 
@@ -117,6 +208,8 @@ export const editUserdetailsController     = async (req, res) => {
 
     }
 };
+
+
 
 
 

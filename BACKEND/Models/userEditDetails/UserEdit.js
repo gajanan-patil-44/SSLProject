@@ -13,6 +13,21 @@ export const getAllUserDetails = async () => {
         u."LastName",
         u."Email",
         u."LoginName",
+        u."PhoneNumber",
+        u."AltPhoneNumber",
+        u."DateOfJoining",
+        u."DateOfBirth",
+
+        u."GenderId", 
+        g."GenderName" AS "GenderName",
+
+        u."MaritalStatusId", 
+        ms."MaritalStatusName" AS "MaritalStatusName",
+
+        u."DesignationId", 
+        cd."DesignationName" AS "DesignationName",
+
+
 
         -- =====================================
         -- COMPANY
@@ -194,16 +209,29 @@ export const getAllUserDetails = async () => {
     LEFT JOIN "LKP"."Company" rmc
         ON rmc."CompanyId" = urm."CompanyId"
 
-    
+    LEFT JOIN "LKP"."Gender" g 
+    ON g."GenderId" = u."GenderId"
 
-    GROUP BY
+    LEFT JOIN "LKP"."MaritalStatus" ms 
+    ON ms."MaritalStatusId" = u."MaritalStatusId"
+
+    LEFT JOIN "LKP"."CompanyDesignation" cd 
+    ON cd."CompanyDesignationId" = u."DesignationId"
+
+GROUP BY
         u."UserId",
         u."EmployeeId",
         u."FirstName",
         u."MiddleName",
         u."LastName",
         u."Email",
-        u."LoginName";
+        u."LoginName",
+        u."GenderId", 
+        g."GenderName", 
+        u."MaritalStatusId",
+        ms."MaritalStatusName", 
+        u."DesignationId", 
+        cd."DesignationName";
 
 `;
         const result = await pool.query(query);
@@ -342,8 +370,7 @@ export const editUserdetails = async ({
                 UserId
             ]
         );
-
-
+console.log("UserCompanyId:", UserCompanyId);
         if (UserCompanyId) {
 
             const userCompanyQuery = `
@@ -368,8 +395,8 @@ export const editUserdetails = async ({
                 AND "UserId" = $5;
             `;
 
-
-            await client.query(
+            
+          let r=  await client.query(
                 userCompanyQuery,
                 [
                     companyId,
@@ -379,10 +406,13 @@ export const editUserdetails = async ({
                     UserId
                 ]
             );
+            console.log("UserCompany update result:", r.rowCount);
         }
 
 
+
        
+console.log("UserProductId:", UserProductId);
 
         if (UserProductId) {
 
@@ -409,7 +439,7 @@ export const editUserdetails = async ({
             `;
 
 
-            await client.query(
+          let s=  await client.query(
                 userProductQuery,
                 [
                     companyProductId,
@@ -418,6 +448,8 @@ export const editUserdetails = async ({
                     UserId
                 ]
             );
+
+            console.log("Userprouct update result:", s.rowCount);
         }
 
 
@@ -790,9 +822,7 @@ export const getAllCompanyProducts = async (CompanyId) => {
 };
 
 
-// ======================================================
-// GET ALL PROJECTS
-// ======================================================
+
 
 export const getAllProjects = async (CompanyProductId) => {
 
@@ -857,4 +887,7 @@ export const getAllRoles = async (CompanyId) => {
         throw error;
     }
 };
+
+
+
 
