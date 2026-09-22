@@ -1,0 +1,16 @@
+info:
+  name: toggleUserStatus
+  type: http
+  seq: 14
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/userEdit/toggleUserStatus
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
