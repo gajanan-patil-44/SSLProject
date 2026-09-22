@@ -18,6 +18,7 @@ import { useERPStore } from '../../store/useERPStore';
 import { authService } from '../../services';
 import { Dropdown, DropdownItem, DropdownDivider } from '../ui/Dropdown';
 import { Avatar } from '../ui/index';
+import logo from '../../assets/vite.svg';
 
 export default function Topbar() {
   const navigate = useNavigate();
@@ -57,6 +58,23 @@ export default function Topbar() {
           className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 md:hidden cursor-pointer"
         >
           <Menu className="w-5 h-5" />
+        </button>
+
+        {/* Topbar Logo - Click to refresh site and navigate to main page */}
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = '/dashboard';
+          }}
+          className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors group"
+          title="Refresh & Go to Main Page"
+        >
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500/20 to-emerald-500/10 dark:from-teal-500/30 dark:to-emerald-500/20 flex items-center justify-center p-1 shrink-0 border border-teal-500/30 shadow-xs group-hover:scale-105 transition-transform">
+            <img src={logo} alt="Logo" className="w-full h-full object-contain filter drop-shadow-xs" />
+          </div>
+          <span className="font-bold text-sm text-slate-800 dark:text-slate-100 hidden sm:inline-block tracking-tight">
+            Vishvin ERP
+          </span>
         </button>
 
         {/* Company Selector */}

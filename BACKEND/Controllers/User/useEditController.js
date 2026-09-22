@@ -1,6 +1,6 @@
 import { getAllUserDetails,editUserdetails } from "../../Models/userEditDetails/UserEdit.js";
 
-import {getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompanies, getAllReportingManagers, getAllCompanyProducts, getAllProjects, getAllRoles} from "../../Models/userEditDetails/UserEdit.js";
+import {getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompanies, getAllReportingManagers, getAllCompanyProducts, getAllProjects, getAllRoles, toggleUserStatuses} from "../../Models/userEditDetails/UserEdit.js";
 
 
 
@@ -556,6 +556,60 @@ export const getRole = async (req, res) => {
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch roles",
+            error: error.message
+        });
+    }
+};
+
+
+export const toggleUserStatus = async (req, res) => {
+
+    const { flagId } = req.body;
+
+    try {
+
+        if (!flagId) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+        // flagId 4 = Toggle User Status
+        if (parseInt(flagId) === 1) {
+
+            const userData = req.body;
+            const user = await toggleUserStatuses(userData);
+
+            // User does not exist
+            if (!user) {
+
+                return res.status(404).json({
+                    status: "error",
+                    message: "User not found"
+                });
+            }
+
+            // User status successfully toggled
+            return res.status(200).json({
+                status: "success",
+                message: "User status updated successfully"
+            });
+        }
+
+        // Invalid flagId
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid flagId"
+        });
+
+    } catch (error) {
+
+        // console.error("Error toggling user status:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to update user status",
             error: error.message
         });
     }
