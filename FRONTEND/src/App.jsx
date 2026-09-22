@@ -16,6 +16,7 @@ import HelpView from './pages/Help/HelpView';
 import LetterBuilderView from './pages/Documents/LetterBuilderView';
 import UserCreationView from './pages/Master/UserCreationView';
 import ManagePageView from './pages/Master/ManagePageView';
+import ManageUserView from './pages/UserManagement/ManageUserView';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -46,6 +47,8 @@ export default function App() {
           <Route path="applications" element={<KeyedModuleRenderer />} />
           <Route path="layouts" element={<KeyedModuleRenderer />} />
           <Route path="manage-page" element={<ManagePageView />} />
+          <Route path="manage-users" element={<ManageUserView />} />
+          <Route path="users" element={<ManageUserView />} />
 
           {/* HRM Special Pages */}
           <Route path="hrm/employees" element={<EmployeesView />} />
@@ -75,6 +78,11 @@ export default function App() {
 
           {/* Master Special Pages */}
           <Route path="master/user-creation" element={<UserCreationView />} />
+          <Route path="master/manage-users" element={<ManageUserView />} />
+          <Route path="master/manage-user" element={<ManageUserView />} />
+          <Route path="master/users" element={<ManageUserView />} />
+          <Route path="user-management/manage-users" element={<ManageUserView />} />
+          <Route path="user-management/users" element={<ManageUserView />} />
           <Route path="master/manage-page" element={<ManagePageView />} />
 
           {/* Documents */}
