@@ -132,7 +132,8 @@ export const USER_ROUTES = {
   // New confirmed endpoint for company → product → project → role cascade
   CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown',
   GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
-  EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails'
+  EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
+  TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus'
 };
 
 /**
@@ -157,7 +158,8 @@ export const PAGE_ROUTES = {
   VIEW: '/verp-service/managePages/view',
   DROPDOWN: '/verp-service/managePages/dropdown',
   STATUS: '/verp-service/managePages/status',
-  ADD: '/verp-service/managePages/add'
+  ADD: '/verp-service/managePages/add',
+  EDIT: '/verp-service/managePages/edit'
 };
 
 /**
@@ -168,6 +170,7 @@ export const PAGE_ROUTES = {
 export const USER_EDIT_ROUTES = {
   GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
   EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
+  TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus',
   GET_GENDER: '/verp-service/userEdit/getGender',
   GET_MARITAL_STATUS: '/verp-service/userEdit/getMaritalStatus',
   GET_DESIGNATION: '/verp-service/userEdit/getDesignation',
@@ -176,6 +179,17 @@ export const USER_EDIT_ROUTES = {
   GET_COMPANY_PRODUCT: '/verp-service/userEdit/getCompanyProduct',
   GET_PROJECT: '/verp-service/userEdit/getProject',
   GET_ROLE: '/verp-service/userEdit/getRole'
+};
+
+/**
+ * ============================================================================
+ * 12. BIRTHDAY EMAIL ROUTES
+ * ============================================================================
+ */
+export const BIRTHDAY_ROUTES = {
+  PROCESS_MAIL: '/verp-service/birthdayEmails/process',
+  GET_LOGS: '/verp-service/birthdayEmails/logs',
+  GET_LOG_BY_ID: (id) => `/verp-service/birthdayEmails/logs/${id}`
 };
 
 /**
@@ -194,7 +208,8 @@ export const API_ROUTES = {
   USER: USER_ROUTES,
   USER_EDIT: USER_EDIT_ROUTES,
   FILE_TYPE: FILE_TYPE_ROUTES,
-  PAGE: PAGE_ROUTES
+  PAGE: PAGE_ROUTES,
+  BIRTHDAY: BIRTHDAY_ROUTES
 };
 
 export default API_ROUTES;

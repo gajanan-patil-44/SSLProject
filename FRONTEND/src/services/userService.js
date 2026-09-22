@@ -117,9 +117,24 @@ export const userService = {
   editUserDetails: async (userData) => {
     return apiClient.patch(API_ROUTES.USER_EDIT.EDIT_USER_DETAILS, {
       flagId: 2,
-      FlagId: 2,
       ...userData
     });
+  },
+
+  /**
+   * Toggle user status
+   * Endpoint: /verp-service/userEdit/toggleUserStatus
+   * @param {Object} statusData { flagId, IsDisabled, UpdatedByUserName, UserId }
+   */
+  toggleUserStatus: async (statusData) => {
+    const payload = {
+      flagId: Number(statusData.flagId ?? 1),
+      IsDisabled: Boolean(statusData.IsDisabled),
+      UpdatedByUserName: statusData.UpdatedByUserName || '',
+      UserId: Number(statusData.UserId ?? statusData.userId ?? statusData.id)
+    };
+
+    return apiClient.post(API_ROUTES.USER_EDIT.TOGGLE_USER_STATUS, payload);
   },
 
   /**

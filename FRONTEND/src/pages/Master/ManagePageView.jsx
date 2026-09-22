@@ -20,6 +20,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { pageService } from '../../services/pageService';
+import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
 
 export default function ManagePageView() {
@@ -336,7 +337,7 @@ export default function ManagePageView() {
       OrderPosition: page.OrderPosition || 'IsBefore',
       OrderRelativePage: page.OrderRelativePage || page.OrderPageId || '',
       Roles: Array.isArray(page.Roles) && page.Roles.length > 0 
-        ? page.Roles 
+        ? page.Roles.map(r => (typeof r === 'object' && r !== null ? (r.RoleName || r.roleName || '') : String(r))).filter(Boolean)
         : (page.RoleName ? page.RoleName.split(',').map(r => r.trim()) : ['Super Admin']),
       IsActive: page.IsDisabled !== true && page.Status !== 'INACTIVE' && page.IsActive !== false
     });
@@ -356,6 +357,20 @@ export default function ManagePageView() {
     try {
       const isCurrentlyDisabled = record.IsDisabled === true || record.Status === 'INACTIVE' || record.IsActive === false;
       const newDisabledState = !isCurrentlyDisabled; // true if turning inactive, false if turning active
+
+      if (record.UserId) {
+        const currentUser = useERPStore.getState().user;
+        const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || 'admin';
+        await userService.toggleUserStatus({
+          flagId: 1,
+          IsDisabled: newDisabledState,
+          UpdatedByUserName: userName,
+          UserId: Number(record.UserId)
+        });
+        showToast(`User status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
+        await loadPages();
+        return;
+      }
 
       await pageService.updateStatus(record.PageId, newDisabledState);
       showToast(`Page status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
@@ -507,31 +522,95 @@ export default function ManagePageView() {
         await pageService.addPage(addPayload);
         showToast('Page created successfully!', 'success');
       } else {
+        // Build PageRoles array
+        let rolesPool = [...rolesDropdownList];
+        if (rolesPool.length === 0) {
+          try {
+            rolesPool = await pageService.getRolesDropdown();
+          } catch (e) {
+            rolesPool = [];
+          }
+        }
+
+        const existingRawRoles = Array.isArray(selectedPage?.RawRoles) 
+          ? selectedPage.RawRoles 
+          : (Array.isArray(selectedPage?.Roles) ? selectedPage.Roles : []);
+        
+        const existingRoleMap = new Map();
+        existingRawRoles.forEach((r) => {
+          if (typeof r === 'object' && r !== null) {
+            const rId = Number(r.RoleId || r.roleId);
+            if (rId) existingRoleMap.set(rId, r);
+          }
+        });
+
+        const selectedRoleNames = new Set(
+          (formData.Roles || []).map((r) => String(r).trim().toLowerCase())
+        );
+
+        const processedRoleIds = new Set();
+        const pageRolesPayload = [];
+
+        rolesPool.forEach((r) => {
+          const rId = Number(r.RoleId || r.roleId || r.id);
+          if (!rId || processedRoleIds.has(rId)) return;
+          processedRoleIds.add(rId);
+
+          const rName = (r.RoleName || r.roleName || r.name || '').trim().toLowerCase();
+          const isAllocated = selectedRoleNames.has(rName) || selectedRoleNames.has(String(rId));
+          const existing = existingRoleMap.get(rId);
+
+          pageRolesPayload.push({
+            PageRoleId: existing?.PageRoleId ? Number(existing.PageRoleId) : null,
+            RoleId: rId,
+            IsDisabled: false,
+            IsAllocated: isAllocated
+          });
+        });
+
+        existingRawRoles.forEach((r) => {
+          if (typeof r === 'object' && r !== null) {
+            const rId = Number(r.RoleId || r.roleId);
+            if (rId && !processedRoleIds.has(rId)) {
+              processedRoleIds.add(rId);
+              const rName = (r.RoleName || r.roleName || '').trim().toLowerCase();
+              const isAllocated = selectedRoleNames.has(rName) || selectedRoleNames.has(String(rId));
+              pageRolesPayload.push({
+                PageRoleId: r.PageRoleId ? Number(r.PageRoleId) : null,
+                RoleId: rId,
+                IsDisabled: false,
+                IsAllocated: isAllocated
+              });
+            }
+          }
+        });
+
         const updatePayload = {
-          PageId: selectedPage.PageId,
+          FlagId: 2,
+          PageId: Number(selectedPage.PageId),
           PageName: formData.PageName.trim(),
-          PageURL: formData.PageURL.trim(),
           PageUrl: formData.PageURL.trim(),
-          IconName: formData.IconName.trim(),
           PageIcon: formData.IconName.trim(),
           PageType: formData.PageType,
-          ParentPage: resolvedParentPageName,
-          ...(resolvedParentPageId !== null ? { ParentPageId: Number(resolvedParentPageId) } : {}),
-          Roles: formData.Roles,
-          RoleIds: roleIds.length > 0 ? roleIds : [1],
-          RoleName: formData.Roles.join(', '),
-          OrderChanged: formData.OrderChanged,
+          ParentPageId: formData.PageType !== 'MainPage' && resolvedParentPageId !== null ? Number(resolvedParentPageId) : null,
           IsChangeOrder: Boolean(formData.OrderChanged),
-          ...(formData.OrderChanged ? {
-            OrderType: formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER',
-            TargetPageId: resolvedTargetPageId ? Number(resolvedTargetPageId) : 2
-          } : {}),
-          OrderPosition: formData.OrderPosition,
-          OrderRelativePage: formData.OrderRelativePage,
-          IsActive: formData.IsActive
+          OrderType: formData.OrderChanged ? (formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER') : '',
+          TargetPageId: formData.OrderChanged && resolvedTargetPageId ? Number(resolvedTargetPageId) : null,
+          UpdatedByUserName: userName,
+          PageRoles: pageRolesPayload
         };
 
         await pageService.updatePage(updatePayload);
+
+        // Also update status if changed in the modal
+        if (formData.IsActive !== undefined && selectedPage.IsActive !== undefined && formData.IsActive !== selectedPage.IsActive) {
+          try {
+            await pageService.updateStatus(selectedPage.PageId, !formData.IsActive);
+          } catch (statusErr) {
+            console.error('Failed to update status with edit:', statusErr);
+          }
+        }
+
         showToast('Page updated successfully!', 'success');
       }
 

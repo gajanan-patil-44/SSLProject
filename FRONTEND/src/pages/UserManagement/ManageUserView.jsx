@@ -66,6 +66,7 @@ export default function ManageUserView() {
     isActive: true
   };
   const [formData, setFormData] = useState(initialFormData);
+  const [originalFormData, setOriginalFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
 
   // Dropdown Lists for Edit (loaded from the 8 userEdit routes)
@@ -224,7 +225,7 @@ export default function ManageUserView() {
     const currentCompanyProductId = (primaryProduct?.CompanyProductId || primaryRole?.CompanyProductId) ? String(primaryProduct?.CompanyProductId || primaryRole?.CompanyProductId) : '';
     const currentProjectId = (primaryProject?.ProjectId || primaryRole?.ProjectId) ? String(primaryProject?.ProjectId || primaryRole?.ProjectId) : '';
 
-    setFormData({
+    const initialValues = {
       employeeId: user.EmployeeId || '',
       firstName: user.FirstName || '',
       middleName: user.MiddleName || '',
@@ -244,7 +245,10 @@ export default function ManageUserView() {
       roleId: primaryRole?.RoleId ? String(primaryRole.RoleId) : '',
       reportingManagerUserId: primaryManager?.ReportingManagerUserId ? String(primaryManager.ReportingManagerUserId) : '',
       isActive: true
-    });
+    };
+
+    setFormData(initialValues);
+    setOriginalFormData(initialValues);
     setFormErrors({});
     setIsEditOpen(true);
 
@@ -262,8 +266,28 @@ export default function ManageUserView() {
     setIsViewOpen(true);
   };
 
-  const handleToggleStatus = (record) => {
-    showToast(`User status updated for ${record.FirstName || record.EmployeeId}.`, 'success');
+  const handleToggleStatus = async (record) => {
+    try {
+      const isCurrentlyDisabled = record.IsDisabled === true || record.Status === 'INACTIVE' || record.IsActive === false;
+      const newDisabledState = !isCurrentlyDisabled;
+
+      const currentUser = useERPStore.getState().user;
+      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || 'admin';
+
+      const payload = {
+        flagId: 1,
+        IsDisabled: newDisabledState,
+        UpdatedByUserName: userName,
+        UserId: Number(record.UserId || record.userId || record.id)
+      };
+
+      await userService.toggleUserStatus(payload);
+      showToast(`User status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
+      await loadUsers();
+    } catch (err) {
+      console.error('Failed to toggle user status:', err);
+      showToast(err?.response?.data?.message || err?.message || 'Failed to update user status', 'error');
+    }
   };
 
   // Form Validation
@@ -284,63 +308,208 @@ export default function ManageUserView() {
   // Submit Update
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    if (!validateForm()) {
-      showToast('Please fill all mandatory fields.', 'error');
+
+    if (!selectedUser) return;
+
+    const primaryCompany = (selectedUser.Companies || []).find((c) => c.IsPrimaryCompany) || (selectedUser.Companies || [])[0];
+    const primaryProduct = (selectedUser.Products || [])[0];
+    const primaryProject = (selectedUser.Projects || []).find((p) => p.IsPrimary) || (selectedUser.Projects || [])[0];
+    const primaryRole = (selectedUser.Roles || [])[0];
+    const primaryManager = (selectedUser.ReportingManagers || [])[0];
+
+    // Helper to check if a specific field was edited by the user
+    const isEdited = (field) => {
+      const current = formData[field] !== undefined && formData[field] !== null ? String(formData[field]).trim() : '';
+      const original = originalFormData?.[field] !== undefined && originalFormData?.[field] !== null ? String(originalFormData[field]).trim() : '';
+      return current !== original;
+    };
+
+    const editPayload = {
+      flagId: 2,
+      UserId: Number(selectedUser.UserId)
+    };
+
+    let hasEdits = false;
+
+    // 1. Employee ID
+    if (isEdited('employeeId')) {
+      const val = formData.employeeId.trim();
+      if (!val) {
+        setFormErrors((prev) => ({ ...prev, employeeId: 'Employee ID cannot be empty' }));
+        showToast('Employee ID cannot be empty.', 'error');
+        return;
+      }
+      editPayload.employeeId = val;
+      hasEdits = true;
+    }
+
+    // 2. Login Username
+    if (isEdited('loginName')) {
+      const val = formData.loginName.trim();
+      if (!val) {
+        setFormErrors((prev) => ({ ...prev, loginName: 'Login Username cannot be empty' }));
+        showToast('Login Username cannot be empty.', 'error');
+        return;
+      }
+      editPayload.loginName = val;
+      hasEdits = true;
+    }
+
+    // 3. First Name
+    if (isEdited('firstName')) {
+      const val = formData.firstName.trim();
+      if (!val) {
+        setFormErrors((prev) => ({ ...prev, firstName: 'First Name cannot be empty' }));
+        showToast('First Name cannot be empty.', 'error');
+        return;
+      }
+      editPayload.firstName = val;
+      hasEdits = true;
+    }
+
+    // 4. Middle Name
+    if (isEdited('middleName')) {
+      editPayload.middleName = formData.middleName.trim();
+      hasEdits = true;
+    }
+
+    // 5. Last Name
+    if (isEdited('lastName')) {
+      editPayload.lastName = formData.lastName.trim();
+      hasEdits = true;
+    }
+
+    // 6. Email Address
+    if (isEdited('email')) {
+      const val = formData.email.trim();
+      if (!val || !/\S+@\S+\.\S+/.test(val)) {
+        setFormErrors((prev) => ({ ...prev, email: 'Valid Email Address is required' }));
+        showToast('Valid Email Address is required.', 'error');
+        return;
+      }
+      editPayload.email = val;
+      hasEdits = true;
+    }
+
+    // 7. Phone Number
+    if (isEdited('phoneNumber')) {
+      editPayload.phoneNumber = formData.phoneNumber.trim();
+      hasEdits = true;
+    }
+
+    // 8. Alt Phone Number
+    if (isEdited('altPhoneNumber')) {
+      editPayload.altPhoneNumber = formData.altPhoneNumber.trim();
+      hasEdits = true;
+    }
+
+    // 9. Gender ID
+    if (isEdited('genderId')) {
+      editPayload.genderId = formData.genderId ? Number(formData.genderId) : null;
+      hasEdits = true;
+    }
+
+    // 10. Marital Status ID
+    if (isEdited('maritalStatusId')) {
+      editPayload.maritalStatusId = formData.maritalStatusId ? Number(formData.maritalStatusId) : null;
+      hasEdits = true;
+    }
+
+    // 11. Company ID
+    if (isEdited('companyId')) {
+      editPayload.companyId = formData.companyId ? Number(formData.companyId) : null;
+      if (primaryCompany?.UserCompanyId) {
+        editPayload.UserCompanyId = Number(primaryCompany.UserCompanyId);
+      }
+      editPayload.isPrimaryCompany = true;
+      hasEdits = true;
+    }
+
+    // 12. Company Product ID
+    if (isEdited('companyProductId')) {
+      editPayload.companyProductId = formData.companyProductId ? Number(formData.companyProductId) : null;
+      if (primaryProduct?.UserProductId) {
+        editPayload.UserProductId = Number(primaryProduct.UserProductId);
+      }
+      hasEdits = true;
+    }
+
+    // 13. Project ID
+    if (isEdited('projectId')) {
+      editPayload.projectId = formData.projectId ? Number(formData.projectId) : null;
+      if (primaryProject?.UserProjectId) {
+        editPayload.UserProjectId = Number(primaryProject.UserProjectId);
+      }
+      editPayload.isPrimary = true;
+      hasEdits = true;
+    }
+
+    // 14. Role ID
+    if (isEdited('roleId')) {
+      editPayload.roleId = formData.roleId ? Number(formData.roleId) : null;
+      if (primaryRole?.UserRoleId) {
+        editPayload.UserRoleId = Number(primaryRole.UserRoleId);
+      }
+      const rCompanyId = formData.companyId ? Number(formData.companyId) : (primaryRole?.CompanyId ? Number(primaryRole.CompanyId) : null);
+      if (rCompanyId) {
+        editPayload.roleCompanyId = rCompanyId;
+      }
+      const rCompanyProductId = formData.companyProductId ? Number(formData.companyProductId) : (primaryRole?.CompanyProductId ? Number(primaryRole.CompanyProductId) : null);
+      if (rCompanyProductId) {
+        editPayload.roleCompanyProductId = rCompanyProductId;
+      }
+      const rProjectId = formData.projectId ? Number(formData.projectId) : (primaryRole?.ProjectId ? Number(primaryRole.ProjectId) : null);
+      if (rProjectId) {
+        editPayload.roleProjectId = rProjectId;
+      }
+      hasEdits = true;
+    }
+
+    // 15. Designation ID
+    if (isEdited('designationId')) {
+      editPayload.designationId = formData.designationId ? Number(formData.designationId) : null;
+      hasEdits = true;
+    }
+
+    // 16. Reporting Manager User ID
+    if (isEdited('reportingManagerUserId')) {
+      editPayload.reportingManagerUserId = formData.reportingManagerUserId ? Number(formData.reportingManagerUserId) : null;
+      if (primaryManager?.UserReportingManagerId) {
+        editPayload.UserReportingManagerId = Number(primaryManager.UserReportingManagerId);
+      }
+      const repCompanyId = formData.companyId ? Number(formData.companyId) : (primaryManager?.CompanyId ? Number(primaryManager.CompanyId) : null);
+      if (repCompanyId) {
+        editPayload.reportingManagerCompanyId = repCompanyId;
+      }
+      hasEdits = true;
+    }
+
+    // 17. Date of Birth
+    if (isEdited('dateOfBirth')) {
+      editPayload.dateOfBirth = formData.dateOfBirth || null;
+      hasEdits = true;
+    }
+
+    // 18. Date of Joining
+    if (isEdited('dateOfJoining')) {
+      editPayload.dateOfJoining = formData.dateOfJoining || null;
+      hasEdits = true;
+    }
+
+    if (hasEdits && userName) {
+      editPayload.updatedByUserName = userName;
+    }
+
+    if (!hasEdits) {
+      showToast('No changes detected to update.', 'info');
+      setIsEditOpen(false);
       return;
     }
 
     setSubmitting(true);
     try {
-      if (selectedUser) {
-        // Edit User via PATCH /verp-service/userEdit/editUserdetails with flagId: 2
-        const primaryCompany = (selectedUser.Companies || []).find((c) => c.IsPrimaryCompany) || (selectedUser.Companies || [])[0];
-        const primaryProduct = (selectedUser.Products || [])[0];
-        const primaryProject = (selectedUser.Projects || [])[0];
-        const primaryRole = (selectedUser.Roles || [])[0];
-        const primaryManager = (selectedUser.ReportingManagers || [])[0];
-
-        const editPayload = {
-          UserId: selectedUser.UserId,
-          flagId: 2,
-          employeeId: formData.employeeId.trim(),
-          firstName: formData.firstName.trim(),
-          middleName: formData.middleName.trim(),
-          lastName: formData.lastName.trim(),
-          phoneNumber: formData.phoneNumber.trim(),
-          altPhoneNumber: formData.altPhoneNumber.trim(),
-          dateOfBirth: formData.dateOfBirth || null,
-          dateOfJoining: formData.dateOfJoining || null,
-          genderId: formData.genderId ? Number(formData.genderId) : null,
-          maritalStatusId: formData.maritalStatusId ? Number(formData.maritalStatusId) : null,
-          designationId: formData.designationId ? Number(formData.designationId) : null,
-          email: formData.email.trim(),
-          loginName: formData.loginName.trim(),
-          updatedByUserName: userName,
-
-          // Associations
-          UserCompanyId: primaryCompany?.UserCompanyId || null,
-          companyId: formData.companyId ? Number(formData.companyId) : (primaryCompany?.CompanyId || null),
-          isPrimaryCompany: true,
-
-          UserProductId: primaryProduct?.UserProductId || null,
-          companyProductId: primaryProduct?.CompanyProductId || null,
-
-          UserProjectId: primaryProject?.UserProjectId || null,
-          projectId: primaryProject?.ProjectId || null,
-          isPrimary: true,
-
-          UserRoleId: primaryRole?.UserRoleId || null,
-          roleId: formData.roleId ? Number(formData.roleId) : (primaryRole?.RoleId || null),
-
-          UserReportingManagerId: primaryManager?.UserReportingManagerId || null,
-          reportingManagerUserId: formData.reportingManagerUserId ? Number(formData.reportingManagerUserId) : (primaryManager?.ReportingManagerUserId || null),
-          reportingManagerCompanyId: formData.companyId ? Number(formData.companyId) : (primaryManager?.CompanyId || null)
-        };
-
-        await userService.editUserDetails(editPayload);
-        showToast('User details updated successfully!', 'success');
-      }
-
+      await userService.editUserDetails(editPayload);
+      showToast('User details updated successfully!', 'success');
       setIsEditOpen(false);
       await loadUsers();
     } catch (err) {
