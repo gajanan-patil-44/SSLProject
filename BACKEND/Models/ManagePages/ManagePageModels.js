@@ -396,10 +396,6 @@ export const insertPageRole = async (
     );
 };
 
-
-
-
-
 // ==========================================================
 // GET ALL PAGES
 // ==========================================================
@@ -525,4 +521,93 @@ export const updatePageStatus = async (
 
 
     return result.rows[0] || null;
+};
+
+
+// =========================================================
+// UPDATE PAGE AND PAGE ROLES
+// =========================================================
+
+export const updatePage = async (
+    client,
+    PageId,
+    PageName,
+    PageUrl,
+    PageIcon,
+    ParentPageId,
+    OrderNo,
+    UpdatedByUserName,
+    PageRoles
+) => {
+
+    // =====================================================
+    // UPDATE PAGE
+    // =====================================================
+
+    const pageResult = await client.query(
+        `
+        UPDATE "DATA"."Page"
+        SET
+            "PageName" = $1,
+            "PageUrl" = $2,
+            "PageIcon" = $3,
+            "ParentPageId" = $4,
+            "OrderNo" = $5,
+            "UpdatedAt" = CURRENT_TIMESTAMP,
+            "UpdatedByUserName" = $6
+        WHERE
+            "PageId" = $7
+            AND COALESCE("IsDisabled", false) = false
+        RETURNING
+            "PageId",
+            "PageName",
+            "PageUrl",
+            "PageIcon",
+            "ParentPageId",
+            "OrderNo";
+        `,
+        [
+            PageName,
+            PageUrl,
+            PageIcon,
+            ParentPageId,
+            OrderNo,
+            UpdatedByUserName,
+            PageId
+        ]
+    );
+
+
+    // =====================================================
+    // UPDATE EXISTING PAGE ROLES
+    // =====================================================
+
+    for (const role of PageRoles) {
+
+        await client.query(
+            `
+            UPDATE "DATA"."PageRole"
+            SET
+                "RoleId" = $1,
+                "IsDisabled" = $2,
+                "IsAllocated" = $3,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $4
+            WHERE
+                "PageRoleId" = $5
+                AND "PageId" = $6;
+            `,
+            [
+                role.RoleId,
+                role.IsDisabled,
+                role.IsAllocated,
+                UpdatedByUserName,
+                role.PageRoleId,
+                PageId
+            ]
+        );
+    }
+
+
+    return pageResult.rows[0] || null;
 };
