@@ -17,6 +17,7 @@ export const getAllUserDetails = async () => {
         u."AltPhoneNumber",
         u."DateOfJoining",
         u."DateOfBirth",
+        u."IsDisabled",
 
         u."GenderId", 
         g."GenderName" AS "GenderName",
@@ -370,7 +371,7 @@ export const editUserdetails = async ({
                 UserId
             ]
         );
-console.log("UserCompanyId:", UserCompanyId);
+
         if (UserCompanyId) {
 
             const userCompanyQuery = `
@@ -406,13 +407,8 @@ console.log("UserCompanyId:", UserCompanyId);
                     UserId
                 ]
             );
-            console.log("UserCompany update result:", r.rowCount);
+            
         }
-
-
-
-       
-console.log("UserProductId:", UserProductId);
 
         if (UserProductId) {
 
@@ -449,7 +445,7 @@ console.log("UserProductId:", UserProductId);
                 ]
             );
 
-            console.log("Userprouct update result:", s.rowCount);
+         
         }
 
 
@@ -599,11 +595,7 @@ console.log("UserProductId:", UserProductId);
             );
         }
 
-
-       
-
         await client.query("COMMIT");
-
 
         return {
             UserId
