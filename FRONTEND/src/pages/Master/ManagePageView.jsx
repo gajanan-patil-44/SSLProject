@@ -461,12 +461,31 @@ export default function ManagePageView() {
 
     try {
       // 1. Resolve RoleIds from selected Roles
-      const roleIds = (formData.Roles || []).map((roleName) => {
-        const found = rolesDropdownList.find(
-          (r) => (r.RoleName || r.roleName || r.Role || r.name) === roleName || String(r.RoleId || r.roleId || r.id) === String(roleName)
-        );
-        return found?.RoleId ?? found?.roleId ?? found?.id ?? 1;
-      });
+      let rolesPool = [...rolesDropdownList];
+      if (rolesPool.length === 0) {
+        try {
+          rolesPool = await pageService.getRolesDropdown();
+        } catch (e) {
+          rolesPool = [];
+        }
+      }
+
+      const roleIds = Array.from(
+        new Set(
+          (formData.Roles || [])
+            .map((roleName) => {
+              const found = rolesPool.find(
+                (r) =>
+                  (r.RoleName || r.roleName || r.Role || r.name || '').trim().toLowerCase() ===
+                    String(roleName).trim().toLowerCase() ||
+                  String(r.RoleId || r.roleId || r.id) === String(roleName)
+              );
+              const val = found?.RoleId ?? found?.roleId ?? found?.id ?? (Number(roleName) || null);
+              return val ? Number(val) : null;
+            })
+            .filter((id) => id !== null && !isNaN(id))
+        )
+      );
 
       // 2. Resolve ParentPageId based on PageType
       let resolvedParentPageId = null;
@@ -522,69 +541,6 @@ export default function ManagePageView() {
         await pageService.addPage(addPayload);
         showToast('Page created successfully!', 'success');
       } else {
-        // Build PageRoles array
-        let rolesPool = [...rolesDropdownList];
-        if (rolesPool.length === 0) {
-          try {
-            rolesPool = await pageService.getRolesDropdown();
-          } catch (e) {
-            rolesPool = [];
-          }
-        }
-
-        const existingRawRoles = Array.isArray(selectedPage?.RawRoles) 
-          ? selectedPage.RawRoles 
-          : (Array.isArray(selectedPage?.Roles) ? selectedPage.Roles : []);
-        
-        const existingRoleMap = new Map();
-        existingRawRoles.forEach((r) => {
-          if (typeof r === 'object' && r !== null) {
-            const rId = Number(r.RoleId || r.roleId);
-            if (rId) existingRoleMap.set(rId, r);
-          }
-        });
-
-        const selectedRoleNames = new Set(
-          (formData.Roles || []).map((r) => String(r).trim().toLowerCase())
-        );
-
-        const processedRoleIds = new Set();
-        const pageRolesPayload = [];
-
-        rolesPool.forEach((r) => {
-          const rId = Number(r.RoleId || r.roleId || r.id);
-          if (!rId || processedRoleIds.has(rId)) return;
-          processedRoleIds.add(rId);
-
-          const rName = (r.RoleName || r.roleName || r.name || '').trim().toLowerCase();
-          const isAllocated = selectedRoleNames.has(rName) || selectedRoleNames.has(String(rId));
-          const existing = existingRoleMap.get(rId);
-
-          pageRolesPayload.push({
-            PageRoleId: existing?.PageRoleId ? Number(existing.PageRoleId) : null,
-            RoleId: rId,
-            IsDisabled: false,
-            IsAllocated: isAllocated
-          });
-        });
-
-        existingRawRoles.forEach((r) => {
-          if (typeof r === 'object' && r !== null) {
-            const rId = Number(r.RoleId || r.roleId);
-            if (rId && !processedRoleIds.has(rId)) {
-              processedRoleIds.add(rId);
-              const rName = (r.RoleName || r.roleName || '').trim().toLowerCase();
-              const isAllocated = selectedRoleNames.has(rName) || selectedRoleNames.has(String(rId));
-              pageRolesPayload.push({
-                PageRoleId: r.PageRoleId ? Number(r.PageRoleId) : null,
-                RoleId: rId,
-                IsDisabled: false,
-                IsAllocated: isAllocated
-              });
-            }
-          }
-        });
-
         const updatePayload = {
           FlagId: 2,
           PageId: Number(selectedPage.PageId),
@@ -593,11 +549,11 @@ export default function ManagePageView() {
           PageIcon: formData.IconName.trim(),
           PageType: formData.PageType,
           ParentPageId: formData.PageType !== 'MainPage' && resolvedParentPageId !== null ? Number(resolvedParentPageId) : null,
+          RoleIds: roleIds.length > 0 ? roleIds : [1],
           IsChangeOrder: Boolean(formData.OrderChanged),
           OrderType: formData.OrderChanged ? (formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER') : '',
           TargetPageId: formData.OrderChanged && resolvedTargetPageId ? Number(resolvedTargetPageId) : null,
-          UpdatedByUserName: userName,
-          PageRoles: pageRolesPayload
+          UpdatedByUserName: userName
         };
 
         await pageService.updatePage(updatePayload);
