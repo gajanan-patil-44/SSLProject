@@ -253,7 +253,7 @@ export const toggleProductStatus = async (req, res) => {
 
             const productData = req.body;
 
-            console.log("Received toggle product data:", productData);
+            
 
             const product = await toggleProductStatuses(productData);
 

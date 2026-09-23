@@ -10,7 +10,6 @@ import {
   Sun,
   User,
   Settings,
-  ShieldCheck,
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
@@ -18,15 +17,12 @@ import { useERPStore } from '../../store/useERPStore';
 import { authService } from '../../services';
 import { Dropdown, DropdownItem, DropdownDivider } from '../ui/Dropdown';
 import { Avatar } from '../ui/index';
-import logo from '../../assets/vite.svg';
 
 export default function Topbar() {
   const navigate = useNavigate();
   const theme = useERPStore((state) => state.theme);
   const setTheme = useERPStore((state) => state.setTheme);
   const toggleSidebar = useERPStore((state) => state.toggleSidebar);
-  const activeCompany = useERPStore((state) => state.activeCompany);
-  const setActiveCompany = useERPStore((state) => state.setActiveCompany);
   const language = useERPStore((state) => state.language);
   const setLanguage = useERPStore((state) => state.setLanguage);
   const user = useERPStore((state) => state.user);
@@ -59,39 +55,6 @@ export default function Topbar() {
         >
           <Menu className="w-5 h-5" />
         </button>
-
-        {/* Topbar Logo - Click to refresh site and navigate to main page */}
-        <button
-          type="button"
-          onClick={() => {
-            window.location.href = '/dashboard';
-          }}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors group"
-          title="Refresh & Go to Main Page"
-        >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500/20 to-emerald-500/10 dark:from-teal-500/30 dark:to-emerald-500/20 flex items-center justify-center p-1 shrink-0 border border-teal-500/30 shadow-xs group-hover:scale-105 transition-transform">
-            <img src={logo} alt="Logo" className="w-full h-full object-contain filter drop-shadow-xs" />
-          </div>
-          <span className="font-bold text-sm text-slate-800 dark:text-slate-100 hidden sm:inline-block tracking-tight">
-            Vishvin ERP
-          </span>
-        </button>
-
-        {/* Company Selector */}
-        <Dropdown
-          align="left"
-          trigger={
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer">
-              <ShieldCheck className="w-3.5 h-3.5 text-secondary shrink-0" />
-              <span>{activeCompany}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-          }
-        >
-          <DropdownItem onClick={() => setActiveCompany('Falcon LLP')}>Falcon LLP</DropdownItem>
-          <DropdownItem onClick={() => setActiveCompany('Vishvin Corp')}>Vishvin Corp</DropdownItem>
-          <DropdownItem onClick={() => setActiveCompany('Global Inc')}>Global Inc</DropdownItem>
-        </Dropdown>
       </div>
 
       {/* Right Icons Panel */}

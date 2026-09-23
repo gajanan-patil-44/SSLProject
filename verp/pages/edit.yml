@@ -11,24 +11,17 @@ http:
     data: |-
       {
           "FlagId": 2,
-          "PageId": 6,
-          "PageName": "Roles",
-          "PageUrl": "/master/roles",
-          "PageIcon": "billing",
-          "PageType": "MainPage",
-          "ParentPageId": null,
+          "PageId": 1,
+          "PageName": "Companies",
+          "PageUrl": "/master/companies",
+          "PageIcon": "building",
+          "PageType": "ParentPage",
+          "ParentPageId": 6,
+          "RoleIds": [1, 2],
           "IsChangeOrder": true,
           "OrderType": "BEFORE",
           "TargetPageId": 2,
-          "UpdatedByUserName": "admin",
-          "PageRoles": [
-              {
-                  "PageRoleId": 21,
-                  "RoleId": 1,
-                  "IsDisabled": false,
-                  "IsAllocated": true
-              }
-          ]
+          "UpdatedByUserName": "admin"
       }
   auth: inherit
 

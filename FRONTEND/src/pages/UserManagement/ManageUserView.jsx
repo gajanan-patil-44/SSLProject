@@ -587,11 +587,10 @@ export default function ManageUserView() {
             {compList.map((c, i) => (
               <span
                 key={c.UserCompanyId || i}
-                className={`px-2 py-0.5 text-[11px] font-medium rounded border ${
-                  c.IsPrimaryCompany
+                className={`px-2 py-0.5 text-[11px] font-medium rounded border ${c.IsPrimaryCompany
                     ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                }`}
+                  }`}
               >
                 {c.CompanyName}
               </span>
