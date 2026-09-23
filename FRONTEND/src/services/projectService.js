@@ -8,8 +8,7 @@ export const projectService = {
    */
   getProjects: async (flagId = 1) => {
     return apiClient.post(API_ROUTES.PROJECT.GET_PROJECTS, {
-      flagId: Number(flagId),
-      FlagId: Number(flagId)
+      flagId: Number(flagId)
     });
   },
 
@@ -18,8 +17,7 @@ export const projectService = {
    */
   getCompanyProductsDropdown: async () => {
     return apiClient.post(API_ROUTES.PROJECT.ADD_PROJECT, {
-      flagId: 1,
-      FlagId: 1
+      flagId: 1
     });
   },
 

@@ -104,8 +104,7 @@ export const userService = {
    */
   getAllUserDetails: async (flagId = 1) => {
     return apiClient.post(API_ROUTES.USER_EDIT.GET_ALL_USER_DETAILS, {
-      flagId: Number(flagId),
-      FlagId: Number(flagId)
+      flagId: Number(flagId)
     });
   },
 
@@ -163,40 +162,35 @@ export const userService = {
   getEditDesignation: async (companyId) => {
     return apiClient.post(API_ROUTES.USER_EDIT.GET_DESIGNATION, {
       flagId: 1,
-      CompanyId: Number(companyId),
-      companyId: Number(companyId)
+      CompanyId: Number(companyId)
     });
   },
 
   getEditReportingManager: async (companyId) => {
     return apiClient.post(API_ROUTES.USER_EDIT.GET_REPORTING_MANAGER, {
       flagId: 1,
-      CompanyId: Number(companyId),
-      companyId: Number(companyId)
+      CompanyId: Number(companyId)
     });
   },
 
   getEditCompanyProduct: async (companyId) => {
     return apiClient.post(API_ROUTES.USER_EDIT.GET_COMPANY_PRODUCT, {
       flagId: 1,
-      CompanyId: Number(companyId),
-      companyId: Number(companyId)
+      CompanyId: Number(companyId)
     });
   },
 
   getEditProject: async (companyProductId) => {
     return apiClient.post(API_ROUTES.USER_EDIT.GET_PROJECT, {
       flagId: 1,
-      CompanyProductId: Number(companyProductId),
-      companyProductId: Number(companyProductId)
+      CompanyProductId: Number(companyProductId)
     });
   },
 
   getEditRole: async (companyId) => {
     return apiClient.post(API_ROUTES.USER_EDIT.GET_ROLE, {
       flagId: 1,
-      CompanyId: Number(companyId),
-      companyId: Number(companyId)
+      CompanyId: Number(companyId)
     });
   }
 };
