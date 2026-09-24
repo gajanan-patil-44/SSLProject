@@ -834,10 +834,8 @@ export const getProjectDropdown = async (CompanyProductId) => {
             pr."ProjectId",
             pr."ProjectName"
         FROM "LKP"."CompanyProduct" cp
-
         INNER JOIN "LKP"."Project" pr
             ON pr."CompanyProductId" = cp."CompanyProductId"
-
         WHERE cp."CompanyProductId" = $1
           AND pr."IsDisabled" = false
 

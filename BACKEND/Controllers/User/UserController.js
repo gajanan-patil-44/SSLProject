@@ -113,17 +113,11 @@ export const userDropdownController = async (req, res) => {
 export const createUserController = async (req, res) => {
 
     try {
-
         const userData = req.body;
-
-
         // ==========================================================
         // MULTER FILES
         // ==========================================================
-
         const files = req.files || [];
-
-
         // ==========================================================
         // PHOTO
         // ==========================================================
