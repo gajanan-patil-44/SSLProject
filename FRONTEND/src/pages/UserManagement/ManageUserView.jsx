@@ -427,7 +427,7 @@ export default function ManageUserView() {
 
     // 12. Company Product ID
     if (isEdited('companyProductId')) {
-      editPayload.companyProductId = formData.companyProductId ? Number(formData.companyProductId) : null;
+      editPayload.companyProductId = formData.companyProductId ? [Number(formData.companyProductId)] : [];
       if (primaryProduct?.UserProductId) {
         editPayload.UserProductId = Number(primaryProduct.UserProductId);
       }
@@ -436,7 +436,7 @@ export default function ManageUserView() {
 
     // 13. Project ID
     if (isEdited('projectId')) {
-      editPayload.projectId = formData.projectId ? Number(formData.projectId) : null;
+      editPayload.projectId = formData.projectId ? [Number(formData.projectId)] : [];
       if (primaryProject?.UserProjectId) {
         editPayload.UserProjectId = Number(primaryProject.UserProjectId);
       }
@@ -473,7 +473,7 @@ export default function ManageUserView() {
 
     // 16. Reporting Manager User ID
     if (isEdited('reportingManagerUserId')) {
-      editPayload.reportingManagerUserId = formData.reportingManagerUserId ? Number(formData.reportingManagerUserId) : null;
+      editPayload.reportingManagerUserId = formData.reportingManagerUserId ? [Number(formData.reportingManagerUserId)] : [];
       if (primaryManager?.UserReportingManagerId) {
         editPayload.UserReportingManagerId = Number(primaryManager.UserReportingManagerId);
       }

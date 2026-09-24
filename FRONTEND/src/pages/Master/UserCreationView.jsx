@@ -607,13 +607,13 @@ export default function UserCreationView() {
     fd.append('CompanyId',          form.CompanyId);
     // ReportingManagerUserId — multi
     const managerIds = Array.isArray(form.ReportingManagerUserId) ? form.ReportingManagerUserId : (form.ReportingManagerUserId ? [form.ReportingManagerUserId] : []);
-    managerIds.forEach(mid => fd.append('ReportingManagerUserId', mid));
+    fd.append('ReportingManagerUserId', JSON.stringify(managerIds.map(Number)));
     // CompanyProductId — multi
     const productIds = Array.isArray(form.CompanyProductId) ? form.CompanyProductId : (form.CompanyProductId ? [form.CompanyProductId] : []);
-    productIds.forEach(pid => fd.append('CompanyProductId', pid));
+    fd.append('CompanyProductId', JSON.stringify(productIds.map(Number)));
     // ProjectId — multi
     const projectIds = Array.isArray(form.ProjectId) ? form.ProjectId : (form.ProjectId ? [form.ProjectId] : []);
-    projectIds.forEach(pid => fd.append('ProjectId', pid));
+    fd.append('ProjectId', JSON.stringify(projectIds.map(Number)));
     fd.append('RoleId',             form.RoleId);
     fd.append('DesignationId',      form.DesignationId);
     // User documents — keyed by fileTypeId

@@ -1,4 +1,4 @@
-﻿// src/pages/Master/ManagePageView.jsx
+// src/pages/Master/ManagePageView.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   PageHeader,
@@ -885,8 +885,8 @@ export default function ManagePageView() {
                     </label>
                     <div className="relative">
                       <select
-                        value={formData.SelectedMainPage}
-                        onChange={(e) => setFormData({ ...formData, SelectedMainPage: e.target.value })}
+                        value={formData.OrderRelativePage}
+                        onChange={(e) => setFormData({ ...formData, OrderRelativePage: e.target.value })}
                         className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
                       >
                         <option value="">Select MainPage</option>
