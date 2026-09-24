@@ -8,7 +8,7 @@ import {
   Input
 } from '../../components/ui/index';
 import { DataTable } from '../../components/ui/DataTable';
-import { Modal, ConfirmDialog } from '../../components/ui/Modal';
+import { Modal } from '../../components/ui/Modal';
 import {
   Search,
   Plus,
@@ -20,6 +20,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { pageService } from '../../services/pageService';
+import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
 
 export default function ManagePageView() {
@@ -34,8 +35,6 @@ export default function ManagePageView() {
   const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit'
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedPage, setSelectedPage] = useState(null);
-  const [deleteRecord, setDeleteRecord] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -338,7 +337,7 @@ export default function ManagePageView() {
       OrderPosition: page.OrderPosition || 'IsBefore',
       OrderRelativePage: page.OrderRelativePage || page.OrderPageId || '',
       Roles: Array.isArray(page.Roles) && page.Roles.length > 0 
-        ? page.Roles 
+        ? page.Roles.map(r => (typeof r === 'object' && r !== null ? (r.RoleName || r.roleName || '') : String(r))).filter(Boolean)
         : (page.RoleName ? page.RoleName.split(',').map(r => r.trim()) : ['Super Admin']),
       IsActive: page.IsDisabled !== true && page.Status !== 'INACTIVE' && page.IsActive !== false
     });
@@ -358,6 +357,20 @@ export default function ManagePageView() {
     try {
       const isCurrentlyDisabled = record.IsDisabled === true || record.Status === 'INACTIVE' || record.IsActive === false;
       const newDisabledState = !isCurrentlyDisabled; // true if turning inactive, false if turning active
+
+      if (record.UserId) {
+        const currentUser = useERPStore.getState().user;
+        const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || 'admin';
+        await userService.toggleUserStatus({
+          flagId: 1,
+          IsDisabled: newDisabledState,
+          UpdatedByUserName: userName,
+          UserId: Number(record.UserId)
+        });
+        showToast(`User status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
+        await loadPages();
+        return;
+      }
 
       await pageService.updateStatus(record.PageId, newDisabledState);
       showToast(`Page status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
@@ -448,12 +461,31 @@ export default function ManagePageView() {
 
     try {
       // 1. Resolve RoleIds from selected Roles
-      const roleIds = (formData.Roles || []).map((roleName) => {
-        const found = rolesDropdownList.find(
-          (r) => (r.RoleName || r.roleName || r.Role || r.name) === roleName || String(r.RoleId || r.roleId || r.id) === String(roleName)
-        );
-        return found?.RoleId ?? found?.roleId ?? found?.id ?? 1;
-      });
+      let rolesPool = [...rolesDropdownList];
+      if (rolesPool.length === 0) {
+        try {
+          rolesPool = await pageService.getRolesDropdown();
+        } catch (e) {
+          rolesPool = [];
+        }
+      }
+
+      const roleIds = Array.from(
+        new Set(
+          (formData.Roles || [])
+            .map((roleName) => {
+              const found = rolesPool.find(
+                (r) =>
+                  (r.RoleName || r.roleName || r.Role || r.name || '').trim().toLowerCase() ===
+                    String(roleName).trim().toLowerCase() ||
+                  String(r.RoleId || r.roleId || r.id) === String(roleName)
+              );
+              const val = found?.RoleId ?? found?.roleId ?? found?.id ?? (Number(roleName) || null);
+              return val ? Number(val) : null;
+            })
+            .filter((id) => id !== null && !isNaN(id))
+        )
+      );
 
       // 2. Resolve ParentPageId based on PageType
       let resolvedParentPageId = null;
@@ -510,30 +542,31 @@ export default function ManagePageView() {
         showToast('Page created successfully!', 'success');
       } else {
         const updatePayload = {
-          PageId: selectedPage.PageId,
+          FlagId: 2,
+          PageId: Number(selectedPage.PageId),
           PageName: formData.PageName.trim(),
-          PageURL: formData.PageURL.trim(),
           PageUrl: formData.PageURL.trim(),
-          IconName: formData.IconName.trim(),
           PageIcon: formData.IconName.trim(),
           PageType: formData.PageType,
-          ParentPage: resolvedParentPageName,
-          ...(resolvedParentPageId !== null ? { ParentPageId: Number(resolvedParentPageId) } : {}),
-          Roles: formData.Roles,
+          ParentPageId: formData.PageType !== 'MainPage' && resolvedParentPageId !== null ? Number(resolvedParentPageId) : null,
           RoleIds: roleIds.length > 0 ? roleIds : [1],
-          RoleName: formData.Roles.join(', '),
-          OrderChanged: formData.OrderChanged,
           IsChangeOrder: Boolean(formData.OrderChanged),
-          ...(formData.OrderChanged ? {
-            OrderType: formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER',
-            TargetPageId: resolvedTargetPageId ? Number(resolvedTargetPageId) : 2
-          } : {}),
-          OrderPosition: formData.OrderPosition,
-          OrderRelativePage: formData.OrderRelativePage,
-          IsActive: formData.IsActive
+          OrderType: formData.OrderChanged ? (formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER') : '',
+          TargetPageId: formData.OrderChanged && resolvedTargetPageId ? Number(resolvedTargetPageId) : null,
+          UpdatedByUserName: userName
         };
 
         await pageService.updatePage(updatePayload);
+
+        // Also update status if changed in the modal
+        if (formData.IsActive !== undefined && selectedPage.IsActive !== undefined && formData.IsActive !== selectedPage.IsActive) {
+          try {
+            await pageService.updateStatus(selectedPage.PageId, !formData.IsActive);
+          } catch (statusErr) {
+            console.error('Failed to update status with edit:', statusErr);
+          }
+        }
+
         showToast('Page updated successfully!', 'success');
       }
 
@@ -673,7 +706,6 @@ export default function ManagePageView() {
         onAddClick={handleOpenAddModal}
         onViewClick={handleOpenViewModal}
         onEditClick={handleOpenEditModal}
-        onDeleteClick={(row) => setDeleteRecord(row)}
         onToggleStatusClick={handleToggleStatus}
         searchPlaceholder="Search pages..."
       />
@@ -1269,18 +1301,6 @@ export default function ManagePageView() {
           </div>
         )}
       </Modal>
-
-      {/* Delete Confirmation Dialog */}
-      {deleteRecord && (
-        <ConfirmDialog
-          isOpen={!!deleteRecord}
-          onClose={() => setDeleteRecord(null)}
-          onConfirm={handleDeleteConfirm}
-          loading={deleteLoading}
-          title="Delete Page"
-          message={`Are you sure you want to delete the page "${deleteRecord.PageName}"? This action cannot be undone.`}
-        />
-      )}
     </div>
   );
 }

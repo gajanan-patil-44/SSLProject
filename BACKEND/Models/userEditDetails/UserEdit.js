@@ -13,6 +13,22 @@ export const getAllUserDetails = async () => {
         u."LastName",
         u."Email",
         u."LoginName",
+        u."PhoneNumber",
+        u."AltPhoneNumber",
+        u."DateOfJoining",
+        u."DateOfBirth",
+        u."IsDisabled",
+
+        u."GenderId", 
+        g."GenderName" AS "GenderName",
+
+        u."MaritalStatusId", 
+        ms."MaritalStatusName" AS "MaritalStatusName",
+
+        u."DesignationId", 
+        cd."DesignationName" AS "DesignationName",
+
+
 
         -- =====================================
         -- COMPANY
@@ -194,16 +210,29 @@ export const getAllUserDetails = async () => {
     LEFT JOIN "LKP"."Company" rmc
         ON rmc."CompanyId" = urm."CompanyId"
 
-    
+    LEFT JOIN "LKP"."Gender" g 
+    ON g."GenderId" = u."GenderId"
 
-    GROUP BY
+    LEFT JOIN "LKP"."MaritalStatus" ms 
+    ON ms."MaritalStatusId" = u."MaritalStatusId"
+
+    LEFT JOIN "LKP"."CompanyDesignation" cd 
+    ON cd."CompanyDesignationId" = u."DesignationId"
+
+GROUP BY
         u."UserId",
         u."EmployeeId",
         u."FirstName",
         u."MiddleName",
         u."LastName",
         u."Email",
-        u."LoginName";
+        u."LoginName",
+        u."GenderId", 
+        g."GenderName", 
+        u."MaritalStatusId",
+        ms."MaritalStatusName", 
+        u."DesignationId", 
+        cd."DesignationName";
 
 `;
         const result = await pool.query(query);
@@ -343,7 +372,6 @@ export const editUserdetails = async ({
             ]
         );
 
-
         if (UserCompanyId) {
 
             const userCompanyQuery = `
@@ -368,8 +396,8 @@ export const editUserdetails = async ({
                 AND "UserId" = $5;
             `;
 
-
-            await client.query(
+            
+          let r=  await client.query(
                 userCompanyQuery,
                 [
                     companyId,
@@ -379,10 +407,8 @@ export const editUserdetails = async ({
                     UserId
                 ]
             );
+            
         }
-
-
-       
 
         if (UserProductId) {
 
@@ -409,7 +435,7 @@ export const editUserdetails = async ({
             `;
 
 
-            await client.query(
+          let s=  await client.query(
                 userProductQuery,
                 [
                     companyProductId,
@@ -418,6 +444,8 @@ export const editUserdetails = async ({
                     UserId
                 ]
             );
+
+         
         }
 
 
@@ -567,11 +595,7 @@ export const editUserdetails = async ({
             );
         }
 
-
-       
-
         await client.query("COMMIT");
-
 
         return {
             UserId
@@ -790,9 +814,7 @@ export const getAllCompanyProducts = async (CompanyId) => {
 };
 
 
-// ======================================================
-// GET ALL PROJECTS
-// ======================================================
+
 
 export const getAllProjects = async (CompanyProductId) => {
 
@@ -858,3 +880,36 @@ export const getAllRoles = async (CompanyId) => {
     }
 };
 
+
+
+export const toggleUserStatuses = async (userData) => {
+
+    try {
+
+        const query = `
+            UPDATE "DATA"."User"
+            SET
+                "IsDisabled" = $1,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $2
+            WHERE "UserId" = $3
+            RETURNING *;
+        `;
+
+        const values = [
+            userData.IsDisabled,
+            userData.UpdatedByUserName,
+            userData.UserId
+        ];
+
+        const result = await pool.query(query, values);
+
+        return result.rows[0];
+
+    } catch (error) {
+
+        // console.error("Error toggling user status:", error);
+
+        throw error;
+    }
+};

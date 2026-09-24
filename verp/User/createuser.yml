@@ -11,7 +11,7 @@ http:
     data:
       - name: EmployeeId
         type: text
-        value: EMP10
+        value: EMP13
       - name: FirstName
         type: text
         value: htihin
@@ -23,7 +23,7 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-        value: "99998843484"
+        value: "99994843384"
       - name: AltPhoneNumber
         type: text
         value: "7838432136"
@@ -41,10 +41,10 @@ http:
         value: "1"
       - name: Email
         type: text
-        value: admin11@example.com
+        value: admin13@example.com
       - name: LoginName
         type: text
-        value: ADMIN10
+        value: admin13
       - name: Photo
         type: file
         value:
@@ -52,7 +52,7 @@ http:
         contentType: image/jpeg
       - name: Password
         type: text
-        value: admin10@123
+        value: admin13@123
       - name: CreatedByUserName
         type: text
         value: admin
@@ -102,7 +102,9 @@ http:
         type: text
         value: "1"
         disabled: true
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3OTAwNzY4NzAsImV4cCI6MTc5MDEwNTY3MH0.4CN2zwtQ0Die2zlOI9QYn_dcyDrg8-k8Dl6_LvyKz_s
 
 settings:
   encodeUrl: true

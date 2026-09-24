@@ -1,0 +1,33 @@
+info:
+  name: edit
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/managePages/edit
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 2,
+          "PageId": 1,
+          "PageName": "Companies",
+          "PageUrl": "/master/companies",
+          "PageIcon": "building",
+          "PageType": "ParentPage",
+          "ParentPageId": 6,
+          "RoleIds": [1, 2],
+          "IsChangeOrder": true,
+          "OrderType": "BEFORE",
+          "TargetPageId": 2,
+          "UpdatedByUserName": "admin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

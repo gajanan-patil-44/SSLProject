@@ -174,6 +174,13 @@ export const pageService = {
   },
 
   /**
+   * Update existing page (POST /edit FlagId: 2)
+   */
+  updatePage: async (data) => {
+    return apiClient.post(API_ROUTES.PAGE.EDIT, data);
+  },
+
+  /**
    * Toggle or update status (PATCH: FlagId: 2)
    */
   updateStatus: async (pageId, isDisabled) => {
