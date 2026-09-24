@@ -185,9 +185,12 @@ export const createUserController = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     `Received ${userFiles.length} UserFiles but ${fileTypeIds.length} FileTypeIds`
+
             });
 
         }
@@ -209,9 +212,12 @@ export const createUserController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
+
                     status: "error",
+
                     message:
                         `Invalid FileTypeId for UserFile ${i + 1}`
+
                 });
 
             }
@@ -301,11 +307,15 @@ export const createUserController = async (req, res) => {
 
 
                 return res.status(500).json({
+
                     status: "error",
+
                     message:
                         "Failed to process UserFile",
+
                     error:
                         workerError.message
+
                 });
 
             }
@@ -342,9 +352,12 @@ export const createUserController = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "EmployeeId is required"
+
             });
 
         }
@@ -353,9 +366,12 @@ export const createUserController = async (req, res) => {
         if (!userData.FirstName) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "FirstName is required"
+
             });
 
         }
@@ -364,9 +380,12 @@ export const createUserController = async (req, res) => {
         if (!userData.PhoneNumber) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "PhoneNumber is required"
+
             });
 
         }
@@ -375,9 +394,12 @@ export const createUserController = async (req, res) => {
         if (!userData.DateOfBirth) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "DateOfBirth is required"
+
             });
 
         }
@@ -386,9 +408,12 @@ export const createUserController = async (req, res) => {
         if (!userData.DateOfJoining) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "DateOfJoining is required"
+
             });
 
         }
@@ -397,9 +422,12 @@ export const createUserController = async (req, res) => {
         if (!userData.GenderId) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "GenderId is required"
+
             });
 
         }
@@ -408,9 +436,12 @@ export const createUserController = async (req, res) => {
         if (!userData.MaritalStatusId) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "MaritalStatusId is required"
+
             });
 
         }
@@ -419,9 +450,12 @@ export const createUserController = async (req, res) => {
         if (!userData.DesignationId) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "DesignationId is required"
+
             });
 
         }
@@ -430,9 +464,12 @@ export const createUserController = async (req, res) => {
         if (!userData.Email) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "Email is required"
+
             });
 
         }
@@ -441,9 +478,12 @@ export const createUserController = async (req, res) => {
         if (!userData.LoginName) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "LoginName is required"
+
             });
 
         }
@@ -452,9 +492,12 @@ export const createUserController = async (req, res) => {
         if (!userData.Password) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "Password is required"
+
             });
 
         }
@@ -471,43 +514,206 @@ export const createUserController = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "CompanyId is required"
+
             });
 
         }
 
+
+        // ==========================================================
+        // COMPANY PRODUCT - REQUIRED ARRAY
+        // ==========================================================
 
         if (
             userData.CompanyProductId === undefined ||
             userData.CompanyProductId === null ||
-            String(userData.CompanyProductId).trim() === ""
+            userData.CompanyProductId === ""
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "CompanyProductId is required"
+
             });
 
         }
 
+
+        // Convert single value to array
+        if (
+            !Array.isArray(
+                userData.CompanyProductId
+            )
+        ) {
+
+            userData.CompanyProductId = [
+                userData.CompanyProductId
+            ];
+
+        }
+
+
+        // Convert every value to Number
+        userData.CompanyProductId =
+            userData.CompanyProductId.map(
+                id => Number(id)
+            );
+
+
+        // Validate CompanyProductId array
+        if (
+            userData.CompanyProductId.length === 0
+        ) {
+
+            return res.status(400).json({
+
+                status: "error",
+
+                message:
+                    "At least one CompanyProductId is required"
+
+            });
+
+        }
+
+
+        for (
+            const companyProductId
+            of userData.CompanyProductId
+        ) {
+
+            if (
+                !Number.isInteger(
+                    companyProductId
+                ) ||
+                companyProductId <= 0
+            ) {
+
+                return res.status(400).json({
+
+                    status: "error",
+
+                    message:
+                        "Every CompanyProductId must be a valid number"
+
+                });
+
+            }
+
+        }
+
+
+        // Remove duplicate CompanyProductIds
+        userData.CompanyProductId =
+            [...new Set(
+                userData.CompanyProductId
+            )];
+
+
+        // ==========================================================
+        // PROJECT - REQUIRED ARRAY
+        // ==========================================================
 
         if (
             userData.ProjectId === undefined ||
             userData.ProjectId === null ||
-            String(userData.ProjectId).trim() === ""
+            userData.ProjectId === ""
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "ProjectId is required"
+
             });
 
         }
 
+
+        // Convert single value to array
+        if (
+            !Array.isArray(
+                userData.ProjectId
+            )
+        ) {
+
+            userData.ProjectId = [
+                userData.ProjectId
+            ];
+
+        }
+
+
+        // Convert every value to Number
+        userData.ProjectId =
+            userData.ProjectId.map(
+                id => Number(id)
+            );
+
+
+        // Validate ProjectId array
+        if (
+            userData.ProjectId.length === 0
+        ) {
+
+            return res.status(400).json({
+
+                status: "error",
+
+                message:
+                    "At least one ProjectId is required"
+
+            });
+
+        }
+
+
+        for (
+            const projectId
+            of userData.ProjectId
+        ) {
+
+            if (
+                !Number.isInteger(
+                    projectId
+                ) ||
+                projectId <= 0
+            ) {
+
+                return res.status(400).json({
+
+                    status: "error",
+
+                    message:
+                        "Every ProjectId must be a valid number"
+
+                });
+
+            }
+
+        }
+
+
+        // Remove duplicate ProjectIds
+        userData.ProjectId =
+            [...new Set(
+                userData.ProjectId
+            )];
+
+
+        // ==========================================================
+        // ROLE
+        // ==========================================================
 
         if (
             userData.RoleId === undefined ||
@@ -516,16 +722,19 @@ export const createUserController = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "RoleId is required"
+
             });
 
         }
 
 
         // ==========================================================
-        // REPORTING MANAGER
+        // REPORTING MANAGER - OPTIONAL ARRAY
         // ==========================================================
 
         if (
@@ -536,47 +745,83 @@ export const createUserController = async (req, res) => {
             ).trim() !== ""
         ) {
 
-            userData.ReportingManagerUserId =
-                Number(
+            // Convert single value to array
+            if (
+                !Array.isArray(
                     userData.ReportingManagerUserId
+                )
+            ) {
+
+                userData.ReportingManagerUserId = [
+                    userData.ReportingManagerUserId
+                ];
+
+            }
+
+
+            // Convert every value to Number
+            userData.ReportingManagerUserId =
+                userData.ReportingManagerUserId.map(
+                    id => Number(id)
                 );
 
 
+            // Validate array
             if (
-                !Number.isInteger(
-                    userData.ReportingManagerUserId
-                ) ||
-                userData.ReportingManagerUserId <= 0
+                userData.ReportingManagerUserId.length === 0
             ) {
 
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "ReportingManagerUserId must be a valid number"
-                });
+                userData.ReportingManagerUserId = [];
+
+            } else {
+
+                for (
+                    const reportingManagerUserId
+                    of userData.ReportingManagerUserId
+                ) {
+
+                    if (
+                        !Number.isInteger(
+                            reportingManagerUserId
+                        ) ||
+                        reportingManagerUserId <= 0
+                    ) {
+
+                        return res.status(400).json({
+
+                            status: "error",
+
+                            message:
+                                "Every ReportingManagerUserId must be a valid number"
+
+                        });
+
+                    }
+
+                }
+
+
+                // Remove duplicate Reporting Manager IDs
+                userData.ReportingManagerUserId =
+                    [...new Set(
+                        userData.ReportingManagerUserId
+                    )];
 
             }
 
         } else {
 
-            userData.ReportingManagerUserId =
-                null;
+            userData.ReportingManagerUserId = [];
 
         }
 
 
         // ==========================================================
-        // CONVERT NUMERIC VALUES
+        // CONVERT SINGLE NUMERIC VALUES
         // ==========================================================
 
         userData.CompanyId =
             Number(userData.CompanyId);
-
-        userData.CompanyProductId =
-            Number(userData.CompanyProductId);
-
-        userData.ProjectId =
-            Number(userData.ProjectId);
 
         userData.RoleId =
             Number(userData.RoleId);
@@ -600,16 +845,6 @@ export const createUserController = async (req, res) => {
             [
                 "CompanyId",
                 userData.CompanyId
-            ],
-
-            [
-                "CompanyProductId",
-                userData.CompanyProductId
-            ],
-
-            [
-                "ProjectId",
-                userData.ProjectId
             ],
 
             [
@@ -646,9 +881,12 @@ export const createUserController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
+
                     status: "error",
+
                     message:
                         `${field} must be a valid number`
+
                 });
 
             }
@@ -671,9 +909,12 @@ export const createUserController = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "Invalid email format"
+
             });
 
         }
@@ -700,9 +941,12 @@ export const createUserController = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "Invalid phone number"
+
             });
 
         }
@@ -733,9 +977,12 @@ export const createUserController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
+
                     status: "error",
+
                     message:
                         "Invalid alternate phone number"
+
                 });
 
             }
@@ -761,9 +1008,12 @@ export const createUserController = async (req, res) => {
         if (emailExists.length > 0) {
 
             return res.status(409).json({
+
                 status: "error",
+
                 message:
                     "Email already exists"
+
             });
 
         }
@@ -782,9 +1032,12 @@ export const createUserController = async (req, res) => {
         if (loginNameExists.length > 0) {
 
             return res.status(409).json({
+
                 status: "error",
+
                 message:
                     "Login name already exists"
+
             });
 
         }
@@ -803,9 +1056,12 @@ export const createUserController = async (req, res) => {
         if (phoneExists.length > 0) {
 
             return res.status(409).json({
+
                 status: "error",
+
                 message:
                     "Phone number already exists"
+
             });
 
         }
@@ -824,9 +1080,12 @@ export const createUserController = async (req, res) => {
         if (employeeExists.length > 0) {
 
             return res.status(409).json({
+
                 status: "error",
+
                 message:
                     "Employee ID already exists"
+
             });
 
         }
@@ -860,9 +1119,12 @@ export const createUserController = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 status: "error",
+
                 message:
                     "Invalid DateOfJoining"
+
             });
 
         }
