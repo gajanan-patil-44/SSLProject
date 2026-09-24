@@ -1,4 +1,4 @@
-// src/pages/Master/ManagePageView.jsx
+﻿// src/pages/Master/ManagePageView.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   PageHeader,
@@ -663,7 +663,7 @@ export default function ManagePageView() {
             {roles.map((r, i) => (
               <span
                 key={i}
-                className="px-2 py-0.5 text-[11px] font-medium bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800"
+                className="px-2 py-0.5 text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded border border-indigo-200 dark:border-indigo-800"
               >
                 {r}
               </span>
@@ -799,7 +799,7 @@ export default function ManagePageView() {
                   value="MainPage"
                   checked={formData.PageType === 'MainPage'}
                   onChange={() => setFormData({ ...formData, PageType: 'MainPage' })}
-                  className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                  className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                 />
                 <span>MainPage</span>
               </label>
@@ -811,7 +811,7 @@ export default function ManagePageView() {
                   value="ParentPage"
                   checked={formData.PageType === 'ParentPage'}
                   onChange={() => setFormData({ ...formData, PageType: 'ParentPage' })}
-                  className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                  className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                 />
                 <span>ParentPage</span>
               </label>
@@ -823,7 +823,7 @@ export default function ManagePageView() {
                   value="ChildPage"
                   checked={formData.PageType === 'ChildPage'}
                   onChange={() => setFormData({ ...formData, PageType: 'ChildPage' })}
-                  className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                  className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                 />
                 <span>ChildPage</span>
               </label>
@@ -842,7 +842,7 @@ export default function ManagePageView() {
                     type="checkbox"
                     checked={formData.OrderChanged}
                     onChange={(e) => setFormData({ ...formData, OrderChanged: e.target.checked })}
-                    className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                   />
                   <span>Do you want to change order.?</span>
                 </label>
@@ -850,7 +850,7 @@ export default function ManagePageView() {
 
               {/* Dynamic IsBefore / IsAfter above MainPage Dropdown */}
               {formData.OrderChanged && (
-                <div className="space-y-3 pl-1 border-l-2 border-teal-500/40 animate-in fade-in duration-150">
+                <div className="space-y-3 pl-1 border-l-2 border-indigo-500/40 animate-in fade-in duration-150">
                   {/* IsBefore / IsAfter Radio Options placed first */}
                   <div className="flex items-center gap-6 pt-0.5">
                     <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -860,7 +860,7 @@ export default function ManagePageView() {
                         value="IsBefore"
                         checked={formData.OrderPosition === 'IsBefore'}
                         onChange={() => setFormData({ ...formData, OrderPosition: 'IsBefore' })}
-                        className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                       />
                       <span>IsBefore</span>
                     </label>
@@ -872,7 +872,7 @@ export default function ManagePageView() {
                         value="IsAfter"
                         checked={formData.OrderPosition === 'IsAfter'}
                         onChange={() => setFormData({ ...formData, OrderPosition: 'IsAfter' })}
-                        className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                       />
                       <span>IsAfter</span>
                     </label>
@@ -887,7 +887,7 @@ export default function ManagePageView() {
                       <select
                         value={formData.SelectedMainPage}
                         onChange={(e) => setFormData({ ...formData, SelectedMainPage: e.target.value })}
-                        className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                        className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
                       >
                         <option value="">Select MainPage</option>
                         {mainPageOptions.map((mp, idx) => (
@@ -919,7 +919,7 @@ export default function ManagePageView() {
                       setFormData({ ...formData, SelectedParentPage: e.target.value });
                       if (formErrors.SelectedParentPage) setFormErrors({ ...formErrors, SelectedParentPage: null });
                     }}
-                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
+                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
                       formErrors.SelectedParentPage ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -944,7 +944,7 @@ export default function ManagePageView() {
                     type="checkbox"
                     checked={formData.OrderChanged}
                     onChange={(e) => setFormData({ ...formData, OrderChanged: e.target.checked })}
-                    className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                   />
                   <span>Do you want to change order.?</span>
                 </label>
@@ -952,7 +952,7 @@ export default function ManagePageView() {
 
               {/* Dynamic IsBefore / IsAfter and relative ParentPage dropdown */}
               {formData.OrderChanged && (
-                <div className="space-y-3 pl-1 border-l-2 border-teal-500/40 animate-in fade-in duration-150">
+                <div className="space-y-3 pl-1 border-l-2 border-indigo-500/40 animate-in fade-in duration-150">
                   <div className="flex items-center gap-6 pt-0.5">
                     <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <input
@@ -961,7 +961,7 @@ export default function ManagePageView() {
                         value="IsBefore"
                         checked={formData.OrderPosition === 'IsBefore'}
                         onChange={() => setFormData({ ...formData, OrderPosition: 'IsBefore' })}
-                        className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                       />
                       <span>IsBefore</span>
                     </label>
@@ -973,7 +973,7 @@ export default function ManagePageView() {
                         value="IsAfter"
                         checked={formData.OrderPosition === 'IsAfter'}
                         onChange={() => setFormData({ ...formData, OrderPosition: 'IsAfter' })}
-                        className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                       />
                       <span>IsAfter</span>
                     </label>
@@ -988,7 +988,7 @@ export default function ManagePageView() {
                       <select
                         value={formData.OrderRelativePage}
                         onChange={(e) => setFormData({ ...formData, OrderRelativePage: e.target.value })}
-                        className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                        className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
                       >
                         <option value="">Select ParentPage</option>
                         {parentPageOptions
@@ -1028,7 +1028,7 @@ export default function ManagePageView() {
                       });
                       if (formErrors.SelectedMainPage) setFormErrors({ ...formErrors, SelectedMainPage: null });
                     }}
-                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
+                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
                       formErrors.SelectedMainPage ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -1063,7 +1063,7 @@ export default function ManagePageView() {
                       });
                       if (formErrors.SelectedParentPage) setFormErrors({ ...formErrors, SelectedParentPage: null });
                     }}
-                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
+                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8 ${
                       formErrors.SelectedParentPage ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
@@ -1088,7 +1088,7 @@ export default function ManagePageView() {
                     type="checkbox"
                     checked={formData.OrderChanged}
                     onChange={(e) => setFormData({ ...formData, OrderChanged: e.target.checked })}
-                    className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                   />
                   <span>Do you want to change order.?</span>
                 </label>
@@ -1096,7 +1096,7 @@ export default function ManagePageView() {
 
               {/* Dynamic IsBefore / IsAfter placed above ChildPage dropdown */}
               {formData.OrderChanged && (
-                <div className="space-y-3 pl-1 border-l-2 border-teal-500/40 animate-in fade-in duration-150">
+                <div className="space-y-3 pl-1 border-l-2 border-indigo-500/40 animate-in fade-in duration-150">
                   {/* IsBefore / IsAfter Radio Options placed first */}
                   <div className="flex items-center gap-6 pt-0.5">
                     <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -1106,7 +1106,7 @@ export default function ManagePageView() {
                         value="IsBefore"
                         checked={formData.OrderPosition === 'IsBefore'}
                         onChange={() => setFormData({ ...formData, OrderPosition: 'IsBefore' })}
-                        className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                       />
                       <span>IsBefore</span>
                     </label>
@@ -1118,7 +1118,7 @@ export default function ManagePageView() {
                         value="IsAfter"
                         checked={formData.OrderPosition === 'IsAfter'}
                         onChange={() => setFormData({ ...formData, OrderPosition: 'IsAfter' })}
-                        className="w-4 h-4 text-teal-600 focus:ring-teal-500 cursor-pointer accent-teal-600"
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
                       />
                       <span>IsAfter</span>
                     </label>
@@ -1133,7 +1133,7 @@ export default function ManagePageView() {
                       <select
                         value={formData.OrderRelativePage}
                         onChange={(e) => setFormData({ ...formData, OrderRelativePage: e.target.value })}
-                        className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                        className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
                       >
                         <option value="">Select ChildPage</option>
                         {childPageOptions.map((cp, idx) => (
@@ -1172,13 +1172,13 @@ export default function ManagePageView() {
                   formData.Roles.map((role) => (
                     <span
                       key={role}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 shadow-2xs"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 shadow-2xs"
                     >
                       <span>{role}</span>
                       <button
                         type="button"
                         onClick={(e) => handleRemoveRole(role, e)}
-                        className="hover:text-rose-600 text-teal-500 dark:text-teal-400 p-0.5 rounded cursor-pointer transition-colors"
+                        className="hover:text-rose-600 text-teal-500 dark:text-indigo-400 p-0.5 rounded cursor-pointer transition-colors"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -1198,10 +1198,10 @@ export default function ManagePageView() {
                         onClick={() => handleToggleRole(role)}
                         className="px-3.5 py-2 text-xs font-medium flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-slate-800 dark:text-slate-200 transition-colors"
                       >
-                        <span className={isSelected ? 'font-bold text-teal-600 dark:text-teal-400' : ''}>
+                        <span className={isSelected ? 'font-bold text-indigo-600 dark:text-indigo-400' : ''}>
                           {role}
                         </span>
-                        {isSelected && <Check className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
+                        {isSelected && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                       </div>
                     );
                   })}
@@ -1292,7 +1292,7 @@ export default function ManagePageView() {
                   ? selectedPage.Roles.map((r) => (typeof r === 'object' && r !== null ? (r.RoleName || r.roleName || '') : String(r))).filter(Boolean)
                   : (selectedPage.RoleName ? selectedPage.RoleName.split(',').map((r) => r.trim()) : ['Super Admin'])
                 ).map((r, idx) => (
-                  <span key={idx} className="px-2.5 py-1 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800">
+                  <span key={idx} className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded border border-indigo-200 dark:border-indigo-800">
                     {r}
                   </span>
                 ))}
