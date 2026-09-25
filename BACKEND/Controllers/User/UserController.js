@@ -110,217 +110,67 @@ export const userDropdownController = async (req, res) => {
         });
     }
 };
+// ==========================================================
+// CREATE USER
+// ==========================================================
+
 export const createUserController = async (req, res) => {
 
     try {
+
         const userData = req.body;
-        // ==========================================================
-        // MULTER FILES
-        // ==========================================================
-        const files = req.files || [];
-        // ==========================================================
-        // PHOTO
-        // ==========================================================
-
-        const photoFile = files.find(
-            file => file.fieldname === "Photo"
-        );
-
-        if (photoFile) {
-
-            const photoBuffer =
-                await readFile(photoFile.path);
-
-            userData.Photo = photoBuffer;
-
-        } else {
-
-            userData.Photo = null;
-
-        }
 
 
         // ==========================================================
-        // USER FILES
+        // EMPTY VALUE CHECK
         // ==========================================================
 
-        const userFiles = files.filter(
-            file => file.fieldname === "UserFile"
-        );
+        const isEmpty = (value) => {
 
-        let fileTypeIds =
-            req.body.FileTypeId || [];
-
-
-        if (!Array.isArray(fileTypeIds)) {
-
-            fileTypeIds = [fileTypeIds];
-
-        }
-
-
-        // ==========================================================
-        // CONVERT FILE TYPE IDS
-        // ==========================================================
-
-        fileTypeIds =
-            fileTypeIds.map(
-                id => Number(id)
+            return (
+                value === undefined ||
+                value === null ||
+                value === ""
             );
 
-
-        // ==========================================================
-        // VALIDATE FILE COUNT
-        // ==========================================================
-
-        if (
-            userFiles.length !==
-            fileTypeIds.length
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    `Received ${userFiles.length} UserFiles but ${fileTypeIds.length} FileTypeIds`
-            });
-
-        }
+        };
 
 
         // ==========================================================
-        // VALIDATE FILE TYPE IDS
+        // CONVERT MULTIPART ARRAY FIELDS
         // ==========================================================
 
-        for (
-            let i = 0;
-            i < fileTypeIds.length;
-            i++
-        ) {
+        const arrayFields = [
+            "CompanyProductId",
+            "ProjectId",
+            "ReportingManagerUserId"
+        ];
 
-            if (
-                !Number.isInteger(fileTypeIds[i]) ||
-                fileTypeIds[i] <= 0
-            ) {
 
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        `Invalid FileTypeId for UserFile ${i + 1}`
-                });
+        for (const field of arrayFields) {
+
+            if (!isEmpty(userData[field])) {
+
+                if (typeof userData[field] === "string") {
+
+                    try {
+
+                        userData[field] =
+                            JSON.parse(userData[field]);
+
+                    } catch (error) {
+
+                        return res.status(400).json({
+                            status: "error",
+                            message:
+                                `${field} must be a valid JSON array`
+                        });
+
+                    }
+
+                }
 
             }
-
-        }
-
-
-        userData.UserFiles = [];
-
-
-        // ==========================================================
-        // GROUP FILES BY FILE TYPE
-        // ==========================================================
-
-        const fileTypeGroups =
-            new Map();
-
-
-        for (
-            let i = 0;
-            i < userFiles.length;
-            i++
-        ) {
-
-            const file =
-                userFiles[i];
-
-            const fileTypeId =
-                fileTypeIds[i];
-
-
-            if (
-                !fileTypeGroups.has(
-                    fileTypeId
-                )
-            ) {
-
-                fileTypeGroups.set(
-                    fileTypeId,
-                    []
-                );
-
-            }
-
-
-            fileTypeGroups
-                .get(fileTypeId)
-                .push(file.path);
-
-        }
-
-
-        // ==========================================================
-        // PROCESS FILES USING WORKER
-        // ==========================================================
-
-        for (
-            const [fileTypeId, inputPaths]
-            of fileTypeGroups
-        ) {
-
-            try {
-
-                const workerResult =
-                    await processUserFilesUsingWorker(
-                        inputPaths
-                    );
-
-
-                userData.UserFiles.push({
-
-                    FileTypeId:
-                        Number(fileTypeId),
-
-                    FilePath:
-                        workerResult.filePath
-
-                });
-
-
-            } catch (workerError) {
-
-                console.error(
-                    "UserFile Worker Error:",
-                    workerError
-                );
-
-
-                return res.status(500).json({
-                    status: "error",
-                    message:
-                        "Failed to process UserFile",
-                    error:
-                        workerError.message
-                });
-
-            }
-
-        }
-
-
-        // ==========================================================
-        // FILE TYPE FOR USER DETAILS
-        // ==========================================================
-
-        if (
-            userData.UserFiles.length > 0
-        ) {
-
-            userData.FileTypeId =
-                userData.UserFiles[0].FileTypeId;
-
-        } else {
-
-            userData.FileTypeId = null;
 
         }
 
@@ -329,314 +179,114 @@ export const createUserController = async (req, res) => {
         // REQUIRED USER FIELDS
         // ==========================================================
 
-        if (
-            userData.EmployeeId === undefined ||
-            userData.EmployeeId === null ||
-            userData.EmployeeId === ""
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "EmployeeId is required"
-            });
-
-        }
-
-
-        if (!userData.FirstName) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "FirstName is required"
-            });
-
-        }
+        const requiredFields = [
+            "EmployeeId",
+            "FirstName",
+            "PhoneNumber",
+            "DateOfBirth",
+            "DateOfJoining",
+            "GenderId",
+            "MaritalStatusId",
+            "DesignationId",
+            "Email",
+            "LoginName",
+            "Password",
+            "CompanyId",
+            "RoleId"
+        ];
 
 
-        if (!userData.PhoneNumber) {
+        for (const field of requiredFields) {
 
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "PhoneNumber is required"
-            });
+            if (isEmpty(userData[field])) {
 
-        }
+                return res.status(400).json({
+                    status: "error",
+                    message: `${field} is required`
+                });
 
-
-        if (!userData.DateOfBirth) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "DateOfBirth is required"
-            });
-
-        }
-
-
-        if (!userData.DateOfJoining) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "DateOfJoining is required"
-            });
-
-        }
-
-
-        if (!userData.GenderId) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "GenderId is required"
-            });
-
-        }
-
-
-        if (!userData.MaritalStatusId) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "MaritalStatusId is required"
-            });
-
-        }
-
-
-        if (!userData.DesignationId) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "DesignationId is required"
-            });
-
-        }
-
-
-        if (!userData.Email) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "Email is required"
-            });
-
-        }
-
-
-        if (!userData.LoginName) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "LoginName is required"
-            });
-
-        }
-
-
-        if (!userData.Password) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "Password is required"
-            });
+            }
 
         }
 
 
         // ==========================================================
-        // REQUIRED RELATIONSHIP FIELDS
+        // REQUIRED ARRAY FIELDS
         // ==========================================================
 
-        if (
-            userData.CompanyId === undefined ||
-            userData.CompanyId === null ||
-            String(userData.CompanyId).trim() === ""
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "CompanyId is required"
-            });
-
-        }
+        const requiredArrayFields = [
+            "CompanyProductId",
+            "ProjectId"
+        ];
 
 
-        if (
-            userData.CompanyProductId === undefined ||
-            userData.CompanyProductId === null ||
-            String(userData.CompanyProductId).trim() === ""
-        ) {
+        for (const field of requiredArrayFields) {
 
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "CompanyProductId is required"
-            });
+            if (
+                !Array.isArray(userData[field]) ||
+                userData[field].length === 0
+            ) {
 
-        }
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        `${field} must be a non-empty array`
+                });
 
-
-        if (
-            userData.ProjectId === undefined ||
-            userData.ProjectId === null ||
-            String(userData.ProjectId).trim() === ""
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "ProjectId is required"
-            });
-
-        }
-
-
-        if (
-            userData.RoleId === undefined ||
-            userData.RoleId === null ||
-            String(userData.RoleId).trim() === ""
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "RoleId is required"
-            });
+            }
 
         }
 
 
         // ==========================================================
         // REPORTING MANAGER
+        // OPTIONAL ARRAY
         // ==========================================================
 
+        if (isEmpty(userData.ReportingManagerUserId)) {
+
+            userData.ReportingManagerUserId = [];
+
+        }
+
+
         if (
-            userData.ReportingManagerUserId !== undefined &&
-            userData.ReportingManagerUserId !== null &&
-            String(
+            !Array.isArray(
                 userData.ReportingManagerUserId
-            ).trim() !== ""
+            )
         ) {
 
-            userData.ReportingManagerUserId =
-                Number(
-                    userData.ReportingManagerUserId
-                );
-
-
-            if (
-                !Number.isInteger(
-                    userData.ReportingManagerUserId
-                ) ||
-                userData.ReportingManagerUserId <= 0
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "ReportingManagerUserId must be a valid number"
-                });
-
-            }
-
-        } else {
-
-            userData.ReportingManagerUserId =
-                null;
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "ReportingManagerUserId must be an array"
+            });
 
         }
 
 
         // ==========================================================
-        // CONVERT NUMERIC VALUES
-        // ==========================================================
-
-        userData.CompanyId =
-            Number(userData.CompanyId);
-
-        userData.CompanyProductId =
-            Number(userData.CompanyProductId);
-
-        userData.ProjectId =
-            Number(userData.ProjectId);
-
-        userData.RoleId =
-            Number(userData.RoleId);
-
-        userData.GenderId =
-            Number(userData.GenderId);
-
-        userData.MaritalStatusId =
-            Number(userData.MaritalStatusId);
-
-        userData.DesignationId =
-            Number(userData.DesignationId);
-
-
-        // ==========================================================
-        // NUMERIC VALIDATION
+        // SINGLE NUMERIC FIELDS
         // ==========================================================
 
         const numericFields = [
-
-            [
-                "CompanyId",
-                userData.CompanyId
-            ],
-
-            [
-                "CompanyProductId",
-                userData.CompanyProductId
-            ],
-
-            [
-                "ProjectId",
-                userData.ProjectId
-            ],
-
-            [
-                "RoleId",
-                userData.RoleId
-            ],
-
-            [
-                "GenderId",
-                userData.GenderId
-            ],
-
-            [
-                "MaritalStatusId",
-                userData.MaritalStatusId
-            ],
-
-            [
-                "DesignationId",
-                userData.DesignationId
-            ]
-
+            "CompanyId",
+            "RoleId",
+            "GenderId",
+            "MaritalStatusId",
+            "DesignationId"
         ];
 
 
-        for (
-            const [field, value]
-            of numericFields
-        ) {
+        for (const field of numericFields) {
+
+            userData[field] =
+                Number(userData[field]);
+
 
             if (
-                !Number.isInteger(value) ||
-                value <= 0
+                !Number.isInteger(userData[field]) ||
+                userData[field] <= 0
             ) {
 
                 return res.status(400).json({
@@ -651,99 +301,46 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // EMAIL VALIDATION
+        // ARRAY NUMERIC FIELDS
         // ==========================================================
 
-        const emailRegex =
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const numericArrayFields = [
+            "CompanyProductId",
+            "ProjectId",
+            "ReportingManagerUserId"
+        ];
 
 
-        if (
-            !emailRegex.test(
-                userData.Email
-            )
-        ) {
+        for (const field of numericArrayFields) {
 
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "Invalid email format"
-            });
-
-        }
+            userData[field] =
+                userData[field].map(
+                    id => Number(id)
+                );
 
 
-        // ==========================================================
-        // PHONE VALIDATION
-        // ==========================================================
+            for (const id of userData[field]) {
 
-        userData.PhoneNumber =
-            String(
-                userData.PhoneNumber
-            ).trim();
+                if (
+                    !Number.isInteger(id) ||
+                    id <= 0
+                ) {
 
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            `${field} must contain valid numeric IDs`
+                    });
 
-        const phoneRegex =
-            /^[0-9]{10,12}$/;
-
-
-        if (
-            !phoneRegex.test(
-                userData.PhoneNumber
-            )
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "Invalid phone number"
-            });
-
-        }
-
-
-        // ==========================================================
-        // ALTERNATE PHONE
-        // ==========================================================
-
-        if (
-            userData.AltPhoneNumber !== undefined &&
-            userData.AltPhoneNumber !== null &&
-            String(
-                userData.AltPhoneNumber
-            ).trim() !== ""
-        ) {
-
-            userData.AltPhoneNumber =
-                String(
-                    userData.AltPhoneNumber
-                ).trim();
-
-
-            if (
-                !phoneRegex.test(
-                    userData.AltPhoneNumber
-                )
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "Invalid alternate phone number"
-                });
+                }
 
             }
 
-        } else {
-
-            userData.AltPhoneNumber =
-                null;
-
         }
 
 
         // ==========================================================
-        // DUPLICATE EMAIL
+        // CHECK DUPLICATE EMAIL
         // ==========================================================
 
         const emailExists =
@@ -756,15 +353,14 @@ export const createUserController = async (req, res) => {
 
             return res.status(409).json({
                 status: "error",
-                message:
-                    "Email already exists"
+                message: "Email already exists"
             });
 
         }
 
 
         // ==========================================================
-        // DUPLICATE LOGIN NAME
+        // CHECK DUPLICATE LOGIN NAME
         // ==========================================================
 
         const loginNameExists =
@@ -785,7 +381,7 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // DUPLICATE PHONE
+        // CHECK DUPLICATE PHONE NUMBER
         // ==========================================================
 
         const phoneExists =
@@ -806,7 +402,7 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // DUPLICATE EMPLOYEE ID
+        // CHECK DUPLICATE EMPLOYEE ID
         // ==========================================================
 
         const employeeExists =
@@ -827,61 +423,24 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // HASH PASSWORD
-        // ==========================================================
-
-        userData.Password =
-            await bcrypt.hash(
-                userData.Password,
-                10
-            );
-
-
-        // ==========================================================
-        // VALIDATE DATE OF JOINING
-        // ==========================================================
-
-        const joiningDate =
-            new Date(
-                userData.DateOfJoining
-            );
-
-
-        if (
-            isNaN(
-                joiningDate.getTime()
-            )
-        ) {
-
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "Invalid DateOfJoining"
-            });
-
-        }
-
-
-        // ==========================================================
         // CREATE USER
         // ==========================================================
 
-        await createUser(
-            userData
-        );
+        const result =
+            await createUser(
+                userData,
+                req.files
+            );
 
 
         // ==========================================================
-        // SUCCESS
+        // SUCCESS RESPONSE
         // ==========================================================
 
         return res.status(201).json({
-
             status: "success",
-
-            message:
-                "User created successfully"
-
+            message: "User created successfully"
+            
         });
 
 
@@ -894,15 +453,9 @@ export const createUserController = async (req, res) => {
 
 
         return res.status(500).json({
-
             status: "error",
-
-            message:
-                "Failed to create user",
-
-            error:
-                error.message
-
+            message: "Internal server error",
+            error: error.message
         });
 
     }
@@ -962,7 +515,7 @@ export const companyProductProjectDropdownController = async (req, res) => {
         // FLAG ID 3 - PROJECT
         // ==================================================
         if (parseInt(FlagId) === 3) {
-            if (CompanyProductId === undefined || CompanyProductId === null || String(CompanyProductId).trim() === "") {
+            if (CompanyProductId === undefined || CompanyProductId === null ) {
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId is required"

@@ -334,3 +334,152 @@ export const setPermanentBlock = async (userId) => {
     const result = await pool.query(query,[userId]);
     return result.rows[0] || null;
 };
+
+
+
+// ==========================================================
+// CREATE USER LOGIN DETAIL
+// ==========================================================
+
+export const createUserLoginDetail = async (loginData) => {
+
+    const query = `
+        INSERT INTO "DATA"."UserLoginDetail"
+        (
+            "UserId",
+            "IPAddress",
+            "PublicIPAddress",
+            "HostName",
+            "SystemName",
+            "OperatingSystem",
+            "OSVersion",
+            "BrowserName",
+            "BrowserVersion",
+            "UserAgent",
+            "DeviceType",
+            "DeviceName",
+            "Latitude",
+            "Longitude",
+            "LocationAccuracy",
+            "NetworkType",
+            "IsActive",
+            "LogoutReason",
+            "ApplicationName",
+            "ApplicationVersion"
+        )
+        VALUES
+        (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10,
+            $11,
+            $12,
+            $13,
+            $14,
+            $15,
+            $16,
+            TRUE,
+            NULL,
+            $17,
+            $18
+        )
+        RETURNING
+            "UserLoginDetailId",
+            "UserId",
+            "LoginAt",
+            "LogoutAt",
+            "IPAddress",
+            "PublicIPAddress",
+            "HostName",
+            "SystemName",
+            "OperatingSystem",
+            "OSVersion",
+            "BrowserName",
+            "BrowserVersion",
+            "UserAgent",
+            "DeviceType",
+            "DeviceName",
+            "Latitude",
+            "Longitude",
+            "LocationAccuracy",
+            "NetworkType",
+            "IsActive",
+            "LogoutReason",
+            "ApplicationName",
+            "ApplicationVersion",
+            "CreatedAt";
+    `;
+
+    const values = [
+        loginData.UserId,
+        loginData.IPAddress || null,
+        loginData.PublicIPAddress || null,
+        loginData.HostName || null,
+        loginData.SystemName || null,
+        loginData.OperatingSystem || null,
+        loginData.OSVersion || null,
+        loginData.BrowserName || null,
+        loginData.BrowserVersion || null,
+        loginData.UserAgent || null,
+        loginData.DeviceType || null,
+        loginData.DeviceName || null,
+        loginData.Latitude || null,
+        loginData.Longitude || null,
+        loginData.LocationAccuracy || null,
+        loginData.NetworkType || null,
+        loginData.ApplicationName || null,
+        loginData.ApplicationVersion || null
+    ];
+
+    const result = await pool.query(
+        query,
+        values
+    );
+
+    return result.rows[0];
+};
+
+
+// ==========================================================
+// LOGOUT USER LOGIN DETAIL
+// ==========================================================
+
+export const logoutUserLoginDetail = async (UserLoginDetailId,LogoutReason) => {
+
+    const query = `
+        UPDATE "DATA"."UserLoginDetail"
+        SET
+            "LogoutAt" = CURRENT_TIMESTAMP,
+            "IsActive" = FALSE,
+            "LogoutReason" = $1
+        WHERE
+            "UserLoginDetailId" = $2
+            AND "IsActive" = TRUE
+        RETURNING
+            "UserLoginDetailId",
+            "UserId",
+            "LoginAt",
+            "LogoutAt",
+            "IsActive",
+            "LogoutReason";
+    `;
+
+    const values = [
+        LogoutReason || null,
+        UserLoginDetailId
+    ];
+
+    const result = await pool.query(
+        query,
+        values
+    );
+
+    return result.rows[0] || null;
+};
