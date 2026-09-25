@@ -90,7 +90,6 @@ export default function RolesView() {
       });
       setCompanies(Array.from(companyMap.values()));
     } catch (err) {
-      console.error('Failed to load roles data:', err);
       setError(err?.message || 'Failed to load roles. Please verify backend connection.');
     } finally {
       setLoading(false);
@@ -228,7 +227,6 @@ export default function RolesView() {
       setModalMode(null);
       await fetchData();
     } catch (err) {
-      console.error('Save role error:', err);
       setError(err?.message || 'Failed to save role. Please check inputs.');
     } finally {
       setActionLoading(false);
@@ -248,7 +246,6 @@ export default function RolesView() {
       setSelectedRole(null);
       await fetchData();
     } catch (err) {
-      console.error('Delete role error:', err);
       setError(err?.message || 'Failed to delete role.');
     } finally {
       setActionLoading(false);
@@ -272,7 +269,6 @@ export default function RolesView() {
           `Role "${role.RoleName}" has been ${newDisabled ? 'disabled' : 'enabled'}.`
       );
     } catch (err) {
-      console.error('Toggle status error:', err);
       setError(err?.message || 'Failed to update role status.');
       // Revert optimistic update
       setRoles((prev) =>

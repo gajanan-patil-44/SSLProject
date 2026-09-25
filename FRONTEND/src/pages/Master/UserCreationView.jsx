@@ -46,7 +46,6 @@ const getSessionAuth = () => {
       }
     }
   } catch (err) {
-    console.warn('[Session] session parse error:', err);
   }
 
   // 2. Legacy fallback if migrating
@@ -316,7 +315,6 @@ export default function UserCreationView() {
       setRoles(toOpts(rolesRes.value?.data ?? rolesRes.value, 'RoleId', 'RoleName'));
     if (fileTypesRes.status === 'fulfilled') {
       const raw = fileTypesRes.value?.data ?? fileTypesRes.value;
-      console.log('[FileType FlagId:1] raw response:', raw);
       setFileTypes(toOpts(raw, 'FileTypeId', 'FileTypeName'));
     }
   };
@@ -354,7 +352,6 @@ export default function UserCreationView() {
         setReportingManagers([]);
       }
     } catch (err) {
-      console.error('getReportingManagerDropdown failed:', err);
       setReportingManagers([]);
     }
   };
@@ -387,7 +384,6 @@ export default function UserCreationView() {
         const raw = r?.data ?? r;
         setProducts(toOpts(raw, 'ProductId', 'ProductName'));
       } catch (err) {
-        console.error('getProductDropdown failed:', err);
         setProducts([]);
       }
       // Fetch Reporting Managers only if Designation is already selected
@@ -615,12 +611,12 @@ export default function UserCreationView() {
     const projectIds = Array.isArray(form.ProjectId) ? form.ProjectId : (form.ProjectId ? [form.ProjectId] : []);
     fd.append('ProjectId', JSON.stringify(projectIds.map(Number)));
     fd.append('RoleId',             form.RoleId);
-    fd.append('DesignationId',      form.DesignationId);
     // User documents — keyed by fileTypeId
     Object.entries(userFiles).forEach(([ftId, file]) => {
       fd.append('FileTypeId', ftId);
       fd.append('UserFile',   file);
     });
+
 
     try {
       setSubmitting(true);

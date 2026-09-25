@@ -36,7 +36,6 @@ import { useERPStore } from './store/useERPStore'
       toRemove.forEach(k => sessionStorage.removeItem(k));
     }
   } catch (e) {
-    console.warn('[Storage] Clean up error:', e);
   }
 })();
 

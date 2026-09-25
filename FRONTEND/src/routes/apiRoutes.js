@@ -13,7 +13,8 @@ export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
  * ============================================================================
  */
 export const AUTH_ROUTES = {
-  LOGIN: '/verp-service/auth/login'
+  LOGIN: '/verp-service/auth/login',
+  LOGIN_DETAIL: '/verp-service/auth/logindetail'
 };
 
 /**

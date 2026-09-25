@@ -364,7 +364,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching company products:", err);
         return [];
       }
     },
@@ -391,7 +390,6 @@ export const registryConfigs = {
           label: p.ProductName
         }));
       } catch (err) {
-        console.error("Error fetching company product dropdowns:", err);
       }
 
       return [
@@ -536,7 +534,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching projects:", err);
         return [];
       }
     },
@@ -558,7 +555,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching project dropdowns:", err);
       }
 
       return [
@@ -956,7 +952,6 @@ export function ModuleRenderer() {
           setDynamicFormFields(fields);
         }
       }).catch((err) => {
-        console.error("Dropdown fetch error:", err);
       });
     } else {
       setDynamicFormFields(null);
@@ -998,7 +993,6 @@ export function ModuleRenderer() {
           setDynamicFormFields(fields);
         }
       } catch (err) {
-        console.error("Dropdown error on add:", err);
       }
     } else {
       setDynamicFormFields(null);
@@ -1013,7 +1007,6 @@ export function ModuleRenderer() {
         setRefreshKey(prev => prev + 1);
         setIsAddOpen(false);
       } catch (err) {
-        console.error("Error creating record:", err);
         // Modal stays open so the user can change fields or cancel!
       }
     }
@@ -1027,7 +1020,6 @@ export function ModuleRenderer() {
         setIsEditOpen(false);
         setSelectedRecord(null);
       } catch (err) {
-        console.error("Error updating record:", err);
         // Modal stays open so the user can change fields or cancel!
       }
     }
@@ -1126,7 +1118,6 @@ export function ModuleRenderer() {
                 });
               }
             } catch (err) {
-              console.error("Dropdown error on edit:", err);
             }
           } else {
             setDynamicFormFields(null);

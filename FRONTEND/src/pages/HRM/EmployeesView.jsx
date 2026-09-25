@@ -36,7 +36,6 @@ export default function EmployeesView() {
       const data = await api.getEmployees();
       setEmployees(data || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -59,7 +58,6 @@ export default function EmployeesView() {
       setIsAddOpen(false);
       useERPStore.getState().showToast("Employee registered successfully!", "success");
     } catch (e) {
-      console.error(e);
       useERPStore.getState().showToast(e?.message || "Failed to register employee.", "error");
     }
   };
@@ -72,7 +70,6 @@ export default function EmployeesView() {
       setEditEmp(null);
       useERPStore.getState().showToast("Employee updated successfully!", "success");
     } catch (e) {
-      console.error(e);
       useERPStore.getState().showToast(e?.message || "Failed to update employee.", "error");
     }
   };
@@ -84,7 +81,6 @@ export default function EmployeesView() {
         setEmployees(prev => prev.filter(e => e.id !== emp.id));
         useERPStore.getState().showToast("Employee deleted successfully!", "success");
       } catch (e) {
-        console.error(e);
         useERPStore.getState().showToast(e?.message || "Failed to delete employee.", "error");
       }
     }
