@@ -334,7 +334,7 @@ export const setPermanentBlock = async (userId) => {
     const result = await pool.query(query,[userId]);
     return result.rows[0] || null;
 };
-
+//
 
 
 // ==========================================================

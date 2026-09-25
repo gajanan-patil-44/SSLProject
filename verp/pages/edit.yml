@@ -11,16 +11,15 @@ http:
     data: |-
       {
           "FlagId": 2,
-          "PageId": 1,
-          "PageName": "Companies",
-          "PageUrl": "/master/companies",
-          "PageIcon": "building",
-          "PageType": "MainPage",
+          "PageId": 4,
+          "PageName": "products",
+          "PageUrl": "/master/products",
+          "PageIcon": "products Page",
           "ParentPageId": null,
           "RoleIds": [1, 2],
           "IsChangeOrder": true,
           "OrderType": "BEFORE",
-          "TargetPageId": 2,
+          "TargetPageId": 1,
           "UpdatedByUserName": "admin"
       }
   auth: inherit
