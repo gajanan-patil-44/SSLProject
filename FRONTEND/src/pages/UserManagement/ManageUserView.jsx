@@ -427,7 +427,7 @@ export default function ManageUserView() {
 
     // 12. Company Product ID
     if (isEdited('companyProductId')) {
-      editPayload.companyProductId = formData.companyProductId ? Number(formData.companyProductId) : null;
+      editPayload.companyProductId = formData.companyProductId ? [Number(formData.companyProductId)] : [];
       if (primaryProduct?.UserProductId) {
         editPayload.UserProductId = Number(primaryProduct.UserProductId);
       }
@@ -436,7 +436,7 @@ export default function ManageUserView() {
 
     // 13. Project ID
     if (isEdited('projectId')) {
-      editPayload.projectId = formData.projectId ? Number(formData.projectId) : null;
+      editPayload.projectId = formData.projectId ? [Number(formData.projectId)] : [];
       if (primaryProject?.UserProjectId) {
         editPayload.UserProjectId = Number(primaryProject.UserProjectId);
       }
@@ -473,7 +473,7 @@ export default function ManageUserView() {
 
     // 16. Reporting Manager User ID
     if (isEdited('reportingManagerUserId')) {
-      editPayload.reportingManagerUserId = formData.reportingManagerUserId ? Number(formData.reportingManagerUserId) : null;
+      editPayload.reportingManagerUserId = formData.reportingManagerUserId ? [Number(formData.reportingManagerUserId)] : [];
       if (primaryManager?.UserReportingManagerId) {
         editPayload.UserReportingManagerId = Number(primaryManager.UserReportingManagerId);
       }
@@ -588,7 +588,7 @@ export default function ManageUserView() {
               <span
                 key={c.UserCompanyId || i}
                 className={`px-2 py-0.5 text-[11px] font-medium rounded border ${c.IsPrimaryCompany
-                    ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                   }`}
               >
@@ -612,7 +612,7 @@ export default function ManageUserView() {
             {rolesList.map((r, i) => (
               <span
                 key={r.UserRoleId || i}
-                className="px-2 py-0.5 text-[11px] font-medium bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800"
+                className="px-2 py-0.5 text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded border border-indigo-200 dark:border-indigo-800"
               >
                 {r.RoleName}
               </span>
@@ -634,6 +634,40 @@ export default function ManageUserView() {
             {managers[0].ReportingManagerName || '—'}
           </span>
         );
+      }
+    },
+    {
+      id: 'CreatedAt',
+      header: 'CREATED AT',
+      accessorKey: 'CreatedAt',
+      cell: ({ row }) => {
+        const rawDate = row.original.CreatedAt || row.original.createdAt || row.original.CreatedOn;
+        if (!rawDate) return <span className="text-slate-400">—</span>;
+        try {
+          const d = new Date(rawDate);
+          if (isNaN(d.getTime())) return <span className="text-slate-500 font-mono text-xs">{String(rawDate)}</span>;
+          const formatted = d.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          });
+          const time = d.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          return (
+            <div className="flex flex-col">
+              <span className="font-medium text-xs text-slate-700 dark:text-slate-200">
+                {formatted}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                {time}
+              </span>
+            </div>
+          );
+        } catch {
+          return <span className="text-slate-400">—</span>;
+        }
       }
     },
     {
@@ -827,7 +861,7 @@ export default function ManageUserView() {
                 <select
                   value={formData.genderId}
                   onChange={(e) => setFormData({ ...formData, genderId: e.target.value })}
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
                 >
                   <option value="">Select Gender</option>
                   {genders.map((g) => (
@@ -849,7 +883,7 @@ export default function ManageUserView() {
                 <select
                   value={formData.maritalStatusId}
                   onChange={(e) => setFormData({ ...formData, maritalStatusId: e.target.value })}
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
                 >
                   <option value="">Select Marital Status</option>
                   {maritalStatuses.map((m) => (
@@ -871,7 +905,7 @@ export default function ManageUserView() {
                 <select
                   value={formData.companyId}
                   onChange={(e) => handleCompanyChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
                 >
                   <option value="">Select Company</option>
                   {companies.map((c) => (
@@ -894,7 +928,7 @@ export default function ManageUserView() {
                   disabled={!formData.companyId}
                   value={formData.companyProductId}
                   onChange={(e) => handleCompanyProductChange(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <option value="">{formData.companyId ? 'Select Company Product' : 'Select Company first'}</option>
                   {companyProducts.map((p) => (
@@ -917,7 +951,7 @@ export default function ManageUserView() {
                   disabled={!formData.companyProductId}
                   value={formData.projectId}
                   onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyProductId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyProductId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <option value="">{formData.companyProductId ? 'Select Project' : 'Select Product first'}</option>
                   {projects.map((pr) => (
@@ -940,7 +974,7 @@ export default function ManageUserView() {
                   disabled={!formData.companyId}
                   value={formData.roleId}
                   onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <option value="">{formData.companyId ? 'Select Role' : 'Select Company first'}</option>
                   {roles.map((r) => (
@@ -963,7 +997,7 @@ export default function ManageUserView() {
                   disabled={!formData.companyId}
                   value={formData.designationId}
                   onChange={(e) => setFormData({ ...formData, designationId: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <option value="">{formData.companyId ? 'Select Designation' : 'Select Company first'}</option>
                   {designations.map((d) => (
@@ -986,7 +1020,7 @@ export default function ManageUserView() {
                   disabled={!formData.companyId}
                   value={formData.reportingManagerUserId}
                   onChange={(e) => setFormData({ ...formData, reportingManagerUserId: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <option value="">{formData.companyId ? 'Select Reporting Manager' : 'Select Company first'}</option>
                   {reportingManagers.map((rm) => (
@@ -1074,9 +1108,18 @@ export default function ManageUserView() {
                 </span>
               </div>
               <div>
-                <span className="text-xs text-slate-400 uppercase font-semibold block">User ID</span>
+                <span className="text-xs text-slate-400 uppercase font-semibold block">Created At</span>
                 <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
-                  #{selectedUser.UserId}
+                  {selectedUser.CreatedAt ? (() => {
+                    try {
+                      const d = new Date(selectedUser.CreatedAt);
+                      return !isNaN(d.getTime())
+                        ? `${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
+                        : selectedUser.CreatedAt;
+                    } catch {
+                      return selectedUser.CreatedAt;
+                    }
+                  })() : '—'}
                 </span>
               </div>
               <div>
@@ -1120,7 +1163,7 @@ export default function ManageUserView() {
             {/* Assigned Companies */}
             <div>
               <span className="text-xs text-slate-400 uppercase font-semibold block mb-1.5 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                <Building2 className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Assigned Companies</span>
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -1128,7 +1171,7 @@ export default function ManageUserView() {
                   selectedUser.Companies.map((c, idx) => (
                     <span
                       key={idx}
-                      className="px-2.5 py-1 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800"
+                      className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded border border-indigo-200 dark:border-indigo-800"
                     >
                       {c.CompanyName}
                     </span>
@@ -1142,7 +1185,7 @@ export default function ManageUserView() {
             {/* Assigned Roles */}
             <div>
               <span className="text-xs text-slate-400 uppercase font-semibold block mb-1.5 flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-teal-600" />
+                <Shield className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Assigned Roles</span>
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -1150,7 +1193,7 @@ export default function ManageUserView() {
                   selectedUser.Roles.map((r, idx) => (
                     <span
                       key={idx}
-                      className="px-2.5 py-1 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded border border-teal-200 dark:border-teal-800"
+                      className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded border border-indigo-200 dark:border-indigo-800"
                     >
                       {r.RoleName}
                     </span>

@@ -1,4 +1,4 @@
-// src/pages/UIInterface/ShowcaseView.jsx
+﻿// src/pages/UIInterface/ShowcaseView.jsx
 import React, { useState } from 'react';
 import {
   PageHeader,
@@ -242,7 +242,7 @@ export default function ShowcaseView() {
                   <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} />
                   <YAxis stroke="#94a3b8" fontSize={11} />
                   <ChartTooltip />
-                  <Area type="monotone" dataKey="Sales" stroke="#0d9488" fill="#0d9488" fillOpacity={0.15} />
+                  <Area type="monotone" dataKey="Sales" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.15} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

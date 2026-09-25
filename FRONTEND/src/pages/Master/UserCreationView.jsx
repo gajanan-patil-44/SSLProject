@@ -5,7 +5,7 @@ import {
   Building, Package, FolderOpen, ShieldCheck, Upload, X,
   FileText, Image, Plus, Trash2, RefreshCw, CheckCircle2,
   AlertCircle, Eye, EyeOff, UserCog, Hash, ArrowLeft,
-  ArrowRight, Check, ChevronRight, Sparkles
+  ArrowRight, Check, ChevronRight, ChevronDown, Sparkles
 } from 'lucide-react';
 import { Button, PageHeader } from '../../components/ui/index';
 import { userService } from '../../services/userService';
@@ -90,9 +90,9 @@ const getInitialForm = () => ({
   LoginName: '',
   Password: '',
   CompanyId: '',
-  ReportingManagerUserId: '',
-  CompanyProductId: '',
-  ProjectId: '',
+  ReportingManagerUserId: [],  // multi
+  CompanyProductId: [],        // multi
+  ProjectId: [],               // multi
   RoleId: '',
 });
 
@@ -151,6 +151,110 @@ function SectionHeader({ icon: Icon, iconColor, title, subtitle }) {
   );
 }
 
+// ─── Custom click-to-toggle Multi-Select Dropdown ──────────────────────────
+function MultiSelectDropdown({
+  name, options = [], value = [], onMultiChange,
+  placeholder = '— Select —',
+  disabledPlaceholder = '— Select Company first —',
+  disabled = false, error = false,
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const toggle = (val) => {
+    const next = value.includes(val)
+      ? value.filter(v => v !== val)
+      : [...value, val];
+    onMultiChange(name, next);
+  };
+
+  const selectedItems = options.filter(o => value.includes(o.value));
+
+  const triggerCls = [
+    'w-full min-h-[40px] px-3 py-2 text-sm rounded-lg border text-left flex items-start justify-between gap-2 transition-all duration-200 focus:outline-none',
+    error ? 'border-rose-400' : open
+      ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-white dark:bg-slate-800'
+      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-600',
+    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+  ].join(' ');
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setOpen(p => !p)}
+        className={triggerCls}
+      >
+        <div className="flex-1 flex flex-wrap gap-1 min-w-0">
+          {selectedItems.length === 0 ? (
+            <span className="text-slate-400 dark:text-slate-500 text-xs leading-6">
+              {disabled ? disabledPlaceholder : placeholder}
+            </span>
+          ) : (
+            selectedItems.map(item => (
+              <span
+                key={item.value}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
+              >
+                {item.label}
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  onClick={(e) => { e.stopPropagation(); toggle(item.value); }}
+                  className="ml-0.5 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 cursor-pointer leading-none text-sm"
+                >×</span>
+              </span>
+            ))
+          )}
+        </div>
+        <ChevronDown className={`w-4 h-4 shrink-0 mt-1 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && !disabled && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-h-52 overflow-y-auto">
+          {options.length === 0 ? (
+            <div className="px-4 py-3 text-xs text-slate-400 text-center italic">No options available</div>
+          ) : (
+            options.map(o => {
+              const selected = value.includes(o.value);
+              return (
+                <button
+                  key={o.key ?? o.value}
+                  type="button"
+                  onClick={() => toggle(o.value)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
+                    selected
+                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                    selected
+                      ? 'bg-indigo-600 border-indigo-600'
+                      : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+                  }`}>
+                    {selected && <Check className="w-2.5 h-2.5 text-white stroke-[3]" />}
+                  </div>
+                  <span className="flex-1 text-xs font-medium leading-tight">{o.label}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── File type icon ────────────────────────────────────────────────────────
 function FileIcon({ mime = '' }) {
   if (mime.startsWith('image/'))
@@ -166,7 +270,7 @@ export default function UserCreationView() {
   const [errors, setErrors]                   = useState({});
   const [showPwd, setShowPwd]                 = useState(false);
   const [photo, setPhoto]                     = useState(null);   // { file, preview }
-  const [userFiles, setUserFiles]             = useState([]);     // [{ file, fileTypeId }]
+  const [userFiles, setUserFiles]             = useState({});     // { [fileTypeId]: File }
   const [designations, setDesignations]       = useState([]);
   const [genders, setGenders]                 = useState([]);
   const [maritalStatuses, setMaritalStatuses] = useState([]);
@@ -229,29 +333,21 @@ export default function UserCreationView() {
       }));
   };
 
-  // ── Fetch Reporting Managers (FlagId: 4 via /userCreation/userdropdowns) ──
+  // ── Fetch Reporting Managers — requires BOTH CompanyId AND DesignationId (FlagId:4) ──
   const fetchReportingManagers = async (companyId, designationId) => {
-    if (!companyId || !designationId) {
-      setReportingManagers([]);
-      return;
-    }
+    if (!companyId || !designationId) { setReportingManagers([]); return; }
     try {
       const res = await userService.getReportingManagerDropdown(companyId, designationId);
       const raw = res?.data ?? res;
-      console.log('[Reporting Manager FlagId:4] raw response:', raw);
       if (Array.isArray(raw)) {
         setReportingManagers(
           raw
-            .filter(i => (i.UserId ?? i.ReportingManagerUserId ?? i.Id) !== null && (i.UserId ?? i.ReportingManagerUserId ?? i.Id) !== undefined && (i.UserId ?? i.ReportingManagerUserId ?? i.Id) !== '')
+            .filter(i => (i.UserId ?? i.ReportingManagerUserId ?? i.Id) != null && (i.UserId ?? i.ReportingManagerUserId ?? i.Id) !== '')
             .map((i, idx) => {
               const val = String(i.UserId ?? i.ReportingManagerUserId ?? i.Id);
-              const name = i.ReportingManagerName ?? i.UserName ?? i.FullName ?? `User #${val}`;
+              const nm  = i.ReportingManagerName ?? i.UserName ?? i.FullName ?? `User #${val}`;
               const desig = i.DesignationName ? ` (${i.DesignationName})` : '';
-              return {
-                value: val,
-                label: `${name}${desig}`,
-                key: `${val}_${idx}`,
-              };
+              return { value: val, label: `${nm}${desig}`, key: `${val}_${idx}` };
             })
         );
       } else {
@@ -263,74 +359,95 @@ export default function UserCreationView() {
     }
   };
 
-  // ── Smart change handler — cascades inline to avoid stale closure bugs ──
+  // ── Smart change handler (single-value fields only) ───────────────────────
   const change = async e => {
     const { name, value } = e.target;
 
     if (name === 'DesignationId') {
-      setForm(f => ({ ...f, DesignationId: value, ReportingManagerUserId: '' }));
-      setErrors(er => ({ ...er, DesignationId: '', ReportingManagerUserId: '' }));
+      // Clear reporting managers when designation changes
+      setForm(f => ({ ...f, DesignationId: value, ReportingManagerUserId: [] }));
+      setErrors(er => ({ ...er, DesignationId: '' }));
       setReportingManagers([]);
-      if (!value) return;
-
-      // If CompanyId is already chosen, fetch reporting managers
-      if (form.CompanyId) {
+      // Trigger fetch only if Company is already selected
+      if (value && form.CompanyId) {
         fetchReportingManagers(form.CompanyId, value);
       }
       return;
     }
 
     if (name === 'CompanyId') {
-      // Reset downstream immediately with the new CompanyId
-      setForm(f => ({ ...f, CompanyId: value, CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+      setForm(f => ({ ...f, CompanyId: value, CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
       setProducts([]);
       setProjects([]);
       setReportingManagers([]);
       setErrors(er => ({ ...er, CompanyId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
       if (!value) return;
-
-      // 1. Fetch Company Products (FlagId: 2)
       try {
         const r = await userService.getProductDropdown(value);
         const raw = r?.data ?? r;
-        console.log('[CPP FlagId:2] raw response:', raw);
         setProducts(toOpts(raw, 'ProductId', 'ProductName'));
       } catch (err) {
         console.error('getProductDropdown failed:', err);
         setProducts([]);
       }
-
-      // 2. Fetch Reporting Managers (FlagId: 4) if DesignationId is already selected
+      // Fetch Reporting Managers only if Designation is already selected
       if (form.DesignationId) {
         fetchReportingManagers(value, form.DesignationId);
       }
       return;
     }
 
-    if (name === 'CompanyProductId') {
-      // Reset downstream immediately with the new CompanyProductId
-      setForm(f => ({ ...f, CompanyProductId: value, ProjectId: '' }));
-      setProjects([]);
-      setErrors(er => ({ ...er, CompanyProductId: '', ProjectId: '' }));
-      if (!value) return;
-      try {
-        const r = await userService.getProjectDropdown(value);
-        const raw = r?.data ?? r;
-        console.log('[CPP FlagId:3] raw response:', raw);
-        setProjects(toOpts(raw, 'ProjectId', 'ProjectName'));
-      } catch (err) {
-        console.error('getProjectDropdown failed:', err);
-        setProjects([]);
-      }
-      return;
-    }
-
-    // Default: plain field update
+    // Default single-value fields (RoleId, GenderId, etc.)
     setForm(f => ({ ...f, [name]: value }));
     setErrors(er => ({ ...er, [name]: '' }));
   };
 
-  // ── Photo ────────────────────────────────────────────────────────────────
+  // ── Fetch projects for multiple product IDs, merging deduplicated results ─
+  const fetchProjectsForProducts = async (productIds) => {
+    if (!productIds || productIds.length === 0) { setProjects([]); return; }
+    try {
+      const results = await Promise.allSettled(
+        productIds.map(pid => userService.getProjectDropdown(pid))
+      );
+      const combined = [];
+      const seen = new Set();
+      results.forEach(r => {
+        if (r.status === 'fulfilled') {
+          const raw = r.value?.data ?? r.value;
+          if (Array.isArray(raw)) {
+            toOpts(raw, 'ProjectId', 'ProjectName').forEach(o => {
+              if (!seen.has(o.value)) { seen.add(o.value); combined.push(o); }
+            });
+          }
+        }
+      });
+      setProjects(combined);
+    } catch {
+      setProjects([]);
+    }
+  };
+
+  // ── Multi-select handler (called by MultiSelectDropdown component) ─────────
+  const multiChange = async (name, newValues) => {
+    if (name === 'CompanyProductId') {
+      setForm(f => ({ ...f, CompanyProductId: newValues, ProjectId: [] }));
+      setProjects([]);
+      setErrors(er => ({ ...er, CompanyProductId: '', ProjectId: '' }));
+      if (newValues.length > 0) await fetchProjectsForProducts(newValues);
+      return;
+    }
+    if (name === 'ProjectId') {
+      setForm(f => ({ ...f, ProjectId: newValues }));
+      setErrors(er => ({ ...er, ProjectId: '' }));
+      return;
+    }
+    if (name === 'ReportingManagerUserId') {
+      setForm(f => ({ ...f, ReportingManagerUserId: newValues }));
+      setErrors(er => ({ ...er, ReportingManagerUserId: '' }));
+      return;
+    }
+  };
+
   const onPhotoChange = e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -339,15 +456,19 @@ export default function UserCreationView() {
   };
   const removePhoto = () => { setPhoto(null); if (photoRef.current) photoRef.current.value = ''; };
 
-  // ── UserFiles ────────────────────────────────────────────────────────────
-  const onAddFiles = e => {
-    const files = Array.from(e.target.files);
-    setUserFiles(p => [...p, ...files.map(f => ({ file: f, fileTypeId: '' }))]);
-    if (fileRef.current) fileRef.current.value = '';
+  // ── Per-FileType upload handlers ──────────────────────────────────────────
+  const onAddFiles = () => {}; // kept for ref compat
+  const onFileForType = (fileTypeId, file) => {
+    if (!file) return;
+    setUserFiles(prev => ({ ...prev, [fileTypeId]: file }));
   };
-  const setFileType = (idx, val) =>
-    setUserFiles(p => p.map((f, i) => i === idx ? { ...f, fileTypeId: val } : f));
-  const removeFile = idx => setUserFiles(p => p.filter((_, i) => i !== idx));
+  const removeFileForType = (fileTypeId) => {
+    setUserFiles(prev => {
+      const next = { ...prev };
+      delete next[fileTypeId];
+      return next;
+    });
+  };
 
   // ── Step-by-Step Validation ───────────────────────────────────────────────
   const validateStep = (step) => {
@@ -362,7 +483,6 @@ export default function UserCreationView() {
       if (!form.DateOfJoining)                                       e.DateOfJoining    = 'Date of joining is required';
       if (!form.GenderId)                                            e.GenderId         = 'Select a gender';
       if (!form.MaritalStatusId)                                     e.MaritalStatusId  = 'Select marital status';
-      if (!form.DesignationId)                                       e.DesignationId    = 'Select a designation';
     }
 
     if (step === 2) {
@@ -373,10 +493,12 @@ export default function UserCreationView() {
     }
 
     if (step === 3) {
-      if (!form.CompanyId)                                           e.CompanyId        = 'Select a company';
-      if (!form.CompanyProductId)                                    e.CompanyProductId = 'Select a company product';
-      if (!form.ProjectId)                                           e.ProjectId        = 'Select a project';
-      if (!form.RoleId)                                              e.RoleId           = 'Select a role';
+      if (!form.CompanyId)                                                        e.CompanyId        = 'Select a company';
+      if (!form.DesignationId)                                                    e.DesignationId    = 'Select a designation';
+      if (!Array.isArray(form.CompanyProductId) || form.CompanyProductId.length === 0)
+                                                                                  e.CompanyProductId = 'Select at least one product';
+      if (!Array.isArray(form.ProjectId) || form.ProjectId.length === 0)         e.ProjectId        = 'Select at least one project';
+      if (!form.RoleId)                                                           e.RoleId           = 'Select a role';
     }
 
     if (step === 4) {
@@ -384,9 +506,7 @@ export default function UserCreationView() {
     }
 
     if (step === 5) {
-      userFiles.forEach((uf, i) => {
-        if (!uf.fileTypeId) e[`ft_${i}`] = 'Select file type';
-      });
+      // No mandatory documents — all optional per file type
     }
 
     return e;
@@ -485,15 +605,21 @@ export default function UserCreationView() {
       fd.append('CreatedByUserName', createdBy);
     }
     fd.append('CompanyId',          form.CompanyId);
-    if (form.ReportingManagerUserId) {
-      fd.append('ReportingManagerUserId', form.ReportingManagerUserId);
-    }
-    fd.append('CompanyProductId',   form.CompanyProductId);
-    fd.append('ProjectId',          form.ProjectId);
+    // ReportingManagerUserId — multi
+    const managerIds = Array.isArray(form.ReportingManagerUserId) ? form.ReportingManagerUserId : (form.ReportingManagerUserId ? [form.ReportingManagerUserId] : []);
+    fd.append('ReportingManagerUserId', JSON.stringify(managerIds.map(Number)));
+    // CompanyProductId — multi
+    const productIds = Array.isArray(form.CompanyProductId) ? form.CompanyProductId : (form.CompanyProductId ? [form.CompanyProductId] : []);
+    fd.append('CompanyProductId', JSON.stringify(productIds.map(Number)));
+    // ProjectId — multi
+    const projectIds = Array.isArray(form.ProjectId) ? form.ProjectId : (form.ProjectId ? [form.ProjectId] : []);
+    fd.append('ProjectId', JSON.stringify(projectIds.map(Number)));
     fd.append('RoleId',             form.RoleId);
-    userFiles.forEach(uf => {
-      fd.append('FileTypeId', uf.fileTypeId);
-      fd.append('UserFile',   uf.file);
+    fd.append('DesignationId',      form.DesignationId);
+    // User documents — keyed by fileTypeId
+    Object.entries(userFiles).forEach(([ftId, file]) => {
+      fd.append('FileTypeId', ftId);
+      fd.append('UserFile',   file);
     });
 
     try {
@@ -534,7 +660,7 @@ export default function UserCreationView() {
     setErrors({});
     setShowPwd(false);
     setPhoto(null);
-    setUserFiles([]);
+    setUserFiles({});
     setProducts([]);
     setProjects([]);
     setReportingManagers([]);
@@ -843,18 +969,6 @@ export default function UserCreationView() {
                 </select>
               </Field>
 
-              {/* Designation */}
-              <Field label="Designation" required error={errors.DesignationId}>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="DesignationId" value={form.DesignationId} onChange={change}
-                    className={`${selectCls(errors.DesignationId)} pl-8`}>
-                    <option value="">— Select Designation —</option>
-                    {designations.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              </Field>
-
             </div>
           </div>
         )}
@@ -922,13 +1036,13 @@ export default function UserCreationView() {
           <div className="animate-in fade-in duration-300">
             <SectionHeader
               icon={Building}
-              iconColor="bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400"
+              iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Company Assignment"
-              subtitle="Assign the user to a company, select reporting hierarchy, product and project roles."
+              subtitle="Assign the user to a company, designation, product, project and role. Reporting Manager is optional."
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
-              {/* Company */}
+              {/* ── Company ── */}
               <Field label="Company" required error={errors.CompanyId}>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
@@ -940,62 +1054,36 @@ export default function UserCreationView() {
                 </div>
               </Field>
 
-              {/* Reporting Manager (comes right after company selection) */}
-              <Field label="Reporting Manager" error={errors.ReportingManagerUserId}>
-                <div className="relative">
-                  <UserCog className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select
-                    name="ReportingManagerUserId"
-                    value={form.ReportingManagerUserId}
-                    onChange={change}
-                    disabled={!form.CompanyId || !form.DesignationId}
-                    className={`${selectCls(errors.ReportingManagerUserId)} pl-8 disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    <option value="">
-                      {!form.CompanyId
-                        ? '— Select Company first —'
-                        : !form.DesignationId
-                        ? '— Select Designation first —'
-                        : reportingManagers.length === 0
-                        ? '— No Reporting Managers found —'
-                        : '— Select Reporting Manager —'}
-                    </option>
-                    {reportingManagers.map(o => (
-                      <option key={o.key} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </Field>
 
-              {/* Company Product */}
+              {/* ── Company Product — Multi-Select ── */}
               <Field label="Company Product" required error={errors.CompanyProductId}>
-                <div className="relative">
-                  <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="CompanyProductId" value={form.CompanyProductId} onChange={change}
-                    disabled={!form.CompanyId}
-                    className={`${selectCls(errors.CompanyProductId)} pl-8 disabled:opacity-50 disabled:cursor-not-allowed`}>
-                    <option value="">{form.CompanyId ? '— Select Product —' : '— Select Company first —'}</option>
-                    {products.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
+                <MultiSelectDropdown
+                  name="CompanyProductId"
+                  options={products}
+                  value={Array.isArray(form.CompanyProductId) ? form.CompanyProductId : []}
+                  onMultiChange={multiChange}
+                  placeholder="— Select Products —"
+                  disabledPlaceholder="— Select Company first —"
+                  disabled={!form.CompanyId}
+                  error={!!errors.CompanyProductId}
+                />
               </Field>
 
-              {/* Project */}
+              {/* ── Project — Multi-Select ── */}
               <Field label="Project" required error={errors.ProjectId}>
-                <div className="relative">
-                  <FolderOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="ProjectId" value={form.ProjectId} onChange={change}
-                    disabled={!form.CompanyProductId}
-                    className={`${selectCls(errors.ProjectId)} pl-8 disabled:opacity-50 disabled:cursor-not-allowed`}>
-                    <option value="">{form.CompanyProductId ? '— Select Project —' : '— Select Product first —'}</option>
-                    {projects.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
+                <MultiSelectDropdown
+                  name="ProjectId"
+                  options={projects}
+                  value={Array.isArray(form.ProjectId) ? form.ProjectId : []}
+                  onMultiChange={multiChange}
+                  placeholder="— Select Projects —"
+                  disabledPlaceholder="— Select Product first —"
+                  disabled={!form.CompanyProductId || (Array.isArray(form.CompanyProductId) && form.CompanyProductId.length === 0)}
+                  error={!!errors.ProjectId}
+                />
               </Field>
 
-              {/* Role */}
+              {/* ── Role ── */}
               <Field label="Role" required error={errors.RoleId}>
                 <div className="relative">
                   <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
@@ -1006,6 +1094,33 @@ export default function UserCreationView() {
                   </select>
                 </div>
               </Field>
+
+              {/* ── Designation ── */}
+              <Field label="Designation" required error={errors.DesignationId}>
+                <div className="relative">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
+                  <select name="DesignationId" value={form.DesignationId} onChange={change}
+                    className={`${selectCls(errors.DesignationId)} pl-8`}>
+                    <option value="">— Select Designation —</option>
+                    {designations.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </Field>
+
+              {/* ── Reporting Manager — Multi-Select ── */}
+              <Field label="Reporting Manager" error={errors.ReportingManagerUserId}>
+                <MultiSelectDropdown
+                  name="ReportingManagerUserId"
+                  options={reportingManagers}
+                  value={Array.isArray(form.ReportingManagerUserId) ? form.ReportingManagerUserId : []}
+                  onMultiChange={multiChange}
+                  placeholder="— Select Reporting Managers —"
+                  disabledPlaceholder="— Select Company first —"
+                  disabled={!form.CompanyId}
+                  error={!!errors.ReportingManagerUserId}
+                />
+              </Field>
+
 
             </div>
           </div>
@@ -1070,89 +1185,100 @@ export default function UserCreationView() {
           </div>
         )}
 
-        {/* ── STEP 5: User Documents & Review ── */}
+        {/* ── STEP 5: Supporting Documents ── */}
         {currentStep === 5 && (
           <div className="animate-in fade-in duration-300">
             <SectionHeader
               icon={FileText}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-              title="User Documents & Submission"
-              subtitle="Attach ID proof, certificates, or resume. Review details and complete registration."
+              title="Supporting Documents"
+              subtitle="Upload documents for each required file type. All fields are optional."
             />
 
-            {/* Document Upload Area */}
-            <div className="bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden mb-6">
-              <div className="px-5 py-4 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                    Supporting Documents
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {userFiles.length === 0 ? 'No files attached yet' : `${userFiles.length} file${userFiles.length > 1 ? 's' : ''} attached`}
-                  </p>
-                </div>
-                <div>
-                  <input ref={fileRef} type="file" multiple onChange={onAddFiles} className="hidden" id="ufile-inp" />
-                  <label
-                    htmlFor="ufile-inp"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-primary/50 text-primary hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Attach Files
-                  </label>
-                </div>
-              </div>
-
-              {/* File list / empty state */}
-              {userFiles.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-slate-400 dark:text-slate-600">
-                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-2.5">
-                    <Upload className="w-5 h-5 text-slate-400" />
-                  </div>
-                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Optional: No documents attached</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Click "Attach Files" to upload Aadhaar, certificates, or resumes</p>
+            {/* File-type compact grid — 3 per row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+              {fileTypes.length === 0 ? (
+                <div className="col-span-3 flex flex-col items-center justify-center py-8 text-slate-400">
+                  <FileText className="w-8 h-8 mb-2 opacity-40" />
+                  <p className="text-xs font-medium">No document types configured</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-200/70 dark:divide-slate-800">
-                  {userFiles.map((uf, idx) => (
-                    <div key={idx} className="flex items-center gap-3 px-5 py-3 hover:bg-white dark:hover:bg-slate-800/60 transition-colors">
-                      <FileIcon mime={uf.file.type} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{uf.file.name}</p>
-                        <p className="text-[11px] text-slate-400">{uf.file.type || 'Unknown'} · {(uf.file.size / 1024).toFixed(1)} KB</p>
+                fileTypes.map(ft => {
+                  const uploaded = userFiles[ft.value];
+                  return (
+                    <div
+                      key={ft.key}
+                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
+                        uploaded
+                          ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/60 dark:bg-emerald-950/20'
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-indigo-200 dark:hover:border-indigo-800'
+                      }`}
+                    >
+                      {/* Icon */}
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        uploaded
+                          ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
+                      }`}>
+                        <FileText className="w-3.5 h-3.5" />
                       </div>
-                      {/* FileTypeId */}
-                      <div className="shrink-0 w-56">
-                        <select
-                          value={uf.fileTypeId}
-                          onChange={e => setFileType(idx, e.target.value)}
-                          className={`${selectCls(errors[`ft_${idx}`])} text-xs py-2`}
-                        >
-                          <option value="">— Select File Type —</option>
-                          {fileTypes.map(o => (
-                            <option key={o.key} value={o.value}>
-                              {o.label}
-                            </option>
-                          ))}
-                        </select>
-                        {errors[`ft_${idx}`] && (
-                          <span className="text-[10px] text-rose-500 mt-0.5 block">{errors[`ft_${idx}`]}</span>
+
+                      {/* Name + status */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">{ft.label}</p>
+                        {uploaded ? (
+                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate leading-tight mt-0.5">
+                            ✓ {uploaded.name}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-slate-400 leading-tight mt-0.5">No file</p>
                         )}
                       </div>
-                      <button
-                        type="button" onClick={() => removeFile(idx)}
-                        className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
-                        title="Delete Document"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <label
+                          htmlFor={`ft-upload-${ft.value}`}
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md cursor-pointer transition-colors ${
+                            uploaded
+                              ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                          }`}
+                          title={uploaded ? 'Replace file' : 'Upload file'}
+                        >
+                          <Upload className="w-3 h-3" />
+                          {uploaded ? 'Replace' : 'Upload'}
+                        </label>
+                        {uploaded && (
+                          <button
+                            type="button"
+                            onClick={() => removeFileForType(ft.value)}
+                            className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
+                            title="Remove"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                        <input
+                          id={`ft-upload-${ft.value}`}
+                          type="file"
+                          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) onFileForType(ft.value, file);
+                            e.target.value = '';
+                          }}
+                        />
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })
               )}
             </div>
 
-            {/* Quick Summary Pill / Verification */}
+
+            {/* Quick Summary */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 text-xs">
               <div>
                 <span className="text-slate-400 font-medium block">Employee:</span>
