@@ -237,13 +237,10 @@ export const checkEmployeeIdExists = async (EmployeeId) => {
 // + USER PROJECT + USER ROLE + USER FILE
 // ==========================================================
 export const createUser = async (userData) => {
-
     const client = await pool.connect();
 
     try {
-
         await client.query("BEGIN");
-
 
         // ==================================================
         // 1. CREATE USER
@@ -272,23 +269,9 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5,
-                $6,
-                $7,
-                $8,
-                $9,
-                $10,
-                $11,
-                $12,
-                $13,
-                $14,
-                CURRENT_TIMESTAMP,
-                $15,
-                $16
+                $1, $2, $3, $4, $5, $6, $7, $8, $9,
+                $10, $11, $12, $13, $14,
+                CURRENT_TIMESTAMP, $15, $16
             )
             RETURNING
                 "UserId",
@@ -309,7 +292,7 @@ export const createUser = async (userData) => {
                 "DateOfJoining";
         `;
 
-        const userValues = [
+        const userResult = await client.query(userQuery, [
             userData.EmployeeId,
             userData.FirstName,
             userData.MiddleName || null,
@@ -326,12 +309,7 @@ export const createUser = async (userData) => {
             userData.Photo || null,
             userData.CreatedByUserName,
             userData.DateOfJoining
-        ];
-
-        const userResult = await client.query(
-            userQuery,
-            userValues
-        );
+        ]);
 
         const user = userResult.rows[0];
 
@@ -341,17 +319,14 @@ export const createUser = async (userData) => {
 
         const UserId = user.UserId;
 
-
         // ==================================================
-        // 2. CREATE USER REPORTING MANAGER
+        // 2. CREATE USER REPORTING MANAGERS
         // ==================================================
 
-        let userReportingManagerId = null;
+        const createdReportingManagers = [];
 
-        if (
-            userData.ReportingManagerUserId !== null &&
-            userData.ReportingManagerUserId !== undefined
-        ) {
+        for (const reportingManagerUserId of
+            userData.ReportingManagerUserId || []) {
 
             const reportingManagerQuery = `
                 INSERT INTO "DATA"."UserReportingManager"
@@ -362,34 +337,27 @@ export const createUser = async (userData) => {
                     "CreatedAt",
                     "CreatedByUserId"
                 )
-                VALUES
-                (
-                    $1,
-                    $2,
-                    $3,
-                    CURRENT_TIMESTAMP,
-                    $4
-                )
-                RETURNING
-                    "UserReportingManagerId";
+                VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
+                RETURNING "UserReportingManagerId";
             `;
 
-            const reportingManagerResult =
-                await client.query(
-                    reportingManagerQuery,
-                    [
-                        UserId,
-                        userData.ReportingManagerUserId,
-                        userData.CompanyId,
-                        UserId
-                    ]
-                );
+            const result = await client.query(
+                reportingManagerQuery,
+                [
+                    UserId,
+                    reportingManagerUserId,
+                    userData.CompanyId,
+                    UserId
+                ]
+            );
 
-            userReportingManagerId =
-                reportingManagerResult.rows[0]
-                    .UserReportingManagerId;
+            createdReportingManagers.push(
+                result.rows[0].UserReportingManagerId
+            );
         }
 
+        const userReportingManagerId =
+            createdReportingManagers[0] || null;
 
         // ==================================================
         // 3. CREATE USER COMPANY
@@ -405,36 +373,86 @@ export const createUser = async (userData) => {
                 "CreatedAt",
                 "CreatedByUserId"
             )
-            VALUES
-            (
-                $1,
-                $2,
-                true,
-                false,
-                CURRENT_TIMESTAMP,
-                $3
-            )
-            RETURNING
-                "UserCompanyId";
+            VALUES ($1, $2, true, false, CURRENT_TIMESTAMP, $3)
+            RETURNING "UserCompanyId";
         `;
 
-        const userCompanyResult =
-            await client.query(
-                userCompanyQuery,
-                [
-                    UserId,
-                    userData.CompanyId,
-                    UserId
-                ]
-            );
+        const userCompanyResult = await client.query(
+            userCompanyQuery,
+            [UserId, userData.CompanyId, UserId]
+        );
 
         const userCompanyId =
             userCompanyResult.rows[0].UserCompanyId;
 
+        // ==================================================
+        // 4. VALIDATE PRODUCT-PROJECT RELATIONSHIPS
+        // ==================================================
+
+        const relationshipQuery = `
+            SELECT
+                cp."CompanyProductId",
+                p."ProjectId"
+            FROM "LKP"."CompanyProduct" cp
+            LEFT JOIN "LKP"."Project" p
+                ON p."CompanyProductId" = cp."CompanyProductId"
+                AND p."IsDisabled" = false
+            WHERE
+                cp."CompanyProductId" = ANY($1::integer[])
+                AND cp."CompanyId" = $2
+                AND cp."IsDisabled" = false;
+        `;
+
+        const relationshipResult = await client.query(
+            relationshipQuery,
+            [
+                userData.CompanyProductId,
+                userData.CompanyId
+            ]
+        );
+
+        const validProjectsByProduct = new Map();
+
+        for (const productId of userData.CompanyProductId) {
+            validProjectsByProduct.set(productId, new Set());
+        }
+
+        for (const row of relationshipResult.rows) {
+            if (row.ProjectId !== null) {
+                validProjectsByProduct
+                    .get(row.CompanyProductId)
+                    ?.add(Number(row.ProjectId));
+            }
+        }
+
+        for (let i = 0; i < userData.CompanyProductId.length; i++) {
+            const productId = userData.CompanyProductId[i];
+            const projectIds = userData.ProjectId[i];
+
+            if (!validProjectsByProduct.has(productId)) {
+                throw new Error(
+                    `Invalid or inactive CompanyProductId: ${productId}`
+                );
+            }
+
+            for (const projectId of projectIds) {
+                if (
+                    !validProjectsByProduct
+                        .get(productId)
+                        .has(projectId)
+                ) {
+                    throw new Error(
+                        `ProjectId ${projectId} does not belong to CompanyProductId ${productId}`
+                    );
+                }
+            }
+        }
 
         // ==================================================
-        // 4. CREATE USER PRODUCT
+        // 5. CREATE USER PRODUCTS
         // ==================================================
+
+        const createdUserProducts = [];
 
         const userProductQuery = `
             INSERT INTO "DATA"."UserProduct"
@@ -445,35 +463,30 @@ export const createUser = async (userData) => {
                 "CreatedAt",
                 "CreatedByUserId"
             )
-            VALUES
-            (
-                $1,
-                $2,
-                false,
-                CURRENT_TIMESTAMP,
-                $3
-            )
-            RETURNING
-                "UserProductId";
+            VALUES ($1, $2, false, CURRENT_TIMESTAMP, $3)
+            RETURNING "UserProductId";
         `;
 
-        const userProductResult =
-            await client.query(
+        for (const companyProductId of userData.CompanyProductId) {
+            const result = await client.query(
                 userProductQuery,
-                [
-                    UserId,
-                    userData.CompanyProductId,
-                    UserId
-                ]
+                [UserId, companyProductId, UserId]
             );
 
+            createdUserProducts.push({
+                CompanyProductId: companyProductId,
+                UserProductId: result.rows[0].UserProductId
+            });
+        }
+
         const userProductId =
-            userProductResult.rows[0].UserProductId;
-
+            createdUserProducts[0]?.UserProductId || null;
 
         // ==================================================
-        // 5. CREATE USER PROJECT
+        // 6. CREATE USER PROJECTS
         // ==================================================
+
+        const createdUserProjects = [];
 
         const userProjectQuery = `
             INSERT INTO "DATA"."UserProject"
@@ -485,36 +498,42 @@ export const createUser = async (userData) => {
                 "CreatedAt",
                 "CreatedByUserId"
             )
-            VALUES
-            (
-                $1,
-                $2,
-                true,
-                false,
-                CURRENT_TIMESTAMP,
-                $3
-            )
-            RETURNING
-                "UserProjectId";
+            VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP, $4)
+            RETURNING "UserProjectId";
         `;
 
-        const userProjectResult =
-            await client.query(
-                userProjectQuery,
-                [
-                    UserId,
-                    userData.ProjectId,
-                    UserId
-                ]
-            );
+        let isFirstProject = true;
+
+        for (const projectIds of userData.ProjectId) {
+            for (const projectId of projectIds) {
+                const result = await client.query(
+                    userProjectQuery,
+                    [
+                        UserId,
+                        projectId,
+                        isFirstProject,
+                        UserId
+                    ]
+                );
+
+                createdUserProjects.push({
+                    ProjectId: projectId,
+                    UserProjectId:
+                        result.rows[0].UserProjectId
+                });
+
+                isFirstProject = false;
+            }
+        }
 
         const userProjectId =
-            userProjectResult.rows[0].UserProjectId;
-
+            createdUserProjects[0]?.UserProjectId || null;
 
         // ==================================================
-        // 6. CREATE USER ROLE
+        // 7. CREATE USER ROLES
         // ==================================================
+
+        const createdUserRoles = [];
 
         const userRoleQuery = `
             INSERT INTO "DATA"."UserRole"
@@ -527,39 +546,40 @@ export const createUser = async (userData) => {
                 "CreatedAt",
                 "CreatedByUserId"
             )
-            VALUES
-            (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5,
-                CURRENT_TIMESTAMP,
-                $6
-            )
-            RETURNING
-                "UserRoleId";
+            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)
+            RETURNING "UserRoleId";
         `;
 
-        const userRoleResult =
-            await client.query(
-                userRoleQuery,
-                [
-                    UserId,
-                    userData.RoleId,
-                    userData.CompanyId,
-                    userData.CompanyProductId,
-                    userData.ProjectId,
-                    UserId
-                ]
-            );
+        for (let i = 0; i < userData.CompanyProductId.length; i++) {
+            const companyProductId = userData.CompanyProductId[i];
+            const projectIds = userData.ProjectId[i];
+
+            for (const projectId of projectIds) {
+                const result = await client.query(
+                    userRoleQuery,
+                    [
+                        UserId,
+                        userData.RoleId,
+                        userData.CompanyId,
+                        companyProductId,
+                        projectId,
+                        UserId
+                    ]
+                );
+
+                createdUserRoles.push({
+                    CompanyProductId: companyProductId,
+                    ProjectId: projectId,
+                    UserRoleId: result.rows[0].UserRoleId
+                });
+            }
+        }
 
         const userRoleId =
-            userRoleResult.rows[0].UserRoleId;
-
+            createdUserRoles[0]?.UserRoleId || null;
 
         // ==================================================
-        // 7. CREATE USER DETAILS
+        // 8. CREATE USER DETAILS
         // ==================================================
 
         const userDetailsQuery = `
@@ -592,57 +612,11 @@ export const createUser = async (userData) => {
             )
             VALUES
             (
-                $1,
-                $2,
-                $3,
-                $4,
-                $5,
-                $6,
-                $7,
-                $8,
-                $9,
-                $10,
-                $11,
-                $12,
-                $13,
-                $14,
-                $15,
-                $16,
-                $17,
-                $18,
-                $19,
-                $20,
-                false,
-                CURRENT_TIMESTAMP,
-                NULL,
-                $21
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                $11, $12, $13, $14, $15, $16, $17, $18,
+                $19, $20, false, CURRENT_TIMESTAMP, NULL, $21
             )
-            RETURNING
-                "UserDetailsId",
-                "UserId",
-                "EmployeeId",
-                "FirstName",
-                "MiddleName",
-                "LastName",
-                "PhoneNumber",
-                "DateOfBirth",
-                "GenderId",
-                "MaritalStatusId",
-                "DesignationId",
-                "Email",
-                "LoginName",
-                "AltPhoneNumber",
-                "DateOfJoining",
-                "FileTypeId",
-                "UserCompanyId",
-                "UserProductId",
-                "UserProjectId",
-                "UserReportingManagerId",
-                "UserRoleId",
-                "IsDisabled",
-                "CreatedAt",
-                "UpdatedAt",
-                "CreatedByUserId";
+            RETURNING *;
         `;
 
         const userDetailsValues = [
@@ -661,46 +635,29 @@ export const createUser = async (userData) => {
             userData.AltPhoneNumber || null,
             userData.DateOfJoining,
             userData.FileTypeId || null,
-
-            // Generated UserCompanyId
             userCompanyId,
-
-            // Generated UserProductId
             userProductId,
-
-            // Generated UserProjectId
             userProjectId,
-
-            // Generated UserReportingManagerId
             userReportingManagerId,
-
-            // Generated UserRoleId
             userRoleId,
-
             UserId
         ];
 
-        const userDetailsResult =
-            await client.query(
-                userDetailsQuery,
-                userDetailsValues
-            );
+        const userDetailsResult = await client.query(
+            userDetailsQuery,
+            userDetailsValues
+        );
 
-        const userDetails =
-            userDetailsResult.rows[0];
-
+        const userDetails = userDetailsResult.rows[0];
 
         // ==================================================
-        // 8. CREATE USER FILES
+        // 9. CREATE USER FILES
         // ==================================================
 
-        const userFiles =
-            userData.UserFiles || [];
-
+        const userFiles = userData.UserFiles || [];
         const createdUserFiles = [];
 
         for (const userFile of userFiles) {
-
             const userFileQuery = `
                 INSERT INTO "DATA"."UserFile"
                 (
@@ -711,15 +668,7 @@ export const createUser = async (userData) => {
                     "CreatedAt",
                     "CreatedByUserId"
                 )
-                VALUES
-                (
-                    $1,
-                    $2,
-                    $3,
-                    false,
-                    CURRENT_TIMESTAMP,
-                    $4
-                )
+                VALUES ($1, $2, $3, false, CURRENT_TIMESTAMP, $4)
                 RETURNING
                     "UserFileId",
                     "FileTypeId",
@@ -730,28 +679,20 @@ export const createUser = async (userData) => {
                     "CreatedByUserId";
             `;
 
-            const userFileValues = [
-                userFile.FileTypeId,
-                UserId,
-                userFile.FilePath,
-                UserId
-            ];
+            const result = await client.query(
+                userFileQuery,
+                [
+                    userFile.FileTypeId,
+                    UserId,
+                    userFile.FilePath,
+                    UserId
+                ]
+            );
 
-            const userFileResult =
-                await client.query(
-                    userFileQuery,
-                    userFileValues
-                );
-
-            if (userFileResult.rows.length > 0) {
-
-                createdUserFiles.push(
-                    userFileResult.rows[0]
-                );
-
+            if (result.rows.length > 0) {
+                createdUserFiles.push(result.rows[0]);
             }
         }
-
 
         // ==================================================
         // COMMIT
@@ -759,24 +700,21 @@ export const createUser = async (userData) => {
 
         await client.query("COMMIT");
 
-
         return {
             ...user,
             UserDetails: userDetails,
+            UserReportingManagers: createdReportingManagers,
+            UserProducts: createdUserProducts,
+            UserProjects: createdUserProjects,
+            UserRoles: createdUserRoles,
             UserFiles: createdUserFiles
         };
 
-
     } catch (error) {
-
         await client.query("ROLLBACK");
-
         throw error;
-
     } finally {
-
         client.release();
-
     }
 };
 // ==========================================================
