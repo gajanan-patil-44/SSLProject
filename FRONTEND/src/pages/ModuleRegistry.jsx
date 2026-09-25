@@ -1,4 +1,4 @@
-// src/pages/ModuleRegistry.jsx
+﻿// src/pages/ModuleRegistry.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { DynamicListPage, DynamicFormPage } from '../components/ui/DynamicPageEngine';
@@ -52,7 +52,7 @@ function GenericAnalyticsDashboard({ title }) {
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <ChartTooltip />
-                <Area type="monotone" dataKey="Revenue" stroke="#0d9488" fill="#0d9488" fillOpacity={0.15} />
+                <Area type="monotone" dataKey="Revenue" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.15} />
                 <Area type="monotone" dataKey="Expenses" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} />
               </AreaChart>
             </ResponsiveContainer>

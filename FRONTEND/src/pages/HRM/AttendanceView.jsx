@@ -1,4 +1,4 @@
-// src/pages/HRM/AttendanceView.jsx
+﻿// src/pages/HRM/AttendanceView.jsx
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import {
@@ -90,7 +90,7 @@ export default function AttendanceView() {
     { id: 'employeeId', header: 'ID', accessorKey: 'employeeId', key: 'employeeId' },
     { id: 'name', header: 'Employee', accessorKey: 'name', key: 'name', cell: ({ row }) => <span className="font-bold">{row.original.name}</span> },
     { id: 'date', header: 'Date', accessorKey: 'date', key: 'date' },
-    { id: 'clockIn', header: 'Clock In', accessorKey: 'clockIn', key: 'clockIn', cell: ({ row }) => <span className="font-semibold text-teal-650">{row.original.clockIn}</span> },
+    { id: 'clockIn', header: 'Clock In', accessorKey: 'clockIn', key: 'clockIn', cell: ({ row }) => <span className="font-semibold text-indigo-600">{row.original.clockIn}</span> },
     { id: 'clockOut', header: 'Clock Out', accessorKey: 'clockOut', key: 'clockOut', cell: ({ row }) => <span className="font-semibold text-slate-500">{row.original.clockOut}</span> },
     { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
   ];

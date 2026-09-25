@@ -1,4 +1,4 @@
-// src/pages/Master/CompanyProductView.jsx
+﻿// src/pages/Master/CompanyProductView.jsx
 import React, { useState, useMemo } from 'react';
 import {
   Boxes,
@@ -487,7 +487,7 @@ export default function CompanyProductView() {
       {/* Toast alert */}
       {toastMessage && (
         <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 border border-slate-700 animate-in fade-in duration-200">
-          <Sparkles className="w-4 h-4 text-teal-400 shrink-0" />
+          <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
           <span className="text-xs font-medium">{toastMessage}</span>
         </div>
       )}
@@ -538,7 +538,7 @@ export default function CompanyProductView() {
               </h3>
               <p className="text-[11px] text-slate-400 mt-1">Across all clients</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Boxes className="w-6 h-6" />
             </div>
           </div>
@@ -688,9 +688,9 @@ export default function CompanyProductView() {
 
           {/* Bulk Action Bar */}
           {selectedIds.length > 0 && (
-            <div className="p-2.5 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 rounded-lg flex items-center justify-between animate-in fade-in duration-150">
+            <div className="p-2.5 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-lg flex items-center justify-between animate-in fade-in duration-150">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <CheckCircle2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span className="text-xs font-bold text-teal-900 dark:text-teal-200">
                   {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''} selected
                 </span>
@@ -780,7 +780,7 @@ export default function CompanyProductView() {
                       {/* Company */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-[10px] shrink-0">
+                          <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-teal-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-[10px] shrink-0">
                             {row.CompanyCode || 'CO'}
                           </div>
                           <div>
@@ -802,7 +802,7 @@ export default function CompanyProductView() {
                             <span className="font-bold text-slate-900 dark:text-slate-100 block">
                               {row.ProductName}
                             </span>
-                            <span className="text-[10px] text-teal-600 dark:text-teal-400 font-mono">
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono">
                               {row.ProductCode}
                             </span>
                           </div>
@@ -841,7 +841,7 @@ export default function CompanyProductView() {
                           </div>
                           <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                             <div
-                              className="bg-teal-500 h-full rounded-full transition-all"
+                              className="bg-indigo-500 h-full rounded-full transition-all"
                               style={{
                                 width: `${Math.min(
                                   100,
@@ -919,7 +919,7 @@ export default function CompanyProductView() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 flex items-center justify-center font-black text-xs shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-950/80 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-black text-xs shrink-0">
                       {row.CompanyCode || 'CO'}
                     </div>
                     <div>
@@ -944,7 +944,7 @@ export default function CompanyProductView() {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Product
                     </span>
-                    <span className="text-[9px] font-bold bg-primary/10 text-primary dark:text-teal-300 px-1.5 py-0.2 rounded">
+                    <span className="text-[9px] font-bold bg-primary/10 text-primary dark:text-indigo-300 px-1.5 py-0.2 rounded">
                       {row.LicenseType}
                     </span>
                   </div>
@@ -968,7 +968,7 @@ export default function CompanyProductView() {
                       </span>
                     ))}
                     {row.EnabledModules?.length > 3 && (
-                      <span className="text-[9px] font-bold bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded">
+                      <span className="text-[9px] font-bold bg-teal-100 dark:bg-teal-900/50 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">
                         +{row.EnabledModules.length - 3} more
                       </span>
                     )}
@@ -983,7 +983,7 @@ export default function CompanyProductView() {
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                     <div
-                      className="bg-teal-500 h-full rounded-full"
+                      className="bg-indigo-500 h-full rounded-full"
                       style={{
                         width: `${Math.min(
                           100,
@@ -1205,12 +1205,12 @@ export default function CompanyProductView() {
                       onClick={() => toggleModuleSelection(mod)}
                       className={`flex items-center gap-2 p-1.5 rounded cursor-pointer transition-colors ${
                         isChecked
-                          ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 font-bold'
+                          ? 'bg-indigo-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 font-bold'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'
                       }`}
                     >
                       {isChecked ? (
-                        <CheckSquare className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                        <CheckSquare className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                       ) : (
                         <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       )}
@@ -1453,9 +1453,9 @@ export default function CompanyProductView() {
         >
           <div className="space-y-4 text-xs">
             {/* Header Hero */}
-            <div className="p-4 bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-transparent border border-teal-500/20 rounded-xl flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-transparent border border-indigo-500/20 rounded-xl flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                   Mapping #{selectedRecord.CompanyProductId}
                 </span>
                 <h3 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
@@ -1534,7 +1534,7 @@ export default function CompanyProductView() {
                   {selectedRecord.EnabledModules.map((m) => (
                     <span
                       key={m}
-                      className="px-2 py-0.5 bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 rounded font-semibold text-[11px]"
+                      className="px-2 py-0.5 bg-indigo-50 dark:bg-teal-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded font-semibold text-[11px]"
                     >
                       ✓ {m}
                     </span>
