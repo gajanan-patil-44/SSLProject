@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Shield,
   ShieldCheck,
@@ -165,7 +165,6 @@ export default function RolesView() {
     return Object.keys(errs).length === 0;
   };
 
-  // Auto-generate code when RoleName changes in 'add' mode if code is untouched
   const handleRoleNameChange = (e) => {
     const val = e.target.value;
     setFormData((prev) => {
@@ -173,8 +172,7 @@ export default function RolesView() {
       if (modalMode === 'add' && (!prev.Role_Code || prev.Role_Code.length <= 4)) {
         updated.Role_Code = val
           .replace(/[^a-zA-Z]/g, '')
-          .slice(0, 4)
-          .toUpperCase();
+          .slice(0, 4);
       }
       return updated;
     });
@@ -196,11 +194,11 @@ export default function RolesView() {
     try {
       if (modalMode === 'add') {
         const payload = {
-          CompanyId: Number(formData.CompanyId),
+          CompanyId: Number(formData.CompanyId) || 1,
           RoleName: formData.RoleName.trim(),
-          Role_Code: formData.Role_Code.trim().toUpperCase(),
+          Role_Code: formData.Role_Code.trim(),
           Description: formData.Description?.trim() || '',
-          RequestUserName: currentUserName
+          CreatedByUserName: currentUserName
         };
         const res = await roleService.addRole(payload);
         showToast(res?.message || `Role "${formData.RoleName}" created successfully!`);
@@ -758,7 +756,7 @@ export default function RolesView() {
                 onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
-                    Role_Code: e.target.value.toUpperCase()
+                    Role_Code: e.target.value
                   }));
                   if (formErrors.Role_Code) {
                     setFormErrors((prev) => ({ ...prev, Role_Code: null }));

@@ -490,10 +490,6 @@ export default function UserCreationView() {
 
     if (step === 3) {
       if (!form.CompanyId)                                                        e.CompanyId        = 'Select a company';
-      if (!form.DesignationId)                                                    e.DesignationId    = 'Select a designation';
-      if (!Array.isArray(form.CompanyProductId) || form.CompanyProductId.length === 0)
-                                                                                  e.CompanyProductId = 'Select at least one product';
-      if (!Array.isArray(form.ProjectId) || form.ProjectId.length === 0)         e.ProjectId        = 'Select at least one project';
       if (!form.RoleId)                                                           e.RoleId           = 'Select a role';
     }
 
@@ -1052,7 +1048,7 @@ export default function UserCreationView() {
 
 
               {/* ── Company Product — Multi-Select ── */}
-              <Field label="Company Product" required error={errors.CompanyProductId}>
+              <Field label="Company Product" error={errors.CompanyProductId}>
                 <MultiSelectDropdown
                   name="CompanyProductId"
                   options={products}
@@ -1066,7 +1062,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Project — Multi-Select ── */}
-              <Field label="Project" required error={errors.ProjectId}>
+              <Field label="Project" error={errors.ProjectId}>
                 <MultiSelectDropdown
                   name="ProjectId"
                   options={projects}
@@ -1092,7 +1088,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Designation ── */}
-              <Field label="Designation" required error={errors.DesignationId}>
+              <Field label="Designation" error={errors.DesignationId}>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
                   <select name="DesignationId" value={form.DesignationId} onChange={change}

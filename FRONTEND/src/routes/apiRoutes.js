@@ -27,7 +27,8 @@ export const ROLE_ROUTES = {
   ADD_ROLE: '/verp-service/roleCreation/addRole',
   UPDATE_ROLE: '/verp-service/roleCreation/updateRole',
   UPDATE_ROLE_STATUS: '/verp-service/roleCreation/updateRoleStatus',
-  DELETE_ROLE: '/verp-service/roleCreation/deleteRole'
+  DELETE_ROLE: '/verp-service/roleCreation/deleteRole',
+  DROPDOWN: '/verp-service/roleCreation/dropdown'
 };
 
 /**
