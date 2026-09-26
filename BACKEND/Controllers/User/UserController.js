@@ -18,7 +18,7 @@ import {
 
 } from "../../Models/UserModels.js";
 import { readFile } from "fs/promises";
-import {processUserFilesUsingWorker} from "../../Helpers/userFileWorkerHelper.js";
+import { processUserFilesUsingWorker } from "../../Helpers/userFileWorkerHelper.js";
 
 import { getAllUserDetails, editUserdetails } from "../../Models/userEditDetails/UserEdit.js";
 // =====================================================
@@ -113,10 +113,13 @@ export const userDropdownController = async (req, res) => {
 // ==========================================================
 // CREATE USER
 // ==========================================================
-
 export const createUserController = async (req, res) => {
 
     try {
+
+        // ==========================================================
+        // FORM DATA
+        // ==========================================================
 
         const userData = req.body;
 
@@ -137,46 +140,7 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // CONVERT MULTIPART ARRAY FIELDS
-        // ==========================================================
-
-        const arrayFields = [
-            "CompanyProductId",
-            "ProjectId",
-            "ReportingManagerUserId"
-        ];
-
-
-        for (const field of arrayFields) {
-
-            if (!isEmpty(userData[field])) {
-
-                if (typeof userData[field] === "string") {
-
-                    try {
-
-                        userData[field] =
-                            JSON.parse(userData[field]);
-
-                    } catch (error) {
-
-                        return res.status(400).json({
-                            status: "error",
-                            message:
-                                `${field} must be a valid JSON array`
-                        });
-
-                    }
-
-                }
-
-            }
-
-        }
-
-
-        // ==========================================================
-        // REQUIRED USER FIELDS
+        // COMMON REQUIRED FIELDS
         // ==========================================================
 
         const requiredFields = [
@@ -187,12 +151,11 @@ export const createUserController = async (req, res) => {
             "DateOfJoining",
             "GenderId",
             "MaritalStatusId",
-            "DesignationId",
             "Email",
             "LoginName",
             "Password",
-            "CompanyId",
-            "RoleId"
+            "RoleId",
+            "CreatedByUserName"
         ];
 
 
@@ -211,26 +174,74 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // REQUIRED ARRAY FIELDS
+        // ROLE ID
         // ==========================================================
 
-        const requiredArrayFields = [
+        userData.RoleId =
+            Number(userData.RoleId);
+
+
+        if (
+            !Number.isInteger(userData.RoleId) ||
+            userData.RoleId <= 0
+        ) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "RoleId must be a valid number"
+            });
+
+        }
+
+
+        // ==========================================================
+        // PARSE FORM-DATA ARRAY FIELDS
+        // ==========================================================
+
+        const arrayFields = [
             "CompanyProductId",
-            "ProjectId"
+            "ProjectId",
+            "ReportingManagerUserId"
         ];
 
 
-        for (const field of requiredArrayFields) {
+        for (const field of arrayFields) {
 
-            if (
-                !Array.isArray(userData[field]) ||
-                userData[field].length === 0
-            ) {
+            if (isEmpty(userData[field])) {
+
+                userData[field] = null;
+
+                continue;
+
+            }
+
+
+            if (typeof userData[field] === "string") {
+
+                try {
+
+                    userData[field] =
+                        JSON.parse(userData[field]);
+
+                } catch (error) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            `${field} must be a valid JSON array`
+                    });
+
+                }
+
+            }
+
+
+            if (!Array.isArray(userData[field])) {
 
                 return res.status(400).json({
                     status: "error",
                     message:
-                        `${field} must be a non-empty array`
+                        `${field} must be an array`
                 });
 
             }
@@ -239,42 +250,346 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // REPORTING MANAGER
-        // OPTIONAL ARRAY
+        // ROLE ID = 1
+        // SUPER ADMIN
+        // ==========================================================
+        //
+        // CompanyId              = NULL
+        // CompanyProductId       = NULL
+        // ProjectId              = NULL
+        // ReportingManagerUserId = NULL
+        // DesignationId          = NULL
+        //
         // ==========================================================
 
-        if (isEmpty(userData.ReportingManagerUserId)) {
+        if (userData.RoleId === 1) {
 
-            userData.ReportingManagerUserId = [];
+            userData.CompanyId = null;
+
+            userData.CompanyProductId = null;
+
+            userData.ProjectId = null;
+
+            userData.ReportingManagerUserId = null;
+
+            userData.DesignationId = null;
 
         }
 
 
+        // ==========================================================
+        // ROLE ID = 2
+        // ADMIN
+        // ==========================================================
+        //
+        // CompanyId              = REQUIRED
+        // CompanyProductId       = NULL
+        // ProjectId              = NULL
+        // ReportingManagerUserId = NULL
+        // DesignationId          = NULL
+        //
+        // ==========================================================
+
+        else if (userData.RoleId === 2) {
+
+
+            // ------------------------------------------------------
+            // COMPANY ID REQUIRED
+            // ------------------------------------------------------
+
+            if (isEmpty(userData.CompanyId)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+
+            }
+
+
+            userData.CompanyId =
+                Number(userData.CompanyId);
+
+
+            if (
+                !Number.isInteger(userData.CompanyId) ||
+                userData.CompanyId <= 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "CompanyId must be a valid number"
+                });
+
+            }
+
+
+            // ------------------------------------------------------
+            // REMAINING VALUES ARE NULL
+            // ------------------------------------------------------
+
+            userData.CompanyProductId = null;
+
+            userData.ProjectId = null;
+
+            userData.ReportingManagerUserId = null;
+
+            userData.DesignationId = null;
+
+        }
+
+
+        // ==========================================================
+        // ROLE ID > 2
+        // NORMAL USER
+        // ==========================================================
+        //
+        // CompanyId              = REQUIRED
+        // CompanyProductId       = REQUIRED
+        // ProjectId              = REQUIRED
+        // ReportingManagerUserId = REQUIRED
+        // DesignationId          = REQUIRED
+        //
+        // ==========================================================
+
+        else {
+
+
+            // ------------------------------------------------------
+            // COMPANY ID
+            // ------------------------------------------------------
+
+            if (isEmpty(userData.CompanyId)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+
+            }
+
+
+            userData.CompanyId =
+                Number(userData.CompanyId);
+
+
+            if (
+                !Number.isInteger(userData.CompanyId) ||
+                userData.CompanyId <= 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "CompanyId must be a valid number"
+                });
+
+            }
+
+
+            // ------------------------------------------------------
+            // COMPANY PRODUCT
+            // ------------------------------------------------------
+
+            if (
+                !Array.isArray(userData.CompanyProductId) ||
+                userData.CompanyProductId.length === 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "CompanyProductId must be a non-empty array"
+                });
+
+            }
+
+
+            // ------------------------------------------------------
+            // PROJECT
+            // ------------------------------------------------------
+
+            if (
+                !Array.isArray(userData.ProjectId) ||
+                userData.ProjectId.length === 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "ProjectId must be a non-empty array"
+                });
+
+            }
+
+
+            // ------------------------------------------------------
+            // REPORTING MANAGER
+            // ------------------------------------------------------
+
+            if (
+                !Array.isArray(
+                    userData.ReportingManagerUserId
+                ) ||
+                userData.ReportingManagerUserId.length === 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "ReportingManagerUserId must be a non-empty array"
+                });
+
+            }
+
+
+            // ------------------------------------------------------
+            // DESIGNATION
+            // ------------------------------------------------------
+
+            if (isEmpty(userData.DesignationId)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "DesignationId is required"
+                });
+
+            }
+
+
+            userData.DesignationId =
+                Number(userData.DesignationId);
+
+
+            if (
+                !Number.isInteger(
+                    userData.DesignationId
+                ) ||
+                userData.DesignationId <= 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "DesignationId must be a valid number"
+                });
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // CONVERT COMPANY PRODUCT IDS
+        // ==========================================================
+
+        if (Array.isArray(userData.CompanyProductId)) {
+
+            userData.CompanyProductId =
+                userData.CompanyProductId.map(
+                    id => Number(id)
+                );
+
+
+            for (const id of userData.CompanyProductId) {
+
+                if (
+                    !Number.isInteger(id) ||
+                    id <= 0
+                ) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "CompanyProductId must contain valid numeric IDs"
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // CONVERT PROJECT IDS
+        // ==========================================================
+
+        if (Array.isArray(userData.ProjectId)) {
+
+            userData.ProjectId =
+                userData.ProjectId.map(
+                    id => Number(id)
+                );
+
+
+            for (const id of userData.ProjectId) {
+
+                if (
+                    !Number.isInteger(id) ||
+                    id <= 0
+                ) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "ProjectId must contain valid numeric IDs"
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // CONVERT REPORTING MANAGER IDS
+        // ==========================================================
+
         if (
-            !Array.isArray(
+            Array.isArray(
                 userData.ReportingManagerUserId
             )
         ) {
 
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "ReportingManagerUserId must be an array"
-            });
+            userData.ReportingManagerUserId =
+                userData.ReportingManagerUserId.map(
+                    id => Number(id)
+                );
+
+
+            for (
+                const id of userData.ReportingManagerUserId
+            ) {
+
+                if (
+                    !Number.isInteger(id) ||
+                    id <= 0
+                ) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "ReportingManagerUserId must contain valid numeric IDs"
+                    });
+
+                }
+
+            }
 
         }
 
 
         // ==========================================================
-        // SINGLE NUMERIC FIELDS
+        // OTHER NUMERIC FIELDS
         // ==========================================================
 
         const numericFields = [
-            "CompanyId",
-            "RoleId",
             "GenderId",
-            "MaritalStatusId",
-            "DesignationId"
+            "MaritalStatusId"
         ];
 
 
@@ -301,38 +616,65 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // ARRAY NUMERIC FIELDS
+        // DUPLICATE CHECKS
         // ==========================================================
 
-        const numericArrayFields = [
-            "CompanyProductId",
-            "ProjectId",
-            "ReportingManagerUserId"
-        ];
+        const duplicateFields = {
+
+            Email: {
+                check: checkEmailExists,
+                message: "Email already exists"
+            },
+
+            LoginName: {
+                check: checkLoginNameExists,
+                message: "Login name already exists"
+            },
+
+            PhoneNumber: {
+                check: checkPhoneNumberExists,
+                message: "Phone number already exists"
+            },
+
+            EmployeeId: {
+                check: checkEmployeeIdExists,
+                message: "Employee ID already exists",
+                transform: value => String(value)
+            }
+
+        };
 
 
-        for (const field of numericArrayFields) {
+        for (
+            const field of Object.keys(duplicateFields)
+        ) {
 
-            userData[field] =
-                userData[field].map(
-                    id => Number(id)
-                );
+            const config =
+                duplicateFields[field];
 
 
-            for (const id of userData[field]) {
+            let value =
+                userData[field];
 
-                if (
-                    !Number.isInteger(id) ||
-                    id <= 0
-                ) {
 
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            `${field} must contain valid numeric IDs`
-                    });
+            if (config.transform) {
 
-                }
+                value =
+                    config.transform(value);
+
+            }
+
+
+            const existingRecord =
+                await config.check(value);
+
+
+            if (existingRecord.length > 0) {
+
+                return res.status(409).json({
+                    status: "error",
+                    message: config.message
+                });
 
             }
 
@@ -340,97 +682,24 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // CHECK DUPLICATE EMAIL
+        // HASH PASSWORD
         // ==========================================================
 
-        const emailExists =
-            await checkEmailExists(
-                userData.Email
+        userData.Password =
+            await bcrypt.hash(
+                userData.Password,
+                10
             );
-
-
-        if (emailExists.length > 0) {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Email already exists"
-            });
-
-        }
-
-
-        // ==========================================================
-        // CHECK DUPLICATE LOGIN NAME
-        // ==========================================================
-
-        const loginNameExists =
-            await checkLoginNameExists(
-                userData.LoginName
-            );
-
-
-        if (loginNameExists.length > 0) {
-
-            return res.status(409).json({
-                status: "error",
-                message:
-                    "Login name already exists"
-            });
-
-        }
-
-
-        // ==========================================================
-        // CHECK DUPLICATE PHONE NUMBER
-        // ==========================================================
-
-        const phoneExists =
-            await checkPhoneNumberExists(
-                userData.PhoneNumber
-            );
-
-
-        if (phoneExists.length > 0) {
-
-            return res.status(409).json({
-                status: "error",
-                message:
-                    "Phone number already exists"
-            });
-
-        }
-
-
-        // ==========================================================
-        // CHECK DUPLICATE EMPLOYEE ID
-        // ==========================================================
-
-        const employeeExists =
-            await checkEmployeeIdExists(
-                String(userData.EmployeeId)
-            );
-
-
-        if (employeeExists.length > 0) {
-
-            return res.status(409).json({
-                status: "error",
-                message:
-                    "Employee ID already exists"
-            });
-
-        }
 
 
         // ==========================================================
         // CREATE USER
         // ==========================================================
 
-        const result =
-            await createUser(
-                userData,
-                req.files
-            );
+        await createUser(
+            userData,
+            req.files
+        );
 
 
         // ==========================================================
@@ -440,7 +709,6 @@ export const createUserController = async (req, res) => {
         return res.status(201).json({
             status: "success",
             message: "User created successfully"
-            
         });
 
 
@@ -515,7 +783,7 @@ export const companyProductProjectDropdownController = async (req, res) => {
         // FLAG ID 3 - PROJECT
         // ==================================================
         if (parseInt(FlagId) === 3) {
-            if (CompanyProductId === undefined || CompanyProductId === null ) {
+            if (CompanyProductId === undefined || CompanyProductId === null) {
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId is required"

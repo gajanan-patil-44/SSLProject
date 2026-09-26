@@ -81,9 +81,7 @@ export const addProduct = async (productData) => {
                 "ProductDescription",
                 "IsDisabled",
                 "CreatedAt",
-                "UpdatedAt",
-                "CreatedByUserName",
-                "UpdatedByUserName"
+                "CreatedByUserName"
             )
             VALUES
             (
@@ -92,8 +90,6 @@ export const addProduct = async (productData) => {
                 $3,
                 false,
                 CURRENT_TIMESTAMP,
-                CURRENT_TIMESTAMP,
-                $4,
                 $4
             )
             RETURNING *;
@@ -103,7 +99,7 @@ export const addProduct = async (productData) => {
             productData.ProductCode,
             productData.ProductName,
             productData.ProductDescription,
-            productData.RequestUserName
+            productData.CreatedByUserName
         ];
 
         const result = await pool.query(query, values);

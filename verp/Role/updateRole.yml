@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "RoleId": 5,
-        "RoleName": "Officer",
+        "RoleId": 1,
+        "RoleName": "SUPER ADMIN",
         "Description": "Officer responsible for processing application",
         "RequestUserName": "Praveen",
         "Role_Code": "OFFICER",

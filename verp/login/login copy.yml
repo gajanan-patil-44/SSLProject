@@ -5,13 +5,14 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.67:9004/verp-service/auth/login
+  url: http://192.168.23.76:9004/verp-service/auth/logindetail
   body:
     type: json
     data: |-
-      {
-          "username": "admin2",
-          "password": "admin2@123"
+      {"FlagId":2,
+          "UserLoginDetailId": 3,
+          "UserId": 1,
+          "LogoutReason": "User logged out"
       }
   auth: inherit
 
