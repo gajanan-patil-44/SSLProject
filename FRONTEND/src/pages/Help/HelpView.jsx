@@ -1,4 +1,4 @@
-// src/pages/Help/HelpView.jsx
+﻿// src/pages/Help/HelpView.jsx
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { PageHeader, Card, Button, Timeline, Badge, Input } from '../../components/ui/index';
@@ -31,8 +31,8 @@ export default function HelpView() {
         <Card className="max-w-3xl mx-auto p-6">
           <Timeline
             items={[
-              { id: 1, content: "Released Version 2.0.4 - Introduced dynamic page engines & Zustand shell cache store.", dateText: "August 17, 2026", iconBg: "bg-teal-500/10 text-teal-650" },
-              { id: 2, content: "Released Version 2.0.0 - Upgraded layout to React 19 + Tailwind v4 build system.", dateText: "August 01, 2026", iconBg: "bg-teal-500/10 text-teal-650" },
+              { id: 1, content: "Released Version 2.0.4 - Introduced dynamic page engines & Zustand shell cache store.", dateText: "August 17, 2026", iconBg: "bg-indigo-500/10 text-indigo-600" },
+              { id: 2, content: "Released Version 2.0.0 - Upgraded layout to React 19 + Tailwind v4 build system.", dateText: "August 01, 2026", iconBg: "bg-indigo-500/10 text-indigo-600" },
               { id: 3, content: "Released Version 1.5.0 - Integrated drag-and-drop sales pipeline and touch cashier POS.", dateText: "July 12, 2026", iconBg: "bg-slate-100 text-slate-500" }
             ]}
           />

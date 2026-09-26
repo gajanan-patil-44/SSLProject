@@ -13,21 +13,21 @@ export const Button = forwardRef(({
   className = '',
   ...props
 }, ref) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer';
+  const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer active:scale-[0.98]';
   
   const variants = {
-    primary: 'bg-primary hover:bg-primary-light text-white focus:ring-slate-900 border border-transparent shadow-sm',
-    secondary: 'bg-secondary hover:bg-teal-800 text-white focus:ring-teal-700 border border-transparent shadow-sm',
-    outline: 'border border-slate-200 dark:border-slate-800 bg-transparent text-slate-700 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 focus:ring-slate-400',
-    ghost: 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 focus:ring-slate-400',
-    danger: 'bg-danger hover:bg-red-700 text-white focus:ring-red-600 border border-transparent shadow-sm',
-    success: 'bg-success hover:bg-green-700 text-white focus:ring-green-650 border border-transparent shadow-sm'
+    primary: 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white focus:ring-indigo-500 shadow-md shadow-indigo-500/20 border border-transparent',
+    secondary: 'bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white focus:ring-cyan-500 shadow-md shadow-cyan-500/20 border border-transparent',
+    outline: 'border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus:ring-indigo-500/40 shadow-2xs',
+    ghost: 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-300 focus:ring-slate-400',
+    danger: 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white focus:ring-rose-500 shadow-md shadow-rose-500/20 border border-transparent',
+    success: 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white focus:ring-emerald-500 shadow-md shadow-emerald-500/20 border border-transparent'
   };
 
   const sizes = {
-    sm: 'text-xs px-2.5 py-1.5 gap-1.5',
-    md: 'text-sm px-4 py-2 gap-2',
-    lg: 'text-base px-5 py-2.5 gap-2.5'
+    sm: 'text-xs px-3 py-1.5 gap-1.5',
+    md: 'text-sm px-4 py-2.5 gap-2',
+    lg: 'text-base px-5 py-3 gap-2.5'
   };
 
   return (
@@ -111,7 +111,7 @@ export const Input = forwardRef(({ className = '', error, ...props }, ref) => {
   return (
     <input
       ref={ref}
-      className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary transition-all disabled:opacity-50 disabled:bg-slate-50 ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${className}`}
+      className={`w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs disabled:opacity-50 disabled:bg-slate-50 ${error ? 'border-red-500 focus:ring-red-500' : ''} ${className}`}
       {...props}
     />
   );
@@ -121,7 +121,7 @@ export const Textarea = forwardRef(({ className = '', error, ...props }, ref) =>
   return (
     <textarea
       ref={ref}
-      className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary transition-all disabled:opacity-50 disabled:bg-slate-50 min-h-[80px] ${error ? 'border-red-500 focus:ring-red-500' : ''} ${className}`}
+      className={`w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs disabled:opacity-50 disabled:bg-slate-50 min-h-[85px] ${error ? 'border-red-500 focus:ring-red-500' : ''} ${className}`}
       {...props}
     />
   );
@@ -129,21 +129,17 @@ export const Textarea = forwardRef(({ className = '', error, ...props }, ref) =>
 
 export const Select = forwardRef(({ options = [], placeholder, className = '', error, ...props }, ref) => {
   const hasEmptyOption = options.some(opt => opt.value === '' || opt.value === undefined || opt.value === null);
+  const shouldRenderPlaceholder = placeholder !== false && !hasEmptyOption;
 
   return (
     <select
       ref={ref}
-      className={`w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary transition-all disabled:opacity-50 disabled:bg-slate-50 cursor-pointer ${error ? 'border-red-500' : ''} ${className}`}
+      className={`w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs disabled:opacity-50 disabled:bg-slate-50 cursor-pointer ${error ? 'border-red-500' : ''} ${className}`}
       {...props}
     >
-      {!hasEmptyOption && placeholder && (
+      {shouldRenderPlaceholder && (
         <option value="">
-          {placeholder}
-        </option>
-      )}
-      {!hasEmptyOption && !placeholder && (
-        <option value="">
-          Select...
+          {placeholder || 'Select...'}
         </option>
       )}
       {options.map((opt) => (
@@ -160,11 +156,11 @@ export const Select = forwardRef(({ options = [], placeholder, className = '', e
 // ==========================================
 export const Checkbox = forwardRef(({ label, className = '', ...props }, ref) => {
   return (
-    <label className={`inline-flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-400 select-none ${className}`}>
+    <label className={`inline-flex items-center gap-2.5 cursor-pointer text-sm text-slate-700 dark:text-slate-300 select-none ${className}`}>
       <input
         ref={ref}
         type="checkbox"
-        className="w-4 h-4 rounded border-slate-300 dark:border-slate-800 text-secondary focus:ring-secondary cursor-pointer"
+        className="w-4 h-4 rounded-md border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
         {...props}
       />
       {label && <span>{label}</span>}
@@ -174,11 +170,11 @@ export const Checkbox = forwardRef(({ label, className = '', ...props }, ref) =>
 
 export const Radio = forwardRef(({ label, className = '', ...props }, ref) => {
   return (
-    <label className={`inline-flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-400 select-none ${className}`}>
+    <label className={`inline-flex items-center gap-2.5 cursor-pointer text-sm text-slate-700 dark:text-slate-300 select-none ${className}`}>
       <input
         ref={ref}
         type="radio"
-        className="w-4 h-4 border-slate-300 dark:border-slate-800 text-secondary focus:ring-secondary cursor-pointer"
+        className="w-4 h-4 border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
         {...props}
       />
       {label && <span>{label}</span>}
@@ -188,7 +184,7 @@ export const Radio = forwardRef(({ label, className = '', ...props }, ref) => {
 
 export const Switch = forwardRef(({ label, className = '', checked, onChange, ...props }, ref) => {
   return (
-    <label className={`inline-flex items-center gap-3 cursor-pointer text-sm text-slate-700 dark:text-slate-400 select-none ${className}`}>
+    <label className={`inline-flex items-center gap-3 cursor-pointer text-sm text-slate-700 dark:text-slate-300 select-none ${className}`}>
       <div className="relative">
         <input
           ref={ref}
@@ -198,7 +194,7 @@ export const Switch = forwardRef(({ label, className = '', checked, onChange, ..
           className="sr-only peer"
           {...props}
         />
-        <div className="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+        <div className="w-10 h-5.5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-indigo-600 peer-checked:to-violet-600"></div>
       </div>
       {label && <span>{label}</span>}
     </label>
@@ -210,16 +206,16 @@ export const Switch = forwardRef(({ label, className = '', checked, onChange, ..
 // ==========================================
 export const Badge = ({ children, variant = 'neutral', className = '' }) => {
   const styles = {
-    neutral: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700',
-    primary: 'bg-primary/10 text-primary dark:bg-slate-900/50 dark:text-slate-200 border-primary/20',
-    secondary: 'bg-secondary/15 text-secondary dark:bg-teal-950/20 dark:text-teal-400 border-secondary/20',
-    success: 'bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/50',
-    warning: 'bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border-orange-200 dark:border-orange-900/50',
-    danger: 'bg-red-50 text-red-750 dark:bg-red-950/20 dark:text-red-450 border-red-200 dark:border-red-900/50',
-    info: 'bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200 dark:border-blue-900/50'
+    neutral: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200/80 dark:border-slate-700',
+    primary: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/50',
+    secondary: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border-cyan-200/60 dark:border-cyan-800/50',
+    success: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/50',
+    warning: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/50',
+    danger: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/50',
+    info: 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border-sky-200/60 dark:border-sky-800/50'
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${styles[variant]} ${className}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${styles[variant]} shadow-2xs ${className}`}>
       {children}
     </span>
   );
@@ -264,7 +260,7 @@ export const StatusBadge = ({ status }) => {
 export const Card = ({ children, className = '', ...props }) => {
   return (
     <div
-      className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-xl shadow-xs transition-all duration-150 p-5 ${className}`}
+      className={`bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-xl border border-slate-200/70 dark:border-slate-800/80 rounded-2xl shadow-xs transition-all duration-200 p-5.5 card-hover ${className}`}
       {...props}
     >
       {children}
@@ -278,32 +274,35 @@ export const StatCard = ({
   badgeText,
   badgeVariant = 'secondary',
   icon: Icon,
-  iconColorClass = 'text-primary bg-slate-100 dark:bg-slate-800 dark:text-slate-200',
+  iconColorClass = 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 dark:text-indigo-300',
   description,
   className = '',
   onClick
 }) => {
   return (
-    <Card className={`flex flex-col justify-between hover:shadow-sm transition-shadow ${onClick ? 'cursor-pointer' : ''} ${className}`} onClick={onClick}>
+    <Card className={`relative overflow-hidden flex flex-col justify-between transition-all ${onClick ? 'cursor-pointer' : ''} ${className}`} onClick={onClick}>
+      {/* Top accent light bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500/0 via-indigo-500/40 to-indigo-500/0"></div>
+      
       <div className="flex justify-between items-start">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</span>
-          <span className="text-2xl font-bold text-slate-900 dark:text-slate-50">{value}</span>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{title}</span>
+          <span className="text-2xl sm:text-[26px] font-extrabold text-slate-900 dark:text-white tracking-tight">{value}</span>
         </div>
         {Icon && (
-          <div className={`p-2.5 rounded-lg ${iconColorClass}`}>
+          <div className={`p-3 rounded-2xl shadow-2xs ${iconColorClass}`}>
             <Icon className="w-5 h-5 shrink-0" />
           </div>
         )}
       </div>
       <div className="flex items-center gap-2 mt-4 text-xs">
         {badgeText && (
-          <Badge variant={badgeVariant} className="font-semibold px-1.5 py-0.5 rounded-md">
+          <Badge variant={badgeVariant} className="font-bold px-2 py-0.5 rounded-lg text-[10px]">
             {badgeText}
           </Badge>
         )}
         {description && (
-          <span className="text-slate-500 dark:text-slate-400 font-medium">{description}</span>
+          <span className="text-slate-400 dark:text-slate-500 font-medium text-[11px]">{description}</span>
         )}
       </div>
     </Card>
@@ -486,15 +485,18 @@ export const Breadcrumb = ({ items = [] }) => {
     </nav>
   );
 };
-export const PageHeader = ({ title, description, actions, breadcrumbs }) => {
+export const PageHeader = ({ title, description, actions, breadcrumbs, badge }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-5 border-b border-slate-200/80 dark:border-slate-800/80 mb-6 gap-4">
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-5 border-b border-slate-200/70 dark:border-slate-800/60 mb-6 gap-4">
       <div className="flex flex-col gap-1.5">
         {breadcrumbs && <Breadcrumb items={breadcrumbs} />}
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight m-0">{title}</h1>
-        {description && <p className="text-sm text-slate-500 dark:text-slate-405 m-0 leading-relaxed">{description}</p>}
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-2xl sm:text-[26px] font-extrabold text-slate-900 dark:text-white tracking-tight m-0">{title}</h1>
+          {badge && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">{badge}</span>}
+        </div>
+        {description && <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 m-0 leading-relaxed font-normal">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2.5 shrink-0">{actions}</div>}
+      {actions && <div className="flex items-center gap-2.5 shrink-0 flex-wrap">{actions}</div>}
     </div>
   );
 };
