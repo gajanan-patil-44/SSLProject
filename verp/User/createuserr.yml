@@ -67,10 +67,10 @@ http:
         value: "[20,6,1]"
       - name: CompanyProductId
         type: text
-        value: "[3,4]"
+        value: "[2, 1]"
       - name: ProjectId
         type: text
-        value: "[4,3,9]"
+        value: "[[3,4], [1,2]]"
       - name: RoleId
         type: text
         value: "2"
@@ -103,7 +103,7 @@ http:
         contentType: image/png
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3OTAyNTA2OTQsImV4cCI6MTc5MDI3OTQ5NH0.AUIbtrBBJ7_m-46hhG2z_tHhoqGvO4c6p-q3SWGv_Jk
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3OTAzMTQ3NzQsImV4cCI6MTc5MDM0MzU3NH0.XidtXuof-sjO7Z1W0qZKMl4WUUcvRiGes_CuDSsoDkk
 
 settings:
   encodeUrl: true
