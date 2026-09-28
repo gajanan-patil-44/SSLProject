@@ -54,7 +54,6 @@ export default function ProductsView() {
 
       setProducts(productList);
     } catch (err) {
-      console.error('Failed to load products:', err);
       setError(err?.message || 'Failed to fetch products. Please ensure the backend service is reachable.');
     } finally {
       setLoading(false);

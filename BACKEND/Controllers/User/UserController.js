@@ -164,6 +164,7 @@ export const createUserController = async (req, res) => {
             if (isEmpty(userData[field])) {
 
                 return res.status(400).json({
+
                     status: "error",
                     message: `${field} is required`
                 });
@@ -605,9 +606,12 @@ export const createUserController = async (req, res) => {
             ) {
 
                 return res.status(400).json({
+
                     status: "error",
+
                     message:
                         `${field} must be a valid number`
+
                 });
 
             }

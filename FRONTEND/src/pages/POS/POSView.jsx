@@ -1,4 +1,4 @@
-// src/pages/POS/POSView.jsx
+﻿// src/pages/POS/POSView.jsx
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import {
@@ -32,7 +32,6 @@ export default function POSView() {
       const res = await api.getProducts();
       setProducts(res || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -168,7 +167,7 @@ export default function POSView() {
                     <span className="text-[10px] text-slate-400 uppercase tracking-widest">{prod.brand}</span>
                     <h5 className="font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{prod.name}</h5>
                     <div className="flex justify-between items-center pt-1">
-                      <span className="font-extrabold text-slate-900 dark:text-teal-400">${prod.price}</span>
+                      <span className="font-extrabold text-slate-900 dark:text-indigo-400">${prod.price}</span>
                       <span className="text-[10px] text-slate-400 font-semibold">{prod.stock} in stock</span>
                     </div>
                   </div>

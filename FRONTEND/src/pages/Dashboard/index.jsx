@@ -1,4 +1,4 @@
-// src/pages/Dashboard/index.jsx
+﻿// src/pages/Dashboard/index.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -34,11 +34,11 @@ import { useERPStore } from '../../store/useERPStore';
 
 // Mock charts datasets
 const deptDistribution = [
-  { name: 'Engineering', value: 489, color: '#0d9488' },
+  { name: 'Engineering', value: 489, color: '#4f46e5' },
   { name: 'Marketing', value: 282, color: '#f59e0b' },
   { name: 'Finance', value: 231, color: '#10b981' },
   { name: 'Sales', value: 180, color: '#3b82f6' },
-  { name: 'HR', value: 103, color: '#8b5cf6' }
+  { name: 'HR', value: 103, color: '#7c3aed' }
 ];
 
 const weeklyAttendance = [
@@ -119,7 +119,6 @@ export default function Dashboard() {
       useERPStore.getState().showToast(`Employee "${formData.name}" onboarded successfully!`, "success");
       navigate('/hrm/employees');
     } catch (err) {
-      console.error(err);
       useERPStore.getState().showToast("Failed to onboard employee. Please check required fields.", "error");
     }
   };
@@ -168,7 +167,7 @@ export default function Dashboard() {
           badgeText="3.64%"
           badgeVariant="success"
           icon={Calendar}
-          iconColorClass="bg-teal-50 dark:bg-teal-950/20 text-teal-600"
+          iconColorClass="bg-violet-50 dark:bg-violet-950/20 text-violet-600"
           description="Planned leave requests"
         />
         <StatCard
@@ -284,7 +283,7 @@ export default function Dashboard() {
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <ChartTooltip />
-                <Bar dataKey="Present" fill="#0d9488" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Present" fill="#4f46e5" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Late" fill="#ea580c" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -324,7 +323,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <span className="text-slate-400 font-medium">MoM Growth</span>
-                <p className="text-sm font-bold text-teal-600 dark:text-teal-400 flex items-center gap-0.5 mt-1">
+                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5 mt-1">
                   <TrendingUp className="w-3.5 h-3.5" /> 4.2%
                 </p>
               </div>
@@ -337,7 +336,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={payrollHistory}>
                   <ChartTooltip />
-                  <Line type="monotone" dataKey="Amount" stroke="#0d9488" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="Amount" stroke="#4f46e5" strokeWidth={2.5} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -367,7 +366,7 @@ export default function Dashboard() {
               <p className="text-[10px] text-slate-400">Screening</p>
             </div>
             <div className="border border-slate-100 dark:border-slate-800 py-1.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40">
-              <span className="text-lg font-bold text-teal-650">12</span>
+              <span className="text-lg font-bold text-indigo-600">12</span>
               <p className="text-[10px] text-slate-400">Interviews</p>
             </div>
           </div>

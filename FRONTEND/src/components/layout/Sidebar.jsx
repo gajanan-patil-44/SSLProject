@@ -24,6 +24,10 @@ const ICON_MAP = {
   'user-creation': Icons.UserPlus,
   usercreation: Icons.UserPlus,
   userplus: Icons.UserPlus,
+  'manage-users': Icons.Users,
+  'manage-user': Icons.Users,
+  manageusers: Icons.Users,
+  manageuser: Icons.Users,
   reports: Icons.BarChart3,
   report: Icons.BarChart3,
   barchart: Icons.BarChart3,
@@ -225,22 +229,22 @@ export default function Sidebar() {
     const fontSize = level === 0 ? 'text-xs' : 'text-[11.5px]';
 
     const linkClass = (isActive) => `
-      flex items-center justify-between ${paddingLeft} py-2 rounded-lg ${fontSize} font-semibold transition-all duration-150 group cursor-pointer w-full
+      flex items-center justify-between ${paddingLeft} py-2.5 rounded-xl ${fontSize} font-semibold transition-all duration-200 group cursor-pointer w-full relative
       ${isActive
-        ? 'bg-primary dark:bg-slate-800 text-white font-bold shadow-xs'
-        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'}
+        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-md shadow-indigo-500/25 ring-1 ring-white/20'
+        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/70'}
     `;
 
     const rowContent = (
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {renderIcon(
           item.icon,
-          `${level === 0 ? 'w-4.5 h-4.5' : 'w-3.5 h-3.5'} shrink-0 ${
-            isDirectActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+          `${level === 0 ? 'w-4.5 h-4.5' : 'w-3.5 h-3.5'} shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+            isDirectActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
           }`
         )}
         {!sidebarCollapsed && (
-          <span className="truncate">{item.label}</span>
+          <span className="truncate tracking-tight">{item.label}</span>
         )}
       </div>
     );
@@ -279,7 +283,7 @@ export default function Sidebar() {
                 {rowContent}
                 {item.badge && (
                   <span className={`px-1.5 py-0.5 text-[9px] rounded-md font-bold mr-1 ${
-                    isDirectActive ? 'bg-white/20 text-white' : 'bg-secondary/10 text-secondary'
+                    isDirectActive ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
                   }`}>
                     {item.badge}
                   </span>
@@ -304,7 +308,7 @@ export default function Sidebar() {
                   e.stopPropagation();
                   toggleSubmenu(itemKey);
                 }}
-                className={`p-1.5 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors ml-0.5 ${
+                className={`p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors ml-0.5 ${
                   isDirectActive ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
                 title={isOpen ? 'Collapse' : 'Expand'}
@@ -321,7 +325,7 @@ export default function Sidebar() {
 
         {/* Recursive child list */}
         {hasChildren && isOpen && !sidebarCollapsed && (
-          <div className="pl-3.5 ml-4 border-l border-slate-200 dark:border-slate-800 space-y-0.5 py-0.5 mt-0.5">
+          <div className="pl-3.5 ml-4 border-l-2 border-indigo-100 dark:border-slate-800/80 space-y-0.5 py-0.5 mt-0.5">
             {item.children.map((child, idx) =>
               renderMenuItem(child, level + 1, `${itemKey}-${idx}`)
             )}
@@ -332,18 +336,18 @@ export default function Sidebar() {
   };
 
   const SidebarContent = (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-300">
+    <div className="flex flex-col h-full bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800/70 text-slate-800 dark:text-slate-300">
       {/* Brand Logo Header */}
-      <div className={`flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4.5'} h-18 border-b border-slate-200 dark:border-slate-800 shrink-0`}>
+      <div className={`flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-5'} h-18 border-b border-slate-200/70 dark:border-slate-800/60 shrink-0`}>
         {sidebarCollapsed ? (
           <button
             type="button"
             onClick={toggleSidebarCollapsed}
-            className="group relative w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/10 dark:from-teal-500/30 dark:to-emerald-500/20 flex items-center justify-center p-1.5 shrink-0 border border-teal-500/30 shadow-sm shadow-teal-500/10 cursor-pointer hover:scale-105 hover:border-teal-500 transition-all"
+            className="group relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center p-2 shrink-0 shadow-md shadow-indigo-500/25 cursor-pointer hover:scale-105 hover:shadow-indigo-500/40 transition-all"
             title="Click to Expand Sidebar"
           >
-            <img src={logo} alt="Vishvin ERP Logo" className="w-full h-full object-contain filter drop-shadow-sm group-hover:opacity-30 transition-opacity" />
-            <PanelLeft className="w-5 h-5 text-teal-700 dark:text-teal-400 absolute opacity-0 group-hover:opacity-100 transition-opacity" />
+            <img src={logo} alt="Vishvin ERP Logo" className="w-full h-full object-contain filter drop-shadow brightness-0 invert group-hover:opacity-20 transition-opacity" />
+            <PanelLeft className="w-5 h-5 text-white absolute opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         ) : (
           <>
@@ -354,15 +358,20 @@ export default function Sidebar() {
               className="flex items-center gap-3 cursor-pointer group"
               title="Refresh & Go to Main Page"
             >
-              {/* Logo Icon */}
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/10 dark:from-teal-500/30 dark:to-emerald-500/20 flex items-center justify-center p-1.5 shrink-0 border border-teal-500/30 shadow-sm shadow-teal-500/10 group-hover:scale-105 transition-transform">
-                <img src={logo} alt="Vishvin ERP Logo" className="w-full h-full object-contain filter drop-shadow-sm" />
+              {/* Logo Icon with glowing gradient container */}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 flex items-center justify-center p-2 shrink-0 shadow-md shadow-indigo-500/25 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all">
+                <img src={logo} alt="Vishvin ERP Logo" className="w-full h-full object-contain filter drop-shadow brightness-0 invert" />
               </div>
               <div className="flex flex-col">
-                <span className="font-black text-lg tracking-tight text-slate-900 dark:text-slate-50 leading-tight group-hover:text-primary transition-colors">
-                  Vishvin ERP
-                </span>
-                <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 tracking-wider uppercase">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Vishvin
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                    ERP
+                  </span>
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wide">
                   Enterprise Cloud
                 </span>
               </div>
@@ -382,16 +391,16 @@ export default function Sidebar() {
       </div>
 
       {/* Scrollable Navigation */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-3.5 py-4 space-y-5">
         {sections.map((section, sIdx) => (
           <div key={sIdx} className="space-y-1.5">
             {/* Section Title */}
             {!sidebarCollapsed ? (
-              <h5 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+              <h5 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5">
                 {section.title}
               </h5>
             ) : (
-              <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 mx-1"></div>
+              <div className="border-t border-slate-200/50 dark:border-slate-800/80 my-2 mx-1"></div>
             )}
 
             {/* Section Items */}
@@ -408,7 +417,7 @@ export default function Sidebar() {
     <>
       {/* Desktop Fixed Sidebar */}
       <aside className={`
-        hidden md:block shrink-0 h-screen sticky top-0 transition-all duration-200 ease-in-out z-20
+        hidden md:block shrink-0 h-full transition-all duration-200 ease-in-out z-20
         ${sidebarCollapsed ? 'w-[70px]' : 'w-[230px]'}
       `}>
         {SidebarContent}

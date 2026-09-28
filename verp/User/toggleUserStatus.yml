@@ -6,6 +6,15 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/userEdit/toggleUserStatus
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":1,
+        "IsDisabled":true,
+        "UpdatedByUserName":"kavyaaa",
+        "UserId":8
+      }
   auth: inherit
 
 settings:

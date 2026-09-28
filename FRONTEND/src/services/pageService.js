@@ -118,7 +118,6 @@ export const pageService = {
       const list = response?.data || response?.result || (Array.isArray(response) ? response : []);
       return Array.isArray(list) ? list : [];
     } catch (err) {
-      console.error('Failed to fetch roles dropdown:', err);
       return [];
     }
   },
@@ -132,7 +131,6 @@ export const pageService = {
       const list = response?.data || response?.result || (Array.isArray(response) ? response : []);
       return Array.isArray(list) ? list : [];
     } catch (err) {
-      console.error('Failed to fetch main pages dropdown:', err);
       return [];
     }
   },
@@ -154,7 +152,6 @@ export const pageService = {
       const list = response?.data || response?.result || (Array.isArray(response) ? response : []);
       return Array.isArray(list) ? list : [];
     } catch (err) {
-      console.error('Failed to fetch parent/child pages dropdown:', err);
       return [];
     }
   },
@@ -171,6 +168,13 @@ export const pageService = {
    */
   addPage: async (data) => {
     return apiClient.post(API_ROUTES.PAGE.ADD, data);
+  },
+
+  /**
+   * Update existing page (POST /edit FlagId: 2)
+   */
+  updatePage: async (data) => {
+    return apiClient.post(API_ROUTES.PAGE.EDIT, data);
   },
 
   /**

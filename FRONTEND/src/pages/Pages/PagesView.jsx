@@ -1,4 +1,4 @@
-// src/pages/Pages/PagesView.jsx
+﻿// src/pages/Pages/PagesView.jsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -123,12 +123,12 @@ export default function PagesView() {
     const isOTP = pathname.includes('/otp');
 
     return (
-      <div className="min-h-screen w-full flex flex-col md:flex-row bg-white dark:bg-slate-950 font-sans">
+      <div className="min-h-screen w-full flex flex-col md:flex-row bg-[#f8fafc] dark:bg-[#090d16] font-sans selection:bg-indigo-500 selection:text-white">
 
         {/* ========================================== */}
-        {/* LEFT COLUMN: Clean Form Interface         */}
+        {/* LEFT COLUMN: Clean Modern SaaS Form       */}
         {/* ========================================== */}
-        <div className="w-full md:w-1/2 lg:w-7/12 xl:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
+        <div className="w-full md:w-1/2 lg:w-7/12 xl:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16 bg-white/90 dark:bg-[#0b0f19]/90 backdrop-blur-xl text-slate-900 dark:text-slate-100 min-h-screen border-r border-slate-200/60 dark:border-slate-800/60">
 
           {/* Top Brand Header */}
           <div className="flex items-center justify-between w-full">
@@ -136,33 +136,56 @@ export default function PagesView() {
               className="flex items-center gap-3 cursor-pointer select-none group"
               onClick={() => navigate('/dashboard')}
             >
-              <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/20 border border-teal-500/20 flex items-center justify-center p-2 shrink-0 shadow-xs group-hover:border-teal-500/40 transition-all">
-                <img src={logo} alt="Vishvin ERP" className="w-full h-full object-contain" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 flex items-center justify-center p-2 shrink-0 shadow-md shadow-indigo-500/25 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all">
+                <img src={logo} alt="Vishvin ERP" className="w-full h-full object-contain filter drop-shadow brightness-0 invert" />
               </div>
-              <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white uppercase">
-                VISHVIN ERP
-              </span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
+                    Vishvin
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                    ERP
+                  </span>
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                  Enterprise Cloud Portal
+                </span>
+              </div>
             </div>
+
+            {/* Quick Theme Toggle */}
+            <button
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              title="Toggle theme"
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
+            </button>
           </div>
 
           {/* Center Form Section */}
-          <div className="w-full max-w-[400px] mx-auto my-auto py-8">
+          <div className="w-full max-w-[410px] mx-auto my-auto py-8">
 
             {/* LOGIN VIEW */}
             {isLogin && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl sm:text-[28px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                    Sign in to your account
+                  {/* <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                    SECURE ENTERPRISE LOGIN
+                  </div> */}
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Welcome back
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
-                    Enter your registered credentials to access your dashboard.
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
+                    Sign in with your enterprise credentials to access your workspace.
                   </p>
                 </div>
 
                 {authError && (
-                  <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2.5 animate-fadeIn">
-                    <ShieldAlert className="w-4 h-4 shrink-0 text-red-500" />
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2.5 animate-fadeIn">
+                    <ShieldAlert className="w-4 h-4 shrink-0 text-rose-500" />
                     <span>{authError}</span>
                   </div>
                 )}
@@ -170,22 +193,22 @@ export default function PagesView() {
                 <form onSubmit={handleAuthSubmit} className="space-y-4">
                   {/* Username / Email Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                      Username or Email or PhoneNo
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      Username, Email, or Phone
                     </label>
                     <input
                       type="text"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your username or email"
-                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#053742] dark:focus:ring-teal-500 transition-all shadow-2xs"
+                      placeholder="e.g. admin or admin@vishvin.com"
+                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs"
                       required
                     />
                   </div>
 
                   {/* Password Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                       Password
                     </label>
                     <div className="relative">
@@ -193,8 +216,8 @@ export default function PagesView() {
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                        className="w-full px-4 py-3 pr-11 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#053742] dark:focus:ring-teal-500 transition-all shadow-2xs"
+                        placeholder="Enter your security password"
+                        className="w-full px-4 py-3 pr-11 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs"
                         required
                       />
                       <button
@@ -212,7 +235,7 @@ export default function PagesView() {
                     <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400 select-none">
                       <input
                         type="checkbox"
-                        className="rounded-md accent-[#053742] w-4 h-4 cursor-pointer"
+                        className="rounded-md accent-indigo-600 w-4 h-4 cursor-pointer"
                         checked={rememberMe}
                         onChange={(e) => {
                           const checked = e.target.checked;
@@ -226,7 +249,7 @@ export default function PagesView() {
                     </label>
                     <span
                       onClick={() => navigate('/pages/auth/forgot-password')}
-                      className="text-slate-600 dark:text-slate-400 hover:text-[#053742] dark:hover:text-teal-400 hover:underline cursor-pointer font-medium"
+                      className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline cursor-pointer font-semibold"
                     >
                       Forgot password?
                     </span>
@@ -236,23 +259,23 @@ export default function PagesView() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 px-4 rounded-xl bg-[#053742] hover:bg-[#03262e] active:scale-[0.99] text-white font-bold text-sm transition-all cursor-pointer shadow-md shadow-[#053742]/25 flex items-center justify-center gap-2 mt-2"
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.99] text-white font-bold text-sm transition-all cursor-pointer shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 flex items-center justify-center gap-2 mt-2"
                   >
                     {loading ? (
                       <>
-                        <RefreshCw className="w-4 h-4 animate-spin" /> Signing in...
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Authenticating...
                       </>
                     ) : (
-                      "Sign in"
+                      "Sign in to Dashboard"
                     )}
                   </button>
                 </form>
 
                 {/* Or Divider */}
                 <div className="relative flex py-1 items-center">
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                  <span className="shrink-0 mx-4 text-xs font-medium text-slate-400 uppercase tracking-wider">Or</span>
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                  <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800"></div>
+                  <span className="shrink-0 mx-4 text-xs font-semibold text-slate-400 uppercase tracking-widest text-[10px]">Or continue with</span>
+                  <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800"></div>
                 </div>
 
                 {/* Social Buttons */}
@@ -290,7 +313,7 @@ export default function PagesView() {
                     <button
                       type="button"
                       onClick={() => navigate('/pages/auth/register')}
-                      className="text-[#053742] dark:text-teal-400 font-bold hover:underline cursor-pointer"
+                      className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer"
                     >
                       Sign up
                     </button>
@@ -303,10 +326,14 @@ export default function PagesView() {
             {isRegister && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl sm:text-[28px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                    Create an account
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                    INSTANT WORKSPACE SETUP
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Create your account
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
                     Sign up to begin your enterprise operations experience.
                   </p>
                 </div>
@@ -314,40 +341,40 @@ export default function PagesView() {
                 <form onSubmit={handleAuthSubmit} className="space-y-4">
                   {/* Name Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                      Name
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      Full Name
                     </label>
                     <input
                       type="text"
-                      placeholder="Enter your name"
-                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#053742] dark:focus:ring-teal-500 transition-all shadow-2xs"
+                      placeholder="e.g. John Doe"
+                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs"
                       required
                     />
                   </div>
 
                   {/* Email Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                      Email
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      Corporate Email
                     </label>
                     <input
                       type="email"
-                      placeholder="Enter your mail"
-                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#053742] dark:focus:ring-teal-500 transition-all shadow-2xs"
+                      placeholder="john@company.com"
+                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs"
                       required
                     />
                   </div>
 
                   {/* Password Field */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                      Password
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      Create Password
                     </label>
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        className="w-full px-4 py-3 pr-11 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#053742] dark:focus:ring-teal-500 transition-all shadow-2xs"
+                        placeholder="Choose a strong password"
+                        className="w-full px-4 py-3 pr-11 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs"
                         required
                       />
                       <button
@@ -365,12 +392,12 @@ export default function PagesView() {
                     <input
                       type="checkbox"
                       id="terms"
-                      className="rounded-md accent-[#053742] w-4 h-4 cursor-pointer"
+                      className="rounded-md accent-indigo-600 w-4 h-4 cursor-pointer"
                       defaultChecked
                       required
                     />
                     <label htmlFor="terms" className="cursor-pointer text-slate-600 dark:text-slate-400 select-none font-medium">
-                      I agree to all the <span className="underline font-semibold text-slate-800 dark:text-slate-200">Terms & Conditions</span>
+                      I agree to the <span className="underline font-semibold text-slate-800 dark:text-slate-200">Terms of Service</span> and <span className="underline font-semibold text-slate-800 dark:text-slate-200">Privacy Policy</span>
                     </label>
                   </div>
 
@@ -378,23 +405,23 @@ export default function PagesView() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 px-4 rounded-xl bg-[#053742] hover:bg-[#03262e] active:scale-[0.99] text-white font-bold text-sm transition-all cursor-pointer shadow-md shadow-[#053742]/25 flex items-center justify-center gap-2 mt-2"
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.99] text-white font-bold text-sm transition-all cursor-pointer shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 flex items-center justify-center gap-2 mt-2"
                   >
                     {loading ? (
                       <>
-                        <RefreshCw className="w-4 h-4 animate-spin" /> Creating Account...
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Provisioning Account...
                       </>
                     ) : (
-                      "Sign up"
+                      "Create Account"
                     )}
                   </button>
                 </form>
 
                 {/* Or Divider */}
                 <div className="relative flex py-1 items-center">
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                  <span className="shrink-0 mx-4 text-xs font-medium text-slate-400 uppercase tracking-wider">Or</span>
-                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                  <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800"></div>
+                  <span className="shrink-0 mx-4 text-xs font-semibold text-slate-400 uppercase tracking-widest text-[10px]">Or continue with</span>
+                  <div className="flex-grow border-t border-slate-200/80 dark:border-slate-800"></div>
                 </div>
 
                 {/* Social Buttons */}
@@ -402,7 +429,7 @@ export default function PagesView() {
                   <button
                     type="button"
                     onClick={() => handleSSOLogin('Google')}
-                    className="flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs hover:border-slate-300"
+                    className="flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs hover:border-indigo-400/40"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -416,7 +443,7 @@ export default function PagesView() {
                   <button
                     type="button"
                     onClick={() => handleSSOLogin('Facebook')}
-                    className="flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs hover:border-slate-300"
+                    className="flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-2xs hover:border-indigo-400/40"
                   >
                     <svg className="w-4 h-4" fill="#1877F2" viewBox="0 0 24 24">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -432,7 +459,7 @@ export default function PagesView() {
                     <button
                       type="button"
                       onClick={() => navigate('/pages/auth/login')}
-                      className="text-[#053742] dark:text-teal-400 font-bold hover:underline cursor-pointer"
+                      className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer"
                     >
                       Log in
                     </button>
@@ -445,42 +472,46 @@ export default function PagesView() {
             {isForgot && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl sm:text-[28px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                    Reset password
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    PASSWORD RECOVERY
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Reset your password
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
-                    Enter your email to receive recovery instructions.
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
+                    Enter your email and we'll send recovery instructions.
                   </p>
                 </div>
 
                 <form onSubmit={(e) => { e.preventDefault(); navigate('/pages/auth/otp'); }} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                      Email Address
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      Registered Email Address
                     </label>
                     <input
                       type="email"
-                      placeholder="Enter your mail"
+                      placeholder="your@email.com"
                       defaultValue=""
-                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#053742]"
+                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/20 transition-all shadow-2xs"
                       required
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-4 rounded-xl bg-[#053742] hover:bg-[#03262e] text-white font-bold text-sm transition-all cursor-pointer shadow-md shadow-[#053742]/25"
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm transition-all cursor-pointer shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
                   >
                     Send Verification Code
                   </button>
                 </form>
 
                 <p className="text-xs text-center text-slate-500 pt-2">
-                  Back to{' '}
+                  Remember your password?{' '}
                   <button
                     type="button"
                     onClick={() => navigate('/pages/auth/login')}
-                    className="text-[#053742] dark:text-teal-400 font-bold hover:underline cursor-pointer"
+                    className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer"
                   >
                     Sign in
                   </button>
@@ -492,42 +523,46 @@ export default function PagesView() {
             {isReset && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl sm:text-[28px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    SECURE PASSWORD RESET
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
                     Set new password
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
                     Enter your new secure password below.
                   </p>
                 </div>
 
                 <form onSubmit={handleAuthSubmit} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                       New Password
                     </label>
                     <input
                       type="password"
-                      placeholder="Enter new password"
-                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800"
+                      placeholder="Choose a strong password"
+                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-2xs"
                       required
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                       Confirm Password
                     </label>
                     <input
                       type="password"
-                      placeholder="Confirm new password"
-                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800"
+                      placeholder="Repeat your new password"
+                      className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-2xs"
                       required
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-4 rounded-xl bg-[#053742] hover:bg-[#03262e] text-white font-bold text-sm transition-all cursor-pointer shadow-md shadow-[#053742]/25"
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm transition-all cursor-pointer shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
                   >
                     Update Password & Sign In
                   </button>
@@ -539,34 +574,45 @@ export default function PagesView() {
             {isOTP && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl sm:text-[28px] font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                    Verification Code
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+                    TWO-FACTOR VERIFICATION
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Verify your identity
                   </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
-                    Enter the 6-digit code dispatched to your registered email.
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
+                    Enter the 6-digit code sent to your registered email address.
                   </p>
                 </div>
 
                 <form onSubmit={(e) => { e.preventDefault(); navigate('/pages/auth/reset-password'); }} className="space-y-4">
-                  <div className="grid grid-cols-6 gap-2 text-center py-2">
+                  <div className="grid grid-cols-6 gap-2.5 text-center py-2">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
                       <input
                         key={i}
                         type="text"
                         maxLength="1"
                         defaultValue={i === 1 ? "4" : i === 2 ? "9" : i === 3 ? "2" : ""}
-                        className="h-12 text-center text-lg font-bold border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/80 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#053742]"
+                        className="h-14 text-center text-xl font-extrabold border-2 border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/80 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 transition-all shadow-2xs"
                       />
                     ))}
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-4 rounded-xl bg-[#053742] hover:bg-[#03262e] text-white font-bold text-sm transition-all cursor-pointer shadow-md shadow-[#053742]/25"
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm transition-all cursor-pointer shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40"
                   >
-                    Verify Code
+                    Verify & Proceed
                   </button>
                 </form>
+
+                <p className="text-xs text-center text-slate-500 pt-1">
+                  Didn't receive the code?{' '}
+                  <button type="button" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer">
+                    Resend code
+                  </button>
+                </p>
               </div>
             )}
 
@@ -576,50 +622,57 @@ export default function PagesView() {
         </div>
 
         {/* ========================================== */}
-        {/* RIGHT COLUMN: Rich Deep Teal Showcase (SS) */}
+        {/* RIGHT COLUMN: Modern Indigo/Violet Showcase */}
         {/* ========================================== */}
-        <div className="w-full md:w-1/2 lg:w-5/12 xl:w-1/2 relative bg-[#04333d] dark:bg-[#021f26] text-white p-8 sm:p-12 lg:p-14 xl:p-16 flex flex-col justify-between overflow-hidden min-h-screen">
+        <div className="w-full md:w-1/2 lg:w-5/12 xl:w-1/2 relative text-white p-8 sm:p-12 lg:p-14 xl:p-16 flex flex-col justify-between overflow-hidden min-h-screen" style={{background: 'linear-gradient(135deg, #312e81 0%, #4c1d95 40%, #1e1b4b 100%)'}}>
 
-          {/* Subtle Geometric Square Mosaics (Top-Right & Bottom-Left) */}
-          <div className="absolute top-4 right-4 grid grid-cols-4 gap-2.5 opacity-25 pointer-events-none">
-            <div className="w-7 h-7 rounded-md bg-white/40"></div>
-            <div className="w-7 h-7 rounded-md bg-white/20"></div>
-            <div className="w-7 h-7 rounded-md bg-white/60"></div>
-            <div className="w-7 h-7 rounded-md bg-transparent"></div>
-            <div className="w-7 h-7 rounded-md bg-transparent"></div>
-            <div className="w-7 h-7 rounded-md bg-white/30"></div>
-            <div className="w-7 h-7 rounded-md bg-white/50"></div>
-            <div className="w-7 h-7 rounded-md bg-white/20"></div>
+          {/* Animated mesh gradient orbs */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-80 h-80 bg-violet-500/30 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/2 -left-20 w-64 h-64 bg-indigo-400/20 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-20 right-1/3 w-72 h-72 bg-purple-600/25 rounded-full blur-3xl"></div>
           </div>
 
-          <div className="absolute bottom-6 left-6 grid grid-cols-4 gap-2.5 opacity-20 pointer-events-none">
-            <div className="w-6 h-6 rounded-md bg-white/30"></div>
-            <div className="w-6 h-6 rounded-md bg-white/50"></div>
-            <div className="w-6 h-6 rounded-md bg-transparent"></div>
-            <div className="w-6 h-6 rounded-md bg-white/20"></div>
-            <div className="w-6 h-6 rounded-md bg-white/40"></div>
-            <div className="w-6 h-6 rounded-md bg-transparent"></div>
+          {/* Floating dots grid - top right */}
+          <div className="absolute top-8 right-8 grid grid-cols-5 gap-2 opacity-20 pointer-events-none">
+            {Array.from({length: 15}).map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-white"></div>
+            ))}
           </div>
 
-          {/* Top spacer */}
-          <div></div>
+          {/* Floating dots grid - bottom left */}
+          <div className="absolute bottom-8 left-8 grid grid-cols-5 gap-2 opacity-15 pointer-events-none">
+            {Array.from({length: 10}).map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-white"></div>
+            ))}
+          </div>
 
-          {/* Center Showcase Mockup Cards (Exact visual recreation from screenshot) */}
+          {/* Top Badge */}
+          <div className="relative z-10">
+            {/* <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-[11px] font-bold text-white/90">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Enterprise Cloud Platform · 99.99% uptime
+            </div> */}
+          </div>
+
+          {/* Center Showcase Mockup Cards */}
           <div className="relative my-auto w-full max-w-[440px] mx-auto py-6">
 
             {/* Primary Analytics Card */}
-            <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-800 w-full max-w-[400px]">
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-5 sm:p-6 shadow-2xl text-slate-800 w-full max-w-[400px] border border-white/20">
               {/* Card Header with Tabs */}
               <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-                <span className="font-bold text-sm text-slate-800">Analytics</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                  <span className="font-bold text-sm text-slate-800">Performance Analytics</span>
+                </div>
                 <div className="flex items-center gap-1 bg-slate-100/80 p-0.5 rounded-lg text-[10px] text-slate-400">
                   {['Weekly', 'Monthly', 'Yearly'].map((t) => (
                     <button
                       key={t}
                       type="button"
                       onClick={() => setChartPeriod(t)}
-                      className={`px-2 py-0.5 rounded-md font-medium cursor-pointer transition-all ${chartPeriod === t ? 'bg-white text-slate-800 shadow-xs' : 'hover:text-slate-600'
-                        }`}
+                      className={`px-2.5 py-1 rounded-md font-semibold cursor-pointer transition-all ${chartPeriod === t ? 'bg-indigo-600 text-white shadow-sm' : 'hover:text-slate-600'}`}
                     >
                       {t}
                     </button>
@@ -627,10 +680,26 @@ export default function PagesView() {
                 </div>
               </div>
 
+              {/* Metric Row */}
+              <div className="grid grid-cols-3 gap-3 py-3 border-b border-slate-100">
+                <div className="text-center">
+                  <div className="text-lg font-extrabold text-slate-900">1,284</div>
+                  <div className="text-[10px] text-slate-400 font-medium">Employees</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-extrabold text-emerald-600">94.2%</div>
+                  <div className="text-[10px] text-slate-400 font-medium">Attendance</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-extrabold text-indigo-600">$1.2M</div>
+                  <div className="text-[10px] text-slate-400 font-medium">Payroll</div>
+                </div>
+              </div>
+
               {/* Chart Line Visualization */}
-              <div className="h-40 w-full pt-3">
+              <div className="h-32 w-full pt-3">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                     <XAxis
                       dataKey="day"
                       axisLine={false}
@@ -641,43 +710,43 @@ export default function PagesView() {
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#053742',
-                        borderRadius: '8px',
+                        backgroundColor: '#4f46e5',
+                        borderRadius: '10px',
                         color: '#fff',
                         fontSize: '11px',
                         border: 'none',
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)'
+                        boxShadow: '0 10px 25px -5px rgba(79,70,229,0.5)'
                       }}
                     />
                     <Line
                       type="monotone"
                       dataKey="val1"
-                      stroke="#053742"
+                      stroke="#4f46e5"
                       strokeWidth={2.5}
                       dot={false}
-                      activeDot={{ r: 4, fill: '#053742' }}
+                      activeDot={{ r: 4, fill: '#4f46e5' }}
                     />
                     <Line
                       type="monotone"
                       dataKey="val2"
-                      stroke="#94a3b8"
+                      stroke="#c4b5fd"
                       strokeWidth={1.5}
                       dot={false}
-                      strokeDasharray="3 3"
+                      strokeDasharray="4 4"
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Overlapping Donut Circle Card (Floating on bottom right) */}
-            <div className="absolute -bottom-6 right-0 sm:right-2 bg-white rounded-2xl p-5 shadow-2xl w-44 sm:w-48 flex flex-col items-center justify-center border border-slate-100 animate-fade-in">
+            {/* Overlapping Donut Circle Card (Floating bottom right) */}
+            <div className="absolute -bottom-6 right-0 sm:right-2 bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-2xl w-44 sm:w-48 flex flex-col items-center justify-center border border-white/20">
               <div className="relative w-24 h-24 flex items-center justify-center">
                 {/* Donut Ring SVG */}
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                   {/* Background Track */}
                   <path
-                    className="text-slate-100"
+                    className="text-indigo-100"
                     strokeWidth="3.8"
                     stroke="currentColor"
                     fill="none"
@@ -685,32 +754,38 @@ export default function PagesView() {
                   />
                   {/* Active Progress Segment */}
                   <path
-                    className="text-[#053742]"
-                    strokeDasharray="42, 100"
+                    stroke="url(#donutGrad)"
+                    strokeDasharray="68, 100"
                     strokeWidth="4.2"
                     strokeLinecap="round"
-                    stroke="currentColor"
                     fill="none"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
+                  <defs>
+                    <linearGradient id="donutGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#4f46e5"/>
+                      <stop offset="100%" stopColor="#7c3aed"/>
+                    </linearGradient>
+                  </defs>
                 </svg>
                 {/* Center Percentage Label */}
                 <div className="absolute flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</span>
-                  <span className="text-lg font-black text-[#053742]">42%</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Score</span>
+                  <span className="text-xl font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">68%</span>
                 </div>
               </div>
+              <p className="text-[10px] text-slate-500 font-semibold mt-2 text-center">Efficiency Index</p>
             </div>
 
           </div>
 
-          {/* Bottom Heading and Subtitle (From screenshot) */}
-          <div className="relative z-10 text-center max-w-md mx-auto pt-10 space-y-2">
-            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Very simple way you can engage
+          {/* Bottom Heading and Subtitle */}
+          <div className="relative z-10 text-center max-w-md mx-auto pt-10 space-y-3">
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
+              Your entire business,<br/><span className="text-violet-300">one intelligent platform</span>
             </h3>
-            <p className="text-xs sm:text-sm text-teal-100/80 leading-relaxed font-normal">
-              Welcome to Vishvin ERP Management System! Efficiently track and manage your business operations with ease.
+            <p className="text-xs sm:text-sm text-indigo-200/80 leading-relaxed font-normal">
+              Vishvin ERP unifies HR, CRM, POS, payroll, and operations into one seamless cloud workspace.
             </p>
           </div>
 
@@ -731,48 +806,56 @@ export default function PagesView() {
     const isSoon = pathname.includes('/coming-soon');
 
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950">
-        <div className="text-center max-w-md mx-auto p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 animate-fade-in">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-inner">
-            {isMaint ? <RefreshCw className="w-8 h-8 text-teal-700 animate-spin" /> : <ShieldAlert className="w-8 h-8 text-red-500" />}
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#f8fafc] dark:bg-[#090d16]">
+        {/* Ambient orbs */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-40">
+          <div className="absolute -top-32 -left-32 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-violet-500/20 rounded-full blur-3xl"></div>
+        </div>
+        <div className="relative text-center max-w-md mx-auto p-10 rounded-3xl bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-xl border border-slate-200/70 dark:border-slate-800/80 shadow-2xl space-y-6">
+          {/* Icon */}
+          <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-500/10 to-violet-500/10 dark:from-indigo-900/30 dark:to-violet-900/30 flex items-center justify-center border border-indigo-500/20 dark:border-violet-500/20 shadow-inner">
+            {isMaint ? <RefreshCw className="w-9 h-9 text-indigo-600 dark:text-indigo-400 animate-spin" /> : <ShieldAlert className="w-9 h-9 text-rose-500 dark:text-rose-400" />}
           </div>
 
           <div className="space-y-2">
             {is404 && (
               <>
-                <h2 className="text-5xl font-black text-slate-900 dark:text-white">404</h2>
-                <p className="text-base font-bold text-slate-700 dark:text-slate-300">Page Not Found</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">The route path you searched could not be located in our system navigation tree.</p>
+                <h2 className="text-7xl font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">404</h2>
+                <p className="text-lg font-extrabold text-slate-900 dark:text-white">Page Not Found</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">The route you're looking for couldn't be found in our navigation tree.</p>
               </>
             )}
 
             {is403 && (
               <>
-                <h2 className="text-5xl font-black text-slate-900 dark:text-white">403</h2>
-                <p className="text-base font-bold text-slate-700 dark:text-slate-300">Unauthorized Access</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">You do not have authorization to view this module. Contact your system administrator.</p>
+                <h2 className="text-7xl font-black bg-gradient-to-r from-rose-500 to-red-600 bg-clip-text text-transparent">403</h2>
+                <p className="text-lg font-extrabold text-slate-900 dark:text-white">Access Denied</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">You don't have permission to view this module. Contact your system administrator.</p>
               </>
             )}
 
             {is500 && (
               <>
-                <h2 className="text-5xl font-black text-slate-900 dark:text-white">500</h2>
-                <p className="text-base font-bold text-slate-700 dark:text-slate-300">Internal Server Error</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">The local service layer encountered an unexpected exception while compiling modules.</p>
+                <h2 className="text-7xl font-black bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent">500</h2>
+                <p className="text-lg font-extrabold text-slate-900 dark:text-white">Server Error</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">An unexpected error occurred on our servers. Our team has been notified.</p>
               </>
             )}
 
             {isMaint && (
               <>
+                <div className="text-5xl mb-2">🔧</div>
                 <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Under Maintenance</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Vishvin ERP is undergoing structural database updates. We will be back online shortly.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Vishvin ERP is being upgraded. We'll be back online shortly.</p>
               </>
             )}
 
             {isSoon && (
               <>
+                <div className="text-5xl mb-2">🚀</div>
                 <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Coming Soon</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">We are currently constructing this segment modules. Stand by for release.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">We're building something amazing for this module. Stand by for release.</p>
               </>
             )}
           </div>
@@ -781,14 +864,14 @@ export default function PagesView() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="px-4 py-2 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              className="px-5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-slate-700 dark:text-slate-300 transition-colors"
             >
-              Go Back
+              ← Go Back
             </button>
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 text-xs font-semibold rounded-lg bg-[#053742] text-white hover:bg-[#042d36] cursor-pointer"
+              className="px-5 py-2.5 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white cursor-pointer shadow-md shadow-indigo-500/20 transition-all active:scale-[0.98]"
             >
               Dashboard Home
             </button>
@@ -805,7 +888,7 @@ export default function PagesView() {
     <div className="space-y-6">
       <div className="pb-5 border-b border-slate-200 dark:border-slate-800">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-1.5 leading-tight m-0">
-          <Sparkles className="w-5 h-5 text-teal-700" /> Utility Systems & Heartbeat
+          <Sparkles className="w-5 h-5 text-indigo-700" /> Utility Systems & Heartbeat
         </h2>
         <p className="text-xs text-slate-500 mt-1">Operational support widgets and cloud diagnostics.</p>
       </div>

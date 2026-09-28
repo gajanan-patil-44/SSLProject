@@ -52,7 +52,7 @@ function GenericAnalyticsDashboard({ title }) {
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <ChartTooltip />
-                <Area type="monotone" dataKey="Revenue" stroke="#0d9488" fill="#0d9488" fillOpacity={0.15} />
+                <Area type="monotone" dataKey="Revenue" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.15} />
                 <Area type="monotone" dataKey="Expenses" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} />
               </AreaChart>
             </ResponsiveContainer>
@@ -364,7 +364,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching company products:", err);
         return [];
       }
     },
@@ -391,7 +390,6 @@ export const registryConfigs = {
           label: p.ProductName
         }));
       } catch (err) {
-        console.error("Error fetching company product dropdowns:", err);
       }
 
       return [
@@ -536,7 +534,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching projects:", err);
         return [];
       }
     },
@@ -558,7 +555,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching project dropdowns:", err);
       }
 
       return [
@@ -839,14 +835,13 @@ export const registryConfigs = {
       const userState = useERPStore.getState().user;
       const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
 
-      if (api.role.createRole) {
-        return await api.role.createRole({
+      if (api.role.addRole) {
+        return await api.role.addRole({
           CompanyId: Number(formData.CompanyId) || 1,
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
-          CreatedByUserName: userName,
-          UpdatedByUserName: userName
+          CreatedByUserName: userName
         });
       }
     },
@@ -884,17 +879,45 @@ export const registryConfigs = {
       { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
+    fetchDropdowns: async () => {
+      let companyOptions = [];
+      try {
+        const res = await api.role.getCompaniesForRole();
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        companyOptions = list.map(c => ({
+          value: Number(c.CompanyId || c.id),
+          label: c.CompanyName || c.name || `Company #${c.CompanyId || c.id}`
+        }));
+      } catch (err) {}
+      
+      return [
+        {
+          key: "CompanyId",
+          label: "Company",
+          type: "select",
+          required: true,
+          options: companyOptions,
+          placeholder: "Select Company"
+        },
+        { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
+        { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
+        { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
+      ];
+    },
     formFields: [
+      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     addFormFields: [
+      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     editFormFields: [
+      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
@@ -956,7 +979,6 @@ export function ModuleRenderer() {
           setDynamicFormFields(fields);
         }
       }).catch((err) => {
-        console.error("Dropdown fetch error:", err);
       });
     } else {
       setDynamicFormFields(null);
@@ -998,7 +1020,6 @@ export function ModuleRenderer() {
           setDynamicFormFields(fields);
         }
       } catch (err) {
-        console.error("Dropdown error on add:", err);
       }
     } else {
       setDynamicFormFields(null);
@@ -1013,7 +1034,6 @@ export function ModuleRenderer() {
         setRefreshKey(prev => prev + 1);
         setIsAddOpen(false);
       } catch (err) {
-        console.error("Error creating record:", err);
         // Modal stays open so the user can change fields or cancel!
       }
     }
@@ -1027,7 +1047,6 @@ export function ModuleRenderer() {
         setIsEditOpen(false);
         setSelectedRecord(null);
       } catch (err) {
-        console.error("Error updating record:", err);
         // Modal stays open so the user can change fields or cancel!
       }
     }
@@ -1126,7 +1145,6 @@ export function ModuleRenderer() {
                 });
               }
             } catch (err) {
-              console.error("Dropdown error on edit:", err);
             }
           } else {
             setDynamicFormFields(null);

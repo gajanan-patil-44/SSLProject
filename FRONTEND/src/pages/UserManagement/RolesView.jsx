@@ -90,7 +90,6 @@ export default function RolesView() {
       });
       setCompanies(Array.from(companyMap.values()));
     } catch (err) {
-      console.error('Failed to load roles data:', err);
       setError(err?.message || 'Failed to load roles. Please verify backend connection.');
     } finally {
       setLoading(false);
@@ -166,7 +165,6 @@ export default function RolesView() {
     return Object.keys(errs).length === 0;
   };
 
-  // Auto-generate code when RoleName changes in 'add' mode if code is untouched
   const handleRoleNameChange = (e) => {
     const val = e.target.value;
     setFormData((prev) => {
@@ -174,8 +172,7 @@ export default function RolesView() {
       if (modalMode === 'add' && (!prev.Role_Code || prev.Role_Code.length <= 4)) {
         updated.Role_Code = val
           .replace(/[^a-zA-Z]/g, '')
-          .slice(0, 4)
-          .toUpperCase();
+          .slice(0, 4);
       }
       return updated;
     });
@@ -197,11 +194,11 @@ export default function RolesView() {
     try {
       if (modalMode === 'add') {
         const payload = {
-          CompanyId: Number(formData.CompanyId),
+          CompanyId: Number(formData.CompanyId) || 1,
           RoleName: formData.RoleName.trim(),
-          Role_Code: formData.Role_Code.trim().toUpperCase(),
+          Role_Code: formData.Role_Code.trim(),
           Description: formData.Description?.trim() || '',
-          RequestUserName: currentUserName
+          CreatedByUserName: currentUserName
         };
         const res = await roleService.addRole(payload);
         showToast(res?.message || `Role "${formData.RoleName}" created successfully!`);
@@ -228,7 +225,6 @@ export default function RolesView() {
       setModalMode(null);
       await fetchData();
     } catch (err) {
-      console.error('Save role error:', err);
       setError(err?.message || 'Failed to save role. Please check inputs.');
     } finally {
       setActionLoading(false);
@@ -248,7 +244,6 @@ export default function RolesView() {
       setSelectedRole(null);
       await fetchData();
     } catch (err) {
-      console.error('Delete role error:', err);
       setError(err?.message || 'Failed to delete role.');
     } finally {
       setActionLoading(false);
@@ -272,7 +267,6 @@ export default function RolesView() {
           `Role "${role.RoleName}" has been ${newDisabled ? 'disabled' : 'enabled'}.`
       );
     } catch (err) {
-      console.error('Toggle status error:', err);
       setError(err?.message || 'Failed to update role status.');
       // Revert optimistic update
       setRoles((prev) =>
@@ -390,7 +384,7 @@ export default function RolesView() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-xl shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-semibold">
             <span>Total Roles</span>
-            <Shield className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <Shield className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-black text-slate-900 dark:text-white">
@@ -451,7 +445,7 @@ export default function RolesView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search role name, code, company..."
-            className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+            className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-teal-500"
           />
         </div>
 
@@ -462,7 +456,7 @@ export default function RolesView() {
             <select
               value={selectedCompanyFilter}
               onChange={(e) => setSelectedCompanyFilter(e.target.value)}
-              className="px-2.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+              className="px-2.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
               <option value="ALL">All Companies</option>
               {companies.map((c) => (
@@ -479,7 +473,7 @@ export default function RolesView() {
             <select
               value={selectedStatusFilter}
               onChange={(e) => setSelectedStatusFilter(e.target.value)}
-              className="px-2.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+              className="px-2.5 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active Only</option>
@@ -506,7 +500,7 @@ export default function RolesView() {
 
         {loading ? (
           <div className="p-12 text-center space-y-3">
-            <RefreshCw className="w-8 h-8 mx-auto text-teal-600 dark:text-teal-400 animate-spin" />
+            <RefreshCw className="w-8 h-8 mx-auto text-indigo-600 dark:text-indigo-400 animate-spin" />
             <p className="text-xs text-slate-500 dark:text-slate-400">Loading roles from backend...</p>
           </div>
         ) : filteredRoles.length === 0 ? (
@@ -571,7 +565,7 @@ export default function RolesView() {
                             className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                               isDisabled
                                 ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
-                                : 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 text-teal-600 dark:text-teal-400'
+                                : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400'
                             }`}
                           >
                             <Shield className="w-4 h-4" />
@@ -663,7 +657,7 @@ export default function RolesView() {
                           <button
                             type="button"
                             onClick={() => openEditModal(role)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
                             title="Edit Role"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -714,7 +708,7 @@ export default function RolesView() {
                 }}
                 className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border ${
                   formErrors.CompanyId ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                } text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/20`}
+                } text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
                 required
               >
                 <option value="" disabled>
@@ -743,7 +737,7 @@ export default function RolesView() {
                 placeholder="e.g., Operations Manager, Auditor, Super Admin"
                 className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border ${
                   formErrors.RoleName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20`}
+                } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
                 required
               />
               {formErrors.RoleName && (
@@ -762,7 +756,7 @@ export default function RolesView() {
                 onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
-                    Role_Code: e.target.value.toUpperCase()
+                    Role_Code: e.target.value
                   }));
                   if (formErrors.Role_Code) {
                     setFormErrors((prev) => ({ ...prev, Role_Code: null }));
@@ -772,7 +766,7 @@ export default function RolesView() {
                 placeholder="e.g., OPR, AUD, SADMIN"
                 className={`w-full px-3.5 py-2.5 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-800 border ${
                   formErrors.Role_Code ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20`}
+                } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
                 required
               />
               {formErrors.Role_Code && (
@@ -792,7 +786,7 @@ export default function RolesView() {
                 }
                 rows={3}
                 placeholder="Enter role responsibilities, permissions summary, and access scope..."
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
               />
             </div>
 
@@ -816,7 +810,7 @@ export default function RolesView() {
                     }
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-teal-600"></div>
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
                 </label>
               </div>
             )}
@@ -835,7 +829,7 @@ export default function RolesView() {
               <Button
                 type="submit"
                 disabled={actionLoading}
-                className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4"
               >
                 {actionLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -862,8 +856,8 @@ export default function RolesView() {
           size="md"
         >
           <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-xl bg-gradient-to-r from-teal-500/10 to-emerald-500/10 border border-teal-500/20 flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
                 <Shield className="w-6 h-6" />
               </div>
               <div>

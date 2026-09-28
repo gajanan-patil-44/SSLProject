@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useERPStore } from '../../store/useERPStore';
 import {
@@ -44,7 +44,6 @@ export default function PipelineView() {
       });
       setContacts(mapped || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -75,7 +74,6 @@ export default function PipelineView() {
     try {
       await api.createContact({ id: cardId, stage: targetStage });
     } catch (err) {
-      console.error(err);
     }
   };
 
@@ -93,7 +91,6 @@ export default function PipelineView() {
       setIsAddOpen(false);
       showToast(res?.message || 'Deal registered in pipeline successfully!', 'success');
     } catch (e) {
-      console.error(e);
       showToast(e?.message || 'Failed to register deal.', 'error');
     }
   };
@@ -180,7 +177,7 @@ export default function PipelineView() {
                       </div>
                       <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                         <span>{deal.name}</span>
-                        <span className="font-bold text-slate-900 dark:text-teal-400">${(deal.value || 0).toLocaleString()}</span>
+                        <span className="font-bold text-slate-900 dark:text-indigo-400">${(deal.value || 0).toLocaleString()}</span>
                       </div>
                     </div>
                   ))
