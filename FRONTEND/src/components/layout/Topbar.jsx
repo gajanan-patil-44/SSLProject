@@ -62,7 +62,6 @@ export default function Topbar() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <span className="flex-1 text-slate-400 font-medium">Search modules...</span>
-          <kbd className="px-1.5 py-0.5 text-[10px] font-semibold bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-600 shadow-2xs">⌘K</kbd>
         </div>
       </div>
 
