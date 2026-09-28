@@ -26,7 +26,6 @@ export default function AttendanceView() {
       const res = await api.getAttendance();
       setLogs(res || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -57,7 +56,6 @@ export default function AttendanceView() {
       setLogs(prev => [record, ...prev.filter(l => l.employeeId !== "EMP-001")]);
       useERPStore.getState().showToast(`Success! Checked-in at ${timeStr}`, 'success');
     } catch (e) {
-      console.error(e);
       useERPStore.getState().showToast(e?.message || "Failed to record check-in.", "error");
     }
   };
@@ -81,7 +79,6 @@ export default function AttendanceView() {
       setLogs(prev => [record, ...prev.filter(l => l.employeeId !== "EMP-001")]);
       useERPStore.getState().showToast(`Success! Checked-out at ${timeStr}`, 'success');
     } catch (e) {
-      console.error(e);
       useERPStore.getState().showToast(e?.message || "Failed to record check-out.", "error");
     }
   };

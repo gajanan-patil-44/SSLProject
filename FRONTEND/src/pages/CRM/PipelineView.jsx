@@ -44,7 +44,6 @@ export default function PipelineView() {
       });
       setContacts(mapped || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -75,7 +74,6 @@ export default function PipelineView() {
     try {
       await api.createContact({ id: cardId, stage: targetStage });
     } catch (err) {
-      console.error(err);
     }
   };
 
@@ -93,7 +91,6 @@ export default function PipelineView() {
       setIsAddOpen(false);
       showToast(res?.message || 'Deal registered in pipeline successfully!', 'success');
     } catch (e) {
-      console.error(e);
       showToast(e?.message || 'Failed to register deal.', 'error');
     }
   };

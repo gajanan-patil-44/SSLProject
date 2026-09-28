@@ -76,7 +76,6 @@ export default function ManagePageView() {
         setPages([]);
       }
     } catch (err) {
-      console.error('Failed to load pages:', err);
       setPages([]);
       showToast(err?.message || 'Failed to load pages from server', 'error');
     } finally {
@@ -124,7 +123,6 @@ export default function ManagePageView() {
           }
         }
       } catch (err) {
-        console.error('Error loading modal dropdowns:', err);
       }
     };
 
@@ -158,7 +156,6 @@ export default function ManagePageView() {
           setParentPagesDropdownList(parentsRes);
         }
       } catch (err) {
-        console.error('Error loading parent dropdown:', err);
       }
     };
 
@@ -224,7 +221,6 @@ export default function ManagePageView() {
           }
         }
       } catch (err) {
-        console.error('Failed to load cascade dropdown:', err);
         if (isMounted) {
           setChildPagesDropdown([]);
           setLoadingChildDropdown(false);
@@ -376,7 +372,6 @@ export default function ManagePageView() {
       showToast(`Page status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
       await loadPages();
     } catch (err) {
-      console.error('Failed to toggle status:', err);
       showToast(err?.message || 'Failed to update status', 'error');
     }
   };
@@ -391,7 +386,6 @@ export default function ManagePageView() {
       setDeleteRecord(null);
       await loadPages();
     } catch (err) {
-      console.error('Failed to delete page:', err);
       showToast(err?.message || 'Failed to delete page', 'error');
     } finally {
       setDeleteLoading(false);
@@ -563,7 +557,6 @@ export default function ManagePageView() {
           try {
             await pageService.updateStatus(selectedPage.PageId, !formData.IsActive);
           } catch (statusErr) {
-            console.error('Failed to update status with edit:', statusErr);
           }
         }
 
@@ -573,7 +566,6 @@ export default function ManagePageView() {
       await loadPages();
       setIsAddEditOpen(false);
     } catch (err) {
-      console.error('Save failed:', err);
       showToast(err?.message || 'Action failed to complete.', 'error');
     }
   };

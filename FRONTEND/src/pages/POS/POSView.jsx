@@ -32,7 +32,6 @@ export default function POSView() {
       const res = await api.getProducts();
       setProducts(res || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
