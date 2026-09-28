@@ -27,14 +27,14 @@ export const roleService = {
   },
 
   /**
-   * Get companies dropdown for role creation (FlagId: 3)
+   * Get companies dropdown for role creation
    */
   getCompaniesForRole: async () => {
-    if (!API_ROUTES.ROLE.GET_COMPANIES_FOR_ROLE) {
+    if (!API_ROUTES.ROLE.DROPDOWN) {
       return { data: [] };
     }
-    return apiClient.post(API_ROUTES.ROLE.GET_COMPANIES_FOR_ROLE, {
-      FlagId: 3
+    return apiClient.post(API_ROUTES.ROLE.DROPDOWN, {
+      FlagId: 1
     });
   },
 

@@ -2369,9 +2369,6 @@ export const editUserdetails = async ({
                     "UserId",
                     "UserRoleId",
                     "RoleId",
-                    
-                    
-                 
                     "CreatedAt",
                     "CreatedByUserId"
                 )
@@ -2386,8 +2383,6 @@ export const editUserdetails = async ({
                     old.UserId,
                     old.UserRoleId,
                     old.RoleId,
-                
-                    
                     UserId
                 ]
             );

@@ -119,7 +119,6 @@ export default function Dashboard() {
       useERPStore.getState().showToast(`Employee "${formData.name}" onboarded successfully!`, "success");
       navigate('/hrm/employees');
     } catch (err) {
-      console.error(err);
       useERPStore.getState().showToast("Failed to onboard employee. Please check required fields.", "error");
     }
   };
