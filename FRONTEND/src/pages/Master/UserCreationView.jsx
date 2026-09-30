@@ -382,7 +382,18 @@ export default function UserCreationView() {
       try {
         const r = await userService.getProductDropdown(value);
         const raw = r?.data ?? r;
-        setProducts(toOpts(raw, 'ProductId', 'ProductName'));
+        setProducts(
+          Array.isArray(raw)
+            ? raw
+                .filter(item => item.ProductId !== null && item.ProductId !== undefined && item.ProductId !== '')
+                .map((item, idx) => ({
+                  value: String(item.ProductId),
+                  label: item.ProductName ?? String(item.ProductId),
+                  key: `${String(item.ProductId)}_${idx}`,
+                  companyProductId: item.CompanyProductId,
+                }))
+            : []
+        );
       } catch (err) {
         setProducts([]);
       }
@@ -402,8 +413,13 @@ export default function UserCreationView() {
   const fetchProjectsForProducts = async (productIds) => {
     if (!productIds || productIds.length === 0) { setProjects([]); return; }
     try {
+      const selectedProducts = productIds
+        .map(productId => products.find(product => product.value === String(productId)))
+        .filter(product => product && product.companyProductId != null);
       const results = await Promise.allSettled(
-        productIds.map(pid => userService.getProjectDropdown(pid))
+        selectedProducts.map(product =>
+          userService.getProjectDropdown(product.value, product.companyProductId)
+        )
       );
       const combined = [];
       const seen = new Set();

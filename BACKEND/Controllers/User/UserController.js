@@ -685,6 +685,8 @@ export const createUserController = async (req, res) => {
         }
 
 
+
+
         // ==========================================================
         // HASH PASSWORD
         // ==========================================================
@@ -695,6 +697,35 @@ export const createUserController = async (req, res) => {
                 10
             );
 
+        // ==========================================================
+        // USER FILES
+        // ==========================================================
+
+        const uploadedUserFiles = (req.files || []).filter(
+            file => file.fieldname === "UserFile"
+        );
+
+        const fileTypeIds = Array.isArray(userData.FileTypeId)
+            ? userData.FileTypeId
+            : [userData.FileTypeId];
+
+        if (uploadedUserFiles.length !== fileTypeIds.length) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "Each UserFile must have a corresponding FileTypeId"
+            });
+
+        }
+
+        userData.UserFiles = uploadedUserFiles.map((file, index) => {
+
+            return {
+                FileTypeId: Number(fileTypeIds[index]),
+                FilePath: file.path
+            };
+
+        });
 
         // ==========================================================
         // CREATE USER
@@ -743,10 +774,10 @@ export const createUserController = async (req, res) => {
 export const companyProductProjectDropdownController = async (req, res) => {
     const { FlagId, CompanyId, CompanyProductId } = req.body;
     try {
-        // ==================================================
+        // =================================================
         // FLAG ID VALIDATION
         // ==================================================
-        if (FlagId === undefined || FlagId === null) {
+        if (FlagId === undefined || FlagId === null || String(FlagId).trim() === "") {
             return res.status(400).json({
                 status: "error",
                 message: "FlagId is required"
@@ -763,8 +794,6 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 data: result
             });
         }
-
-
         // ==================================================
         // FLAG ID 2 - PRODUCT
         // ==================================================
@@ -776,7 +805,7 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 });
             }
 
-            const result = await getProductDropdown(CompanyId);
+            const result = await getProductDropdown(parseInt(CompanyId));
             return res.status(200).json({
                 status: "success",
                 message: "Product data fetched successfully",
@@ -787,26 +816,36 @@ export const companyProductProjectDropdownController = async (req, res) => {
         // FLAG ID 3 - PROJECT
         // ==================================================
         if (parseInt(FlagId) === 3) {
-            if (CompanyProductId === undefined || CompanyProductId === null) {
+
+            if (
+                CompanyProductId === undefined ||
+                CompanyProductId === null ||
+                (
+                    !Array.isArray(CompanyProductId) &&
+                    String(CompanyProductId).trim() === ""
+                )
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId is required"
                 });
             }
-            const result = await getProjectDropdown(CompanyProductId);
+
+            const result = await getProjectDropdown(
+                CompanyProductId
+            );
+
             return res.status(200).json({
                 status: "success",
                 message: "Project data fetched successfully",
                 data: result
             });
         }
-
         // ==================================================
         // FLAG ID 4 - ROLE
         // ==================================================
         if (parseInt(FlagId) === 4) {
             const result = await getRoleDropdown();
-
             return res.status(200).json({
                 status: "success",
                 message: "Role data fetched successfully",
@@ -820,8 +859,8 @@ export const companyProductProjectDropdownController = async (req, res) => {
             status: "error",
             message: "Invalid FlagId. Use 1, 2, 3 or 4"
         });
+
     } catch (error) {
-        console.error("Company Product Project Dropdown Error:", error);
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch dropdown data",
@@ -829,7 +868,6 @@ export const companyProductProjectDropdownController = async (req, res) => {
         });
     }
 };
-
 
 
 

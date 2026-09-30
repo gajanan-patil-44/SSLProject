@@ -12,12 +12,13 @@ http:
       
           {
             "flagId": 2,
-              "CompanyName": "Microsoft",
-              "CompanyCode": "Microsoft_001",
+              "CompanyName": " Tech",
+              "CompanyCode": "ABC_003",
               "CreatedByUserName": "hithin",
+              "UpdatedByUserName": "hithin",
               "IsDisabled": false,
-              "Email": "Microsoft@technology.com",
-              "PhoneNumber": "8876343260",
+              "Email": "c@technology.com",
+              "PhoneNumber": "8876543260",
               "Address": "Bangalore, Karnataka"
           }
   auth:

@@ -52,7 +52,7 @@ export const userService = {
    *
    * FlagId: 1 → Company list            (CompanyId, CompanyName)
    * FlagId: 2 → Company Products        (CompanyProductId, ProductName) — requires CompanyId
-   * FlagId: 3 → Projects                (ProjectId, ProjectName)        — requires CompanyProductId
+    * FlagId: 3 → Projects                (ProjectId, ProjectName)        — requires ProductId and CompanyProductId
    * FlagId: 4 → Roles                   (RoleId, RoleName)
    */
   getCompanyDropdown: async () => {
@@ -68,9 +68,10 @@ export const userService = {
     });
   },
 
-  getProjectDropdown: async (companyProductId) => {
+  getProjectDropdown: async (productId, companyProductId) => {
     return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
       FlagId: 3,
+      ProductId: Number(productId),
       CompanyProductId: Number(companyProductId)
     });
   },

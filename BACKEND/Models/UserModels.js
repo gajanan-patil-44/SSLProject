@@ -896,13 +896,15 @@ export const getCompanyDropdown = async () => {
 export const getProductDropdown = async (CompanyId) => {
 
     const query = `
-        SELECT DISTINCT
-            p."ProductId",
+        SELECT
+            cp."CompanyProductId",
+            cp."ProductId",
             p."ProductName"
         FROM "LKP"."CompanyProduct" cp
         INNER JOIN "LKP"."Product" p
             ON p."ProductId" = cp."ProductId"
         WHERE cp."CompanyId" = $1
+          AND cp."IsDisabled" = false
           AND p."IsDisabled" = false
         ORDER BY p."ProductName";
     `;
@@ -915,25 +917,23 @@ export const getProductDropdown = async (CompanyId) => {
     return result.rows;
 };
 
-
 export const getProjectDropdown = async (CompanyProductId) => {
 
     const query = `
-        SELECT DISTINCT
-            pr."ProjectId",
-            pr."ProjectName"
-        FROM "LKP"."CompanyProduct" cp
-        INNER JOIN "LKP"."Project" pr
-            ON pr."CompanyProductId" = cp."CompanyProductId"
-        WHERE cp."CompanyProductId" = $1
-          AND pr."IsDisabled" = false
-
-        ORDER BY pr."ProjectName";
+        SELECT
+            "ProjectId",
+            "ProjectName"
+        FROM "LKP"."Project"
+        WHERE "CompanyProductId" = $1
+          AND "IsDisabled" = false
+        ORDER BY "ProjectName";
     `;
 
-    const result = await pool.query(query, [
-        CompanyProductId
-    ]);
+    const result = await pool.query(
+        query,
+        [Number(CompanyProductId)]
+    );
+
     return result.rows;
 };
 

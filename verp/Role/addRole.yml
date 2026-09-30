@@ -11,9 +11,10 @@ http:
     data: |-
       {
         "FlagId":2,
-        "RoleName": "Super Admin",
-        "Role_Code": "sup001",
-        "Description": "Assign",
+        "RoleName": "HR",
+        "CompanyId": 1,
+        "Role_Code": "sup003",
+        "Description": "HRRR",
         "CreatedByUserName": "Praveen"
       }
   auth:
