@@ -87,9 +87,7 @@ export const addCompany = async (companyData) => {
                 "CompanyName",
                 "CompanyCode",
                 "CreatedAt",
-                "UpdatedAt",
                 "CreatedByUserName",
-                "UpdatedByUserName",
                 "IsDisabled",
                 "Email",
                 "PhoneNumber",
@@ -100,8 +98,6 @@ export const addCompany = async (companyData) => {
                 $1,
                 $2,
                 CURRENT_TIMESTAMP,
-                CURRENT_TIMESTAMP,
-                $3,
                 $3,
                 false,
                 $4,
@@ -114,7 +110,7 @@ export const addCompany = async (companyData) => {
         const values = [
             companyData.CompanyName,
             companyData.CompanyCode,
-            companyData.RequestUserName,
+            companyData.CreatedByUserName,
             companyData.Email,
             companyData.PhoneNumber,
             companyData.Address

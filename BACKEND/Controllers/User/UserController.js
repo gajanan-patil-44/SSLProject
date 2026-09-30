@@ -18,7 +18,7 @@ import {
 
 } from "../../Models/UserModels.js";
 import { readFile } from "fs/promises";
-import {processUserFilesUsingWorker} from "../../Helpers/userFileWorkerHelper.js";
+import { processUserFilesUsingWorker } from "../../Helpers/userFileWorkerHelper.js";
 
 import { getAllUserDetails, editUserdetails } from "../../Models/userEditDetails/UserEdit.js";
 // =====================================================
@@ -110,114 +110,63 @@ export const userDropdownController = async (req, res) => {
         });
     }
 };
+// ==========================================================
+// CREATE USER
+// ==========================================================
 export const createUserController = async (req, res) => {
 
     try {
+
+        // ==========================================================
+        // FORM DATA
+        // ==========================================================
 
         const userData = req.body;
 
 
         // ==========================================================
-        // MULTER FILES
+        // EMPTY VALUE CHECK
         // ==========================================================
 
-        const files = req.files || [];
+        const isEmpty = (value) => {
 
-
-        // ==========================================================
-        // PHOTO
-        // ==========================================================
-
-        const photoFile = files.find(
-            file => file.fieldname === "Photo"
-        );
-
-        if (photoFile) {
-
-            const photoBuffer =
-                await readFile(photoFile.path);
-
-            userData.Photo = photoBuffer;
-
-        } else {
-
-            userData.Photo = null;
-
-        }
-
-
-        // ==========================================================
-        // USER FILES
-        // ==========================================================
-
-        const userFiles = files.filter(
-            file => file.fieldname === "UserFile"
-        );
-
-        let fileTypeIds =
-            req.body.FileTypeId || [];
-
-
-        if (!Array.isArray(fileTypeIds)) {
-
-            fileTypeIds = [fileTypeIds];
-
-        }
-
-
-        // ==========================================================
-        // CONVERT FILE TYPE IDS
-        // ==========================================================
-
-        fileTypeIds =
-            fileTypeIds.map(
-                id => Number(id)
+            return (
+                value === undefined ||
+                value === null ||
+                value === ""
             );
 
-
-        // ==========================================================
-        // VALIDATE FILE COUNT
-        // ==========================================================
-
-        if (
-            userFiles.length !==
-            fileTypeIds.length
-        ) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    `Received ${userFiles.length} UserFiles but ${fileTypeIds.length} FileTypeIds`
-
-            });
-
-        }
+        };
 
 
         // ==========================================================
-        // VALIDATE FILE TYPE IDS
+        // COMMON REQUIRED FIELDS
         // ==========================================================
 
-        for (
-            let i = 0;
-            i < fileTypeIds.length;
-            i++
-        ) {
+        const requiredFields = [
+            "EmployeeId",
+            "FirstName",
+            "PhoneNumber",
+            "DateOfBirth",
+            "DateOfJoining",
+            "GenderId",
+            "MaritalStatusId",
+            "Email",
+            "LoginName",
+            "Password",
+            "RoleId",
+            "CreatedByUserName"
+        ];
 
-            if (
-                !Number.isInteger(fileTypeIds[i]) ||
-                fileTypeIds[i] <= 0
-            ) {
+
+        for (const field of requiredFields) {
+
+            if (isEmpty(userData[field])) {
 
                 return res.status(400).json({
 
                     status: "error",
-
-                    message:
-                        `Invalid FileTypeId for UserFile ${i + 1}`
-
+                    message: `${field} is required`
                 });
 
             }
@@ -225,97 +174,75 @@ export const createUserController = async (req, res) => {
         }
 
 
-        userData.UserFiles = [];
-
-
         // ==========================================================
-        // GROUP FILES BY FILE TYPE
+        // ROLE ID
         // ==========================================================
 
-        const fileTypeGroups =
-            new Map();
+        userData.RoleId =
+            Number(userData.RoleId);
 
 
-        for (
-            let i = 0;
-            i < userFiles.length;
-            i++
+        if (
+            !Number.isInteger(userData.RoleId) ||
+            userData.RoleId <= 0
         ) {
 
-            const file =
-                userFiles[i];
-
-            const fileTypeId =
-                fileTypeIds[i];
-
-
-            if (
-                !fileTypeGroups.has(
-                    fileTypeId
-                )
-            ) {
-
-                fileTypeGroups.set(
-                    fileTypeId,
-                    []
-                );
-
-            }
-
-
-            fileTypeGroups
-                .get(fileTypeId)
-                .push(file.path);
+            return res.status(400).json({
+                status: "error",
+                message: "RoleId must be a valid number"
+            });
 
         }
 
 
         // ==========================================================
-        // PROCESS FILES USING WORKER
+        // PARSE FORM-DATA ARRAY FIELDS
         // ==========================================================
 
-        for (
-            const [fileTypeId, inputPaths]
-            of fileTypeGroups
-        ) {
-
-            try {
-
-                const workerResult =
-                    await processUserFilesUsingWorker(
-                        inputPaths
-                    );
+        const arrayFields = [
+            "CompanyProductId",
+            "ProjectId",
+            "ReportingManagerUserId"
+        ];
 
 
-                userData.UserFiles.push({
+        for (const field of arrayFields) {
 
-                    FileTypeId:
-                        Number(fileTypeId),
+            if (isEmpty(userData[field])) {
 
-                    FilePath:
-                        workerResult.filePath
+                userData[field] = null;
 
-                });
+                continue;
 
-
-            } catch (workerError) {
-
-                console.error(
-                    "UserFile Worker Error:",
-                    workerError
-                );
+            }
 
 
-                return res.status(500).json({
+            if (typeof userData[field] === "string") {
 
+                try {
+
+                    userData[field] =
+                        JSON.parse(userData[field]);
+
+                } catch (error) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            `${field} must be a valid JSON array`
+                    });
+
+                }
+
+            }
+
+
+            if (!Array.isArray(userData[field])) {
+
+                return res.status(400).json({
                     status: "error",
-
                     message:
-                        "Failed to process UserFile",
-
-                    error:
-                        workerError.message
-
+                        `${field} must be an array`
                 });
 
             }
@@ -324,560 +251,358 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // FILE TYPE FOR USER DETAILS
+        // ROLE ID = 1
+        // SUPER ADMIN
+        // ==========================================================
+        //
+        // CompanyId              = NULL
+        // CompanyProductId       = NULL
+        // ProjectId              = NULL
+        // ReportingManagerUserId = NULL
+        // DesignationId          = NULL
+        //
         // ==========================================================
 
-        if (
-            userData.UserFiles.length > 0
-        ) {
+        if (userData.RoleId === 1) {
 
-            userData.FileTypeId =
-                userData.UserFiles[0].FileTypeId;
+            userData.CompanyId = null;
 
-        } else {
+            userData.CompanyProductId = null;
 
-            userData.FileTypeId = null;
+            userData.ProjectId = null;
 
-        }
+            userData.ReportingManagerUserId = null;
 
-
-        // ==========================================================
-        // REQUIRED USER FIELDS
-        // ==========================================================
-
-        if (
-            userData.EmployeeId === undefined ||
-            userData.EmployeeId === null ||
-            userData.EmployeeId === ""
-        ) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "EmployeeId is required"
-
-            });
-
-        }
-
-
-        if (!userData.FirstName) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "FirstName is required"
-
-            });
-
-        }
-
-
-        if (!userData.PhoneNumber) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "PhoneNumber is required"
-
-            });
-
-        }
-
-
-        if (!userData.DateOfBirth) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "DateOfBirth is required"
-
-            });
-
-        }
-
-
-        if (!userData.DateOfJoining) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "DateOfJoining is required"
-
-            });
-
-        }
-
-
-        if (!userData.GenderId) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "GenderId is required"
-
-            });
-
-        }
-
-
-        if (!userData.MaritalStatusId) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "MaritalStatusId is required"
-
-            });
-
-        }
-
-
-        if (!userData.DesignationId) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "DesignationId is required"
-
-            });
-
-        }
-
-
-        if (!userData.Email) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "Email is required"
-
-            });
-
-        }
-
-
-        if (!userData.LoginName) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "LoginName is required"
-
-            });
-
-        }
-
-
-        if (!userData.Password) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "Password is required"
-
-            });
+            userData.DesignationId = null;
 
         }
 
 
         // ==========================================================
-        // REQUIRED RELATIONSHIP FIELDS
+        // ROLE ID = 2
+        // ADMIN
+        // ==========================================================
+        //
+        // CompanyId              = REQUIRED
+        // CompanyProductId       = NULL
+        // ProjectId              = NULL
+        // ReportingManagerUserId = NULL
+        // DesignationId          = NULL
+        //
         // ==========================================================
 
-        if (
-            userData.CompanyId === undefined ||
-            userData.CompanyId === null ||
-            String(userData.CompanyId).trim() === ""
-        ) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "CompanyId is required"
-
-            });
-
-        }
+        else if (userData.RoleId === 2) {
 
 
-        // ==========================================================
-        // COMPANY PRODUCT - REQUIRED ARRAY
-        // ==========================================================
+            // ------------------------------------------------------
+            // COMPANY ID REQUIRED
+            // ------------------------------------------------------
 
-        if (
-            userData.CompanyProductId === undefined ||
-            userData.CompanyProductId === null ||
-            userData.CompanyProductId === ""
-        ) {
+            if (isEmpty(userData.CompanyId)) {
 
-            return res.status(400).json({
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
 
-                status: "error",
-
-                message:
-                    "CompanyProductId is required"
-
-            });
-
-        }
+            }
 
 
-        // Convert single value to array
-        if (
-            !Array.isArray(
-                userData.CompanyProductId
-            )
-        ) {
+            userData.CompanyId =
+                Number(userData.CompanyId);
 
-            userData.CompanyProductId = [
-                userData.CompanyProductId
-            ];
-
-        }
-
-
-        // Convert every value to Number
-        userData.CompanyProductId =
-            userData.CompanyProductId.map(
-                id => Number(id)
-            );
-
-
-        // Validate CompanyProductId array
-        if (
-            userData.CompanyProductId.length === 0
-        ) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "At least one CompanyProductId is required"
-
-            });
-
-        }
-
-
-        for (
-            const companyProductId
-            of userData.CompanyProductId
-        ) {
 
             if (
-                !Number.isInteger(
-                    companyProductId
-                ) ||
-                companyProductId <= 0
+                !Number.isInteger(userData.CompanyId) ||
+                userData.CompanyId <= 0
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
-
                     message:
-                        "Every CompanyProductId must be a valid number"
-
+                        "CompanyId must be a valid number"
                 });
 
             }
 
+
+            // ------------------------------------------------------
+            // REMAINING VALUES ARE NULL
+            // ------------------------------------------------------
+
+            userData.CompanyProductId = null;
+
+            userData.ProjectId = null;
+
+            userData.ReportingManagerUserId = null;
+
+            userData.DesignationId = null;
+
         }
-
-
-        // Remove duplicate CompanyProductIds
-        userData.CompanyProductId =
-            [...new Set(
-                userData.CompanyProductId
-            )];
 
 
         // ==========================================================
-        // PROJECT - REQUIRED ARRAY
+        // ROLE ID > 2
+        // NORMAL USER
+        // ==========================================================
+        //
+        // CompanyId              = REQUIRED
+        // CompanyProductId       = REQUIRED
+        // ProjectId              = REQUIRED
+        // ReportingManagerUserId = REQUIRED
+        // DesignationId          = REQUIRED
+        //
         // ==========================================================
 
-        if (
-            userData.ProjectId === undefined ||
-            userData.ProjectId === null ||
-            userData.ProjectId === ""
-        ) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "ProjectId is required"
-
-            });
-
-        }
+        else {
 
 
-        // Convert single value to array
-        if (
-            !Array.isArray(
-                userData.ProjectId
-            )
-        ) {
+            // ------------------------------------------------------
+            // COMPANY ID
+            // ------------------------------------------------------
 
-            userData.ProjectId = [
-                userData.ProjectId
-            ];
+            if (isEmpty(userData.CompanyId)) {
 
-        }
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
 
-
-        // Convert every value to Number
-        userData.ProjectId =
-            userData.ProjectId.map(
-                id => Number(id)
-            );
+            }
 
 
-        // Validate ProjectId array
-        if (
-            userData.ProjectId.length === 0
-        ) {
+            userData.CompanyId =
+                Number(userData.CompanyId);
 
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "At least one ProjectId is required"
-
-            });
-
-        }
-
-
-        for (
-            const projectId
-            of userData.ProjectId
-        ) {
 
             if (
-                !Number.isInteger(
-                    projectId
-                ) ||
-                projectId <= 0
+                !Number.isInteger(userData.CompanyId) ||
+                userData.CompanyId <= 0
             ) {
 
                 return res.status(400).json({
-
                     status: "error",
-
                     message:
-                        "Every ProjectId must be a valid number"
-
+                        "CompanyId must be a valid number"
                 });
 
             }
 
-        }
+
+            // ------------------------------------------------------
+            // COMPANY PRODUCT
+            // ------------------------------------------------------
+
+            if (
+                !Array.isArray(userData.CompanyProductId) ||
+                userData.CompanyProductId.length === 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "CompanyProductId must be a non-empty array"
+                });
+
+            }
 
 
-        // Remove duplicate ProjectIds
-        userData.ProjectId =
-            [...new Set(
-                userData.ProjectId
-            )];
+            // ------------------------------------------------------
+            // PROJECT
+            // ------------------------------------------------------
+
+            if (
+                !Array.isArray(userData.ProjectId) ||
+                userData.ProjectId.length === 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "ProjectId must be a non-empty array"
+                });
+
+            }
 
 
-        // ==========================================================
-        // ROLE
-        // ==========================================================
+            // ------------------------------------------------------
+            // REPORTING MANAGER
+            // ------------------------------------------------------
 
-        if (
-            userData.RoleId === undefined ||
-            userData.RoleId === null ||
-            String(userData.RoleId).trim() === ""
-        ) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "RoleId is required"
-
-            });
-
-        }
-
-
-        // ==========================================================
-        // REPORTING MANAGER - OPTIONAL ARRAY
-        // ==========================================================
-
-        if (
-            userData.ReportingManagerUserId !== undefined &&
-            userData.ReportingManagerUserId !== null &&
-            String(
-                userData.ReportingManagerUserId
-            ).trim() !== ""
-        ) {
-
-            // Convert single value to array
             if (
                 !Array.isArray(
                     userData.ReportingManagerUserId
-                )
+                ) ||
+                userData.ReportingManagerUserId.length === 0
             ) {
 
-                userData.ReportingManagerUserId = [
-                    userData.ReportingManagerUserId
-                ];
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "ReportingManagerUserId must be a non-empty array"
+                });
 
             }
 
 
-            // Convert every value to Number
+            // ------------------------------------------------------
+            // DESIGNATION
+            // ------------------------------------------------------
+
+            if (isEmpty(userData.DesignationId)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "DesignationId is required"
+                });
+
+            }
+
+
+            userData.DesignationId =
+                Number(userData.DesignationId);
+
+
+            if (
+                !Number.isInteger(
+                    userData.DesignationId
+                ) ||
+                userData.DesignationId <= 0
+            ) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message:
+                        "DesignationId must be a valid number"
+                });
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // CONVERT COMPANY PRODUCT IDS
+        // ==========================================================
+
+        if (Array.isArray(userData.CompanyProductId)) {
+
+            userData.CompanyProductId =
+                userData.CompanyProductId.map(
+                    id => Number(id)
+                );
+
+
+            for (const id of userData.CompanyProductId) {
+
+                if (
+                    !Number.isInteger(id) ||
+                    id <= 0
+                ) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "CompanyProductId must contain valid numeric IDs"
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // CONVERT PROJECT IDS
+        // ==========================================================
+
+        if (Array.isArray(userData.ProjectId)) {
+
+            userData.ProjectId =
+                userData.ProjectId.map(
+                    id => Number(id)
+                );
+
+
+            for (const id of userData.ProjectId) {
+
+                if (
+                    !Number.isInteger(id) ||
+                    id <= 0
+                ) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "ProjectId must contain valid numeric IDs"
+                    });
+
+                }
+
+            }
+
+        }
+
+
+        // ==========================================================
+        // CONVERT REPORTING MANAGER IDS
+        // ==========================================================
+
+        if (
+            Array.isArray(
+                userData.ReportingManagerUserId
+            )
+        ) {
+
             userData.ReportingManagerUserId =
                 userData.ReportingManagerUserId.map(
                     id => Number(id)
                 );
 
 
-            // Validate array
-            if (
-                userData.ReportingManagerUserId.length === 0
+            for (
+                const id of userData.ReportingManagerUserId
             ) {
 
-                userData.ReportingManagerUserId = [];
-
-            } else {
-
-                for (
-                    const reportingManagerUserId
-                    of userData.ReportingManagerUserId
+                if (
+                    !Number.isInteger(id) ||
+                    id <= 0
                 ) {
 
-                    if (
-                        !Number.isInteger(
-                            reportingManagerUserId
-                        ) ||
-                        reportingManagerUserId <= 0
-                    ) {
-
-                        return res.status(400).json({
-
-                            status: "error",
-
-                            message:
-                                "Every ReportingManagerUserId must be a valid number"
-
-                        });
-
-                    }
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "ReportingManagerUserId must contain valid numeric IDs"
+                    });
 
                 }
 
-
-                // Remove duplicate Reporting Manager IDs
-                userData.ReportingManagerUserId =
-                    [...new Set(
-                        userData.ReportingManagerUserId
-                    )];
-
             }
-
-        } else {
-
-            userData.ReportingManagerUserId = [];
 
         }
 
 
         // ==========================================================
-        // CONVERT SINGLE NUMERIC VALUES
-        // ==========================================================
-
-        userData.CompanyId =
-            Number(userData.CompanyId);
-
-        userData.RoleId =
-            Number(userData.RoleId);
-
-        userData.GenderId =
-            Number(userData.GenderId);
-
-        userData.MaritalStatusId =
-            Number(userData.MaritalStatusId);
-
-        userData.DesignationId =
-            Number(userData.DesignationId);
-
-
-        // ==========================================================
-        // NUMERIC VALIDATION
+        // OTHER NUMERIC FIELDS
         // ==========================================================
 
         const numericFields = [
-
-            [
-                "CompanyId",
-                userData.CompanyId
-            ],
-
-            [
-                "RoleId",
-                userData.RoleId
-            ],
-
-            [
-                "GenderId",
-                userData.GenderId
-            ],
-
-            [
-                "MaritalStatusId",
-                userData.MaritalStatusId
-            ],
-
-            [
-                "DesignationId",
-                userData.DesignationId
-            ]
-
+            "GenderId",
+            "MaritalStatusId"
         ];
 
 
-        for (
-            const [field, value]
-            of numericFields
-        ) {
+        for (const field of numericFields) {
+
+            userData[field] =
+                Number(userData[field]);
+
 
             if (
-                !Number.isInteger(value) ||
-                value <= 0
+                !Number.isInteger(userData[field]) ||
+                userData[field] <= 0
             ) {
 
                 return res.status(400).json({
@@ -895,200 +620,71 @@ export const createUserController = async (req, res) => {
 
 
         // ==========================================================
-        // EMAIL VALIDATION
+        // DUPLICATE CHECKS
         // ==========================================================
 
-        const emailRegex =
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const duplicateFields = {
+
+            Email: {
+                check: checkEmailExists,
+                message: "Email already exists"
+            },
+
+            LoginName: {
+                check: checkLoginNameExists,
+                message: "Login name already exists"
+            },
+
+            PhoneNumber: {
+                check: checkPhoneNumberExists,
+                message: "Phone number already exists"
+            },
+
+            EmployeeId: {
+                check: checkEmployeeIdExists,
+                message: "Employee ID already exists",
+                transform: value => String(value)
+            }
+
+        };
 
 
-        if (
-            !emailRegex.test(
-                userData.Email
-            )
+        for (
+            const field of Object.keys(duplicateFields)
         ) {
 
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "Invalid email format"
-
-            });
-
-        }
+            const config =
+                duplicateFields[field];
 
 
-        // ==========================================================
-        // PHONE VALIDATION
-        // ==========================================================
-
-        userData.PhoneNumber =
-            String(
-                userData.PhoneNumber
-            ).trim();
+            let value =
+                userData[field];
 
 
-        const phoneRegex =
-            /^[0-9]{10,12}$/;
+            if (config.transform) {
+
+                value =
+                    config.transform(value);
+
+            }
 
 
-        if (
-            !phoneRegex.test(
-                userData.PhoneNumber
-            )
-        ) {
-
-            return res.status(400).json({
-
-                status: "error",
-
-                message:
-                    "Invalid phone number"
-
-            });
-
-        }
+            const existingRecord =
+                await config.check(value);
 
 
-        // ==========================================================
-        // ALTERNATE PHONE
-        // ==========================================================
+            if (existingRecord.length > 0) {
 
-        if (
-            userData.AltPhoneNumber !== undefined &&
-            userData.AltPhoneNumber !== null &&
-            String(
-                userData.AltPhoneNumber
-            ).trim() !== ""
-        ) {
-
-            userData.AltPhoneNumber =
-                String(
-                    userData.AltPhoneNumber
-                ).trim();
-
-
-            if (
-                !phoneRegex.test(
-                    userData.AltPhoneNumber
-                )
-            ) {
-
-                return res.status(400).json({
-
+                return res.status(409).json({
                     status: "error",
-
-                    message:
-                        "Invalid alternate phone number"
-
+                    message: config.message
                 });
 
             }
 
-        } else {
-
-            userData.AltPhoneNumber =
-                null;
-
         }
 
 
-        // ==========================================================
-        // DUPLICATE EMAIL
-        // ==========================================================
-
-        const emailExists =
-            await checkEmailExists(
-                userData.Email
-            );
-
-
-        if (emailExists.length > 0) {
-
-            return res.status(409).json({
-
-                status: "error",
-
-                message:
-                    "Email already exists"
-
-            });
-
-        }
-
-
-        // ==========================================================
-        // DUPLICATE LOGIN NAME
-        // ==========================================================
-
-        const loginNameExists =
-            await checkLoginNameExists(
-                userData.LoginName
-            );
-
-
-        if (loginNameExists.length > 0) {
-
-            return res.status(409).json({
-
-                status: "error",
-
-                message:
-                    "Login name already exists"
-
-            });
-
-        }
-
-
-        // ==========================================================
-        // DUPLICATE PHONE
-        // ==========================================================
-
-        const phoneExists =
-            await checkPhoneNumberExists(
-                userData.PhoneNumber
-            );
-
-
-        if (phoneExists.length > 0) {
-
-            return res.status(409).json({
-
-                status: "error",
-
-                message:
-                    "Phone number already exists"
-
-            });
-
-        }
-
-
-        // ==========================================================
-        // DUPLICATE EMPLOYEE ID
-        // ==========================================================
-
-        const employeeExists =
-            await checkEmployeeIdExists(
-                String(userData.EmployeeId)
-            );
-
-
-        if (employeeExists.length > 0) {
-
-            return res.status(409).json({
-
-                status: "error",
-
-                message:
-                    "Employee ID already exists"
-
-            });
-
-        }
 
 
         // ==========================================================
@@ -1101,55 +697,53 @@ export const createUserController = async (req, res) => {
                 10
             );
 
-
         // ==========================================================
-        // VALIDATE DATE OF JOINING
+        // USER FILES
         // ==========================================================
 
-        const joiningDate =
-            new Date(
-                userData.DateOfJoining
-            );
+        const uploadedUserFiles = (req.files || []).filter(
+            file => file.fieldname === "UserFile"
+        );
 
+        const fileTypeIds = Array.isArray(userData.FileTypeId)
+            ? userData.FileTypeId
+            : [userData.FileTypeId];
 
-        if (
-            isNaN(
-                joiningDate.getTime()
-            )
-        ) {
+        if (uploadedUserFiles.length !== fileTypeIds.length) {
 
             return res.status(400).json({
-
                 status: "error",
-
-                message:
-                    "Invalid DateOfJoining"
-
+                message: "Each UserFile must have a corresponding FileTypeId"
             });
 
         }
 
+        userData.UserFiles = uploadedUserFiles.map((file, index) => {
+
+            return {
+                FileTypeId: Number(fileTypeIds[index]),
+                FilePath: file.path
+            };
+
+        });
 
         // ==========================================================
         // CREATE USER
         // ==========================================================
 
         await createUser(
-            userData
+            userData,
+            req.files
         );
 
 
         // ==========================================================
-        // SUCCESS
+        // SUCCESS RESPONSE
         // ==========================================================
 
         return res.status(201).json({
-
             status: "success",
-
-            message:
-                "User created successfully"
-
+            message: "User created successfully"
         });
 
 
@@ -1162,15 +756,9 @@ export const createUserController = async (req, res) => {
 
 
         return res.status(500).json({
-
             status: "error",
-
-            message:
-                "Failed to create user",
-
-            error:
-                error.message
-
+            message: "Internal server error",
+            error: error.message
         });
 
     }
@@ -1186,10 +774,10 @@ export const createUserController = async (req, res) => {
 export const companyProductProjectDropdownController = async (req, res) => {
     const { FlagId, CompanyId, CompanyProductId } = req.body;
     try {
-        // ==================================================
+        // =================================================
         // FLAG ID VALIDATION
         // ==================================================
-        if (FlagId === undefined || FlagId === null) {
+        if (FlagId === undefined || FlagId === null || String(FlagId).trim() === "") {
             return res.status(400).json({
                 status: "error",
                 message: "FlagId is required"
@@ -1206,8 +794,6 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 data: result
             });
         }
-
-
         // ==================================================
         // FLAG ID 2 - PRODUCT
         // ==================================================
@@ -1219,7 +805,7 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 });
             }
 
-            const result = await getProductDropdown(CompanyId);
+            const result = await getProductDropdown(parseInt(CompanyId));
             return res.status(200).json({
                 status: "success",
                 message: "Product data fetched successfully",
@@ -1230,26 +816,36 @@ export const companyProductProjectDropdownController = async (req, res) => {
         // FLAG ID 3 - PROJECT
         // ==================================================
         if (parseInt(FlagId) === 3) {
-            if (CompanyProductId === undefined || CompanyProductId === null || String(CompanyProductId).trim() === "") {
+
+            if (
+                CompanyProductId === undefined ||
+                CompanyProductId === null ||
+                (
+                    !Array.isArray(CompanyProductId) &&
+                    String(CompanyProductId).trim() === ""
+                )
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId is required"
                 });
             }
-            const result = await getProjectDropdown(CompanyProductId);
+
+            const result = await getProjectDropdown(
+                CompanyProductId
+            );
+
             return res.status(200).json({
                 status: "success",
                 message: "Project data fetched successfully",
                 data: result
             });
         }
-
         // ==================================================
         // FLAG ID 4 - ROLE
         // ==================================================
         if (parseInt(FlagId) === 4) {
             const result = await getRoleDropdown();
-
             return res.status(200).json({
                 status: "success",
                 message: "Role data fetched successfully",
@@ -1263,8 +859,8 @@ export const companyProductProjectDropdownController = async (req, res) => {
             status: "error",
             message: "Invalid FlagId. Use 1, 2, 3 or 4"
         });
+
     } catch (error) {
-        console.error("Company Product Project Dropdown Error:", error);
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch dropdown data",
@@ -1272,7 +868,6 @@ export const companyProductProjectDropdownController = async (req, res) => {
         });
     }
 };
-
 
 
 

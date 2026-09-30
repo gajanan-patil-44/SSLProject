@@ -2,9 +2,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-import {findUserForLogin,updateFailedLogin,setTempBlock,clearTempBlock,resetAttempts,setPermanentBlock} from "../../Models/LoginModel.js"
+import { findUserForLogin, updateFailedLogin, setTempBlock, clearTempBlock, resetAttempts, setPermanentBlock, logoutUserLoginDetail, createUserLoginDetail } from "../../Models/LoginModel.js"
 
-const buildMenuPage = (pages) => {const pageMap = new Map();
+const buildMenuPage = (pages) => {
+    const pageMap = new Map();
     const menuPage = [];
     // ==========================================================
     // CREATE PAGE MAP
@@ -13,11 +14,11 @@ const buildMenuPage = (pages) => {const pageMap = new Map();
     for (const page of pages) {
         pageMap.set(Number(page.PageId),
             {
-                PageId:page.PageId,
-                PageName:page.PageName,
-                PageUrl:page.PageUrl,
-                PageIcon:page.PageIcon,
-                ParentPageId:page.ParentPageId === null || page.ParentPageId === undefined ? null : Number(page.ParentPageId),
+                PageId: page.PageId,
+                PageName: page.PageName,
+                PageUrl: page.PageUrl,
+                PageIcon: page.PageIcon,
+                ParentPageId: page.ParentPageId === null || page.ParentPageId === undefined ? null : Number(page.ParentPageId),
                 OrderNo: Number(page.OrderNo),
                 children: []
             }
@@ -46,17 +47,15 @@ const buildMenuPage = (pages) => {const pageMap = new Map();
     // ==========================================================
     const sortPages = (pageList) => {
         pageList.sort((a, b) => {
-                const orderDifference = Number(a.OrderNo) - Number(b.OrderNo);
-                if (orderDifference !== 0)
-                     {
-                    return orderDifference;
-                }
-                return (Number(a.PageId) - Number(b.PageId));
+            const orderDifference = Number(a.OrderNo) - Number(b.OrderNo);
+            if (orderDifference !== 0) {
+                return orderDifference;
             }
+            return (Number(a.PageId) - Number(b.PageId));
+        }
         );
         for (const page of pageList) {
-            if (Array.isArray(page.children) && page.children.length > 0)
-                 {
+            if (Array.isArray(page.children) && page.children.length > 0) {
                 sortPages(page.children);
             }
         }
@@ -69,122 +68,113 @@ const buildMenuPage = (pages) => {const pageMap = new Map();
 // ==========================================================
 export const login = async (req, res) => {
     try {
-        const {username,password} = req.body;
-        if (!username || !password)
-             {
+
+        // ==========================================================
+        // REQUEST
+        // ==========================================================
+        const { username, password } = req.body;
+
+        if (!username || !password) {
             return res.status(400).json({
                 success: false,
-                message:"Username and password are required"
+                message: "Username and password are required"
             });
         }
         // ==========================================================
         // FIND USER
         // ==========================================================
-        const result =await findUserForLogin(username);
-        if (!result) {
+        const result = await findUserForLogin(username);
+
+        if (!result || !result.user) {
             return res.status(401).json({
                 success: false,
-                message:"Invalid username or password"
+                message: "Invalid username or password"
             });
         }
-        const user =result.user;
+        const user = result.user;
         // ==========================================================
         // CHECK PERMANENT BLOCK
         // ==========================================================
-        if (user.IsBlocked === true)
-             {
+        if (user.IsBlocked === true) {
             return res.status(403).json({
                 success: false,
-                message:"User account is permanently blocked"
+                message: "User account is permanently blocked"
             });
         }
-        // =========================================================
+        // ==========================================================
         // CHECK TEMPORARY BLOCK
         // ==========================================================
-        if (user.IsTempBlocked === true && user.TempBlockedOn) 
-            {
+        if (user.IsTempBlocked === true && user.TempBlockedOn) {
             const blockedTime = new Date(user.TempBlockedOn).getTime();
             const currentTime = Date.now();
             const difference = currentTime - blockedTime;
             const blockDuration = 2 * 60 * 1000;
 
-            if (difference < blockDuration) 
-                {
+            if (difference < blockDuration) {
                 const remainingSeconds = Math.ceil((blockDuration - difference) / 1000);
-
                 return res.status(403).json({
                     success: false,
-                    message:`Account temporarily blocked. Try again after ${remainingSeconds} seconds`
+                    message: `Account temporarily blocked. Try again after ${remainingSeconds} seconds`
                 });
             }
+
+
+            // Temporary block expired
             await clearTempBlock(user.UserId);
         }
         // ==========================================================
         // CHECK PASSWORD
         // ==========================================================
-        const passwordMatch = await bcrypt.compare(password,user.Password);
+        const passwordMatch = await bcrypt.compare(password, user.Password);
+
         if (!passwordMatch) {
-            const attemptCount =await updateFailedLogin(user.UserId);
-            // ==========================================================
-            // 3 FAILED ATTEMPTS
+            const attemptCount = await updateFailedLogin(user.UserId);
+            // =====================================================
             // TEMPORARY BLOCK
-            // ==========================================================
-            if (attemptCount >= 3 && attemptCount < 5)
-                 {
+            // ======================================================
+            if (attemptCount >= 3 && attemptCount < 5) {
                 await setTempBlock(user.UserId);
                 return res.status(403).json({
                     success: false,
-                    message:"Too many failed attempts. Account temporarily blocked for 2 minutes"
+                    message: "Too many failed attempts. Account temporarily blocked for 2 minutes"
                 });
             }
-            // ==========================================================
-            // 5 FAILED ATTEMPTS
+            // ======================================================
             // PERMANENT BLOCK
-            // ==========================================================
-            if (attemptCount >= 5)
-                 {
+            // ======================================================
+            if (attemptCount >= 5) {
                 await setPermanentBlock(user.UserId);
                 return res.status(403).json({
                     success: false,
-                    message:"Account permanently blocked due to multiple failed login attempts"
+                    message: "Account permanently blocked due to multiple failed login attempts"
                 });
             }
             return res.status(401).json({
                 success: false,
-                message:"Invalid username or password",
-                attemptsRemaining: 3 - attemptCount
+                message: "Invalid username or password",
+                attemptsRemaining: Math.max(0, 3 - attemptCount)
             });
         }
         // ==========================================================
         // SUCCESSFUL LOGIN
-        // RESET ATTEMPTS
         // ==========================================================
-        await resetAttempts( user.UserId);
+        await resetAttempts(user.UserId);
         // ==========================================================
         // JWT TOKEN
         // ==========================================================
         const token = jwt.sign(
             {
-                UserId:user.UserId,
-                EmployeeId:user.EmployeeId,
-                LoginName:user.LoginName,
-                Email:user.Email,
-                DesignationId:user.DesignationId
+                UserId: user.UserId,
+                EmployeeId: user.EmployeeId,
+                LoginName: user.LoginName,
+                Email: user.Email,
+                DesignationId: user.DesignationId
             },
             process.env.JWT_SECRET,
             {
-                expiresIn:
-                    process.env.JWT_EXPIRES_IN ||
-                    "12h"
+                expiresIn: process.env.JWT_EXPIRES_IN || "12h"
             }
         );
-        // ==========================================================
-        // SESSION
-        // ==========================================================
-        const sessionId = crypto.randomUUID();
-        const loginAt = new Date();
-        const expiresAt = new Date(loginAt.getTime() + 12 * 60 * 60 * 1000);
-
         // ==========================================================
         // MENU PAGE
         // ==========================================================
@@ -194,8 +184,8 @@ export const login = async (req, res) => {
         // ==========================================================
         let photo = null;
         if (user.Photo) {
-            if (Buffer.isBuffer(user.Photo))
-                 {
+
+            if (Buffer.isBuffer(user.Photo)) {
                 photo = user.Photo.toString("base64");
             } else if (
                 user.Photo instanceof Uint8Array
@@ -204,6 +194,7 @@ export const login = async (req, res) => {
             } else if (
                 typeof user.Photo === "string"
             ) {
+
                 photo = user.Photo;
             }
         }
@@ -212,61 +203,176 @@ export const login = async (req, res) => {
         // ==========================================================
         return res.status(200).json({
             success: true,
-            message:"Login successful",
+            message: "Login successful",
             token: {
-                accessToken:token
+                accessToken: token
             },
             data: {
                 user: {
-                    UserId:user.UserId,
-                    loginName:user.LoginName,
+                    UserId: user.UserId,
+                    loginName: user.LoginName,
                     name: {
-                        first:user.FirstName,
-                        middle:user.MiddleName,
-                        last:user.LastName
+                        first: user.FirstName,
+                        middle: user.MiddleName,
+                        last: user.LastName
                     },
-                    email:user.Email,
-                    phone:user.PhoneNumber,
+                    email: user.Email,
+                    phone: user.PhoneNumber,
+
                     designation: {
-                        id:user.DesignationId,
-                        name:user.DesignationName,
-                        level:user.DesignationLevel
+                        id: user.DesignationId,
+                        name: user.DesignationName,
+                        level: user.DesignationLevel
                     }
                 },
-              
-
                 context: {
-                    companies: result.companies,
-                    products:result.products,
-                    projects:result.projects,
-                    roles:result.roles
+                    companies: result.companies || [],
+                    products: result.products || [],
+                    projects: result.projects || [],
+                    roles: result.roles || []
                 },
-                
                 reporting: {
-                    manager:
-                        result.reportingManager &&
-                        result.reportingManager.length > 0
-                            ? result.reportingManager[0]
-                            : null
+                    manager: result.reportingManager && result.reportingManager.length > 0 ? result.reportingManager[0] : null
                 },
-           
-                menuPage:
-                    menuPage
+                menuPage: menuPage
             },
-
-            session: {
-                id:sessionId,
-                loginAt:loginAt.toISOString(),
-                expiresAt:expiresAt.toISOString()
-            },
-    
-            photo:photo
+            photo: photo
         });
-    }
-    catch (error) {
+
+    } catch (error) {
+        console.error(
+            "LOGIN ERROR:",
+            error
+        );
         return res.status(500).json({
             success: false,
-            message:"Internal server error"
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+// ==========================================================
+// MANAGE USER LOGIN DETAIL
+// FlagId 1 = LOGIN
+// FlagId 2 = LOGOUT
+// ==========================================================
+
+export const manageLoginDetail = async (req, res) => {
+    try {
+        const {
+            FlagId, UserLoginDetailId, UserId, PublicIPAddress, HostName, SystemName, OperatingSystem, OSVersion,
+            BrowserName, BrowserVersion, UserAgent, DeviceType, DeviceName, Latitude, Longitude, LocationAccuracy, NetworkType, LogoutReason,
+            ApplicationName,
+            ApplicationVersion
+        } = req.body;
+
+
+
+        if (!FlagId) {
+            return res.status(400).json({
+                success: false,
+                message: "FlagId is required"
+            });
+        }
+        // ==========================================================
+        // LOGIN
+        // FlagId = 1
+        // ==========================================================
+        if (FlagId === 1) {
+            if (!UserId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "UserId is required for login"
+                });
+            }
+
+            const loginDetail =
+                await createUserLoginDetail({
+                    UserId: UserId,
+                    IPAddress: req.ip,
+                    PublicIPAddress: PublicIPAddress || null,
+                    HostName: HostName || null,
+                    SystemName: SystemName || null,
+                    OperatingSystem: OperatingSystem || null,
+                    OSVersion: OSVersion || null,
+                    BrowserName: BrowserName || null,
+                    BrowserVersion: BrowserVersion || null,
+                    UserAgent: UserAgent || req.get("User-Agent") || null,
+                    DeviceType: DeviceType || null,
+                    DeviceName: DeviceName || null,
+                    Latitude: Latitude || null,
+                    Longitude: Longitude || null,
+                    LocationAccuracy: LocationAccuracy || null,
+                    NetworkType: NetworkType || null,
+                    ApplicationName: ApplicationName || null,
+                    ApplicationVersion: ApplicationVersion || null
+                });
+
+
+            return res.status(201).json({
+                success: true,
+                message: "User login detail created successfully",
+                data: {
+                    UserLoginDetailId: loginDetail.UserLoginDetailId,
+                    UserId: loginDetail.UserId,
+                    LoginAt: loginDetail.LoginAt
+                }
+            });
+        }
+
+
+        // ==========================================================
+        // LOGOUT
+        // FlagId = 2
+        // ==========================================================
+
+        if (FlagId === 2) {
+            if (!UserLoginDetailId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "UserLoginDetailId is required for logout"
+                });
+            }
+
+            const logoutDetail = await logoutUserLoginDetail(UserLoginDetailId, LogoutReason);
+
+            if (!logoutDetail) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Active login session not found"
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Logout successful",
+                data: {
+                    UserLoginDetailId: logoutDetail.UserLoginDetailId,
+                    UserId: logoutDetail.UserId,
+                    LoginAt: logoutDetail.LoginAt,
+                    LogoutAt: logoutDetail.LogoutAt,
+                    IsActive: logoutDetail.IsActive,
+                    LogoutReason: logoutDetail.LogoutReason
+                }
+            });
+        }
+        // ==========================================================
+        // INVALID FLAG
+        // ==========================================================
+        return res.status(400).json({
+            success: false,
+            message: "Invalid FlagId"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Manage Login Detail Error:",
+            error
+        );
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
         });
     }
 };

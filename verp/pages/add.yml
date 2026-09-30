@@ -26,12 +26,12 @@ http:
 
       {
           "FlagId": 1,
-          "PageName": "Users",
-          "PageUrl": "/users",
-          "PageIcon": "users",
+          "PageName": "user-creation",
+          "PageUrl": "/master/user-creation",
+          "PageIcon": "user-creation page",
           "PageType": "MainPage",
           "ParentPageId": null,
-          "RoleIds": [2],
+          "RoleIds": [1, 2],
           "CreatedByUserName": "admin1"
       }
   auth: inherit

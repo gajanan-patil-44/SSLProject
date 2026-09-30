@@ -19,7 +19,9 @@ export const getAllDesignations = async () => {
                 cd."CreatedAt",
                 cd."CreatedByUserName",
                 cd."UpdateByUserName",
-                cd."UpdatedAt"
+                cd."UpdatedAt",
+                cd."DesignationLevel"
+            
             FROM "LKP"."CompanyDesignation" cd
             INNER JOIN "LKP"."Company" c
                 ON c."CompanyId" = cd."CompanyId"
@@ -176,6 +178,7 @@ export const addDesignation = async (designationData) => {
                 "CompanyId",
                 "DesignationName",
                 "DesignationCode",
+                "DesignationLevel",
                 "IsDisabled",
                 "CreatedAt",
                 "CreatedByUserName"
@@ -187,8 +190,9 @@ export const addDesignation = async (designationData) => {
                 $2,
                 $3,
                 $4,
+                $5,
                 CURRENT_TIMESTAMP,
-                $5
+                $6
             )
 
             RETURNING
@@ -196,6 +200,7 @@ export const addDesignation = async (designationData) => {
                 "CompanyId",
                 "DesignationName",
                 "DesignationCode",
+                "DesignationLevel",
                 "IsDisabled",
                 "CreatedAt",
                 "CreatedByUserName";
@@ -206,6 +211,7 @@ export const addDesignation = async (designationData) => {
             designationData.CompanyId,
             designationData.DesignationName,
             designationData.DesignationCode,
+            designationData.DesignationLevel,
             designationData.IsDisabled,
             designationData.CreatedByUserName
         ];
@@ -220,8 +226,6 @@ export const addDesignation = async (designationData) => {
         return result.rows[0];
 
     } catch (error) {
-
-        // console.error("Error adding designation:", error);
 
         throw error;
     }
@@ -419,3 +423,6 @@ export const deleteDesignation = async (CompanyDesignationId) => {
         throw error;
     }
 };
+
+
+

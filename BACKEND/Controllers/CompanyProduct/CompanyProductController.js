@@ -187,8 +187,8 @@ export const companyProductController = async (req, res) => {
 
             return res.status(201).json({
                 status: "success",
-                message: "Company product added successfully",
-                data: companyProduct
+                message: "Company product added successfully"
+               
             });
         }
 

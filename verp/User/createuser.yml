@@ -11,7 +11,7 @@ http:
     data:
       - name: EmployeeId
         type: text
-        value: EMP13
+        value: EMP8
       - name: FirstName
         type: text
         value: htihin
@@ -23,7 +23,7 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-        value: "99994843384"
+        value: "9966699959"
       - name: AltPhoneNumber
         type: text
         value: "7838432136"
@@ -38,13 +38,13 @@ http:
         value: "1"
       - name: DesignationId
         type: text
-        value: "1"
+        value: "2"
       - name: Email
         type: text
-        value: admin13@example.com
+        value: admin8@gmail.com
       - name: LoginName
         type: text
-        value: admin13
+        value: admin8
       - name: Photo
         type: file
         value:
@@ -52,7 +52,7 @@ http:
         contentType: image/jpeg
       - name: Password
         type: text
-        value: admin13@123
+        value: admin8@123
       - name: CreatedByUserName
         type: text
         value: admin
@@ -61,13 +61,13 @@ http:
         value: "1"
       - name: CompanyProductId
         type: text
-        value: "1"
+        value: "[1]"
       - name: ProjectId
         type: text
-        value: "1"
+        value: "[1]"
       - name: RoleId
         type: text
-        value: "1"
+        value: "3"
       - name: FileTypeId
         type: text
         value: "1"
@@ -94,7 +94,7 @@ http:
         contentType: application/pdf
       - name: ReportingManagerUserId
         type: text
-        value: "1"
+        value: "[1]"
       - name: DateOfJoining
         type: text
         value: 2024-08-12
@@ -104,7 +104,7 @@ http:
         disabled: true
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3OTAwNzY4NzAsImV4cCI6MTc5MDEwNTY3MH0.4CN2zwtQ0Die2zlOI9QYn_dcyDrg8-k8Dl6_LvyKz_s
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3OTAzMTMxODgsImV4cCI6MTc5MDM0MTk4OH0.vyqqqbe4wdC0qn_mXTNRhaZXlfpNhRSZrc1SWrVmvpo
 
 settings:
   encodeUrl: true

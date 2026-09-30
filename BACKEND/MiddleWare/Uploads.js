@@ -34,13 +34,13 @@ const storage = multer.diskStorage({
             cb(null, userFileDirectory);
         }
         else {
-            cb(new Error("Invalid file field"));
+            cb(new Error("Invalid file field"), false);
         }
     },
 
     filename: (req, file, cb) => {
 
-        const extension = path.extname(file.originalname);
+        const extension = path.extname(file.originalname).toLowerCase();
 
         const fileName =
             `${Date.now()}-${Math.round(Math.random() * 1E9)}${extension}`;
@@ -55,18 +55,39 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
 
-    const allowedTypes = [
+    const allowedExtensions = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".pdf"
+    ];
+
+    const allowedMimeTypes = [
         "image/jpeg",
         "image/jpg",
         "image/png",
         "image/webp",
-        "application/pdf"
+        "application/pdf",
+        "application/x-pdf"
     ];
 
-    if (allowedTypes.includes(file.mimetype)) {
+    const extension = path
+        .extname(file.originalname)
+        .toLowerCase();
+
+    const isValidExtension =
+        allowedExtensions.includes(extension);
+
+    const isValidMimeType =
+        allowedMimeTypes.includes(file.mimetype);
+
+    if (isValidExtension && isValidMimeType) {
         cb(null, true);
     }
     else {
+      
+
         cb(
             new Error(
                 "Only JPG, JPEG, PNG, WEBP and PDF files are allowed"
@@ -89,4 +110,5 @@ export const uploadUserPhoto = multer({
     limits: {
         fileSize: 5 * 1024 * 1024
     }
+
 });
