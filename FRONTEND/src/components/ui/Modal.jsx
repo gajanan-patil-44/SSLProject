@@ -1,5 +1,5 @@
-// src/components/ui/Modal.jsx
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Button } from './index';
 
@@ -41,8 +41,8 @@ export const Modal = ({
     '2xl': 'max-w-6xl'
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs transition-opacity animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs transition-opacity animate-fade-in">
       <div className={`w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden ${sizes[size]} ${className}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
@@ -67,7 +67,8 @@ export const Modal = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -114,8 +115,8 @@ export const Drawer = ({
     xl: 'w-full md:w-[800px]'
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs">
       {/* Click outside backdrop to close */}
       <div className="absolute inset-0 cursor-default" onClick={onClose}></div>
       
@@ -143,7 +144,8 @@ export const Drawer = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
