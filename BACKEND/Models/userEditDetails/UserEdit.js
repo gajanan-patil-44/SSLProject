@@ -1636,11 +1636,7 @@ GROUP BY
 // GET ALL GENDERS
 // ======================================================
 
-
-
-
 export const editUserdetails = async ({
-
     UserId,
 
     // ============================================================
@@ -1662,7 +1658,6 @@ export const editUserdetails = async ({
     dateOfJoining,
     updatedByUserName,
 
-
     // ============================================================
     // RELATIONSHIPS
     // ============================================================
@@ -1680,7 +1675,7 @@ export const editUserdetails = async ({
     try {
 
         // ============================================================
-        // 1. BEGIN
+        // 1. BEGIN TRANSACTION
         // ============================================================
 
         await client.query("BEGIN");
@@ -1716,7 +1711,6 @@ export const editUserdetails = async ({
 
 
         if (userResult.rows.length === 0) {
-
             throw new Error(
                 `User with UserId ${UserId} not found`
             );
@@ -1727,7 +1721,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 3. FETCH ALL OLD COMPANIES
+        // 3. FETCH OLD COMPANIES
         // ============================================================
 
         const oldCompaniesResult = await client.query(
@@ -1744,13 +1738,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldCompanies =
-            oldCompaniesResult.rows;
+        const oldCompanies = oldCompaniesResult.rows;
 
 
         // ============================================================
-        // 4. FETCH ALL OLD PRODUCTS
+        // 4. FETCH OLD PRODUCTS
         // ============================================================
 
         const oldProductsResult = await client.query(
@@ -1766,13 +1758,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldProducts =
-            oldProductsResult.rows;
+        const oldProducts = oldProductsResult.rows;
 
 
         // ============================================================
-        // 5. FETCH ALL OLD PROJECTS
+        // 5. FETCH OLD PROJECTS
         // ============================================================
 
         const oldProjectsResult = await client.query(
@@ -1789,13 +1779,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldProjects =
-            oldProjectsResult.rows;
+        const oldProjects = oldProjectsResult.rows;
 
 
         // ============================================================
-        // 6. FETCH ALL OLD ROLES
+        // 6. FETCH OLD ROLES
         // ============================================================
 
         const oldRolesResult = await client.query(
@@ -1814,13 +1802,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldRoles =
-            oldRolesResult.rows;
+        const oldRoles = oldRolesResult.rows;
 
 
         // ============================================================
-        // 7. FETCH ALL OLD REPORTING MANAGERS
+        // 7. FETCH OLD REPORTING MANAGERS
         // ============================================================
 
         const oldManagersResult = await client.query(
@@ -1837,13 +1823,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldManagers =
-            oldManagersResult.rows;
+        const oldManagers = oldManagersResult.rows;
 
 
         // ============================================================
-        // 8. CHECK WHETHER ACTUAL USER VALUE CHANGED
+        // 8. CHECK USER FIELD CHANGES
         // ============================================================
 
         let hasChanges = false;
@@ -1856,12 +1840,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             firstName !== undefined &&
             firstName !== oldUser.FirstName
         ) {
             hasChanges = true;
         }
+
 
         if (
             middleName !== undefined &&
@@ -1870,12 +1856,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             lastName !== undefined &&
             lastName !== oldUser.LastName
         ) {
             hasChanges = true;
         }
+
 
         if (
             phoneNumber !== undefined &&
@@ -1884,6 +1872,7 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             dateOfBirth !== undefined &&
             dateOfBirth !== oldUser.DateOfBirth
@@ -1891,12 +1880,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             genderId !== undefined &&
             Number(genderId) !== Number(oldUser.GenderId)
         ) {
             hasChanges = true;
         }
+
 
         if (
             maritalStatusId !== undefined &&
@@ -1906,6 +1897,7 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             designationId !== undefined &&
             Number(designationId) !==
@@ -1914,12 +1906,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             email !== undefined &&
             email !== oldUser.Email
         ) {
             hasChanges = true;
         }
+
 
         if (
             loginName !== undefined &&
@@ -1928,12 +1922,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             altPhoneNumber !== undefined &&
             altPhoneNumber !== oldUser.AltPhoneNumber
         ) {
             hasChanges = true;
         }
+
 
         if (
             dateOfJoining !== undefined &&
@@ -1963,7 +1959,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserCompanyId ${company.UserCompanyId} not found for UserId ${UserId}`
                 );
@@ -2009,7 +2004,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserProductId ${product.UserProductId} not found for UserId ${UserId}`
                 );
@@ -2046,7 +2040,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserProjectId ${project.UserProjectId} not found for UserId ${UserId}`
                 );
@@ -2091,7 +2084,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserRoleId ${role.UserRoleId} not found for UserId ${UserId}`
                 );
@@ -2155,7 +2147,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserReportingManagerId ${manager.UserReportingManagerId} not found for UserId ${UserId}`
                 );
@@ -2197,9 +2188,42 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 15. INSERT OLD USER DATA
+        // 15. GET OLD RELATED RECORDS
         //
-        // One row for the main User information.
+        // Your UserDetails table has only one column for each
+        // related table, so we use the first existing old record.
+        // ============================================================
+
+        const oldCompany =
+            oldCompanies.length > 0
+                ? oldCompanies[0]
+                : null;
+
+        const oldProduct =
+            oldProducts.length > 0
+                ? oldProducts[0]
+                : null;
+
+        const oldProject =
+            oldProjects.length > 0
+                ? oldProjects[0]
+                : null;
+
+        const oldRole =
+            oldRoles.length > 0
+                ? oldRoles[0]
+                : null;
+
+        const oldManager =
+            oldManagers.length > 0
+                ? oldManagers[0]
+                : null;
+
+
+        // ============================================================
+        // 16. INSERT COMPLETE OLD RECORD
+        //
+        // ONLY ONE ROW IS INSERTED INTO UserDetails
         // ============================================================
 
         const historyResult = await client.query(
@@ -2207,6 +2231,7 @@ export const editUserdetails = async ({
             INSERT INTO "DATA"."UserDetails"
             (
                 "UserId",
+
                 "EmployeeId",
                 "FirstName",
                 "MiddleName",
@@ -2220,19 +2245,55 @@ export const editUserdetails = async ({
                 "LoginName",
                 "AltPhoneNumber",
                 "DateOfJoining",
+
+                "UserCompanyId",
+                "UserProductId",
+                "UserProjectId",
+                "UserReportingManagerId",
+                "UserRoleId",
+
+                "RoleId",
+                "ReportingManagerUserId",
+
                 "CreatedAt",
                 "CreatedByUserId"
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-                $11,$12,$13,$14,
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13,
+                $14,
+
+                $15,
+                $16,
+                $17,
+                $18,
+                $19,
+
+                $20,
+                $21,
+
                 CURRENT_TIMESTAMP,
-                $15
+                $22
             )
             RETURNING "UserDetailsId";
             `,
             [
+                // ========================================================
+                // OLD USER DATA
+                // ========================================================
+
                 oldUser.UserId,
                 oldUser.EmployeeId,
                 oldUser.FirstName,
@@ -2247,6 +2308,67 @@ export const editUserdetails = async ({
                 oldUser.LoginName,
                 oldUser.AltPhoneNumber,
                 oldUser.DateOfJoining,
+
+                // ========================================================
+                // OLD COMPANY
+                // ========================================================
+
+                oldCompany
+                    ? oldCompany.UserCompanyId
+                    : null,
+
+                // ========================================================
+                // OLD PRODUCT
+                // ========================================================
+
+                oldProduct
+                    ? oldProduct.UserProductId
+                    : null,
+
+                // ========================================================
+                // OLD PROJECT
+                // ========================================================
+
+                oldProject
+                    ? oldProject.UserProjectId
+                    : null,
+
+                // ========================================================
+                // OLD REPORTING MANAGER
+                // ========================================================
+
+                oldManager
+                    ? oldManager.UserReportingManagerId
+                    : null,
+
+                // ========================================================
+                // OLD ROLE
+                // ========================================================
+
+                oldRole
+                    ? oldRole.UserRoleId
+                    : null,
+
+                // ========================================================
+                // OLD ROLE ID
+                // ========================================================
+
+                oldRole
+                    ? oldRole.RoleId
+                    : null,
+
+                // ========================================================
+                // OLD REPORTING MANAGER USER ID
+                // ========================================================
+
+                oldManager
+                    ? oldManager.ReportingManagerUserId
+                    : null,
+
+                // ========================================================
+                // USER WHO PERFORMED EDIT
+                // ========================================================
+
                 UserId
             ]
         );
@@ -2257,175 +2379,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 16. INSERT ALL OLD COMPANIES
-        // ============================================================
-
-        for (const old of oldCompanies) {
-
-            await client.query(
-                `
-                INSERT INTO "DATA"."UserDetails"
-                (
-                    "UserId",
-                    "UserCompanyId",
-                    
-                    
-                    "CreatedAt",
-                    "CreatedByUserId"
-                )
-                VALUES
-                (
-                    $1,$2,
-                    CURRENT_TIMESTAMP,
-                    $3
-                );
-                `,
-                [
-                    old.UserId,
-                    old.UserCompanyId,
-
-                    UserId
-                ]
-            );
-        }
-
-
-        // ============================================================
-        // 17. INSERT ALL OLD PRODUCTS
-        // ============================================================
-
-        for (const old of oldProducts) {
-
-            await client.query(
-                `
-                INSERT INTO "DATA"."UserDetails"
-                (
-                    "UserId",
-                    "UserProductId",
-                    
-                    "CreatedAt",
-                    "CreatedByUserId"
-                )
-                VALUES
-                (
-                    $1,$2,
-                    CURRENT_TIMESTAMP,
-                    $3
-                );
-                `,
-                [
-                    old.UserId,
-                    old.UserProductId,
-                   
-                    UserId
-                ]
-            );
-        }
-
-
-        // ============================================================
-        // 18. INSERT ALL OLD PROJECTS
-        // ============================================================
-
-        for (const old of oldProjects) {
-
-            await client.query(
-                `
-                INSERT INTO "DATA"."UserDetails"
-                (
-                    "UserId",
-                    "UserProjectId",
-                    
-                    
-                    "CreatedAt",
-                    "CreatedByUserId"
-                )
-                VALUES
-                (
-                    $1,$2,
-                    CURRENT_TIMESTAMP,
-                    $3
-                );
-                `,
-                [
-                    old.UserId,
-                    old.UserProjectId,
-                    UserId
-                ]
-            );
-        }
-
-
-        // ============================================================
-        // 19. INSERT ALL OLD ROLES
-        // ============================================================
-
-        for (const old of oldRoles) {
-
-            await client.query(
-                `
-                INSERT INTO "DATA"."UserDetails"
-                (
-                    "UserId",
-                    "UserRoleId",
-                    "RoleId",
-                    "CreatedAt",
-                    "CreatedByUserId"
-                )
-                VALUES
-                (
-                    $1,$2,$3,
-                    CURRENT_TIMESTAMP,
-                    $4
-                );
-                `,
-                [
-                    old.UserId,
-                    old.UserRoleId,
-                    old.RoleId,
-                    UserId
-                ]
-            );
-        }
-
-
-        // ============================================================
-        // 20. INSERT ALL OLD REPORTING MANAGERS
-        // ============================================================
-
-        for (const old of oldManagers) {
-
-            await client.query(
-                `
-                INSERT INTO "DATA"."UserDetails"
-                (
-                    "UserId",
-                    "UserReportingManagerId",
-                    "ReportingManagerUserId",
-                    "ReportingManagerCompanyId",
-                    "CreatedAt",
-                    "CreatedByUserId"
-                )
-                VALUES
-                (
-                    $1,$2,$3,$4,
-                    CURRENT_TIMESTAMP,
-                    $5
-                );
-                `,
-                [
-                    old.UserId,
-                    old.UserReportingManagerId,
-                    old.ReportingManagerUserId,
-                    old.CompanyId,
-                    UserId
-                ]
-            );
-        }
-
-
-        // ============================================================
-        // 21. UPDATE DATA.User
+        // 17. UPDATE DATA.User
         // ============================================================
 
         await client.query(
@@ -2433,49 +2387,91 @@ export const editUserdetails = async ({
             UPDATE "DATA"."User"
             SET
                 "EmployeeId" =
-                    COALESCE($1, "EmployeeId"),
+                    COALESCE(
+                        $1,
+                        "EmployeeId"
+                    ),
 
                 "FirstName" =
-                    COALESCE($2, "FirstName"),
+                    COALESCE(
+                        $2,
+                        "FirstName"
+                    ),
 
                 "MiddleName" =
-                    COALESCE($3, "MiddleName"),
+                    COALESCE(
+                        $3,
+                        "MiddleName"
+                    ),
 
                 "LastName" =
-                    COALESCE($4, "LastName"),
+                    COALESCE(
+                        $4,
+                        "LastName"
+                    ),
 
                 "PhoneNumber" =
-                    COALESCE($5, "PhoneNumber"),
+                    COALESCE(
+                        $5,
+                        "PhoneNumber"
+                    ),
 
                 "DateOfBirth" =
-                    COALESCE($6, "DateOfBirth"),
+                    COALESCE(
+                        $6,
+                        "DateOfBirth"
+                    ),
 
                 "GenderId" =
-                    COALESCE($7, "GenderId"),
+                    COALESCE(
+                        $7,
+                        "GenderId"
+                    ),
 
                 "MaritalStatusId" =
-                    COALESCE($8, "MaritalStatusId"),
+                    COALESCE(
+                        $8,
+                        "MaritalStatusId"
+                    ),
 
                 "DesignationId" =
-                    COALESCE($9, "DesignationId"),
+                    COALESCE(
+                        $9,
+                        "DesignationId"
+                    ),
 
                 "Email" =
-                    COALESCE($10, "Email"),
+                    COALESCE(
+                        $10,
+                        "Email"
+                    ),
 
                 "LoginName" =
-                    COALESCE($11, "LoginName"),
+                    COALESCE(
+                        $11,
+                        "LoginName"
+                    ),
 
                 "AltPhoneNumber" =
-                    COALESCE($12, "AltPhoneNumber"),
+                    COALESCE(
+                        $12,
+                        "AltPhoneNumber"
+                    ),
 
                 "DateOfJoining" =
-                    COALESCE($13, "DateOfJoining"),
+                    COALESCE(
+                        $13,
+                        "DateOfJoining"
+                    ),
 
                 "UpdatedAt" =
                     CURRENT_TIMESTAMP,
 
                 "UpdatedByUserName" =
-                    COALESCE($14, "UpdatedByUserName")
+                    COALESCE(
+                        $14,
+                        "UpdatedByUserName"
+                    )
 
             WHERE "UserId" = $15;
             `,
@@ -2500,7 +2496,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 22. UPDATE COMPANIES
+        // 18. UPDATE COMPANIES
         // ============================================================
 
         for (const company of companies || []) {
@@ -2510,10 +2506,16 @@ export const editUserdetails = async ({
                 UPDATE "DATA"."UserCompany"
                 SET
                     "CompanyId" =
-                        COALESCE($1, "CompanyId"),
+                        COALESCE(
+                            $1,
+                            "CompanyId"
+                        ),
 
                     "IsPrimaryCompany" =
-                        COALESCE($2, "IsPrimaryCompany"),
+                        COALESCE(
+                            $2,
+                            "IsPrimaryCompany"
+                        ),
 
                     "UpdatedAt" =
                         CURRENT_TIMESTAMP,
@@ -2536,7 +2538,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 23. UPDATE PRODUCTS
+        // 19. UPDATE PRODUCTS
         // ============================================================
 
         for (const product of products || []) {
@@ -2571,7 +2573,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 24. UPDATE PROJECTS
+        // 20. UPDATE PROJECTS
         // ============================================================
 
         for (const project of projects || []) {
@@ -2613,7 +2615,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 25. UPDATE ROLES
+        // 21. UPDATE ROLES
         // ============================================================
 
         for (const role of roles || []) {
@@ -2669,7 +2671,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 26. UPDATE REPORTING MANAGERS
+        // 22. UPDATE REPORTING MANAGERS
         // ============================================================
 
         for (const manager of reportingManagers || []) {
@@ -2711,7 +2713,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 27. COMMIT
+        // 23. COMMIT
         // ============================================================
 
         await client.query("COMMIT");
@@ -2719,7 +2721,7 @@ export const editUserdetails = async ({
 
         return {
             UserId,
-            UserDetailsId: historyResult.rows[0].UserDetailsId,
+            UserDetailsId: userDetailsId,
             message: "User details updated successfully"
         };
 
@@ -2738,8 +2740,1115 @@ export const editUserdetails = async ({
     } finally {
 
         client.release();
+
     }
 };
+
+
+
+
+
+// export const editUserdetails = async ({
+
+//     UserId,
+
+//     // ============================================================
+//     // USER
+//     // ============================================================
+
+//     employeeId,
+//     firstName,
+//     middleName,
+//     lastName,
+//     phoneNumber,
+//     dateOfBirth,
+//     genderId,
+//     maritalStatusId,
+//     designationId,
+//     email,
+//     loginName,
+//     altPhoneNumber,
+//     dateOfJoining,
+//     updatedByUserName,
+
+
+//     // ============================================================
+//     // RELATIONSHIPS
+//     // ============================================================
+
+//     companies,
+//     products,
+//     projects,
+//     roles,
+//     reportingManagers
+
+// }) => {
+
+//     const client = await pool.connect();
+
+//     try {
+
+//         // ============================================================
+//         // 1. BEGIN
+//         // ============================================================
+
+//         await client.query("BEGIN");
+
+
+//         // ============================================================
+//         // 2. FETCH OLD USER
+//         // ============================================================
+
+//         const userResult = await client.query(
+//             `
+//             SELECT
+//                 "UserId",
+//                 "EmployeeId",
+//                 "FirstName",
+//                 "MiddleName",
+//                 "LastName",
+//                 "PhoneNumber",
+//                 "DateOfBirth",
+//                 "GenderId",
+//                 "MaritalStatusId",
+//                 "DesignationId",
+//                 "Email",
+//                 "LoginName",
+//                 "AltPhoneNumber",
+//                 "DateOfJoining"
+//             FROM "DATA"."User"
+//             WHERE "UserId" = $1
+//             FOR UPDATE;
+//             `,
+//             [UserId]
+//         );
+
+
+//         if (userResult.rows.length === 0) {
+
+//             throw new Error(
+//                 `User with UserId ${UserId} not found`
+//             );
+//         }
+
+
+//         const oldUser = userResult.rows[0];
+
+
+//         // ============================================================
+//         // 3. FETCH ALL OLD COMPANIES
+//         // ============================================================
+
+//         const oldCompaniesResult = await client.query(
+//             `
+//             SELECT
+//                 "UserCompanyId",
+//                 "UserId",
+//                 "CompanyId",
+//                 "IsPrimaryCompany"
+//             FROM "DATA"."UserCompany"
+//             WHERE "UserId" = $1
+//             FOR UPDATE;
+//             `,
+//             [UserId]
+//         );
+
+
+//         const oldCompanies =
+//             oldCompaniesResult.rows;
+
+
+//         // ============================================================
+//         // 4. FETCH ALL OLD PRODUCTS
+//         // ============================================================
+
+//         const oldProductsResult = await client.query(
+//             `
+//             SELECT
+//                 "UserProductId",
+//                 "UserId",
+//                 "CompanyProductId"
+//             FROM "DATA"."UserProduct"
+//             WHERE "UserId" = $1
+//             FOR UPDATE;
+//             `,
+//             [UserId]
+//         );
+
+
+//         const oldProducts =
+//             oldProductsResult.rows;
+
+
+//         // ============================================================
+//         // 5. FETCH ALL OLD PROJECTS
+//         // ============================================================
+
+//         const oldProjectsResult = await client.query(
+//             `
+//             SELECT
+//                 "UserProjectId",
+//                 "UserId",
+//                 "ProjectId",
+//                 "IsPrimary"
+//             FROM "DATA"."UserProject"
+//             WHERE "UserId" = $1
+//             FOR UPDATE;
+//             `,
+//             [UserId]
+//         );
+
+
+//         const oldProjects =
+//             oldProjectsResult.rows;
+
+
+//         // ============================================================
+//         // 6. FETCH ALL OLD ROLES
+//         // ============================================================
+
+//         const oldRolesResult = await client.query(
+//             `
+//             SELECT
+//                 "UserRoleId",
+//                 "UserId",
+//                 "RoleId",
+//                 "CompanyId",
+//                 "CompanyProductId",
+//                 "ProjectId"
+//             FROM "DATA"."UserRole"
+//             WHERE "UserId" = $1
+//             FOR UPDATE;
+//             `,
+//             [UserId]
+//         );
+
+
+//         const oldRoles =
+//             oldRolesResult.rows;
+
+
+//         // ============================================================
+//         // 7. FETCH ALL OLD REPORTING MANAGERS
+//         // ============================================================
+
+//         const oldManagersResult = await client.query(
+//             `
+//             SELECT
+//                 "UserReportingManagerId",
+//                 "UserId",
+//                 "ReportingManagerUserId",
+//                 "CompanyId"
+//             FROM "DATA"."UserReportingManager"
+//             WHERE "UserId" = $1
+//             FOR UPDATE;
+//             `,
+//             [UserId]
+//         );
+
+
+//         const oldManagers =
+//             oldManagersResult.rows;
+
+
+//         // ============================================================
+//         // 8. CHECK WHETHER ACTUAL USER VALUE CHANGED
+//         // ============================================================
+
+//         let hasChanges = false;
+
+
+//         if (
+//             employeeId !== undefined &&
+//             employeeId !== oldUser.EmployeeId
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             firstName !== undefined &&
+//             firstName !== oldUser.FirstName
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             middleName !== undefined &&
+//             middleName !== oldUser.MiddleName
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             lastName !== undefined &&
+//             lastName !== oldUser.LastName
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             phoneNumber !== undefined &&
+//             phoneNumber !== oldUser.PhoneNumber
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             dateOfBirth !== undefined &&
+//             dateOfBirth !== oldUser.DateOfBirth
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             genderId !== undefined &&
+//             Number(genderId) !== Number(oldUser.GenderId)
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             maritalStatusId !== undefined &&
+//             Number(maritalStatusId) !==
+//             Number(oldUser.MaritalStatusId)
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             designationId !== undefined &&
+//             Number(designationId) !==
+//             Number(oldUser.DesignationId)
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             email !== undefined &&
+//             email !== oldUser.Email
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             loginName !== undefined &&
+//             loginName !== oldUser.LoginName
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             altPhoneNumber !== undefined &&
+//             altPhoneNumber !== oldUser.AltPhoneNumber
+//         ) {
+//             hasChanges = true;
+//         }
+
+//         if (
+//             dateOfJoining !== undefined &&
+//             dateOfJoining !== oldUser.DateOfJoining
+//         ) {
+//             hasChanges = true;
+//         }
+
+
+//         // ============================================================
+//         // 9. CHECK COMPANY CHANGES
+//         // ============================================================
+
+//         const oldCompanyMap = new Map(
+//             oldCompanies.map(row => [
+//                 Number(row.UserCompanyId),
+//                 row
+//             ])
+//         );
+
+
+//         for (const company of companies || []) {
+
+//             const old = oldCompanyMap.get(
+//                 Number(company.UserCompanyId)
+//             );
+
+
+//             if (!old) {
+
+//                 throw new Error(
+//                     `UserCompanyId ${company.UserCompanyId} not found for UserId ${UserId}`
+//                 );
+//             }
+
+
+//             if (
+//                 company.companyId !== undefined &&
+//                 Number(company.companyId) !==
+//                 Number(old.CompanyId)
+//             ) {
+//                 hasChanges = true;
+//             }
+
+
+//             if (
+//                 company.isPrimaryCompany !== undefined &&
+//                 company.isPrimaryCompany !==
+//                 old.IsPrimaryCompany
+//             ) {
+//                 hasChanges = true;
+//             }
+//         }
+
+
+//         // ============================================================
+//         // 10. CHECK PRODUCT CHANGES
+//         // ============================================================
+
+//         const oldProductMap = new Map(
+//             oldProducts.map(row => [
+//                 Number(row.UserProductId),
+//                 row
+//             ])
+//         );
+
+
+//         for (const product of products || []) {
+
+//             const old = oldProductMap.get(
+//                 Number(product.UserProductId)
+//             );
+
+
+//             if (!old) {
+
+//                 throw new Error(
+//                     `UserProductId ${product.UserProductId} not found for UserId ${UserId}`
+//                 );
+//             }
+
+
+//             if (
+//                 product.companyProductId !== undefined &&
+//                 Number(product.companyProductId) !==
+//                 Number(old.CompanyProductId)
+//             ) {
+//                 hasChanges = true;
+//             }
+//         }
+
+
+//         // ============================================================
+//         // 11. CHECK PROJECT CHANGES
+//         // ============================================================
+
+//         const oldProjectMap = new Map(
+//             oldProjects.map(row => [
+//                 Number(row.UserProjectId),
+//                 row
+//             ])
+//         );
+
+
+//         for (const project of projects || []) {
+
+//             const old = oldProjectMap.get(
+//                 Number(project.UserProjectId)
+//             );
+
+
+//             if (!old) {
+
+//                 throw new Error(
+//                     `UserProjectId ${project.UserProjectId} not found for UserId ${UserId}`
+//                 );
+//             }
+
+
+//             if (
+//                 project.projectId !== undefined &&
+//                 Number(project.projectId) !==
+//                 Number(old.ProjectId)
+//             ) {
+//                 hasChanges = true;
+//             }
+
+
+//             if (
+//                 project.isPrimary !== undefined &&
+//                 project.isPrimary !== old.IsPrimary
+//             ) {
+//                 hasChanges = true;
+//             }
+//         }
+
+
+//         // ============================================================
+//         // 12. CHECK ROLE CHANGES
+//         // ============================================================
+
+//         const oldRoleMap = new Map(
+//             oldRoles.map(row => [
+//                 Number(row.UserRoleId),
+//                 row
+//             ])
+//         );
+
+
+//         for (const role of roles || []) {
+
+//             const old = oldRoleMap.get(
+//                 Number(role.UserRoleId)
+//             );
+
+
+//             if (!old) {
+
+//                 throw new Error(
+//                     `UserRoleId ${role.UserRoleId} not found for UserId ${UserId}`
+//                 );
+//             }
+
+
+//             if (
+//                 role.roleId !== undefined &&
+//                 Number(role.roleId) !==
+//                 Number(old.RoleId)
+//             ) {
+//                 hasChanges = true;
+//             }
+
+
+//             if (
+//                 role.roleCompanyId !== undefined &&
+//                 Number(role.roleCompanyId) !==
+//                 Number(old.CompanyId)
+//             ) {
+//                 hasChanges = true;
+//             }
+
+
+//             if (
+//                 role.roleCompanyProductId !== undefined &&
+//                 Number(role.roleCompanyProductId) !==
+//                 Number(old.CompanyProductId)
+//             ) {
+//                 hasChanges = true;
+//             }
+
+
+//             if (
+//                 role.roleProjectId !== undefined &&
+//                 Number(role.roleProjectId) !==
+//                 Number(old.ProjectId)
+//             ) {
+//                 hasChanges = true;
+//             }
+//         }
+
+
+//         // ============================================================
+//         // 13. CHECK REPORTING MANAGER CHANGES
+//         // ============================================================
+
+//         const oldManagerMap = new Map(
+//             oldManagers.map(row => [
+//                 Number(row.UserReportingManagerId),
+//                 row
+//             ])
+//         );
+
+
+//         for (const manager of reportingManagers || []) {
+
+//             const old = oldManagerMap.get(
+//                 Number(manager.UserReportingManagerId)
+//             );
+
+
+//             if (!old) {
+
+//                 throw new Error(
+//                     `UserReportingManagerId ${manager.UserReportingManagerId} not found for UserId ${UserId}`
+//                 );
+//             }
+
+
+//             if (
+//                 manager.reportingManagerUserId !== undefined &&
+//                 Number(manager.reportingManagerUserId) !==
+//                 Number(old.ReportingManagerUserId)
+//             ) {
+//                 hasChanges = true;
+//             }
+
+
+//             if (
+//                 manager.reportingManagerCompanyId !== undefined &&
+//                 Number(manager.reportingManagerCompanyId) !==
+//                 Number(old.CompanyId)
+//             ) {
+//                 hasChanges = true;
+//             }
+//         }
+
+
+//         // ============================================================
+//         // 14. NOTHING CHANGED
+//         // ============================================================
+
+//         if (!hasChanges) {
+
+//             await client.query("ROLLBACK");
+
+//             return {
+//                 UserId,
+//                 message: "No changes detected"
+//             };
+//         }
+
+
+//         // ============================================================
+//         // 15. INSERT OLD USER DATA
+//         //
+//         // One row for the main User information.
+//         // ============================================================
+
+//         const historyResult = await client.query(
+//             `
+//             INSERT INTO "DATA"."UserDetails"
+//             (
+//                 "UserId",
+//                 "EmployeeId",
+//                 "FirstName",
+//                 "MiddleName",
+//                 "LastName",
+//                 "PhoneNumber",
+//                 "DateOfBirth",
+//                 "GenderId",
+//                 "MaritalStatusId",
+//                 "DesignationId",
+//                 "Email",
+//                 "LoginName",
+//                 "AltPhoneNumber",
+//                 "DateOfJoining",
+//                 "CreatedAt",
+//                 "CreatedByUserId"
+//             )
+//             VALUES
+//             (
+//                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+//                 $11,$12,$13,$14,
+//                 CURRENT_TIMESTAMP,
+//                 $15
+//             )
+//             RETURNING "UserDetailsId";
+//             `,
+//             [
+//                 oldUser.UserId,
+//                 oldUser.EmployeeId,
+//                 oldUser.FirstName,
+//                 oldUser.MiddleName,
+//                 oldUser.LastName,
+//                 oldUser.PhoneNumber,
+//                 oldUser.DateOfBirth,
+//                 oldUser.GenderId,
+//                 oldUser.MaritalStatusId,
+//                 oldUser.DesignationId,
+//                 oldUser.Email,
+//                 oldUser.LoginName,
+//                 oldUser.AltPhoneNumber,
+//                 oldUser.DateOfJoining,
+//                 UserId
+//             ]
+//         );
+
+
+//         const userDetailsId =
+//             historyResult.rows[0].UserDetailsId;
+
+
+//         // ============================================================
+//         // 16. INSERT ALL OLD COMPANIES
+//         // ============================================================
+
+//         for (const old of oldCompanies) {
+
+//             await client.query(
+//                 `
+//                 INSERT INTO "DATA"."UserDetails"
+//                 (
+//                     "UserId",
+//                     "UserCompanyId",
+                    
+                    
+//                     "CreatedAt",
+//                     "CreatedByUserId"
+//                 )
+//                 VALUES
+//                 (
+//                     $1,$2,
+//                     CURRENT_TIMESTAMP,
+//                     $3
+//                 );
+//                 `,
+//                 [
+//                     old.UserId,
+//                     old.UserCompanyId,
+
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 17. INSERT ALL OLD PRODUCTS
+//         // ============================================================
+
+//         for (const old of oldProducts) {
+
+//             await client.query(
+//                 `
+//                 INSERT INTO "DATA"."UserDetails"
+//                 (
+//                     "UserId",
+//                     "UserProductId",
+                    
+//                     "CreatedAt",
+//                     "CreatedByUserId"
+//                 )
+//                 VALUES
+//                 (
+//                     $1,$2,
+//                     CURRENT_TIMESTAMP,
+//                     $3
+//                 );
+//                 `,
+//                 [
+//                     old.UserId,
+//                     old.UserProductId,
+                   
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 18. INSERT ALL OLD PROJECTS
+//         // ============================================================
+
+//         for (const old of oldProjects) {
+
+//             await client.query(
+//                 `
+//                 INSERT INTO "DATA"."UserDetails"
+//                 (
+//                     "UserId",
+//                     "UserProjectId",
+                    
+                    
+//                     "CreatedAt",
+//                     "CreatedByUserId"
+//                 )
+//                 VALUES
+//                 (
+//                     $1,$2,
+//                     CURRENT_TIMESTAMP,
+//                     $3
+//                 );
+//                 `,
+//                 [
+//                     old.UserId,
+//                     old.UserProjectId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 19. INSERT ALL OLD ROLES
+//         // ============================================================
+
+//         for (const old of oldRoles) {
+
+//             await client.query(
+//                 `
+//                 INSERT INTO "DATA"."UserDetails"
+//                 (
+//                     "UserId",
+//                     "UserRoleId",
+//                     "RoleId",
+//                     "CreatedAt",
+//                     "CreatedByUserId"
+//                 )
+//                 VALUES
+//                 (
+//                     $1,$2,$3,
+//                     CURRENT_TIMESTAMP,
+//                     $4
+//                 );
+//                 `,
+//                 [
+//                     old.UserId,
+//                     old.UserRoleId,
+//                     old.RoleId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 20. INSERT ALL OLD REPORTING MANAGERS
+//         // ============================================================
+
+//         for (const old of oldManagers) {
+
+//             await client.query(
+//                 `
+//                 INSERT INTO "DATA"."UserDetails"
+//                 (
+//                     "UserId",
+//                     "UserReportingManagerId",
+//                     "ReportingManagerUserId",
+                 
+//                     "CreatedAt",
+//                     "CreatedByUserId"
+//                 )
+//                 VALUES
+//                 (
+//                     $1,$2,$3,
+//                     CURRENT_TIMESTAMP,
+//                     $4
+//                 );
+//                 `,
+//                 [
+//                     old.UserId,
+//                     old.UserReportingManagerId,
+                    
+//                     old.CompanyId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 21. UPDATE DATA.User
+//         // ============================================================
+
+//         await client.query(
+//             `
+//             UPDATE "DATA"."User"
+//             SET
+//                 "EmployeeId" =
+//                     COALESCE($1, "EmployeeId"),
+
+//                 "FirstName" =
+//                     COALESCE($2, "FirstName"),
+
+//                 "MiddleName" =
+//                     COALESCE($3, "MiddleName"),
+
+//                 "LastName" =
+//                     COALESCE($4, "LastName"),
+
+//                 "PhoneNumber" =
+//                     COALESCE($5, "PhoneNumber"),
+
+//                 "DateOfBirth" =
+//                     COALESCE($6, "DateOfBirth"),
+
+//                 "GenderId" =
+//                     COALESCE($7, "GenderId"),
+
+//                 "MaritalStatusId" =
+//                     COALESCE($8, "MaritalStatusId"),
+
+//                 "DesignationId" =
+//                     COALESCE($9, "DesignationId"),
+
+//                 "Email" =
+//                     COALESCE($10, "Email"),
+
+//                 "LoginName" =
+//                     COALESCE($11, "LoginName"),
+
+//                 "AltPhoneNumber" =
+//                     COALESCE($12, "AltPhoneNumber"),
+
+//                 "DateOfJoining" =
+//                     COALESCE($13, "DateOfJoining"),
+
+//                 "UpdatedAt" =
+//                     CURRENT_TIMESTAMP,
+
+//                 "UpdatedByUserName" =
+//                     COALESCE($14, "UpdatedByUserName")
+
+//             WHERE "UserId" = $15;
+//             `,
+//             [
+//                 employeeId,
+//                 firstName,
+//                 middleName,
+//                 lastName,
+//                 phoneNumber,
+//                 dateOfBirth,
+//                 genderId,
+//                 maritalStatusId,
+//                 designationId,
+//                 email,
+//                 loginName,
+//                 altPhoneNumber,
+//                 dateOfJoining,
+//                 updatedByUserName,
+//                 UserId
+//             ]
+//         );
+
+
+//         // ============================================================
+//         // 22. UPDATE COMPANIES
+//         // ============================================================
+
+//         for (const company of companies || []) {
+
+//             await client.query(
+//                 `
+//                 UPDATE "DATA"."UserCompany"
+//                 SET
+//                     "CompanyId" =
+//                         COALESCE($1, "CompanyId"),
+
+//                     "IsPrimaryCompany" =
+//                         COALESCE($2, "IsPrimaryCompany"),
+
+//                     "UpdatedAt" =
+//                         CURRENT_TIMESTAMP,
+
+//                     "UpdatedByUserId" =
+//                         $3
+
+//                 WHERE "UserCompanyId" = $4
+//                 AND "UserId" = $5;
+//                 `,
+//                 [
+//                     company.companyId,
+//                     company.isPrimaryCompany,
+//                     UserId,
+//                     company.UserCompanyId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 23. UPDATE PRODUCTS
+//         // ============================================================
+
+//         for (const product of products || []) {
+
+//             await client.query(
+//                 `
+//                 UPDATE "DATA"."UserProduct"
+//                 SET
+//                     "CompanyProductId" =
+//                         COALESCE(
+//                             $1,
+//                             "CompanyProductId"
+//                         ),
+
+//                     "UpdatedAt" =
+//                         CURRENT_TIMESTAMP,
+
+//                     "UpdatedByUserId" =
+//                         $2
+
+//                 WHERE "UserProductId" = $3
+//                 AND "UserId" = $4;
+//                 `,
+//                 [
+//                     product.companyProductId,
+//                     UserId,
+//                     product.UserProductId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 24. UPDATE PROJECTS
+//         // ============================================================
+
+//         for (const project of projects || []) {
+
+//             await client.query(
+//                 `
+//                 UPDATE "DATA"."UserProject"
+//                 SET
+//                     "ProjectId" =
+//                         COALESCE(
+//                             $1,
+//                             "ProjectId"
+//                         ),
+
+//                     "IsPrimary" =
+//                         COALESCE(
+//                             $2,
+//                             "IsPrimary"
+//                         ),
+
+//                     "UpdatedAt" =
+//                         CURRENT_TIMESTAMP,
+
+//                     "UpdatedByUserId" =
+//                         $3
+
+//                 WHERE "UserProjectId" = $4
+//                 AND "UserId" = $5;
+//                 `,
+//                 [
+//                     project.projectId,
+//                     project.isPrimary,
+//                     UserId,
+//                     project.UserProjectId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 25. UPDATE ROLES
+//         // ============================================================
+
+//         for (const role of roles || []) {
+
+//             await client.query(
+//                 `
+//                 UPDATE "DATA"."UserRole"
+//                 SET
+//                     "RoleId" =
+//                         COALESCE(
+//                             $1,
+//                             "RoleId"
+//                         ),
+
+//                     "CompanyId" =
+//                         COALESCE(
+//                             $2,
+//                             "CompanyId"
+//                         ),
+
+//                     "CompanyProductId" =
+//                         COALESCE(
+//                             $3,
+//                             "CompanyProductId"
+//                         ),
+
+//                     "ProjectId" =
+//                         COALESCE(
+//                             $4,
+//                             "ProjectId"
+//                         ),
+
+//                     "UpdatedAt" =
+//                         CURRENT_TIMESTAMP,
+
+//                     "UpdatedByUserId" =
+//                         $5
+
+//                 WHERE "UserRoleId" = $6
+//                 AND "UserId" = $7;
+//                 `,
+//                 [
+//                     role.roleId,
+//                     role.roleCompanyId,
+//                     role.roleCompanyProductId,
+//                     role.roleProjectId,
+//                     UserId,
+//                     role.UserRoleId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 26. UPDATE REPORTING MANAGERS
+//         // ============================================================
+
+//         for (const manager of reportingManagers || []) {
+
+//             await client.query(
+//                 `
+//                 UPDATE "DATA"."UserReportingManager"
+//                 SET
+//                     "ReportingManagerUserId" =
+//                         COALESCE(
+//                             $1,
+//                             "ReportingManagerUserId"
+//                         ),
+
+//                     "CompanyId" =
+//                         COALESCE(
+//                             $2,
+//                             "CompanyId"
+//                         ),
+
+//                     "UpdatedAt" =
+//                         CURRENT_TIMESTAMP,
+
+//                     "UpdatedByUserId" =
+//                         $3
+
+//                 WHERE "UserReportingManagerId" = $4
+//                 AND "UserId" = $5;
+//                 `,
+//                 [
+//                     manager.reportingManagerUserId,
+//                     manager.reportingManagerCompanyId,
+//                     UserId,
+//                     manager.UserReportingManagerId,
+//                     UserId
+//                 ]
+//             );
+//         }
+
+
+//         // ============================================================
+//         // 27. COMMIT
+//         // ============================================================
+
+//         await client.query("COMMIT");
+
+
+//         return {
+//             UserId,
+//             UserDetailsId: historyResult.rows[0].UserDetailsId,
+//             message: "User details updated successfully"
+//         };
+
+
+//     } catch (error) {
+
+//         await client.query("ROLLBACK");
+
+//         console.error(
+//             "Edit user transaction failed:",
+//             error
+//         );
+
+//         throw error;
+
+//     } finally {
+
+//         client.release();
+//     }
+// };
 
 export const getAllGenders = async () => {
 
