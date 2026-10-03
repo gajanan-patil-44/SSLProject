@@ -55,8 +55,8 @@ export const normalizePageItem = (p, idx = 0) => {
   }
 
   if (roles.length === 0) {
-    roles = ['Super Admin'];
-    roleNames = ['Super Admin'];
+    roles = [];
+    roleNames = [];
   }
 
   const isMain = !parentPage || parentPage === '-' || parentPage === '—';

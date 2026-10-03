@@ -548,7 +548,7 @@ export default function RolesView() {
                   const roleDescription = role.RoleDescription || '';
                   const companyName = role.CompanyName || `Company #${role.CompanyId || '-'}`;
                   const isDisabled = Boolean(role.IsDisabled);
-                  const createdBy = role.CreatedByUserName || role.RequestUserName || 'admin';
+                  const createdBy = role.CreatedByUserName || role.RequestUserName || '';
                   const createdDate = role.CreatedAt || role.CreatedDate
                     ? new Date(role.CreatedAt || role.CreatedDate).toLocaleDateString()
                     : null;
@@ -901,7 +901,7 @@ export default function RolesView() {
                   Created By
                 </span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 mt-0.5 block">
-                  {selectedRole.CreatedByUserName || selectedRole.RequestUserName || 'admin'}
+                  {selectedRole.CreatedByUserName || selectedRole.RequestUserName || ''}
                 </span>
               </div>
 
