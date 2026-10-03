@@ -244,49 +244,35 @@ export default function ManagePageView() {
     return Array.from(new Set(rolesFromApi)).filter(Boolean);
   }, [rolesDropdownList]);
 
-  // Distinct MainPage options from live backend data and FlagId 2 dropdown
+  // Distinct MainPage options strictly from live backend data and FlagId 2 dropdown
   const mainPageOptions = useMemo(() => {
     const mainsFromApi = mainPagesDropdownList.map((m) => {
       if (typeof m === 'string') return m.trim();
       return (m.PageName || m.pageName || m.MainPage || m.mainPage || m.name || '').trim();
     }).filter(Boolean);
 
-    const dynamicMains = pages
-      .filter((p) => p.PageType === 'MainPage' || !p.ParentPage || p.ParentPage === '-' || p.ParentPage === '—')
-      .map((p) => (p.PageName || '').trim())
-      .filter(Boolean);
+    return Array.from(new Set(mainsFromApi)).filter(Boolean);
+  }, [mainPagesDropdownList]);
 
-    return Array.from(new Set([...mainsFromApi, ...dynamicMains])).filter(Boolean);
-  }, [mainPagesDropdownList, pages]);
-
-  // Distinct ParentPage options from live backend data and FlagId 3 dropdown
+  // Distinct ParentPage options strictly from live backend data and FlagId 3 dropdown
   const parentPageOptions = useMemo(() => {
     const parentsFromApi = parentPagesDropdownList.map((p) => {
       if (typeof p === 'string') return p.trim();
       return (p.PageName || p.pageName || p.ParentPage || p.parentPage || p.name || '').trim();
     }).filter(Boolean);
 
-    const dynamicParents = pages
-      .map((p) => (p.ParentPage && p.ParentPage !== '-' && p.ParentPage !== '—' ? p.ParentPage : p.PageName)?.trim())
-      .filter(Boolean);
+    return Array.from(new Set(parentsFromApi)).filter(Boolean);
+  }, [parentPagesDropdownList]);
 
-    return Array.from(new Set([...parentsFromApi, ...dynamicParents])).filter(Boolean);
-  }, [parentPagesDropdownList, pages]);
-
-  // ChildPage options (pages that are child pages)
+  // ChildPage options strictly from API
   const childPageOptions = useMemo(() => {
     const childsFromApi = childPagesDropdown.map((c) => {
       if (typeof c === 'string') return c.trim();
       return (c.PageName || c.pageName || c.ChildPage || c.childPage || c.name || '').trim();
     }).filter(Boolean);
 
-    const dynamicChilds = pages
-      .filter((p) => p.PageType === 'ChildPage' || (p.ParentPage && p.ParentPage !== '-' && p.ParentPage !== '—'))
-      .map((p) => (p.PageName || '').trim())
-      .filter(Boolean);
-
-    return Array.from(new Set([...childsFromApi, ...dynamicChilds])).filter(Boolean);
-  }, [childPagesDropdown, pages]);
+    return Array.from(new Set(childsFromApi)).filter(Boolean);
+  }, [childPagesDropdown]);
 
   // Open Add Modal
   const handleOpenAddModal = () => {
