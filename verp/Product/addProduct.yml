@@ -11,9 +11,9 @@ http:
     data: |2-
        {
          "flagId":2,
-              "ProductCode": "Product_002",
-              "ProductName": "CCPS",
-              "ProductDescription": "Cyber Crime Police Station",
+              "ProductCode": "Product_003",
+              "ProductName": "VERP",
+              "ProductDescription": "VISHVIN ERP",
               "IsDisabled": false,
               "CreatedByUserName": "nithin"    }
   auth:

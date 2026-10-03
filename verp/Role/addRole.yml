@@ -14,7 +14,7 @@ http:
         "RoleName": "HR",
         "CompanyId": 1,
         "Role_Code": "sup003",
-        "Description": "HRRR",
+        "Description": "ADMINNN",
         "CreatedByUserName": "Praveen"
       }
   auth:

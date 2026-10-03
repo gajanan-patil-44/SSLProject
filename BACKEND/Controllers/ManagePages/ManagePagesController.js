@@ -42,7 +42,7 @@ export const getManagePageDropdown = async (req, res) => {
                 message: "Roles fetched successfully",
                 data: result
             });
-        }
+        } 
         // =====================================================
         // FLAG 2 - MAIN PAGES
         // =====================================================

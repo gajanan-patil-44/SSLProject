@@ -2402,21 +2402,21 @@ export const editUserdetails = async ({
                     "UserId",
                     "UserReportingManagerId",
                     "ReportingManagerUserId",
-                    "ReportingManagerCompanyId",
+                    
                     "CreatedAt",
                     "CreatedByUserId"
                 )
                 VALUES
                 (
-                    $1,$2,$3,$4,
+                    $1,$2,$3,
                     CURRENT_TIMESTAMP,
-                    $5
+                    $4
                 );
                 `,
                 [
                     old.UserId,
                     old.UserReportingManagerId,
-                    old.ReportingManagerUserId,
+                    
                     old.CompanyId,
                     UserId
                 ]
@@ -2728,11 +2728,7 @@ export const editUserdetails = async ({
 
         await client.query("ROLLBACK");
 
-        console.error(
-            "Edit user transaction failed:",
-            error
-        );
-
+      
         throw error;
 
     } finally {
