@@ -127,7 +127,7 @@ export const registryConfigs = {
     },
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
 
       const payload = {
         flagId: 2,
@@ -145,7 +145,7 @@ export const registryConfigs = {
     },
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const companyId = Number(formData.CompanyId ?? formData.id);
 
       const payload = {
@@ -163,7 +163,7 @@ export const registryConfigs = {
     },
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const companyId = Number(record.CompanyId ?? record.id);
 
       const statusPayload = {
@@ -234,7 +234,7 @@ export const registryConfigs = {
     },
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
 
       const payload = {
         flagId: 2,
@@ -250,7 +250,7 @@ export const registryConfigs = {
     },
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const productId = Number(formData.ProductId ?? formData.id);
 
       const updatePayload = {
@@ -265,7 +265,7 @@ export const registryConfigs = {
     },
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const productId = Number(record.ProductId ?? record.id);
 
       const statusPayload = {
@@ -449,7 +449,7 @@ export const registryConfigs = {
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
 
       const payload = {
         FlagId: 3,
@@ -464,7 +464,7 @@ export const registryConfigs = {
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const companyProductId = Number(formData.CompanyProductId ?? formData.id);
 
       const payload = {
@@ -591,7 +591,7 @@ export const registryConfigs = {
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
 
       const payload = {
@@ -610,7 +610,7 @@ export const registryConfigs = {
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const projectId = Number(formData.ProjectId ?? formData.id);
 
@@ -632,7 +632,7 @@ export const registryConfigs = {
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const projectId = Number(record.ProjectId ?? record.id);
 
@@ -755,7 +755,7 @@ export const registryConfigs = {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
       const userContext = useERPStore.getState().userContext;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const userCompanyId = Number(userState?.CompanyId || userState?.companyId || userContext?.companies?.[0]?.CompanyId || session?.CompanyId);
 
@@ -777,7 +777,7 @@ export const registryConfigs = {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
       const userContext = useERPStore.getState().userContext;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const userCompanyId = Number(userState?.CompanyId || userState?.companyId || userContext?.companies?.[0]?.CompanyId || session?.CompanyId);
       const companyDesignationId = Number(formData.CompanyDesignationId ?? formData.id);
@@ -801,7 +801,7 @@ export const registryConfigs = {
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const companyDesignationId = Number(record.CompanyDesignationId ?? record.id);
 
@@ -864,11 +864,11 @@ export const registryConfigs = {
     },
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
 
       if (api.role.addRole) {
         return await api.role.addRole({
-          CompanyId: Number(formData.CompanyId) || 1,
+          CompanyId: Number(formData.CompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -878,13 +878,13 @@ export const registryConfigs = {
     },
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const roleId = Number(formData.RoleId ?? formData.id);
 
       if (api.role.updateRole) {
         return await api.role.updateRole({
           RoleId: roleId,
-          CompanyId: Number(formData.CompanyId) || 1,
+          CompanyId: Number(formData.CompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',

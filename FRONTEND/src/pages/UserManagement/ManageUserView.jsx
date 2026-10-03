@@ -33,7 +33,7 @@ const toOpts = (data, idKey, nameKey) => {
 export default function ManageUserView() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
-  const userName = currentUser?.loginName || currentUser?.EmployeeId || (typeof currentUser?.name === 'string' ? currentUser.name : '') || 'admin';
+  const userName = currentUser?.loginName || currentUser?.EmployeeId || (typeof currentUser?.name === 'string' ? currentUser.name : '') || '';
 
   // Table Data & Loading
   const [users, setUsers] = useState([]);
@@ -268,7 +268,7 @@ export default function ManageUserView() {
       const newDisabledState = !isCurrentlyDisabled;
 
       const currentUser = useERPStore.getState().user;
-      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || 'admin';
+      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
 
       const payload = {
         flagId: 1,

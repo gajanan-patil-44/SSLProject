@@ -47,7 +47,7 @@ export default function ManagePageView() {
     OrderChanged: false,
     OrderPosition: 'IsBefore', // 'IsBefore' | 'IsAfter'
     OrderRelativePage: '',
-    Roles: ['Super Admin'],
+    Roles: [],
     IsActive: true
   });
   const [formErrors, setFormErrors] = useState({});
@@ -234,23 +234,15 @@ export default function ManagePageView() {
     };
   }, [isAddEditOpen, formData.PageType, formData.SelectedMainPage, formData.SelectedParentPage, formData.OrderChanged, pages, mainPagesDropdownList]);
 
-  // Dynamic distinct roles from live backend data and FlagId 1 dropdown
+  // Dynamic distinct roles strictly from live backend data and FlagId 1 dropdown
   const availableRoles = useMemo(() => {
     const rolesFromApi = rolesDropdownList.map((r) => {
       if (typeof r === 'string') return r.trim();
       return (r.RoleName || r.roleName || r.Role || r.role || r.name || '').trim();
     }).filter(Boolean);
 
-    const rolesFromData = pages.flatMap((p) => {
-      if (Array.isArray(p.Roles)) {
-        return p.Roles.map((r) => typeof r === 'object' && r ? (r.RoleName || r.roleName || '') : String(r)).filter(Boolean);
-      }
-      return [];
-    });
-
-    const defaultRoles = ['Super Admin', 'Admin', 'Manager', 'User', 'HR', 'Accountant', 'Cashier', 'Supervisor', 'Developer'];
-    return Array.from(new Set([...rolesFromApi, ...rolesFromData, ...defaultRoles])).filter(Boolean);
-  }, [rolesDropdownList, pages]);
+    return Array.from(new Set(rolesFromApi)).filter(Boolean);
+  }, [rolesDropdownList]);
 
   // Distinct MainPage options from live backend data and FlagId 2 dropdown
   const mainPageOptions = useMemo(() => {
@@ -310,7 +302,7 @@ export default function ManagePageView() {
       OrderChanged: false,
       OrderPosition: 'IsBefore',
       OrderRelativePage: '',
-      Roles: ['Super Admin'],
+      Roles: [],
       IsActive: true
     });
     setFormErrors({});
@@ -334,7 +326,7 @@ export default function ManagePageView() {
       OrderRelativePage: page.OrderRelativePage || page.OrderPageId || '',
       Roles: Array.isArray(page.Roles) && page.Roles.length > 0 
         ? page.Roles.map(r => (typeof r === 'object' && r !== null ? (r.RoleName || r.roleName || '') : String(r))).filter(Boolean)
-        : (page.RoleName ? page.RoleName.split(',').map(r => r.trim()) : ['Super Admin']),
+        : (page.RoleName ? page.RoleName.split(',').map(r => r.trim()) : []),
       IsActive: page.IsDisabled !== true && page.Status !== 'INACTIVE' && page.IsActive !== false
     });
     setFormErrors({});
@@ -491,15 +483,15 @@ export default function ManagePageView() {
           mainPagesDropdownList.find((p) => (p.PageName || p.pageName || p.MainPage || p.name) === formData.SelectedParentPage || String(p.PageId || p.pageId) === String(formData.SelectedParentPage)) ||
           pages.find((p) => p.PageName === formData.SelectedParentPage || String(p.PageId) === String(formData.SelectedParentPage));
         
-        resolvedParentPageId = foundParent?.PageId ?? foundParent?.pageId ?? (Number(formData.SelectedParentPage) || 1);
+        resolvedParentPageId = foundParent?.PageId ?? foundParent?.pageId ?? Number(formData.SelectedParentPage);
         resolvedParentPageName = formData.SelectedParentPage;
       } else if (formData.PageType === 'ChildPage') {
         const foundParent = 
           parentPagesDropdownList.find((p) => (p.PageName || p.pageName || p.ParentPage || p.name) === formData.SelectedParentPage || String(p.PageId || p.pageId || p.ParentPageId) === String(formData.SelectedParentPage)) ||
           pages.find((p) => p.PageName === formData.SelectedParentPage || String(p.PageId) === String(formData.SelectedParentPage));
         
-        resolvedParentPageId = foundParent?.PageId ?? foundParent?.parentPageId ?? foundParent?.ParentPageId ?? (Number(formData.SelectedParentPage) || 1);
-        resolvedParentPageName = formData.SelectedParentPage || formData.SelectedMainPage || 'Administration';
+        resolvedParentPageId = foundParent?.PageId ?? foundParent?.parentPageId ?? foundParent?.ParentPageId ?? Number(formData.SelectedParentPage);
+        resolvedParentPageName = formData.SelectedParentPage || formData.SelectedMainPage;
       }
 
       // 3. Resolve TargetPageId if Order Changed
@@ -508,12 +500,12 @@ export default function ManagePageView() {
         const foundTarget = (mainPagesDropdownList.concat(parentPagesDropdownList, childPagesDropdown, pages)).find(
           (p) => (p.PageName || p.pageName || p.name) === formData.OrderRelativePage || String(p.PageId || p.pageId) === String(formData.OrderRelativePage)
         );
-        resolvedTargetPageId = foundTarget?.PageId ?? foundTarget?.pageId ?? (Number(formData.OrderRelativePage) || 2);
+        resolvedTargetPageId = foundTarget?.PageId ?? foundTarget?.pageId ?? Number(formData.OrderRelativePage);
       }
 
       // 4. Resolve username
       const currentUser = useERPStore.getState().user;
-      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || 'admin';
+      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
 
       if (modalMode === 'add') {
         const addPayload = {
@@ -523,11 +515,11 @@ export default function ManagePageView() {
           PageIcon: formData.IconName.trim(),
           PageType: formData.PageType,
           ...(resolvedParentPageId !== null ? { ParentPageId: Number(resolvedParentPageId) } : {}),
-          RoleIds: roleIds.length > 0 ? roleIds : [1],
+          RoleIds: roleIds,
           IsChangeOrder: Boolean(formData.OrderChanged),
           ...(formData.OrderChanged ? {
             OrderType: formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER',
-            TargetPageId: resolvedTargetPageId ? Number(resolvedTargetPageId) : 2
+            TargetPageId: resolvedTargetPageId ? Number(resolvedTargetPageId) : null
           } : {}),
           CreatedByUserName: userName
         };
@@ -543,7 +535,7 @@ export default function ManagePageView() {
           PageIcon: formData.IconName.trim(),
           PageType: formData.PageType,
           ParentPageId: formData.PageType !== 'MainPage' && resolvedParentPageId !== null ? Number(resolvedParentPageId) : null,
-          RoleIds: roleIds.length > 0 ? roleIds : [1],
+          RoleIds: roleIds,
           IsChangeOrder: Boolean(formData.OrderChanged),
           OrderType: formData.OrderChanged ? (formData.OrderPosition === 'IsBefore' ? 'BEFORE' : 'AFTER') : '',
           TargetPageId: formData.OrderChanged && resolvedTargetPageId ? Number(resolvedTargetPageId) : null,
@@ -647,7 +639,7 @@ export default function ManagePageView() {
         }
 
         if (roles.length === 0) {
-          roles = ['Super Admin'];
+          roles = [];
         }
 
         return (
@@ -1282,7 +1274,7 @@ export default function ManagePageView() {
               <div className="flex flex-wrap gap-1.5">
                 {(Array.isArray(selectedPage.Roles)
                   ? selectedPage.Roles.map((r) => (typeof r === 'object' && r !== null ? (r.RoleName || r.roleName || '') : String(r))).filter(Boolean)
-                  : (selectedPage.RoleName ? selectedPage.RoleName.split(',').map((r) => r.trim()) : ['Super Admin'])
+                  : (selectedPage.RoleName ? selectedPage.RoleName.split(',').map((r) => r.trim()) : [])
                 ).map((r, idx) => (
                   <span key={idx} className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded border border-indigo-200 dark:border-indigo-800">
                     {r}

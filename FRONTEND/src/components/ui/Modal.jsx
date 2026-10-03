@@ -43,7 +43,10 @@ export const Modal = ({
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs transition-opacity animate-fade-in">
-      <div className={`w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden ${sizes[size]} ${className}`}>
+      {/* Click outside backdrop to close */}
+      <div className="absolute inset-0 cursor-default" onClick={onClose}></div>
+      
+      <div className={`relative w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden ${sizes[size]} ${className}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-50">{title}</h3>
