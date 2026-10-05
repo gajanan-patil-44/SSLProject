@@ -46,6 +46,11 @@ export const navigationConfig = [
         label: "Manage Page",
         icon: "Layers",
         path: "/master/manage-page"
+      },
+      {
+        label: "Item Sub Category",
+        icon: "Tag",
+        path: "/master/item-sub-category"
       }
     ]
   },

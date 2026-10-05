@@ -17,6 +17,7 @@ import LetterBuilderView from './pages/Documents/LetterBuilderView';
 import UserCreationView from './pages/Master/UserCreationView';
 import ManagePageView from './pages/Master/ManagePageView';
 import ManageUserView from './pages/UserManagement/ManageUserView';
+import ItemSubCategoryCreation from './pages/ItemSubCategoryCreation';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="user-management/manage-users" element={<ManageUserView />} />
           <Route path="user-management/users" element={<ManageUserView />} />
           <Route path="master/manage-page" element={<ManagePageView />} />
+          <Route path="master/item-sub-category" element={<ItemSubCategoryCreation />} />
 
           {/* Documents */}
           <Route path="documents/letter-builder" element={<LetterBuilderView />} />
