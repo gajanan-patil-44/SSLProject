@@ -298,7 +298,6 @@ export const addProject = async (projectData) => {
                 "IsDisabled",
                 "Description",
                 "CreatedAt",
-                "UpdatedAt",
                 "CreatedByUserId";
         `;
 

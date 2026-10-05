@@ -418,7 +418,7 @@ export default function ProductsView() {
               <div className="p-3 bg-white dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700/60">
                 <span className="text-slate-400 block mb-1">Created By</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {selectedProduct.RequestUserName || 'admin'}
+                  {selectedProduct.RequestUserName || ''}
                 </span>
               </div>
 

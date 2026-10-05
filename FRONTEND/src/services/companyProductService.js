@@ -47,7 +47,7 @@ export const companyProductService = {
       CompanyId: Number(data.CompanyId),
       ProductId: Number(data.ProductId),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
-      CreatedByUserName: String(data.CreatedByUserName || 'admin')
+      CreatedByUserName: String(data.CreatedByUserName || '')
     });
   },
 
@@ -63,7 +63,7 @@ export const companyProductService = {
       CompanyId: Number(data.CompanyId),
       ProductId: Number(data.ProductId),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
-      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || 'admin')
+      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || '')
     });
   },
 
@@ -74,7 +74,7 @@ export const companyProductService = {
       CompanyId: Number(data.CompanyId),
       ProductId: Number(data.ProductId),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
-      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || 'admin')
+      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || '')
     });
   },
 

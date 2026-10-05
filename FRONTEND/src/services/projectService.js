@@ -35,7 +35,7 @@ export const projectService = {
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       Description: data.Description || data.description || '',
       CreatedByUserId: Number(data.CreatedByUserId ?? data.UserId ?? data.userId ?? 1),
-      CreatedByUserName: String(data.CreatedByUserName || 'admin')
+      CreatedByUserName: String(data.CreatedByUserName || '')
     });
   },
 
@@ -64,7 +64,7 @@ export const projectService = {
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       Description: data.Description || data.description || '',
       UpdatedByUserId: Number(data.UpdatedByUserId ?? data.UserId ?? data.userId ?? 1),
-      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || 'admin')
+      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || '')
     });
   },
 
@@ -84,7 +84,7 @@ export const projectService = {
       ProjectId: Number(id),
       IsDisabled: Boolean(isDisabled),
       UpdatedByUserId: Number(data.UpdatedByUserId ?? 1),
-      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || 'admin')
+      UpdatedByUserName: String(data.UpdatedByUserName || data.UpdateByUserName || '')
     });
   },
 

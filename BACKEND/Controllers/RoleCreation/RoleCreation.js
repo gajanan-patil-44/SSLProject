@@ -7,42 +7,32 @@ import {
     updateRoleStatus,
     checkRoleExists,
     checkCompanyExists,
-    getCompaniesForRole
+    getCompaniesForRole,
+    getCompanyDropdownData
 } from "../../Models/RoleModels.js";
 
 
 // =====================================================
 // FLAG ID 1 - GET ALL ROLES
 // =====================================================
-
 export const getRole = async (req, res) => {
-
     const { FlagId } = req.body;
-
-    console.log("FlagId",FlagId)
-
     try {
 
         if (parseInt(FlagId) === 1) {
-
             const rows = await getAllRoles();
-
             return res.status(200).json({
                 status: "success",
                 message: "Roles fetched successfully",
                 data: rows
             });
         }
-
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
-
     } catch (error) {
-
         console.error("Error fetching roles:", error);
-
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch roles",
@@ -50,107 +40,69 @@ export const getRole = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 2 - ADD ROLE
 // =====================================================
-
 export const addRoles = async (req, res) => {
-
     const { FlagId } = req.body;
-
     try {
-
         if (parseInt(FlagId) === 2) {
-
             const roleData = req.body;
-
-
             // ---------------------------------------------
             // VALIDATE COMPANY ID
             // ---------------------------------------------
-
-            if (!roleData.CompanyId) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId is required"
-                });
-            }
-
-
+            // CompanyId is OPTIONAL.
+            // If provided, check whether it exists.
+            // If not provided, store NULL.
             // ---------------------------------------------
-            // CHECK COMPANY
-            // ---------------------------------------------
+            if (roleData.CompanyId !== undefined && roleData.CompanyId !== null && roleData.CompanyId !== "") {
+                const companyExists = await checkCompanyExists(roleData.CompanyId);
 
-            const companyExists = await checkCompanyExists(
-                roleData.CompanyId
-            );
+                if (companyExists.length === 0) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Invalid CompanyId"
+                    });
+                }
 
-            if (companyExists.length === 0) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "Invalid CompanyId"
-                });
+            } else {
+                roleData.CompanyId = null;
             }
-
-
             // ---------------------------------------------
             // VALIDATE ROLE NAME
             // ---------------------------------------------
-
             if (!roleData.RoleName) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "RoleName is required"
                 });
             }
-
-
             // ---------------------------------------------
             // VALIDATE ROLE CODE
             // ---------------------------------------------
-
             if (!roleData.Role_Code) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "Role_Code is required"
                 });
             }
-
-
             // ---------------------------------------------
             // VALIDATE CREATED USER
             // ---------------------------------------------
-
-            if (!roleData.RequestUserName) {
-
+            if (!roleData.CreatedByUserName) {
                 return res.status(400).json({
                     status: "error",
-                    message: "RequestUserName is required"
+                    message: "CreatedByUserName is required"
                 });
             }
-
-
             // ---------------------------------------------
             // CHECK DUPLICATE ROLE
             // ---------------------------------------------
-
-            const existingRole = await checkRoleExists(
-                roleData.RoleName,
-                roleData.Role_Code
-            );
+            const existingRole = await checkRoleExists(roleData.RoleName, roleData.Role_Code);
 
             if (existingRole.length > 0) {
-
                 const role = existingRole[0];
-
                 if (role.RoleName === roleData.RoleName) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Role name already exists"
@@ -158,19 +110,15 @@ export const addRoles = async (req, res) => {
                 }
 
                 if (role.RoleCode === roleData.Role_Code) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Role code already exists"
                     });
                 }
             }
-
-
             // ---------------------------------------------
             // ADD ROLE
             // ---------------------------------------------
-
             const role = await addRole(roleData);
 
             return res.status(201).json({
@@ -179,17 +127,16 @@ export const addRoles = async (req, res) => {
                 data: role
             });
         }
-
-
+        // ---------------------------------------------
+        // INVALID FLAG ID
+        // ---------------------------------------------
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
 
     } catch (error) {
-
         console.error("Error adding role:", error);
-
         return res.status(500).json({
             status: "error",
             message: "Failed to add role",
@@ -197,14 +144,9 @@ export const addRoles = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 3 - GET ALL COMPANY DATA
 // =====================================================
-// ONLY FlagId IS REQUIRED
-// =====================================================
-
 export const getCompanyForRole = async (req, res) => {
 
     const { FlagId } = req.body;
@@ -238,26 +180,14 @@ export const getCompanyForRole = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 4 - EDIT ROLE
 // =====================================================
-
 export const updateRole = async (req, res) => {
-
     const { FlagId } = req.body;
-
     try {
-
         if (parseInt(FlagId) === 4) {
-
             const roleData = req.body;
-
-
-            // ---------------------------------------------
-            // VALIDATE ROLE ID
-            // ---------------------------------------------
 
             if (!roleData.RoleId) {
 
@@ -268,27 +198,18 @@ export const updateRole = async (req, res) => {
             }
 
 
-            // ---------------------------------------------
-            // VALIDATE COMPANY ID
-            // ---------------------------------------------
-
             if (!roleData.CompanyId) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyId is required"
                 });
             }
-
-
             // ---------------------------------------------
             // CHECK COMPANY
             // ---------------------------------------------
-
             const companyExists = await checkCompanyExists(
                 roleData.CompanyId
             );
-
             if (companyExists.length === 0) {
 
                 return res.status(400).json({
@@ -296,12 +217,9 @@ export const updateRole = async (req, res) => {
                     message: "Invalid CompanyId"
                 });
             }
-
-
             // ---------------------------------------------
             // VALIDATE ROLE NAME
             // ---------------------------------------------
-
             if (!roleData.RoleName) {
 
                 return res.status(400).json({
@@ -309,12 +227,9 @@ export const updateRole = async (req, res) => {
                     message: "RoleName is required"
                 });
             }
-
-
             // ---------------------------------------------
             // VALIDATE ROLE CODE
             // ---------------------------------------------
-
             if (!roleData.Role_Code) {
 
                 return res.status(400).json({
@@ -322,12 +237,9 @@ export const updateRole = async (req, res) => {
                     message: "Role_Code is required"
                 });
             }
-
-
             // ---------------------------------------------
             // VALIDATE UPDATED USER
             // ---------------------------------------------
-
             if (!roleData.UpdatedByUserName) {
 
                 return res.status(400).json({
@@ -335,23 +247,17 @@ export const updateRole = async (req, res) => {
                     message: "UpdatedByUserName is required"
                 });
             }
-
-
             // ---------------------------------------------
             // CHECK DUPLICATE ROLE
             // ---------------------------------------------
-
             const existingRoles = await checkRoleExistsForUpdate(
                 roleData.RoleName,
                 roleData.Role_Code,
                 roleData.RoleId
             );
 
-
             for (const role of existingRoles) {
-
                 if (role.RoleName === roleData.RoleName) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Role name already exists"
@@ -359,31 +265,23 @@ export const updateRole = async (req, res) => {
                 }
 
                 if (role.RoleCode === roleData.Role_Code) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Role code already exists"
                     });
                 }
             }
-
-
             // ---------------------------------------------
             // UPDATE ROLE
             // ---------------------------------------------
-
             const result = await updateRoles(roleData);
 
-
             if (result === 0) {
-
                 return res.status(404).json({
                     status: "error",
                     message: "Role not found"
                 });
             }
-
-
             return res.status(200).json({
                 status: "success",
                 message: "Role updated successfully",
@@ -391,16 +289,12 @@ export const updateRole = async (req, res) => {
             });
         }
 
-
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
-
     } catch (error) {
-
         console.error("Error updating role:", error);
-
         return res.status(500).json({
             status: "error",
             message: "Failed to update role",
@@ -408,8 +302,6 @@ export const updateRole = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 5 - DELETE ROLE
 // =====================================================
@@ -479,12 +371,9 @@ export const deleteRole = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 6 - UPDATE ROLE STATUS
 // =====================================================
-
 export const updateRoleStatusController = async (req, res) => {
 
     const {
@@ -569,3 +458,31 @@ export const updateRoleStatusController = async (req, res) => {
         });
     }
 };
+
+
+export const getCompanyDropdown = async (req, res) => {
+    const { FlagId } = req.body;
+    try {
+        if (parseInt(FlagId) === 1) {
+            const rows = await getCompanyDropdownData();
+            return res.status(200).json({
+                status: "success",
+                message: "Company dropdown fetched successfully",
+                data: rows
+            });
+        }
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid FlagId."
+        });
+
+    } catch (error) {
+        console.error("Error fetching company dropdown:", error);
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to fetch company dropdown",
+            error: error.message
+        });
+    }
+};
+

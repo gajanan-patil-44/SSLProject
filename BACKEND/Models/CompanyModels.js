@@ -110,7 +110,7 @@ export const addCompany = async (companyData) => {
         const values = [
             companyData.CompanyName,
             companyData.CompanyCode,
-            companyData.RequestUserName,
+            companyData.CreatedByUserName,
             companyData.Email,
             companyData.PhoneNumber,
             companyData.Address

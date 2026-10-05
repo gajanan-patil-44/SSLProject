@@ -9,22 +9,23 @@ http:
   body:
     type: json
     data: |-
-      {
-        "flagId":1
-      }
-
-
       // {
-      //   "flagId":2,
-      //   "CompanyId":2,
-      //   "DesignationName":"gchvhj",
-      //   "DesignationCode":"ktyuyr3",
-      //   "IsDisabled":false,
-      //   "CreatedByUserName":"kavya"
+      //     "flagId": 2,
+      //     "CompanyId": 2,
+      //     "DesignationName": "Managing Director",
+      //     "DesignationCode": "MD",
+      //     "DesignationLevel": 100,
+      //     "IsDisabled": false,
+      //     "CreatedByUserName": "kavya"
       // }
+
+
+      {
+      "flagId": 1
+      }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODg0MTAxNTIsImV4cCI6MTc4ODQ1MzM1Mn0.poZhS2gtv8po1JfdTyDh6BZNOdnLRd6Ip8QuUUSEQF8
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkwNTgwNjI3LCJleHAiOjE3OTA2MDk0Mjd9.805WBOO9abiWZazpw05m8JI4bm4p2JToUrz-w6U-P1o
 
 settings:
   encodeUrl: true

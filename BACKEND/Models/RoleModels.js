@@ -23,10 +23,8 @@ export const getAllRoles = async () => {
 
         FROM "LKP"."Role" R
 
-        INNER JOIN "LKP"."Company" C
+        LEFT JOIN "LKP"."Company" C
             ON R."CompanyId" = C."CompanyId"
-
-      
 
         ORDER BY R."RoleId";
     `;
@@ -35,8 +33,6 @@ export const getAllRoles = async () => {
 
     return result.rows;
 };
-
-
 // ==========================================
 // CHECK ROLE NAME / ROLE CODE
 // ADD ROLE
@@ -108,8 +104,7 @@ export const addRole = async (userRole) => {
             "RoleCode",
             "RoleDescription",
             "CreatedByUserName",
-            "CreatedAt",
-            "UpdatedAt"
+            "CreatedAt"
         )
         VALUES
         (
@@ -118,7 +113,6 @@ export const addRole = async (userRole) => {
             $3,
             $4,
             $5,
-            CURRENT_TIMESTAMP,
             CURRENT_TIMESTAMP
         )
         RETURNING *;
@@ -129,7 +123,7 @@ export const addRole = async (userRole) => {
         userRole.RoleName,
         userRole.Role_Code,
         userRole.Description,
-        userRole.RequestUserName
+        userRole.CreatedByUserName
     ];
 
     const result = await pool.query(query, values);
@@ -276,4 +270,21 @@ export const updateRoleStatus = async (
     const result = await pool.query(query, values);
 
     return result.rowCount;
+};
+
+
+export const getCompanyDropdownData = async () => {
+
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName"
+        FROM "LKP"."Company"
+        WHERE "IsDisabled" = false
+        ORDER BY "CompanyName" ASC;
+    `;
+
+    const result = await pool.query(query);
+
+    return result.rows;
 };
