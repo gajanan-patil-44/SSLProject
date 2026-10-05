@@ -38,7 +38,6 @@ export const DynamicListPage = ({
       const res = await fetchDataFn();
       setData(res || []);
     } catch (e) {
-      console.error("Failed to fetch dynamic data:", e);
     } finally {
       setLoading(false);
     }
@@ -59,7 +58,6 @@ export const DynamicListPage = ({
         await toggleStatusFn(record, newIsDisabled);
         await loadData();
       } catch (e) {
-        console.error("Failed to toggle status:", e);
       }
     }
   };
@@ -72,7 +70,6 @@ export const DynamicListPage = ({
       await loadData();
       setDeleteRecord(null);
     } catch (e) {
-      console.error("Failed to delete record:", e);
     } finally {
       setDeleteLoading(false);
     }

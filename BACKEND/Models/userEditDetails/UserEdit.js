@@ -1636,11 +1636,7 @@ GROUP BY
 // GET ALL GENDERS
 // ======================================================
 
-
-
-
 export const editUserdetails = async ({
-
     UserId,
 
     // ============================================================
@@ -1662,7 +1658,6 @@ export const editUserdetails = async ({
     dateOfJoining,
     updatedByUserName,
 
-
     // ============================================================
     // RELATIONSHIPS
     // ============================================================
@@ -1680,7 +1675,7 @@ export const editUserdetails = async ({
     try {
 
         // ============================================================
-        // 1. BEGIN
+        // 1. BEGIN TRANSACTION
         // ============================================================
 
         await client.query("BEGIN");
@@ -1716,7 +1711,6 @@ export const editUserdetails = async ({
 
 
         if (userResult.rows.length === 0) {
-
             throw new Error(
                 `User with UserId ${UserId} not found`
             );
@@ -1727,7 +1721,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 3. FETCH ALL OLD COMPANIES
+        // 3. FETCH OLD COMPANIES
         // ============================================================
 
         const oldCompaniesResult = await client.query(
@@ -1744,13 +1738,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldCompanies =
-            oldCompaniesResult.rows;
+        const oldCompanies = oldCompaniesResult.rows;
 
 
         // ============================================================
-        // 4. FETCH ALL OLD PRODUCTS
+        // 4. FETCH OLD PRODUCTS
         // ============================================================
 
         const oldProductsResult = await client.query(
@@ -1766,13 +1758,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldProducts =
-            oldProductsResult.rows;
+        const oldProducts = oldProductsResult.rows;
 
 
         // ============================================================
-        // 5. FETCH ALL OLD PROJECTS
+        // 5. FETCH OLD PROJECTS
         // ============================================================
 
         const oldProjectsResult = await client.query(
@@ -1789,13 +1779,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldProjects =
-            oldProjectsResult.rows;
+        const oldProjects = oldProjectsResult.rows;
 
 
         // ============================================================
-        // 6. FETCH ALL OLD ROLES
+        // 6. FETCH OLD ROLES
         // ============================================================
 
         const oldRolesResult = await client.query(
@@ -1814,13 +1802,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldRoles =
-            oldRolesResult.rows;
+        const oldRoles = oldRolesResult.rows;
 
 
         // ============================================================
-        // 7. FETCH ALL OLD REPORTING MANAGERS
+        // 7. FETCH OLD REPORTING MANAGERS
         // ============================================================
 
         const oldManagersResult = await client.query(
@@ -1837,13 +1823,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldManagers =
-            oldManagersResult.rows;
+        const oldManagers = oldManagersResult.rows;
 
 
         // ============================================================
-        // 8. CHECK WHETHER ACTUAL USER VALUE CHANGED
+        // 8. CHECK USER FIELD CHANGES
         // ============================================================
 
         let hasChanges = false;
@@ -1856,12 +1840,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             firstName !== undefined &&
             firstName !== oldUser.FirstName
         ) {
             hasChanges = true;
         }
+
 
         if (
             middleName !== undefined &&
@@ -1870,12 +1856,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             lastName !== undefined &&
             lastName !== oldUser.LastName
         ) {
             hasChanges = true;
         }
+
 
         if (
             phoneNumber !== undefined &&
@@ -1884,6 +1872,7 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             dateOfBirth !== undefined &&
             dateOfBirth !== oldUser.DateOfBirth
@@ -1891,12 +1880,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             genderId !== undefined &&
             Number(genderId) !== Number(oldUser.GenderId)
         ) {
             hasChanges = true;
         }
+
 
         if (
             maritalStatusId !== undefined &&
@@ -1906,6 +1897,7 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             designationId !== undefined &&
             Number(designationId) !==
@@ -1914,12 +1906,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             email !== undefined &&
             email !== oldUser.Email
         ) {
             hasChanges = true;
         }
+
 
         if (
             loginName !== undefined &&
@@ -1928,12 +1922,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             altPhoneNumber !== undefined &&
             altPhoneNumber !== oldUser.AltPhoneNumber
         ) {
             hasChanges = true;
         }
+
 
         if (
             dateOfJoining !== undefined &&
@@ -1963,7 +1959,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserCompanyId ${company.UserCompanyId} not found for UserId ${UserId}`
                 );
@@ -2009,7 +2004,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserProductId ${product.UserProductId} not found for UserId ${UserId}`
                 );
@@ -2046,7 +2040,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserProjectId ${project.UserProjectId} not found for UserId ${UserId}`
                 );
@@ -2091,7 +2084,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserRoleId ${role.UserRoleId} not found for UserId ${UserId}`
                 );
@@ -2155,7 +2147,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserReportingManagerId ${manager.UserReportingManagerId} not found for UserId ${UserId}`
                 );
@@ -2197,9 +2188,42 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 15. INSERT OLD USER DATA
+        // 15. GET OLD RELATED RECORDS
         //
-        // One row for the main User information.
+        // Your UserDetails table has only one column for each
+        // related table, so we use the first existing old record.
+        // ============================================================
+
+        const oldCompany =
+            oldCompanies.length > 0
+                ? oldCompanies[0]
+                : null;
+
+        const oldProduct =
+            oldProducts.length > 0
+                ? oldProducts[0]
+                : null;
+
+        const oldProject =
+            oldProjects.length > 0
+                ? oldProjects[0]
+                : null;
+
+        const oldRole =
+            oldRoles.length > 0
+                ? oldRoles[0]
+                : null;
+
+        const oldManager =
+            oldManagers.length > 0
+                ? oldManagers[0]
+                : null;
+
+
+        // ============================================================
+        // 16. INSERT COMPLETE OLD RECORD
+        //
+        // ONLY ONE ROW IS INSERTED INTO UserDetails
         // ============================================================
 
         const historyResult = await client.query(
@@ -2207,6 +2231,7 @@ export const editUserdetails = async ({
             INSERT INTO "DATA"."UserDetails"
             (
                 "UserId",
+
                 "EmployeeId",
                 "FirstName",
                 "MiddleName",
@@ -2220,19 +2245,55 @@ export const editUserdetails = async ({
                 "LoginName",
                 "AltPhoneNumber",
                 "DateOfJoining",
+
+                "UserCompanyId",
+                "UserProductId",
+                "UserProjectId",
+                "UserReportingManagerId",
+                "UserRoleId",
+
+                "RoleId",
+                "ReportingManagerUserId",
+
                 "CreatedAt",
                 "CreatedByUserId"
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-                $11,$12,$13,$14,
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13,
+                $14,
+
+                $15,
+                $16,
+                $17,
+                $18,
+                $19,
+
+                $20,
+                $21,
+
                 CURRENT_TIMESTAMP,
-                $15
+                $22
             )
             RETURNING "UserDetailsId";
             `,
             [
+                // ========================================================
+                // OLD USER DATA
+                // ========================================================
+
                 oldUser.UserId,
                 oldUser.EmployeeId,
                 oldUser.FirstName,
@@ -2247,6 +2308,67 @@ export const editUserdetails = async ({
                 oldUser.LoginName,
                 oldUser.AltPhoneNumber,
                 oldUser.DateOfJoining,
+
+                // ========================================================
+                // OLD COMPANY
+                // ========================================================
+
+                oldCompany
+                    ? oldCompany.UserCompanyId
+                    : null,
+
+                // ========================================================
+                // OLD PRODUCT
+                // ========================================================
+
+                oldProduct
+                    ? oldProduct.UserProductId
+                    : null,
+
+                // ========================================================
+                // OLD PROJECT
+                // ========================================================
+
+                oldProject
+                    ? oldProject.UserProjectId
+                    : null,
+
+                // ========================================================
+                // OLD REPORTING MANAGER
+                // ========================================================
+
+                oldManager
+                    ? oldManager.UserReportingManagerId
+                    : null,
+
+                // ========================================================
+                // OLD ROLE
+                // ========================================================
+
+                oldRole
+                    ? oldRole.UserRoleId
+                    : null,
+
+                // ========================================================
+                // OLD ROLE ID
+                // ========================================================
+
+                oldRole
+                    ? oldRole.RoleId
+                    : null,
+
+                // ========================================================
+                // OLD REPORTING MANAGER USER ID
+                // ========================================================
+
+                oldManager
+                    ? oldManager.ReportingManagerUserId
+                    : null,
+
+                // ========================================================
+                // USER WHO PERFORMED EDIT
+                // ========================================================
+
                 UserId
             ]
         );
@@ -2369,9 +2491,6 @@ export const editUserdetails = async ({
                     "UserId",
                     "UserRoleId",
                     "RoleId",
-                    
-                    
-                 
                     "CreatedAt",
                     "CreatedByUserId"
                 )
@@ -2386,8 +2505,6 @@ export const editUserdetails = async ({
                     old.UserId,
                     old.UserRoleId,
                     old.RoleId,
-                
-                    
                     UserId
                 ]
             );
@@ -2407,21 +2524,21 @@ export const editUserdetails = async ({
                     "UserId",
                     "UserReportingManagerId",
                     "ReportingManagerUserId",
-                    "ReportingManagerCompanyId",
+                    
                     "CreatedAt",
                     "CreatedByUserId"
                 )
                 VALUES
                 (
-                    $1,$2,$3,$4,
+                    $1,$2,$3,
                     CURRENT_TIMESTAMP,
-                    $5
+                    $4
                 );
                 `,
                 [
                     old.UserId,
                     old.UserReportingManagerId,
-                    old.ReportingManagerUserId,
+                    
                     old.CompanyId,
                     UserId
                 ]
@@ -2438,49 +2555,91 @@ export const editUserdetails = async ({
             UPDATE "DATA"."User"
             SET
                 "EmployeeId" =
-                    COALESCE($1, "EmployeeId"),
+                    COALESCE(
+                        $1,
+                        "EmployeeId"
+                    ),
 
                 "FirstName" =
-                    COALESCE($2, "FirstName"),
+                    COALESCE(
+                        $2,
+                        "FirstName"
+                    ),
 
                 "MiddleName" =
-                    COALESCE($3, "MiddleName"),
+                    COALESCE(
+                        $3,
+                        "MiddleName"
+                    ),
 
                 "LastName" =
-                    COALESCE($4, "LastName"),
+                    COALESCE(
+                        $4,
+                        "LastName"
+                    ),
 
                 "PhoneNumber" =
-                    COALESCE($5, "PhoneNumber"),
+                    COALESCE(
+                        $5,
+                        "PhoneNumber"
+                    ),
 
                 "DateOfBirth" =
-                    COALESCE($6, "DateOfBirth"),
+                    COALESCE(
+                        $6,
+                        "DateOfBirth"
+                    ),
 
                 "GenderId" =
-                    COALESCE($7, "GenderId"),
+                    COALESCE(
+                        $7,
+                        "GenderId"
+                    ),
 
                 "MaritalStatusId" =
-                    COALESCE($8, "MaritalStatusId"),
+                    COALESCE(
+                        $8,
+                        "MaritalStatusId"
+                    ),
 
                 "DesignationId" =
-                    COALESCE($9, "DesignationId"),
+                    COALESCE(
+                        $9,
+                        "DesignationId"
+                    ),
 
                 "Email" =
-                    COALESCE($10, "Email"),
+                    COALESCE(
+                        $10,
+                        "Email"
+                    ),
 
                 "LoginName" =
-                    COALESCE($11, "LoginName"),
+                    COALESCE(
+                        $11,
+                        "LoginName"
+                    ),
 
                 "AltPhoneNumber" =
-                    COALESCE($12, "AltPhoneNumber"),
+                    COALESCE(
+                        $12,
+                        "AltPhoneNumber"
+                    ),
 
                 "DateOfJoining" =
-                    COALESCE($13, "DateOfJoining"),
+                    COALESCE(
+                        $13,
+                        "DateOfJoining"
+                    ),
 
                 "UpdatedAt" =
                     CURRENT_TIMESTAMP,
 
                 "UpdatedByUserName" =
-                    COALESCE($14, "UpdatedByUserName")
+                    COALESCE(
+                        $14,
+                        "UpdatedByUserName"
+                    )
 
             WHERE "UserId" = $15;
             `,
@@ -2505,7 +2664,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 22. UPDATE COMPANIES
+        // 18. UPDATE COMPANIES
         // ============================================================
 
         for (const company of companies || []) {
@@ -2515,10 +2674,16 @@ export const editUserdetails = async ({
                 UPDATE "DATA"."UserCompany"
                 SET
                     "CompanyId" =
-                        COALESCE($1, "CompanyId"),
+                        COALESCE(
+                            $1,
+                            "CompanyId"
+                        ),
 
                     "IsPrimaryCompany" =
-                        COALESCE($2, "IsPrimaryCompany"),
+                        COALESCE(
+                            $2,
+                            "IsPrimaryCompany"
+                        ),
 
                     "UpdatedAt" =
                         CURRENT_TIMESTAMP,
@@ -2541,7 +2706,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 23. UPDATE PRODUCTS
+        // 19. UPDATE PRODUCTS
         // ============================================================
 
         for (const product of products || []) {
@@ -2576,7 +2741,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 24. UPDATE PROJECTS
+        // 20. UPDATE PROJECTS
         // ============================================================
 
         for (const project of projects || []) {
@@ -2618,7 +2783,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 25. UPDATE ROLES
+        // 21. UPDATE ROLES
         // ============================================================
 
         for (const role of roles || []) {
@@ -2674,7 +2839,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 26. UPDATE REPORTING MANAGERS
+        // 22. UPDATE REPORTING MANAGERS
         // ============================================================
 
         for (const manager of reportingManagers || []) {
@@ -2716,7 +2881,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 27. COMMIT
+        // 23. COMMIT
         // ============================================================
 
         await client.query("COMMIT");
@@ -2724,7 +2889,7 @@ export const editUserdetails = async ({
 
         return {
             UserId,
-            UserDetailsId: historyResult.rows[0].UserDetailsId,
+            UserDetailsId: userDetailsId,
             message: "User details updated successfully"
         };
 
@@ -2733,18 +2898,17 @@ export const editUserdetails = async ({
 
         await client.query("ROLLBACK");
 
-        console.error(
-            "Edit user transaction failed:",
-            error
-        );
-
+      
         throw error;
 
     } finally {
 
         client.release();
+
     }
 };
+
+
 
 export const getAllGenders = async () => {
 
@@ -2936,7 +3100,6 @@ export const getAllCompanyProducts = async (CompanyId) => {
         throw error;
     }
 };
-
 
 
 

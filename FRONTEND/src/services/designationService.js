@@ -45,6 +45,7 @@ export const designationService = {
       CompanyId: Number(data.CompanyId),
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
+      DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       CreatedByUserName: userName
     });
@@ -84,6 +85,7 @@ export const designationService = {
       CompanyId: Number(data.CompanyId),
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
+      DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       UpdateByUserName: userName
     });

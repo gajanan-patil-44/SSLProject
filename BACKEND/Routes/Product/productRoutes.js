@@ -4,7 +4,7 @@ import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 const router = express.Router();
 
 router.post("/getProduct", authenticateToken, getProduct);
-router.post("/addProduct", authenticateToken, addProducts);
+router.post("/addProduct", addProducts);
 router.post("/updateProduct", authenticateToken, updateProduct);
 router.post("/deleteProduct", authenticateToken, deleteProduct);
 router.post("/toggleProductStatus", authenticateToken, toggleProductStatus);

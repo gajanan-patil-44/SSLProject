@@ -16,7 +16,7 @@ const router = express.Router();
 // FlagId 3 = Designation
 // ==========================================
 router.post("/userdropdowns",authenticateToken,userDropdownController);
-router.post("/createuser",authenticateToken,uploadUserPhoto.any(),createUserController);
+router.post("/createuser",uploadUserPhoto.any(),createUserController);
 router.post("/companyproductprojectdropdown", authenticateToken,companyProductProjectDropdownController);  ///superadmindropdown
 
 

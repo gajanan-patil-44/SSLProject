@@ -55,8 +55,8 @@ export const normalizePageItem = (p, idx = 0) => {
   }
 
   if (roles.length === 0) {
-    roles = ['Super Admin'];
-    roleNames = ['Super Admin'];
+    roles = [];
+    roleNames = [];
   }
 
   const isMain = !parentPage || parentPage === '-' || parentPage === '—';
@@ -118,7 +118,6 @@ export const pageService = {
       const list = response?.data || response?.result || (Array.isArray(response) ? response : []);
       return Array.isArray(list) ? list : [];
     } catch (err) {
-      console.error('Failed to fetch roles dropdown:', err);
       return [];
     }
   },
@@ -132,7 +131,6 @@ export const pageService = {
       const list = response?.data || response?.result || (Array.isArray(response) ? response : []);
       return Array.isArray(list) ? list : [];
     } catch (err) {
-      console.error('Failed to fetch main pages dropdown:', err);
       return [];
     }
   },
@@ -154,7 +152,6 @@ export const pageService = {
       const list = response?.data || response?.result || (Array.isArray(response) ? response : []);
       return Array.isArray(list) ? list : [];
     } catch (err) {
-      console.error('Failed to fetch parent/child pages dropdown:', err);
       return [];
     }
   },

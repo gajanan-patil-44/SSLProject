@@ -13,7 +13,8 @@ export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
  * ============================================================================
  */
 export const AUTH_ROUTES = {
-  LOGIN: '/verp-service/auth/login'
+  LOGIN: '/verp-service/auth/login',
+  LOGIN_DETAIL: '/verp-service/auth/logindetail'
 };
 
 /**
@@ -26,7 +27,8 @@ export const ROLE_ROUTES = {
   ADD_ROLE: '/verp-service/roleCreation/addRole',
   UPDATE_ROLE: '/verp-service/roleCreation/updateRole',
   UPDATE_ROLE_STATUS: '/verp-service/roleCreation/updateRoleStatus',
-  DELETE_ROLE: '/verp-service/roleCreation/deleteRole'
+  DELETE_ROLE: '/verp-service/roleCreation/deleteRole',
+  DROPDOWN: '/verp-service/roleCreation/dropdown'
 };
 
 /**

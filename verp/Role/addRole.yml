@@ -11,11 +11,11 @@ http:
     data: |-
       {
         "FlagId":2,
-        "CompanyId":1,
-        "RoleName": "wse",
-        "Role_Code": "wec",
-        "Description": "HRHRR",
-        "RequestUserName": "Praveen"
+        "RoleName": "HR",
+        "CompanyId": 1,
+        "Role_Code": "sup003",
+        "Description": "ADMINNN",
+        "CreatedByUserName": "Praveen"
       }
   auth:
     type: bearer
@@ -26,3 +26,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

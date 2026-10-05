@@ -29,12 +29,12 @@ http:
           "FlagId": 1
 =======
           "FlagId": 1,
-          "PageName": "Users",
-          "PageUrl": "/users",
-          "PageIcon": "users",
-          "PageType": "MainPage",
-          "ParentPageId": null,
-          "RoleIds": [2],
+          "PageName": "company-products",
+          "PageUrl": "/master/company-products",
+          "PageIcon": "company-products page",
+          "PageType": "ParentPage",
+          "ParentPageId": 2,
+          "RoleIds": [1],
           "CreatedByUserName": "admin1"
 >>>>>>> 5c51827001527a9dbef9101417ecb00b1262b187
       }

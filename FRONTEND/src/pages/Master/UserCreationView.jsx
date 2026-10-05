@@ -46,7 +46,6 @@ const getSessionAuth = () => {
       }
     }
   } catch (err) {
-    console.warn('[Session] session parse error:', err);
   }
 
   // 2. Legacy fallback if migrating
@@ -316,7 +315,6 @@ export default function UserCreationView() {
       setRoles(toOpts(rolesRes.value?.data ?? rolesRes.value, 'RoleId', 'RoleName'));
     if (fileTypesRes.status === 'fulfilled') {
       const raw = fileTypesRes.value?.data ?? fileTypesRes.value;
-      console.log('[FileType FlagId:1] raw response:', raw);
       setFileTypes(toOpts(raw, 'FileTypeId', 'FileTypeName'));
     }
   };
@@ -354,7 +352,6 @@ export default function UserCreationView() {
         setReportingManagers([]);
       }
     } catch (err) {
-      console.error('getReportingManagerDropdown failed:', err);
       setReportingManagers([]);
     }
   };
@@ -385,9 +382,19 @@ export default function UserCreationView() {
       try {
         const r = await userService.getProductDropdown(value);
         const raw = r?.data ?? r;
-        setProducts(toOpts(raw, 'ProductId', 'ProductName'));
+        setProducts(
+          Array.isArray(raw)
+            ? raw
+                .filter(item => item.ProductId !== null && item.ProductId !== undefined && item.ProductId !== '')
+                .map((item, idx) => ({
+                  value: String(item.ProductId),
+                  label: item.ProductName ?? String(item.ProductId),
+                  key: `${String(item.ProductId)}_${idx}`,
+                  companyProductId: item.CompanyProductId,
+                }))
+            : []
+        );
       } catch (err) {
-        console.error('getProductDropdown failed:', err);
         setProducts([]);
       }
       // Fetch Reporting Managers only if Designation is already selected
@@ -406,8 +413,13 @@ export default function UserCreationView() {
   const fetchProjectsForProducts = async (productIds) => {
     if (!productIds || productIds.length === 0) { setProjects([]); return; }
     try {
+      const selectedProducts = productIds
+        .map(productId => products.find(product => product.value === String(productId)))
+        .filter(product => product && product.companyProductId != null);
       const results = await Promise.allSettled(
-        productIds.map(pid => userService.getProjectDropdown(pid))
+        selectedProducts.map(product =>
+          userService.getProjectDropdown(product.value, product.companyProductId)
+        )
       );
       const combined = [];
       const seen = new Set();
@@ -494,10 +506,6 @@ export default function UserCreationView() {
 
     if (step === 3) {
       if (!form.CompanyId)                                                        e.CompanyId        = 'Select a company';
-      if (!form.DesignationId)                                                    e.DesignationId    = 'Select a designation';
-      if (!Array.isArray(form.CompanyProductId) || form.CompanyProductId.length === 0)
-                                                                                  e.CompanyProductId = 'Select at least one product';
-      if (!Array.isArray(form.ProjectId) || form.ProjectId.length === 0)         e.ProjectId        = 'Select at least one project';
       if (!form.RoleId)                                                           e.RoleId           = 'Select a role';
     }
 
@@ -615,12 +623,12 @@ export default function UserCreationView() {
     const projectIds = Array.isArray(form.ProjectId) ? form.ProjectId : (form.ProjectId ? [form.ProjectId] : []);
     fd.append('ProjectId', JSON.stringify(projectIds.map(Number)));
     fd.append('RoleId',             form.RoleId);
-    fd.append('DesignationId',      form.DesignationId);
     // User documents — keyed by fileTypeId
     Object.entries(userFiles).forEach(([ftId, file]) => {
       fd.append('FileTypeId', ftId);
       fd.append('UserFile',   file);
     });
+
 
     try {
       setSubmitting(true);
@@ -1056,7 +1064,7 @@ export default function UserCreationView() {
 
 
               {/* ── Company Product — Multi-Select ── */}
-              <Field label="Company Product" required error={errors.CompanyProductId}>
+              <Field label="Company Product" error={errors.CompanyProductId}>
                 <MultiSelectDropdown
                   name="CompanyProductId"
                   options={products}
@@ -1070,7 +1078,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Project — Multi-Select ── */}
-              <Field label="Project" required error={errors.ProjectId}>
+              <Field label="Project" error={errors.ProjectId}>
                 <MultiSelectDropdown
                   name="ProjectId"
                   options={projects}
@@ -1096,7 +1104,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Designation ── */}
-              <Field label="Designation" required error={errors.DesignationId}>
+              <Field label="Designation" error={errors.DesignationId}>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
                   <select name="DesignationId" value={form.DesignationId} onChange={change}

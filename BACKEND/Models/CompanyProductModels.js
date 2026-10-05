@@ -71,7 +71,6 @@ export const addCompanyProduct = async (companyProductData) => {
             "ProductId",
             "IsDisabled",
             "CreatedAt",
-            "UpdatedAt",
             "CreatedByUserName"
         )
         VALUES
@@ -79,7 +78,6 @@ export const addCompanyProduct = async (companyProductData) => {
             $1,
             $2,
             $3,
-            CURRENT_TIMESTAMP,
             CURRENT_TIMESTAMP,
             $4
         )

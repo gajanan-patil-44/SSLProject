@@ -91,59 +91,100 @@ export const getChildPages = async (parentPageId) => {
 // =========================================================
 // CHECK MAIN PAGE
 // =========================================================
-export const checkMainPage = async (client, pageId) => {
+export const checkMainPage = async (
+    client,
+    PageId
+) => {
 
-    const result = await client.query(
-        `
-        SELECT
-            "PageId"
-        FROM "DATA"."Page"
-        WHERE "PageId" = $1
-          AND "ParentPageId" IS NULL
-          AND COALESCE("IsDisabled", false) = false;
-        `,
-        [pageId]
-    );
-
-    return result.rows;
-};
-// =========================================================
-// CHECK PARENT PAGE
-// =========================================================
-export const checkParentPage = async (client, pageId) => {
-    const result = await client.query(
-        `
-        SELECT
-            "PageId"
-        FROM "DATA"."Page"
-        WHERE "PageId" = $1
-          AND "ParentPageId" IS NOT NULL
-          AND COALESCE("IsDisabled", false) = false;
-        `,
-        [pageId]
-    );
-    return result.rows;
-};
-// =========================================================
-// GET PAGE
-// =========================================================
-export const getPageById = async (client, pageId) => {
     const result = await client.query(
         `
         SELECT
             "PageId",
-            "PageName",
-            "ParentPageId",
             "OrderNo"
+
         FROM "DATA"."Page"
-        WHERE "PageId" = $1
-          AND COALESCE("IsDisabled", false) = false;
+
+        WHERE
+            "PageId" = $1
+            AND "ParentPageId" IS NULL
+            AND "IsDisabled" = FALSE;
         `,
-        [pageId]
+        [PageId]
     );
 
     return result.rows[0] || null;
 };
+// =========================================================
+// CHECK PARENT PAGE
+// =========================================================
+export const checkParentPage = async (
+    client,
+    PageId
+) => {
+
+    const result = await client.query(
+        `
+        SELECT
+            p."PageId",
+            p."ParentPageId",
+            p."OrderNo"
+
+        FROM "DATA"."Page" p
+
+        INNER JOIN "DATA"."Page" main
+            ON main."PageId" = p."ParentPageId"
+
+        WHERE
+            p."PageId" = $1
+            AND main."ParentPageId" IS NULL
+            AND p."IsDisabled" = FALSE
+            AND main."IsDisabled" = FALSE;
+        `,
+        [PageId]
+    );
+
+    return result.rows[0] || null;
+};
+// =========================================================
+// GET PAGE
+// =========================================================
+export const getPageById = async (client,PageId) => {
+
+    const result = await client.query(
+        `
+        SELECT
+            p."PageId",
+            p."PageName",
+            p."PageUrl",
+            p."PageIcon",
+            p."ParentPageId",
+            p."OrderNo",
+
+            CASE
+                WHEN p."ParentPageId" IS NULL
+                    THEN 'MainPage'
+
+                WHEN parent."ParentPageId" IS NULL
+                    THEN 'ParentPage'
+
+                ELSE 'ChildPage'
+            END AS "PageType"
+
+        FROM "DATA"."Page" p
+
+        LEFT JOIN "DATA"."Page" parent
+            ON parent."PageId" = p."ParentPageId"
+
+        WHERE
+            p."PageId" = $1
+            AND p."IsDisabled" = FALSE;
+        `,
+        [PageId]
+    );
+
+    return result.rows[0] || null;
+};
+
 // =========================================================
 // GET NEXT MAIN PAGE ORDER
 // =========================================================
@@ -178,17 +219,105 @@ export const getNextChildOrder = async (client, parentPageId) => {
 // Used for BEFORE / AFTER
 // Moves complete main-page hierarchy.
 // =========================================================
-export const shiftMainPageOrders = async (client, targetOrder, change) => {
+
+export const shiftMainPageOrders = async (
+    client,
+    TargetOrder,
+    Increment,
+    ExcludePageId
+) => {
+
     await client.query(
         `
         UPDATE "DATA"."Page"
+
         SET
-            "OrderNo" = ROUND(("OrderNo" + $1)::numeric,3),
+            "OrderNo" = ROUND(
+                ("OrderNo" + $1)::numeric,
+                3
+            ),
             "UpdatedAt" = CURRENT_TIMESTAMP
-        WHERE "OrderNo" >= $2
-          AND COALESCE("IsDisabled", false) = false;
+
+        WHERE
+            "ParentPageId" IS NULL
+            AND "OrderNo" >= $2
+            AND "PageId" <> $3
+            AND "IsDisabled" = FALSE;
         `,
-        [change, targetOrder]
+        [
+            Increment,
+            TargetOrder,
+            ExcludePageId
+        ]
+    );
+};
+
+
+export const shiftParentPageOrders = async (
+    client,
+    MainPageId,
+    TargetOrder,
+    Increment,
+    ExcludePageId
+) => {
+
+    await client.query(
+        `
+        UPDATE "DATA"."Page"
+
+        SET
+            "OrderNo" = ROUND(
+                ("OrderNo" + $1)::numeric,
+                3
+            ),
+            "UpdatedAt" = CURRENT_TIMESTAMP
+
+        WHERE
+            "ParentPageId" = $2
+            AND "OrderNo" >= $3
+            AND "PageId" <> $4
+            AND "IsDisabled" = FALSE;
+        `,
+        [
+            Increment,
+            MainPageId,
+            TargetOrder,
+            ExcludePageId
+        ]
+    );
+};
+
+export const shiftChildPageOrders = async (
+    client,
+    ParentPageId,
+    TargetOrder,
+    Increment,
+    ExcludePageId
+) => {
+
+    await client.query(
+        `
+        UPDATE "DATA"."Page"
+
+        SET
+            "OrderNo" = ROUND(
+                ("OrderNo" + $1)::numeric,
+                3
+            ),
+            "UpdatedAt" = CURRENT_TIMESTAMP
+
+        WHERE
+            "ParentPageId" = $2
+            AND "OrderNo" >= $3
+            AND "PageId" <> $4
+            AND "IsDisabled" = FALSE;
+        `,
+        [
+            Increment,
+            ParentPageId,
+            TargetOrder,
+            ExcludePageId
+        ]
     );
 };
 // =========================================================
@@ -429,4 +558,45 @@ export const updatePage = async (client, PageId, PageName, PageUrl, PageIcon, Pa
         }
     }
     return updatedPage;
+};
+
+// =========================================================
+// GET TARGET PAGE
+// =========================================================
+
+export const getTargetPage = async (
+    client,
+    TargetPageId
+) => {
+
+    const result = await client.query(
+        `
+        SELECT
+            p."PageId",
+            p."ParentPageId",
+            p."OrderNo",
+
+            CASE
+                WHEN p."ParentPageId" IS NULL
+                    THEN 'MainPage'
+
+                WHEN parent."ParentPageId" IS NULL
+                    THEN 'ParentPage'
+
+                ELSE 'ChildPage'
+            END AS "PageType"
+
+        FROM "DATA"."Page" p
+
+        LEFT JOIN "DATA"."Page" parent
+            ON parent."PageId" = p."ParentPageId"
+
+        WHERE
+            p."PageId" = $1
+            AND p."IsDisabled" = FALSE;
+        `,
+        [TargetPageId]
+    );
+
+    return result.rows[0] || null;
 };

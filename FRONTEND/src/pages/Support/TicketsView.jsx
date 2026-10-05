@@ -32,7 +32,6 @@ export default function TicketsView() {
       const res = await api.getTickets();
       setTickets(res || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }

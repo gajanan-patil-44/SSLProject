@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Shield,
   ShieldCheck,
@@ -90,7 +90,6 @@ export default function RolesView() {
       });
       setCompanies(Array.from(companyMap.values()));
     } catch (err) {
-      console.error('Failed to load roles data:', err);
       setError(err?.message || 'Failed to load roles. Please verify backend connection.');
     } finally {
       setLoading(false);
@@ -166,7 +165,6 @@ export default function RolesView() {
     return Object.keys(errs).length === 0;
   };
 
-  // Auto-generate code when RoleName changes in 'add' mode if code is untouched
   const handleRoleNameChange = (e) => {
     const val = e.target.value;
     setFormData((prev) => {
@@ -174,8 +172,7 @@ export default function RolesView() {
       if (modalMode === 'add' && (!prev.Role_Code || prev.Role_Code.length <= 4)) {
         updated.Role_Code = val
           .replace(/[^a-zA-Z]/g, '')
-          .slice(0, 4)
-          .toUpperCase();
+          .slice(0, 4);
       }
       return updated;
     });
@@ -197,11 +194,11 @@ export default function RolesView() {
     try {
       if (modalMode === 'add') {
         const payload = {
-          CompanyId: Number(formData.CompanyId),
+          CompanyId: Number(formData.CompanyId) || 1,
           RoleName: formData.RoleName.trim(),
-          Role_Code: formData.Role_Code.trim().toUpperCase(),
+          Role_Code: formData.Role_Code.trim(),
           Description: formData.Description?.trim() || '',
-          RequestUserName: currentUserName
+          CreatedByUserName: currentUserName
         };
         const res = await roleService.addRole(payload);
         showToast(res?.message || `Role "${formData.RoleName}" created successfully!`);
@@ -228,7 +225,6 @@ export default function RolesView() {
       setModalMode(null);
       await fetchData();
     } catch (err) {
-      console.error('Save role error:', err);
       setError(err?.message || 'Failed to save role. Please check inputs.');
     } finally {
       setActionLoading(false);
@@ -248,7 +244,6 @@ export default function RolesView() {
       setSelectedRole(null);
       await fetchData();
     } catch (err) {
-      console.error('Delete role error:', err);
       setError(err?.message || 'Failed to delete role.');
     } finally {
       setActionLoading(false);
@@ -272,7 +267,6 @@ export default function RolesView() {
           `Role "${role.RoleName}" has been ${newDisabled ? 'disabled' : 'enabled'}.`
       );
     } catch (err) {
-      console.error('Toggle status error:', err);
       setError(err?.message || 'Failed to update role status.');
       // Revert optimistic update
       setRoles((prev) =>
@@ -554,7 +548,7 @@ export default function RolesView() {
                   const roleDescription = role.RoleDescription || '';
                   const companyName = role.CompanyName || `Company #${role.CompanyId || '-'}`;
                   const isDisabled = Boolean(role.IsDisabled);
-                  const createdBy = role.CreatedByUserName || role.RequestUserName || 'admin';
+                  const createdBy = role.CreatedByUserName || role.RequestUserName || '';
                   const createdDate = role.CreatedAt || role.CreatedDate
                     ? new Date(role.CreatedAt || role.CreatedDate).toLocaleDateString()
                     : null;
@@ -762,7 +756,7 @@ export default function RolesView() {
                 onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
-                    Role_Code: e.target.value.toUpperCase()
+                    Role_Code: e.target.value
                   }));
                   if (formErrors.Role_Code) {
                     setFormErrors((prev) => ({ ...prev, Role_Code: null }));
@@ -907,7 +901,7 @@ export default function RolesView() {
                   Created By
                 </span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 mt-0.5 block">
-                  {selectedRole.CreatedByUserName || selectedRole.RequestUserName || 'admin'}
+                  {selectedRole.CreatedByUserName || selectedRole.RequestUserName || ''}
                 </span>
               </div>
 

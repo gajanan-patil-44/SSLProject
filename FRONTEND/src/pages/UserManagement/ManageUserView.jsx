@@ -33,7 +33,7 @@ const toOpts = (data, idKey, nameKey) => {
 export default function ManageUserView() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
-  const userName = currentUser?.loginName || currentUser?.EmployeeId || (typeof currentUser?.name === 'string' ? currentUser.name : '') || 'admin';
+  const userName = currentUser?.loginName || currentUser?.EmployeeId || (typeof currentUser?.name === 'string' ? currentUser.name : '') || '';
 
   // Table Data & Loading
   const [users, setUsers] = useState([]);
@@ -100,7 +100,6 @@ export default function ManageUserView() {
       }
       setUsers(list);
     } catch (err) {
-      console.error('Failed to load users:', err);
       setUsers([]);
       showToast(err?.response?.data?.message || err?.message || 'Failed to load users from server', 'error');
     } finally {
@@ -129,7 +128,6 @@ export default function ManageUserView() {
         setCompanies(toOpts(compRes.value?.data ?? compRes.value, 'CompanyId', 'CompanyName'));
       }
     } catch (err) {
-      console.error('Failed to load base dropdowns:', err);
     }
   };
 
@@ -163,7 +161,6 @@ export default function ManageUserView() {
         setRoles(toOpts(roleRes.value?.data ?? roleRes.value, 'RoleId', 'RoleName'));
       }
     } catch (err) {
-      console.error('Failed to load company dependent dropdowns:', err);
     }
   };
 
@@ -176,7 +173,6 @@ export default function ManageUserView() {
       const projRes = await userService.getEditProject(companyProductId);
       setProjects(toOpts(projRes?.data ?? projRes, 'ProjectId', 'ProjectName'));
     } catch (err) {
-      console.error('Failed to load projects:', err);
       setProjects([]);
     }
   };
@@ -272,7 +268,7 @@ export default function ManageUserView() {
       const newDisabledState = !isCurrentlyDisabled;
 
       const currentUser = useERPStore.getState().user;
-      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || 'admin';
+      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
 
       const payload = {
         flagId: 1,
@@ -285,7 +281,6 @@ export default function ManageUserView() {
       showToast(`User status updated to ${newDisabledState ? 'Inactive' : 'Active'}.`, 'success');
       await loadUsers();
     } catch (err) {
-      console.error('Failed to toggle user status:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to update user status', 'error');
     }
   };
@@ -513,7 +508,6 @@ export default function ManageUserView() {
       setIsEditOpen(false);
       await loadUsers();
     } catch (err) {
-      console.error('Update user failed:', err);
       const msg = err?.response?.data?.message || err?.message || 'Failed to update user.';
       showToast(msg, 'error');
     } finally {

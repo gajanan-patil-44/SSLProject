@@ -164,8 +164,6 @@ export const updateCompany = async (req, res) => {
 
             const companyData = req.body;
 
-            console.log("Received update company data:", companyData);
-
             // Check whether Company Name and Company Code already exist
             const existingCompanies = await checkCompanyExistsForUpdate(
                 companyData.CompanyName,

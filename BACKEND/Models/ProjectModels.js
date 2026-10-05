@@ -276,7 +276,6 @@ export const addProject = async (projectData) => {
                 "IsDisabled",
                 "Description",
                 "CreatedAt",
-                "UpdatedAt",
                 "CreatedByUserId"
             )
 
@@ -287,7 +286,6 @@ export const addProject = async (projectData) => {
                 $3,
                 $4,
                 $5,
-                CURRENT_TIMESTAMP,
                 CURRENT_TIMESTAMP,
                 $6
             )
@@ -300,7 +298,6 @@ export const addProject = async (projectData) => {
                 "IsDisabled",
                 "Description",
                 "CreatedAt",
-                "UpdatedAt",
                 "CreatedByUserId";
         `;
 

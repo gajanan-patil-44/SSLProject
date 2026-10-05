@@ -11,11 +11,11 @@ http:
     data: |-
       {
         "flagId":1,
-        "CompanyProductId":1
+        "CompanyProductId":4
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODk4MTAzNzcsImV4cCI6MTc4OTgzOTE3N30.ZF7wlLMcnl1qFJZbmHXBrv2Q3ZifNp-wOXTNTTtZ7hI
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJlbXAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkwNzQ2NjA4LCJleHAiOjE3OTA3NzU0MDh9.ShAf-Bz33mElYkT-fsz9qyQxCbVSXjvyIbHBu4u0n3o
 
 settings:
   encodeUrl: true

@@ -26,7 +26,6 @@ export default function LeaveView() {
       const res = await api.getLeaves();
       setLeaves(res || []);
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -42,7 +41,6 @@ export default function LeaveView() {
       setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: 'Approved' } : l));
       useERPStore.getState().showToast("Leave request approved successfully!", "success");
     } catch (e) {
-      console.error(e);
       useERPStore.getState().showToast(e?.message || "Failed to approve leave request.", "error");
     }
   };
@@ -53,7 +51,6 @@ export default function LeaveView() {
       setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: 'Rejected' } : l));
       useERPStore.getState().showToast("Leave request rejected.", "warning");
     } catch (e) {
-      console.error(e);
       useERPStore.getState().showToast(e?.message || "Failed to reject leave request.", "error");
     }
   };
@@ -71,7 +68,6 @@ export default function LeaveView() {
       setIsAddOpen(false);
       useERPStore.getState().showToast(res?.message || "Leave request submitted successfully!", "success");
     } catch (e) {
-      console.error(e);
       useERPStore.getState().showToast(e?.message || "Failed to submit leave request.", "error");
     }
   };

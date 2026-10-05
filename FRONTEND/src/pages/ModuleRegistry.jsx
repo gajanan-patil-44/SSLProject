@@ -1,4 +1,4 @@
-﻿// src/pages/ModuleRegistry.jsx
+// src/pages/ModuleRegistry.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { DynamicListPage, DynamicFormPage } from '../components/ui/DynamicPageEngine';
@@ -127,7 +127,7 @@ export const registryConfigs = {
     },
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
 
       const payload = {
         flagId: 2,
@@ -145,7 +145,7 @@ export const registryConfigs = {
     },
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const companyId = Number(formData.CompanyId ?? formData.id);
 
       const payload = {
@@ -163,7 +163,7 @@ export const registryConfigs = {
     },
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const companyId = Number(record.CompanyId ?? record.id);
 
       const statusPayload = {
@@ -234,7 +234,7 @@ export const registryConfigs = {
     },
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
 
       const payload = {
         flagId: 2,
@@ -250,7 +250,7 @@ export const registryConfigs = {
     },
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const productId = Number(formData.ProductId ?? formData.id);
 
       const updatePayload = {
@@ -265,7 +265,7 @@ export const registryConfigs = {
     },
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const productId = Number(record.ProductId ?? record.id);
 
       const statusPayload = {
@@ -364,7 +364,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching company products:", err);
         return [];
       }
     },
@@ -391,7 +390,6 @@ export const registryConfigs = {
           label: p.ProductName
         }));
       } catch (err) {
-        console.error("Error fetching company product dropdowns:", err);
       }
 
       return [
@@ -451,7 +449,7 @@ export const registryConfigs = {
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
 
       const payload = {
         FlagId: 3,
@@ -466,7 +464,7 @@ export const registryConfigs = {
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const companyProductId = Number(formData.CompanyProductId ?? formData.id);
 
       const payload = {
@@ -536,7 +534,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching projects:", err);
         return [];
       }
     },
@@ -558,7 +555,6 @@ export const registryConfigs = {
           };
         });
       } catch (err) {
-        console.error("Error fetching project dropdowns:", err);
       }
 
       return [
@@ -595,7 +591,7 @@ export const registryConfigs = {
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
 
       const payload = {
@@ -614,7 +610,7 @@ export const registryConfigs = {
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const projectId = Number(formData.ProjectId ?? formData.id);
 
@@ -636,7 +632,7 @@ export const registryConfigs = {
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const projectId = Number(record.ProjectId ?? record.id);
 
@@ -692,6 +688,7 @@ export const registryConfigs = {
           DesignationCode: d.DesignationCode || '',
           companyName: d.CompanyName || '—',
           CompanyName: d.CompanyName || '',
+          DesignationLevel: d.DesignationLevel || '',
           status: isDisabled ? "Inactive" : "Active",
           IsDisabled: Boolean(isDisabled),
           isEnabled: isEnabled,
@@ -700,11 +697,25 @@ export const registryConfigs = {
       });
     },
     fetchDropdowns: async () => {
-      const companiesList = await api.designation.getCompaniesDropdown();
-      const companyOptions = companiesList.map(c => ({
+      const userState = useERPStore.getState().user;
+      const session = useERPStore.getState().session;
+      const userContext = useERPStore.getState().userContext;
+      const displayRole = userState?.designation?.name || userContext?.roles?.[0]?.RoleName || userState?.role || 'User';
+      const isSuperAdmin = displayRole.toLowerCase() === 'super admin' || displayRole.toLowerCase() === 'administrator';
+      const userCompanyId = Number(userState?.CompanyId || userState?.companyId || userContext?.companies?.[0]?.CompanyId || session?.CompanyId);
+
+      const res = await api.designation.getCompaniesDropdown();
+      const companiesList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      let companyOptions = companiesList.map(c => ({
         value: Number(c.CompanyId),
-        label: `${c.CompanyName} (${c.CompanyCode})`
+        label: c.CompanyCode ? `${c.CompanyName} (${c.CompanyCode})` : c.CompanyName
       }));
+
+      if (!isSuperAdmin && userCompanyId) {
+        companyOptions = companyOptions.filter(c => c.value === userCompanyId);
+      }
+
+      const lockedCompanyName = (!isSuperAdmin && companyOptions.length > 0) ? companyOptions[0].label : "Select Company";
 
       return [
         {
@@ -713,7 +724,9 @@ export const registryConfigs = {
           type: "select",
           required: true,
           options: companyOptions,
-          placeholder: "Select Company"
+          placeholder: lockedCompanyName,
+          disabled: !isSuperAdmin,
+          defaultValue: !isSuperAdmin ? userCompanyId : undefined
         },
         {
           key: "DesignationCode",
@@ -728,20 +741,30 @@ export const registryConfigs = {
           type: "text",
           required: true,
           placeholder: "e.g. Software Engineer"
+        },
+        {
+          key: "DesignationLevel",
+          label: "Designation Level",
+          type: "number",
+          required: false,
+          placeholder: "e.g. 1"
         }
       ];
     },
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userContext = useERPStore.getState().userContext;
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
+      const userCompanyId = Number(userState?.CompanyId || userState?.companyId || userContext?.companies?.[0]?.CompanyId || session?.CompanyId);
 
       const payload = {
         flagId: 2,
-        CompanyId: Number(formData.CompanyId),
+        CompanyId: Number(formData.CompanyId || userCompanyId),
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
+        DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
         IsDisabled: false,
         Description: '',
         CreatedByUserName: userName,
@@ -753,16 +776,19 @@ export const registryConfigs = {
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userContext = useERPStore.getState().userContext;
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
+      const userCompanyId = Number(userState?.CompanyId || userState?.companyId || userContext?.companies?.[0]?.CompanyId || session?.CompanyId);
       const companyDesignationId = Number(formData.CompanyDesignationId ?? formData.id);
 
       const payload = {
         flagId: 2,
         CompanyDesignationId: companyDesignationId,
-        CompanyId: Number(formData.CompanyId),
+        CompanyId: Number(formData.CompanyId || userCompanyId),
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
+        DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
         IsDisabled: Boolean(formData.IsDisabled),
         Description: '',
         UpdateByUserName: userName,
@@ -775,7 +801,7 @@ export const registryConfigs = {
     apiToggleStatus: async (record, newIsDisabled) => {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
-      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const companyDesignationId = Number(record.CompanyDesignationId ?? record.id);
 
@@ -804,7 +830,8 @@ export const registryConfigs = {
     formFields: [
       { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "DesignationCode", label: "Designation Code", type: "text", required: true, placeholder: "e.g. DES-SE" },
-      { key: "DesignationName", label: "Designation Name", type: "text", required: true, placeholder: "e.g. Software Engineer" }
+      { key: "DesignationName", label: "Designation Name", type: "text", required: true, placeholder: "e.g. Software Engineer" },
+      { key: "DesignationLevel", label: "Designation Level", type: "number", required: false, placeholder: "e.g. 1" }
     ]
   },
 
@@ -837,28 +864,27 @@ export const registryConfigs = {
     },
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
 
-      if (api.role.createRole) {
-        return await api.role.createRole({
-          CompanyId: Number(formData.CompanyId) || 1,
+      if (api.role.addRole) {
+        return await api.role.addRole({
+          CompanyId: Number(formData.CompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
-          CreatedByUserName: userName,
-          UpdatedByUserName: userName
+          CreatedByUserName: userName
         });
       }
     },
     apiUpdate: async (formData) => {
       const userState = useERPStore.getState().user;
-      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || 'admin';
+      const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const roleId = Number(formData.RoleId ?? formData.id);
 
       if (api.role.updateRole) {
         return await api.role.updateRole({
           RoleId: roleId,
-          CompanyId: Number(formData.CompanyId) || 1,
+          CompanyId: Number(formData.CompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -884,17 +910,45 @@ export const registryConfigs = {
       { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
+    fetchDropdowns: async () => {
+      let companyOptions = [];
+      try {
+        const res = await api.role.getCompaniesForRole();
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        companyOptions = list.map(c => ({
+          value: Number(c.CompanyId || c.id),
+          label: c.CompanyName || c.name || `Company #${c.CompanyId || c.id}`
+        }));
+      } catch (err) {}
+      
+      return [
+        {
+          key: "CompanyId",
+          label: "Company",
+          type: "select",
+          required: true,
+          options: companyOptions,
+          placeholder: "Select Company"
+        },
+        { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
+        { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
+        { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
+      ];
+    },
     formFields: [
+      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     addFormFields: [
+      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     editFormFields: [
+      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
@@ -956,7 +1010,6 @@ export function ModuleRenderer() {
           setDynamicFormFields(fields);
         }
       }).catch((err) => {
-        console.error("Dropdown fetch error:", err);
       });
     } else {
       setDynamicFormFields(null);
@@ -998,7 +1051,6 @@ export function ModuleRenderer() {
           setDynamicFormFields(fields);
         }
       } catch (err) {
-        console.error("Dropdown error on add:", err);
       }
     } else {
       setDynamicFormFields(null);
@@ -1013,7 +1065,6 @@ export function ModuleRenderer() {
         setRefreshKey(prev => prev + 1);
         setIsAddOpen(false);
       } catch (err) {
-        console.error("Error creating record:", err);
         // Modal stays open so the user can change fields or cancel!
       }
     }
@@ -1027,7 +1078,6 @@ export function ModuleRenderer() {
         setIsEditOpen(false);
         setSelectedRecord(null);
       } catch (err) {
-        console.error("Error updating record:", err);
         // Modal stays open so the user can change fields or cancel!
       }
     }
@@ -1126,7 +1176,6 @@ export function ModuleRenderer() {
                 });
               }
             } catch (err) {
-              console.error("Dropdown error on edit:", err);
             }
           } else {
             setDynamicFormFields(null);
@@ -1149,7 +1198,7 @@ export function ModuleRenderer() {
             key={`add_form_${path}`}
             title=""
             fields={activeAddFields}
-            defaultValues={{}}
+            defaultValues={activeAddFields.reduce((acc, field) => { if (field.defaultValue !== undefined) acc[field.key] = field.defaultValue; return acc; }, {})}
             onSubmit={handleFormSubmit}
             onCancel={() => setIsAddOpen(false)}
           />
@@ -1207,7 +1256,10 @@ export function ModuleRenderer() {
             key={`edit_form_${path}_${selectedRecord.id || selectedRecord.CompanyProductId || selectedRecord.ProductId || selectedRecord.CompanyId || 'edit'}`}
             title=""
             fields={activeEditFields}
-            defaultValues={selectedRecord}
+            defaultValues={{
+              ...activeEditFields.reduce((acc, field) => { if (field.defaultValue !== undefined) acc[field.key] = field.defaultValue; return acc; }, {}),
+              ...selectedRecord
+            }}
             onSubmit={handleEditSubmit}
             onCancel={() => setIsEditOpen(false)}
           />
