@@ -16,10 +16,10 @@ http:
 
       {
         "flagId": 2,
-        "CompanyProductId":1,
-        "ProjectName": "WFMS",
-        "ProjectCode": "WFMS001",
-        "Description": "wow",
+        "CompanyProductId":3,
+        "ProjectName": "verp",
+        "ProjectCode": "verp001",
+        "Description": "wowww",
         "IsDisabled":false,
         "CreatedByUserId":1
       }

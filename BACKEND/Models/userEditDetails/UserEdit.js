@@ -2379,7 +2379,175 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 17. UPDATE DATA.User
+        // 16. INSERT ALL OLD COMPANIES
+        // ============================================================
+
+        for (const old of oldCompanies) {
+
+            await client.query(
+                `
+                INSERT INTO "DATA"."UserDetails"
+                (
+                    "UserId",
+                    "UserCompanyId",
+                    
+                    
+                    "CreatedAt",
+                    "CreatedByUserId"
+                )
+                VALUES
+                (
+                    $1,$2,
+                    CURRENT_TIMESTAMP,
+                    $3
+                );
+                `,
+                [
+                    old.UserId,
+                    old.UserCompanyId,
+
+                    UserId
+                ]
+            );
+        }
+
+
+        // ============================================================
+        // 17. INSERT ALL OLD PRODUCTS
+        // ============================================================
+
+        for (const old of oldProducts) {
+
+            await client.query(
+                `
+                INSERT INTO "DATA"."UserDetails"
+                (
+                    "UserId",
+                    "UserProductId",
+                    
+                    "CreatedAt",
+                    "CreatedByUserId"
+                )
+                VALUES
+                (
+                    $1,$2,
+                    CURRENT_TIMESTAMP,
+                    $3
+                );
+                `,
+                [
+                    old.UserId,
+                    old.UserProductId,
+                   
+                    UserId
+                ]
+            );
+        }
+
+
+        // ============================================================
+        // 18. INSERT ALL OLD PROJECTS
+        // ============================================================
+
+        for (const old of oldProjects) {
+
+            await client.query(
+                `
+                INSERT INTO "DATA"."UserDetails"
+                (
+                    "UserId",
+                    "UserProjectId",
+                    
+                    
+                    "CreatedAt",
+                    "CreatedByUserId"
+                )
+                VALUES
+                (
+                    $1,$2,
+                    CURRENT_TIMESTAMP,
+                    $3
+                );
+                `,
+                [
+                    old.UserId,
+                    old.UserProjectId,
+                    UserId
+                ]
+            );
+        }
+
+
+        // ============================================================
+        // 19. INSERT ALL OLD ROLES
+        // ============================================================
+
+        for (const old of oldRoles) {
+
+            await client.query(
+                `
+                INSERT INTO "DATA"."UserDetails"
+                (
+                    "UserId",
+                    "UserRoleId",
+                    "RoleId",
+                    "CreatedAt",
+                    "CreatedByUserId"
+                )
+                VALUES
+                (
+                    $1,$2,$3,
+                    CURRENT_TIMESTAMP,
+                    $4
+                );
+                `,
+                [
+                    old.UserId,
+                    old.UserRoleId,
+                    old.RoleId,
+                    UserId
+                ]
+            );
+        }
+
+
+        // ============================================================
+        // 20. INSERT ALL OLD REPORTING MANAGERS
+        // ============================================================
+
+        for (const old of oldManagers) {
+
+            await client.query(
+                `
+                INSERT INTO "DATA"."UserDetails"
+                (
+                    "UserId",
+                    "UserReportingManagerId",
+                    "ReportingManagerUserId",
+                    
+                    "CreatedAt",
+                    "CreatedByUserId"
+                )
+                VALUES
+                (
+                    $1,$2,$3,
+                    CURRENT_TIMESTAMP,
+                    $4
+                );
+                `,
+                [
+                    old.UserId,
+                    old.UserReportingManagerId,
+                    
+                    old.CompanyId,
+                    UserId
+                ]
+            );
+        }
+
+
+        // ============================================================
+        // 21. UPDATE DATA.User
         // ============================================================
 
         await client.query(
@@ -2730,11 +2898,7 @@ export const editUserdetails = async ({
 
         await client.query("ROLLBACK");
 
-        console.error(
-            "Edit user transaction failed:",
-            error
-        );
-
+      
         throw error;
 
     } finally {

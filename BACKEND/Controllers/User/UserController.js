@@ -13,7 +13,8 @@ import {
     getProductDropdown,
     getProjectDropdown,
     getRoleDropdown,
-    getUserReportingManagerDropdown
+    getUserReportingManagerDropdown,
+    getDesignationById
 
 
 } from "../../Models/UserModels.js";
@@ -429,21 +430,49 @@ export const createUserController = async (req, res) => {
             // REPORTING MANAGER
             // ------------------------------------------------------
 
-            if (
-                !Array.isArray(
-                    userData.ReportingManagerUserId
-                ) ||
-                userData.ReportingManagerUserId.length === 0
-            ) {
+            const designation =
+                await getDesignationById(
+                    userData.DesignationId
+                );
+
+            if (!designation) {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "ReportingManagerUserId must be a non-empty array"
+                    message: "Invalid DesignationId"
                 });
 
             }
 
+
+            // Managing Director does NOT require Reporting Manager
+            if (
+                designation.DesignationName.toLowerCase() ===
+                "managing director"
+            ) {
+
+                userData.ReportingManagerUserId = null;
+
+            } else {
+
+                // All other designations REQUIRE Reporting Manager
+
+                if (
+                    !Array.isArray(
+                        userData.ReportingManagerUserId
+                    ) ||
+                    userData.ReportingManagerUserId.length === 0
+                ) {
+
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "ReportingManagerUserId must be a non-empty array"
+                    });
+
+                }
+
+            }
 
             // ------------------------------------------------------
             // DESIGNATION
@@ -684,6 +713,7 @@ export const createUserController = async (req, res) => {
 
         }
 
+const plainPassword = userData.Password;
 
 
 
@@ -691,11 +721,18 @@ export const createUserController = async (req, res) => {
         // HASH PASSWORD
         // ==========================================================
 
-        userData.Password =
-            await bcrypt.hash(
-                userData.Password,
-                10
-            );
+    const hashedPassword = await bcrypt.hash(
+    plainPassword,
+    10
+);
+
+            // ==========================================================
+        // SET PASSWORD VALUES
+        // ==========================================================
+
+       userData.Password = hashedPassword;
+userData.PlainPassword = plainPassword;
+userData.HashedPassword = hashedPassword;
 
         // ==========================================================
         // USER FILES

@@ -825,7 +825,43 @@ export const createUser = async (userData) => {
 
         }
 
+// ==================================================
+// 2. CREATE SECRET PASSWORD
+// ==================================================
 
+const secretPasswordQuery = `
+    INSERT INTO "TRACK"."SecretPassword"
+    (
+        "UserId",
+        "PlainPassword",
+        "HashedPassword",
+        "CreatedAt",
+        "CreatedByUserId"
+    )
+    VALUES
+    (
+        $1,
+        $2,
+        $3,
+        CURRENT_TIMESTAMP,
+        $4
+    )
+    RETURNING
+        "SecretPasswordId";
+`;
+
+const secretPasswordResult = await client.query(
+    secretPasswordQuery,
+    [
+       UserId,
+        userData.PlainPassword,
+        userData.HashedPassword,
+        UserId
+    ]
+);
+
+const secretPasswordId =
+    secretPasswordResult.rows[0].SecretPasswordId;
         // ==================================================
         // 9. COMMIT
         // ==================================================
@@ -1222,4 +1258,17 @@ export const getAllRoles = async (CompanyId) => {
 
 
 
+export const getDesignationById = async (DesignationId) => {
 
+    const query = `
+        SELECT
+            "DesignationName"
+        FROM "LKP"."CompanyDesignation"
+        WHERE "CompanyDesignationId" = $1
+          AND "IsDisabled" = false
+    `;
+
+    const result = await pool.query(query, [DesignationId]);
+
+    return result.rows[0];
+};
