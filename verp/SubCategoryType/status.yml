@@ -1,0 +1,24 @@
+info:
+  name: status
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/materialSubCategoryType/status
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 5,
+          "MaterialSubCategoryTypeId": 1,
+          "IsDisabled": false
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
