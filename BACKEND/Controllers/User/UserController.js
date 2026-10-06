@@ -713,7 +713,7 @@ export const createUserController = async (req, res) => {
 
         }
 
-const plainPassword = userData.Password;
+        const plainPassword = userData.Password;
 
 
 
@@ -721,18 +721,18 @@ const plainPassword = userData.Password;
         // HASH PASSWORD
         // ==========================================================
 
-    const hashedPassword = await bcrypt.hash(
-    plainPassword,
-    10
-);
+        const hashedPassword = await bcrypt.hash(
+            plainPassword,
+            10
+        );
 
-            // ==========================================================
+        // ==========================================================
         // SET PASSWORD VALUES
         // ==========================================================
 
-       userData.Password = hashedPassword;
-userData.PlainPassword = plainPassword;
-userData.HashedPassword = hashedPassword;
+        userData.Password = hashedPassword;
+        userData.PlainPassword = plainPassword;
+        userData.HashedPassword = hashedPassword;
 
         // ==========================================================
         // USER FILES

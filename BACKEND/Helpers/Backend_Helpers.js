@@ -13,3 +13,4 @@ export const MANAGE_PAGES="/verp-service/managePages"
 
 export const USER_EDIT="/verp-service/userEdit"
 
+export const MATERIAL_SUB_CATEGORY_TYPE="/verp-service/materialSubCategoryType"
