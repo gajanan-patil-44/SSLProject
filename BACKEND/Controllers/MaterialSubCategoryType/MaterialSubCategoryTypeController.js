@@ -167,7 +167,6 @@ export const getMaterialCategory = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error fetching material category dropdown:", error);
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch material category dropdown",
