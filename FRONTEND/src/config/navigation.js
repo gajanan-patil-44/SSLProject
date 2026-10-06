@@ -48,9 +48,14 @@ export const navigationConfig = [
         path: "/master/manage-page"
       },
       {
-        label: "Item Sub Category",
+        label: "Material Category",
+        icon: "Tags",
+        path: "/master/material-category"
+      },
+      {
+        label: "Material Sub Category",
         icon: "Tag",
-        path: "/master/item-sub-category"
+        path: "/master/material-sub-category"
       }
     ]
   },

@@ -13,3 +13,5 @@ export { default as companyProductService } from './companyProductService';
 export { default as pageService } from './pageService';
 export { default as materialSubCategoryTypeService } from './materialSubCategoryTypeService';
 export * from './api';
+
+export { default as materialCategoryTypeService } from './materialCategoryTypeService';

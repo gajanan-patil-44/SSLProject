@@ -22,15 +22,14 @@ import {
 } from 'lucide-react';
 import { useERPStore } from '../store/useERPStore';
 
-import { materialSubCategoryTypeService } from '../services';
+import { materialCategoryTypeService } from '../services';
 
-export default function ItemSubCategoryCreation() {
+export default function MaterialCategoryCreation() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
 
   // State
-  const [subCategories, setSubCategories] = useState([]);
-  const [categoryDropdown, setCategoryDropdown] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,54 +40,36 @@ export default function ItemSubCategoryCreation() {
   // Form State
   const [formData, setFormData] = useState({
     id: null,
-    category: '', 
     code: '',
     name: '',
     status: 'Active'
   });
 
-  // Fetch dropdown values (only when modal opens)
-  const fetchCategoryDropdown = async () => {
-    if (categoryDropdown.length > 0) return; // Don't fetch if already fetched
-    try {
-      const data = await materialSubCategoryTypeService.getCategoryDropdown();
-      setCategoryDropdown(data);
-    } catch (error) {
-      console.error("Failed to fetch dropdown:", error);
-    }
-  };
-
-  // Fetch all sub categories
-  const fetchSubCategories = async () => {
+  // Fetch all categories
+  const fetchCategories = async () => {
     setLoading(true);
     try {
-      const data = await materialSubCategoryTypeService.getSubCategories();
-      setSubCategories(data);
+      const data = await materialCategoryTypeService.getCategories();
+      setCategories(data);
     } catch (error) {
-      console.error("Failed to fetch sub categories:", error);
-      showToast('Failed to load sub categories', 'error');
+      console.error("Failed to fetch categories:", error);
+      showToast('Failed to load categories', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSubCategories();
+    fetchCategories();
   }, []);
 
-  const handleOpenModal = async (item = null, mode = 'create') => {
-    // Fetch dropdown before opening the modal
-    await fetchCategoryDropdown();
-    
+  const handleOpenModal = (item = null, mode = 'create') => {
     setIsViewing(mode === 'view');
     
     if (item) {
       setIsEditing(mode === 'edit');
-      // Map back to form state
-      const matchedCategory = categoryDropdown.find(c => c.MaterialCategoryTypeName === item.category);
       setFormData({
         id: item.id,
-        category: matchedCategory ? matchedCategory.MaterialCategoryTypeId : '',
         code: item.code,
         name: item.name,
         status: item.status,
@@ -99,7 +80,6 @@ export default function ItemSubCategoryCreation() {
       setIsEditing(false);
       setFormData({
         id: null,
-        category: '',
         code: '',
         name: '',
         status: 'Active',
@@ -124,34 +104,33 @@ export default function ItemSubCategoryCreation() {
     try {
       if (isEditing) {
         const payload = {
-          FlagId: 4,
-          MaterialSubCategoryTypeId: formData.id,
-          MaterialCategoryTypeId: Number(formData.category),
-          MaterialSubCategoryTypeName: formData.name,
-          MaterialSubCategoryTypeCode: formData.code,
+          flagId: 3,
+          MaterialCategoryTypeId: formData.id,
+          MaterialCategoryTypeName: formData.name,
+          MaterialCategoryTypeCode: formData.code,
           UpdatedByUserName: userName
         };
         
         console.log('Update Payload:', payload);
-        const response = await materialSubCategoryTypeService.updateSubCategory(payload);
+        const response = await materialCategoryTypeService.updateCategory(payload);
         
         if (response && response.status === 'success') {
-          await fetchSubCategories();
+          await fetchCategories();
         }
       } else {
         const payload = {
-          FlagId: 2,
-          MaterialCategoryTypeId: Number(formData.category),
-          MaterialSubCategoryTypeName: formData.name,
-          MaterialSubCategoryTypeCode: formData.code,
+          flagId: 2,
+          MaterialCategoryTypeName: formData.name,
+          MaterialCategoryTypeCode: formData.code,
+          IsDisabled: formData.status === 'Inactive',
           CreatedByUserName: userName
         };
         
         console.log('Create Payload:', payload);
-        const response = await materialSubCategoryTypeService.createSubCategory(payload);
+        const response = await materialCategoryTypeService.createCategory(payload);
         
         if (response && response.status === 'success') {
-          await fetchSubCategories();
+          await fetchCategories();
         }
       }
       setIsModalOpen(false);
@@ -163,13 +142,13 @@ export default function ItemSubCategoryCreation() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this sub category?");
+    const confirmDelete = window.confirm("Are you sure you want to delete this category?");
     if (!confirmDelete) return;
 
     try {
-      const response = await materialSubCategoryTypeService.deleteSubCategory(id);
+      const response = await materialCategoryTypeService.deleteCategory(id);
       if (response && response.status === 'success') {
-        await fetchSubCategories();
+        await fetchCategories();
       }
     } catch (error) {
       console.error("Failed to delete", error);
@@ -180,12 +159,20 @@ export default function ItemSubCategoryCreation() {
     const newStatus = checked ? 'Active' : 'Inactive';
     
     // Optimistic UI update
-    setSubCategories(prev => prev.map(i => 
+    setCategories(prev => prev.map(i => 
       i.id === item.id ? { ...i, status: newStatus } : i
     ));
 
     try {
-      const response = await materialSubCategoryTypeService.toggleStatus(item.id, !checked);
+      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+      const payload = {
+        flagId: 4,
+        IsDisabled: !checked,
+        UpdatedByUserName: userName,
+        MaterialCategoryTypeId: item.id
+      };
+      
+      const response = await materialCategoryTypeService.toggleStatus(payload);
       
       if (!response || response.status !== 'success') {
         throw new Error('Status update failed');
@@ -193,30 +180,21 @@ export default function ItemSubCategoryCreation() {
     } catch (error) {
       console.error("Failed to toggle status:", error);
       // Revert if API fails
-      setSubCategories(prev => prev.map(i => 
+      setCategories(prev => prev.map(i => 
         i.id === item.id ? { ...i, status: item.status } : i
       ));
       showToast('Failed to update status', 'error');
     }
   };
 
-  const filteredData = subCategories.filter(item => 
+  const filteredData = categories.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const columns = [
-    { 
-      header: 'CATEGORY', 
-      accessorKey: 'category',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Box className="w-4 h-4 text-indigo-500" />
-          <span className="font-medium text-slate-900 dark:text-white">{row.original.category}</span>
-        </div>
-      )
-    },
+
     { 
       header: 'CODE', 
       accessorKey: 'code',
@@ -264,12 +242,12 @@ export default function ItemSubCategoryCreation() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Manage Sub Categories"
-        description="Manage system item sub categories, configurations and access permissions."
+        title="Manage Categories"
+        description="Manage system material categories, configurations and access permissions."
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Manage Sub Category', path: '/master/item-sub-category' }
+          { label: 'Manage Category', path: '/master/material-category' }
         ]}
       />
 
@@ -278,21 +256,21 @@ export default function ItemSubCategoryCreation() {
         columns={columns}
         data={filteredData}
         loading={loading}
-        searchPlaceholder="Search by sub category name, code..."
+        searchPlaceholder="Search by category name, code..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         onAddClick={() => handleOpenModal(null, 'create')}
         onEditClick={(row) => handleOpenModal(row, 'edit')}
         onViewClick={(row) => handleOpenModal(row, 'view')}
         onToggleStatusClick={(row) => handleToggleStatus(row, row.status !== 'Active')}
-        onRefresh={fetchSubCategories}
+        onRefresh={fetchCategories}
       />
 
       {/* Create / Edit Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={isViewing ? 'View Sub Category' : (isEditing ? 'Edit Sub Category' : 'Create Sub Category')}
+        title={isViewing ? 'View Category' : (isEditing ? 'Edit Category' : 'Create Category')}
         icon={ClipboardList}
         maxWidth="lg"
         actions={
@@ -322,55 +300,30 @@ export default function ItemSubCategoryCreation() {
             </p>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Item Category {!isViewing && <span className="text-rose-500">*</span>}
-            </label>
-            <div className="relative">
-              <select 
-                required
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                disabled={isViewing}
-                className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${isViewing ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
-              >
-                <option value="" disabled>Select Item Category</option>
-                {categoryDropdown.map(cat => (
-                  <option key={cat.MaterialCategoryTypeId} value={cat.MaterialCategoryTypeId}>
-                    {cat.MaterialCategoryTypeName}
-                  </option>
-                ))}
-              </select>
-              {!isViewing && (
-                <svg className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              )}
-            </div>
-          </div>
+
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Sub Category Code {!isViewing && <span className="text-rose-500">*</span>}
+              Category Code {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               required
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              placeholder="Enter Sub Category Code"
+              placeholder="Enter Category Code"
               disabled={isViewing}
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Sub Category Name {!isViewing && <span className="text-rose-500">*</span>}
+              Category Name {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter Sub Category Name"
+              placeholder="Enter Category Name"
               disabled={isViewing}
             />
           </div>
