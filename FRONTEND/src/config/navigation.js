@@ -46,6 +46,16 @@ export const navigationConfig = [
         label: "Manage Page",
         icon: "Layers",
         path: "/master/manage-page"
+      },
+      {
+        label: "Material Category",
+        icon: "Tags",
+        path: "/master/material-category"
+      },
+      {
+        label: "Material Sub Category",
+        icon: "Tag",
+        path: "/master/material-sub-category"
       }
     ]
   },
