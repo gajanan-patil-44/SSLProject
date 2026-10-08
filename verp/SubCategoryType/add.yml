@@ -1,0 +1,26 @@
+info:
+  name: add
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/materialSubCategoryType/add
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 2,
+          "MaterialCategoryTypeId": 1,
+          "MaterialSubCategoryTypeName": "Cables",
+          "MaterialSubCategoryTypeCode": "CAB",
+          "CreatedByUserName": "admin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

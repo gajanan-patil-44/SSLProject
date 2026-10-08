@@ -12,4 +12,6 @@ export const BIRTHDAY_EMAILS="/verp-service/birthdayEmails"
 export const MANAGE_PAGES="/verp-service/managePages"
 
 export const USER_EDIT="/verp-service/userEdit"
+export const ITEM_CATEGORY_CREATION="/verp-service/itemCategoryCreation"
 
+export const MATERIAL_SUB_CATEGORY_TYPE="/verp-service/materialSubCategoryType"
