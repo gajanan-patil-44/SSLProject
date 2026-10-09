@@ -140,13 +140,14 @@ export default function ManagePageView() {
     const loadParentPageDropdown = async () => {
       try {
         const mainPageFromView = 
+          (formData.SelectedParentPage && mainPagesDropdownList.find((p) => (p.PageName || p.pageName || p.name) === formData.SelectedParentPage)) ||
           (formData.SelectedMainPage && pages.find((p) => p.PageName === formData.SelectedMainPage)) ||
           (selectedPage && selectedPage.ParentPage && pages.find((p) => p.PageName === selectedPage.ParentPage)) ||
           (selectedPage && pages.find((p) => String(p.PageId) === String(selectedPage.ParentPageId || selectedPage.PageId))) ||
           pages.find((p) => p.PageType === 'MainPage' || !p.ParentPage || p.ParentPage === '-' || p.ParentPage === '—') ||
           mainPagesDropdownList[0];
 
-        const mainPageId = mainPageFromView?.PageId ?? selectedPage?.ParentPageId ?? selectedPage?.PageId;
+        const mainPageId = mainPageFromView?.PageId ?? mainPageFromView?.pageId ?? selectedPage?.ParentPageId ?? selectedPage?.PageId;
 
         if (lastFetchedParentMainId.current === `parent_${mainPageId}`) return;
         lastFetchedParentMainId.current = `parent_${mainPageId}`;
@@ -163,7 +164,7 @@ export default function ManagePageView() {
     return () => {
       isMounted = false;
     };
-  }, [isAddEditOpen, formData.PageType, formData.SelectedMainPage, selectedPage, pages, mainPagesDropdownList]);
+  }, [isAddEditOpen, formData.PageType, formData.SelectedMainPage, formData.SelectedParentPage, selectedPage, pages, mainPagesDropdownList]);
 
   // 3. Cascade fetch for ChildPage: When SelectedMainPage or SelectedParentPage changes
   useEffect(() => {
@@ -877,10 +878,10 @@ export default function ManagePageView() {
           {/* 2. When PageType === 'ParentPage' */}
           {formData.PageType === 'ParentPage' && (
             <div className="space-y-3 pt-1 animate-in fade-in duration-150">
-              {/* ParentPage Selection Dropdown */}
+              {/* MainPage Selection Dropdown */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-                  ParentPage <span className="text-rose-500">*</span>
+                  MainPage <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <select
@@ -893,10 +894,10 @@ export default function ManagePageView() {
                       formErrors.SelectedParentPage ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    <option value="">Select ParentPage</option>
-                    {parentPageOptions.map((pp, idx) => (
-                      <option key={idx} value={pp}>
-                        {pp}
+                    <option value="">Select MainPage</option>
+                    {mainPageOptions.map((mp, idx) => (
+                      <option key={idx} value={mp}>
+                        {mp}
                       </option>
                     ))}
                   </select>
@@ -1274,3 +1275,5 @@ export default function ManagePageView() {
     </div>
   );
 }
+
+
