@@ -359,3 +359,26 @@ export const updateMaterialStatus = async (MaterialId,IsDisabled) => {
     const result = await pool.query(query, [IsDisabled,MaterialId]);
     return result.rows[0] || null;
 };
+
+
+// =====================================================
+// FLAG ID 11 - FETCH MATERIAL FILE PATH
+// =====================================================
+export const fetchMaterialFilePath = async (MaterialFileId) => {
+
+    const query = `
+        SELECT
+            "MaterialFileId",
+            "MaterialId",
+            "FileTypeId",
+            "FilePatch"
+        FROM "DATA"."MaterialFile"
+        WHERE "MaterialFileId" = $1
+    `;
+
+    const result = await pool.query(query, [
+        MaterialFileId
+    ]);
+
+    return result.rows;
+};

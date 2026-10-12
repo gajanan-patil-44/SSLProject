@@ -1,0 +1,24 @@
+info:
+  name: status copy
+  type: http
+  seq: 6
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/material/status
+  body:
+    type: json
+    data: |-
+      {
+        "FlagId": 10,
+        "MaterialId": 2,
+        "IsDisabled": false
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
