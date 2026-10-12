@@ -22,8 +22,7 @@ export const getAllMaterialSubCategoryTypes = async () => {
         FROM "LKP"."MaterialSubCategoryType" msct
 
         INNER JOIN "LKP"."MaterialCategoryType" mct
-            ON msct."MaterialCategoryTypeId" =
-               mct."MaterialCategoryTypeId"
+            ON msct."MaterialCategoryTypeId" =mct."MaterialCategoryTypeId"
                
 
         ORDER BY msct."MaterialSubCategoryTypeId" ASC
