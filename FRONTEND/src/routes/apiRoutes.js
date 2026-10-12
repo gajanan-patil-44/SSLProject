@@ -196,6 +196,21 @@ export const BIRTHDAY_ROUTES = {
 
 /**
  * ============================================================================
+ * 13. MATERIAL / ITEM CREATION ROUTES
+ * ============================================================================
+ */
+export const MATERIAL_ROUTES = {
+  VIEW: '/verp-service/material/view',
+  ADD: '/verp-service/material/add',
+  EDIT: '/verp-service/material/edit',
+  STATUS: '/verp-service/material/status',
+  DROPDOWN: '/verp-service/material/dropdown'
+};
+
+export const ITEM_ROUTES = MATERIAL_ROUTES;
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -211,7 +226,9 @@ export const API_ROUTES = {
   USER_EDIT: USER_EDIT_ROUTES,
   FILE_TYPE: FILE_TYPE_ROUTES,
   PAGE: PAGE_ROUTES,
-  BIRTHDAY: BIRTHDAY_ROUTES
+  BIRTHDAY: BIRTHDAY_ROUTES,
+  ITEM: ITEM_ROUTES,
+  MATERIAL: MATERIAL_ROUTES
 };
 
 export default API_ROUTES;

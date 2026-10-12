@@ -15,3 +15,4 @@ export { default as materialSubCategoryTypeService } from './materialSubCategory
 export * from './api';
 
 export { default as materialCategoryTypeService } from './materialCategoryTypeService';
+export { default as itemCreationService } from './itemCreationService';
