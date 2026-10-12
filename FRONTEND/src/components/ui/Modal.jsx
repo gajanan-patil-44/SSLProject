@@ -42,30 +42,37 @@ export const Modal = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs transition-opacity animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs transition-opacity animate-fade-in overflow-y-auto">
       {/* Click outside backdrop to close */}
-      <div className="absolute inset-0 cursor-default" onClick={onClose}></div>
+      <div className="fixed inset-0 cursor-default" onClick={onClose}></div>
       
-      <div className={`relative w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden ${sizes[size]} ${className}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-50">{title}</h3>
+      <div 
+        style={{ maxHeight: 'calc(100vh - 2.5rem)', display: 'flex', flexDirection: 'column' }}
+        className={`relative w-full my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl sm:rounded-2xl shadow-2xl max-h-[88vh] overflow-hidden z-10 ${sizes[size] || sizes.md} ${className}`}
+      >
+        {/* Header - Fixed at top */}
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-50 truncate pr-3">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-650 dark:text-slate-500 cursor-pointer"
+            type="button"
+            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:text-slate-500 cursor-pointer transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-5 overflow-y-auto text-sm text-slate-700 dark:text-slate-300">
+        {/* Content - Guaranteed scrollable with explicit maxHeight and flex-1 */}
+        <div 
+          style={{ maxHeight: 'calc(100vh - 9.5rem)' }}
+          className="flex-1 min-h-0 p-4 sm:p-6 overflow-y-auto overscroll-contain text-sm text-slate-700 dark:text-slate-300"
+        >
           {children}
         </div>
 
-        {/* Footer */}
+        {/* Footer - Fixed at bottom */}
         {actions && (
-          <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+          <div className="shrink-0 flex items-center justify-end gap-2.5 sm:gap-3 px-4 sm:px-6 py-3 sm:py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 backdrop-blur-xs">
             {actions}
           </div>
         )}

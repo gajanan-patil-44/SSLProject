@@ -19,6 +19,7 @@ import ManagePageView from './pages/Master/ManagePageView';
 import ManageUserView from './pages/UserManagement/ManageUserView';
 import MaterialCategoryCreation from './pages/MaterialCategoryCreation';
 import MaterialSubCategoryCreation from './pages/MaterialSubCategoryCreation';
+import ItemCreation from './pages/ItemCreation';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -88,6 +89,8 @@ export default function App() {
           <Route path="master/manage-page" element={<ManagePageView />} />
           <Route path="master/material-category" element={<MaterialCategoryCreation />} />
           <Route path="master/material-sub-category" element={<MaterialSubCategoryCreation />} />
+          <Route path="master/item-creation" element={<ItemCreation />} />
+          <Route path="master/items" element={<ItemCreation />} />
 
           {/* Documents */}
           <Route path="documents/letter-builder" element={<LetterBuilderView />} />
