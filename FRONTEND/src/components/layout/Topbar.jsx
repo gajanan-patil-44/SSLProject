@@ -96,7 +96,7 @@ export default function Topbar() {
 
         {/* Notifications Dropdown */}
         <Dropdown
-          widthClass="w-80"
+          widthClass="w-[300px] sm:w-80 !-right-14 sm:!right-0"
           trigger={
             <button className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 cursor-pointer transition-colors" title="Notifications">
               <Bell className="w-4.5 h-4.5" />

@@ -286,6 +286,7 @@ export default function MaterialSubCategoryCreation() {
         onViewClick={(row) => handleOpenModal(row, 'view')}
         onToggleStatusClick={(row) => handleToggleStatus(row, row.status !== 'Active')}
         onRefresh={fetchSubCategories}
+        hideExport
       />
 
       {/* Create / Edit Modal */}

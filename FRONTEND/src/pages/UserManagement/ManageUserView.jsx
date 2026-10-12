@@ -699,6 +699,7 @@ export default function ManageUserView() {
         onToggleStatusClick={handleToggleStatus}
         searchPlaceholder="Search users..."
         onRefresh={loadUsers}
+        hideExport
       />
 
       {/* ------------------------------------------------------------------ */}
