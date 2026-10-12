@@ -23,7 +23,7 @@ export const getAllDesignations = async () => {
                 cd."DesignationLevel"
             
             FROM "LKP"."CompanyDesignation" cd
-            INNER JOIN "LKP"."Company" c
+            INNER JOIN "LKP"."Company" 
                 ON c."CompanyId" = cd."CompanyId"
             ORDER BY cd."CompanyDesignationId" ASC
         `;
