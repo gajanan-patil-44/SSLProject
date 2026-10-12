@@ -14,6 +14,7 @@ import Usereditroute from "../Routes/Useredit/UserEditRoute.js"
 import ItemCategoryRoutes from "../Routes/ItemCategory/ItemCategoryRoute.js"
 import MaterialSubCategoryTypeRoutes from "../Routes/MaterialSubCategoryType/MaterialSubCategoryTypeRoutes.js"
 import materialRoutes from "../Routes/Material/MaterialRoutes.js";
+import VendorRoutes from "../Routes/Vendor/VendorRoutes.js";
 
 
 const applyRoutes = (app) => {
@@ -33,6 +34,7 @@ app.use(backendHelpers.ITEM_CATEGORY_CREATION, ItemCategoryRoutes);
 app.use(backendHelpers.MATERIAL_SUB_CATEGORY_TYPE, MaterialSubCategoryTypeRoutes);  
 
 app.use(backendHelpers.MATERIAL, materialRoutes);
+app.use(backendHelpers.VENDOR, VendorRoutes);
 };
 
 export default applyRoutes;
