@@ -11,11 +11,9 @@ import {
     updateMaterialStatus
 } from "../../Models/Material/MaterialModel.js";
 
-
 // =====================================================
 // HELPER - PREPARE UPLOADED FILES
-// =====================================================
-
+// ====================================================
 const prepareMaterialFiles = (req) => {
     const uploadedFiles = req.files || [];
     const rawFileTypeIds = req.body.FileTypeIds;
@@ -66,12 +64,9 @@ const prepareMaterialFiles = (req) => {
         };
     });
 };
-
-
 // =====================================================
 // FLAG ID 1 - VIEW ALL MATERIALS
-// =====================================================
-
+// ====================================================
 export const getMaterial = async (req, res) => {
     try {
         if (Number(req.body.FlagId) !== 1) {
@@ -98,12 +93,9 @@ export const getMaterial = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 2 TO 7 - SEPARATE DROPDOWNS
 // =====================================================
-
 export const getMaterialDropdown = async (req, res) => {
     try {
         const FlagId = Number(req.body.FlagId);
@@ -164,12 +156,9 @@ export const getMaterialDropdown = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 8 - ADD MATERIAL WITH MULTER FILES
 // =====================================================
-
 export const createMaterial = async (req, res) => {
     try {
         if (Number(req.body.FlagId) !== 8) {
@@ -192,7 +181,6 @@ export const createMaterial = async (req, res) => {
         }
 
         const files = prepareMaterialFiles(req);
-
         const result = await addMaterial(data, files);
 
         return res.status(201).json({
@@ -221,12 +209,9 @@ export const createMaterial = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 9 - EDIT MATERIAL
 // =====================================================
-
 export const editMaterial = async (req, res) => {
     try {
         if (Number(req.body.FlagId) !== 9) {
@@ -259,7 +244,6 @@ export const editMaterial = async (req, res) => {
         }
 
         const files = prepareMaterialFiles(req);
-
         const result = await updateMaterial(data, files);
 
         if (!result) {
@@ -286,7 +270,7 @@ export const editMaterial = async (req, res) => {
                 status: "error",
                 message: error.message
             });
-        } 
+        }
 
         return res.status(500).json({
             status: "error",
@@ -295,8 +279,6 @@ export const editMaterial = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 10 - ENABLE / DISABLE MATERIAL
 // =====================================================

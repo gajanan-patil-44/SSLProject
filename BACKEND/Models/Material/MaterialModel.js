@@ -3,7 +3,6 @@ import { pool } from "../../Config/db.js";
 // =====================================================
 // FLAG ID 1 - VIEW ALL MATERIALS
 // =====================================================
-
 export const getAllMaterials = async () => {
     const query = `
         SELECT
@@ -70,12 +69,9 @@ export const getAllMaterials = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
-
-
 // =====================================================
 // FLAG ID 2 - MATERIAL CATEGORY DROPDOWN
 // =====================================================
-
 export const getMaterialCategoryDropdown = async () => {
     const query = `
         SELECT
@@ -90,12 +86,9 @@ export const getMaterialCategoryDropdown = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
-
-
 // =====================================================
 // FLAG ID 3 - MATERIAL SUB-CATEGORY DROPDOWN
 // =====================================================
-
 export const getMaterialSubCategoryDropdown = async () => {
     const query = `
         SELECT
@@ -116,12 +109,9 @@ export const getMaterialSubCategoryDropdown = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
-
-
 // =====================================================
 // FLAG ID 4 - UOM DROPDOWN
 // =====================================================
-
 export const getUOMDropdown = async () => {
     const query = `
         SELECT
@@ -136,12 +126,9 @@ export const getUOMDropdown = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
-
-
 // =====================================================
 // FLAG ID 5 - GST TYPE DROPDOWN
 // =====================================================
-
 export const getGSTTypeDropdown = async () => {
     const query = `
         SELECT
@@ -156,12 +143,9 @@ export const getGSTTypeDropdown = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
-
-
 // =====================================================
 // FLAG ID 6 - GST RATE DROPDOWN
 // =====================================================
-
 export const getGSTRateDropdown = async () => {
     const query = `
         SELECT
@@ -182,12 +166,9 @@ export const getGSTRateDropdown = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
-
-
 // =====================================================
 // FLAG ID 7 - FILE TYPE DROPDOWN
 // =====================================================
-
 export const getFileTypeDropdown = async () => {
     const query = `
         SELECT
@@ -202,12 +183,9 @@ export const getFileTypeDropdown = async () => {
     const result = await pool.query(query);
     return result.rows;
 };
-
-
 // =====================================================
 // FLAG ID 8 - ADD MATERIAL AND FILES
 // =====================================================
-
 export const addMaterial = async (data, files) => {
     const client = await pool.connect();
 
@@ -288,18 +266,13 @@ export const addMaterial = async (data, files) => {
         client.release();
     }
 };
-
-
 // =====================================================
 // FLAG ID 9 - EDIT MATERIAL AND APPEND NEW FILES
 // =====================================================
-
 export const updateMaterial = async (data, files) => {
     const client = await pool.connect();
-
     try {
         await client.query("BEGIN");
-
         const query = `
             UPDATE "DATA"."Material"
             SET
@@ -355,11 +328,7 @@ export const updateMaterial = async (data, files) => {
                     )
                     VALUES ($1, $2, $3, NOW())
                 `,
-                [
-                    data.MaterialId,
-                    file.FileTypeId,
-                    file.FilePatch
-                ]
+                [data.MaterialId,file.FileTypeId,file.FilePatch]
             );
         }
 
@@ -372,16 +341,10 @@ export const updateMaterial = async (data, files) => {
         client.release();
     }
 };
-
-
 // =====================================================
 // FLAG ID 10 - ENABLE / DISABLE MATERIAL
 // =====================================================
-
-export const updateMaterialStatus = async (
-    MaterialId,
-    IsDisabled
-) => {
+export const updateMaterialStatus = async (MaterialId,IsDisabled) => {
     const query = `
         UPDATE "DATA"."Material"
         SET
@@ -393,11 +356,6 @@ export const updateMaterialStatus = async (
             "IsDisabled",
             "UpdatedAt"
     `;
-
-    const result = await pool.query(query, [
-        IsDisabled,
-        MaterialId
-    ]);
-
+    const result = await pool.query(query, [IsDisabled,MaterialId]);
     return result.rows[0] || null;
 };
