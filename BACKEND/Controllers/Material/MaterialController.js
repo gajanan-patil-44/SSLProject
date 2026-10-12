@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import "dotenv/config";
 import {
     getAllMaterials,
     getMaterialCategoryDropdown,
@@ -8,14 +11,13 @@ import {
     getFileTypeDropdown,
     addMaterial,
     updateMaterial,
-    updateMaterialStatus
+    updateMaterialStatus,
+    fetchMaterialFilePath
 } from "../../Models/Material/MaterialModel.js";
-
 
 // =====================================================
 // HELPER - PREPARE UPLOADED FILES
-// =====================================================
-
+// ====================================================
 const prepareMaterialFiles = (req) => {
     const uploadedFiles = req.files || [];
     const rawFileTypeIds = req.body.FileTypeIds;
@@ -66,12 +68,9 @@ const prepareMaterialFiles = (req) => {
         };
     });
 };
-
-
 // =====================================================
 // FLAG ID 1 - VIEW ALL MATERIALS
-// =====================================================
-
+// ====================================================
 export const getMaterial = async (req, res) => {
     try {
         if (Number(req.body.FlagId) !== 1) {
@@ -98,12 +97,9 @@ export const getMaterial = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 2 TO 7 - SEPARATE DROPDOWNS
 // =====================================================
-
 export const getMaterialDropdown = async (req, res) => {
     try {
         const FlagId = Number(req.body.FlagId);
@@ -164,12 +160,9 @@ export const getMaterialDropdown = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 8 - ADD MATERIAL WITH MULTER FILES
 // =====================================================
-
 export const createMaterial = async (req, res) => {
     try {
         if (Number(req.body.FlagId) !== 8) {
@@ -192,7 +185,6 @@ export const createMaterial = async (req, res) => {
         }
 
         const files = prepareMaterialFiles(req);
-
         const result = await addMaterial(data, files);
 
         return res.status(201).json({
@@ -221,12 +213,9 @@ export const createMaterial = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 9 - EDIT MATERIAL
 // =====================================================
-
 export const editMaterial = async (req, res) => {
     try {
         if (Number(req.body.FlagId) !== 9) {
@@ -259,7 +248,6 @@ export const editMaterial = async (req, res) => {
         }
 
         const files = prepareMaterialFiles(req);
-
         const result = await updateMaterial(data, files);
 
         if (!result) {
@@ -286,7 +274,7 @@ export const editMaterial = async (req, res) => {
                 status: "error",
                 message: error.message
             });
-        } 
+        }
 
         return res.status(500).json({
             status: "error",
@@ -295,12 +283,9 @@ export const editMaterial = async (req, res) => {
         });
     }
 };
-
-
 // =====================================================
 // FLAG ID 10 - ENABLE / DISABLE MATERIAL
 // =====================================================
-
 export const updateMaterialStatusController = async (req, res) => {
     try {
         const {
@@ -362,6 +347,156 @@ export const updateMaterialStatusController = async (req, res) => {
         });
     }
 };
+// =====================================================
+// FLAG ID 11 - VIEW MATERIAL FILE
+// =====================================================
+export const viewMaterialFile = async (req, res) => {
+    try {
+        const { FlagId, MaterialFileId } = req.body || {};
 
+        // FLAG VALIDATION
+        if (Number(FlagId) !== 11) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid FlagId. Use FlagId 11."
+            });
+        }
 
+        // MATERIAL FILE ID VALIDATION
+        if (
+            MaterialFileId === undefined ||
+            MaterialFileId === null ||
+            String(MaterialFileId).trim() === "" ||
+            !Number.isSafeInteger(Number(MaterialFileId)) ||
+            Number(MaterialFileId) <= 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "A valid MaterialFileId is required"
+            });
+        }
 
+        // FETCH FILE PATH FROM DATABASE
+        const files = await fetchMaterialFilePath(
+            Number(MaterialFileId)
+        );
+
+        if (!files || files.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "Material file not found"
+            });
+        }
+
+        const FilePatch = files[0].FilePatch;
+
+        if (
+            typeof FilePatch !== "string" ||
+            !FilePatch.trim()
+        ) {
+            return res.status(404).json({
+                status: "error",
+                message: "Material file path not available"
+            });
+        }
+        // USE THE SAME DIRECTORY AS MULTER
+        const uploadDirectory = path.resolve(process.env.MATERIAL_UPLOAD_DIR || "./uploads/Materials");
+        // GET THE STORED FILE NAME
+        const fileName = path.basename(FilePatch.trim().replace(/\\/g, "/"));
+        // CONSTRUCT THE ABSOLUTE PATH
+        const absolutePath = path.join(uploadDirectory, fileName);
+
+        // VERIFY THAT THE FILE IS INSIDE THE UPLOAD DIRECTORY
+        if (
+            path.dirname(absolutePath) !== uploadDirectory
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid material file path"
+            });
+        }
+
+        // CHECK WHETHER THE FILE EXISTS
+        let fileStats;
+
+        try {
+            fileStats = await fs.promises.stat(absolutePath);
+        } catch (error) {
+            if (error.code === "ENOENT") {
+                return res.status(404).json({
+                    status: "error",
+                    message: "Material file does not exist on server",
+                    checkedPath: absolutePath
+                });
+            }
+
+            throw error;
+        }
+
+        if (!fileStats.isFile()) {
+            return res.status(404).json({
+                status: "error",
+                message: "Material file not found on server"
+            });
+        }
+
+        // VALIDATE FILE TYPE
+        const ext = path.extname(fileName).toLowerCase();
+
+        const contentTypes = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".webp": "image/webp",
+            ".pdf": "application/pdf"
+        };
+
+        if (!contentTypes[ext]) {
+            return res.status(400).json({
+                status: "error",
+                message: "Unsupported material file type"
+            });
+        }
+
+        // SET RESPONSE HEADERS
+        res.setHeader("Content-Type", contentTypes[ext]);
+
+        res.setHeader(
+            "Content-Disposition",
+            `inline; filename="MaterialFile${ext}"`
+        );
+
+        res.setHeader("X-Content-Type-Options", "nosniff");
+
+        // STREAM FILE
+        const fileStream = fs.createReadStream(absolutePath);
+
+        fileStream.on("error", (error) => {
+            console.error("Material File Stream Error:", error);
+
+            if (!res.headersSent) {
+                return res.status(500).json({
+                    status: "error",
+                    message: "Unable to read material file"
+                });
+            }
+
+            res.destroy(error);
+        });
+
+        return fileStream.pipe(res);
+
+    } catch (error) {
+        console.error("View Material File Error:", error);
+
+        if (res.headersSent) {
+            return res.end();
+        }
+
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to view material file",
+            error: error.message
+        });
+    }
+};
