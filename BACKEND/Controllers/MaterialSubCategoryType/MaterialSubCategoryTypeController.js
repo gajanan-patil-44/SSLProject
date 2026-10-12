@@ -32,7 +32,6 @@ export const getMaterialSubCategoryType = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error fetching material sub category types:", error);
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch material sub category types",
@@ -139,7 +138,6 @@ export const addMaterialSubCategory = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error adding material sub category:", error);
         return res.status(500).json({
             status: "error",
             message: "Failed to add material sub category",
