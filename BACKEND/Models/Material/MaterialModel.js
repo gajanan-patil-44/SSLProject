@@ -157,7 +157,6 @@ export const getGSTRateDropdown = async () => {
         WHERE r."IsDisabled" = false
          AND r."GSTTypeId" = $1
         ORDER BY
-            t."GSTTypeName" ASC,
             r."GSTPercentage" ASC
     `;
 
