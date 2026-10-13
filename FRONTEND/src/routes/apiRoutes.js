@@ -204,10 +204,25 @@ export const MATERIAL_ROUTES = {
   ADD: '/verp-service/material/add',
   EDIT: '/verp-service/material/edit',
   STATUS: '/verp-service/material/status',
-  DROPDOWN: '/verp-service/material/dropdown'
+  DROPDOWN: '/verp-service/material/dropdown',
+  VIEW_FILE: '/verp-service/material/view-file'
 };
 
 export const ITEM_ROUTES = MATERIAL_ROUTES;
+
+/**
+ * ============================================================================
+ * 15. VENDOR MANAGEMENT ROUTES
+ * ============================================================================
+ */
+export const VENDOR_ROUTES = {
+  VIEW: '/verp-service/vendor/view',
+  DROPDOWN: '/verp-service/vendor/dropdown',
+  ADD: '/verp-service/vendor/add',
+  EDIT: '/verp-service/vendor/edit',
+  STATUS: '/verp-service/vendor/status',
+  DELETE: '/verp-service/vendor/delete'
+};
 
 /**
  * ============================================================================
@@ -228,7 +243,8 @@ export const API_ROUTES = {
   PAGE: PAGE_ROUTES,
   BIRTHDAY: BIRTHDAY_ROUTES,
   ITEM: ITEM_ROUTES,
-  MATERIAL: MATERIAL_ROUTES
+  MATERIAL: MATERIAL_ROUTES,
+  VENDOR: VENDOR_ROUTES
 };
 
 export default API_ROUTES;

@@ -6,7 +6,8 @@ const API_ENDPOINTS = {
   add: '/verp-service/material/add',
   edit: '/verp-service/material/edit',
   status: '/verp-service/material/status',
-  dropdown: '/verp-service/material/dropdown'
+  dropdown: '/verp-service/material/dropdown',
+  viewFile: '/verp-service/material/view-file'
 };
 
 const itemCreationService = {
@@ -39,10 +40,21 @@ const itemCreationService = {
           description: item.DescriptionSpecification || '',
           status: item.IsDisabled ? 'Inactive' : 'Active',
           isDisabled: Boolean(item.IsDisabled),
-          createdBy: item.CreatedByUserName || item.CreatedByUserId ? String(item.CreatedByUserName || `User #${item.CreatedByUserId}`) : 'System',
-          userName: item.CreatedByUserName || item.CreatedByUserId ? String(item.CreatedByUserName || `User #${item.CreatedByUserId}`) : 'System',
+          createdBy: item.CreatedByUserName || item.CreatedByUserId ? String(item.CreatedByUserName || `User #${item.CreatedByUserId}`) : '',
+          userName: item.CreatedByUserName || item.CreatedByUserId ? String(item.CreatedByUserName || `User #${item.CreatedByUserId}`) : '',
           createdAt: item.CreatedAt ? new Date(item.CreatedAt).toLocaleDateString('en-GB') : '—',
           updatedAt: item.UpdatedAt ? new Date(item.UpdatedAt).toLocaleDateString('en-GB') : '—',
+          files: Array.isArray(item.Files) ? item.Files.map(f => {
+            const rawPath = f.FilePatch || f.FilePath || '';
+            const path = rawPath ? rawPath.replace(/\\/g, '/') : '';
+            const name = path ? path.split('/').pop() : 'Material Document';
+            return {
+              id: f.MaterialFileId,
+              fileTypeId: f.FileTypeId,
+              filePath: path,
+              fileName: name
+            };
+          }) : [],
           raw: item
         }));
       }
@@ -337,6 +349,37 @@ const itemCreationService = {
       UpdatedAt: payload.UpdatedAt || undefined
     };
     return await apiClient.patch(API_ENDPOINTS.status, body);
+  },
+
+  /**
+   * View Material File
+   * Hits POST /verp-service/material/view-file with payload: { FlagId: 11, MaterialFileId: <id> }
+   */
+  viewFile: async (materialFileId) => {
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.viewFile, {
+        FlagId: 11,
+        MaterialFileId: Number(materialFileId)
+      }, {
+        responseType: 'blob'
+      });
+
+      if (response instanceof Blob) {
+        if (response.type.includes('json') || response.type.includes('text')) {
+          const text = await response.text();
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            return { raw: text };
+          }
+        }
+        return response;
+      }
+      return response;
+    } catch (error) {
+      console.error("Failed to view material file:", error);
+      throw error;
+    }
   }
 };
 
