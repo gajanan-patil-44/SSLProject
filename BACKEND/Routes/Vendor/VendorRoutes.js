@@ -16,7 +16,7 @@ const router = express.Router();
 router.post("/view", getVendors);
 router.post("/dropdown", getVendorDropdowns);
 router.post("/add",upload.array("vendorFiles", 10),createVendor);
-router.post("/edit",upload.array("vendorFiles", 10),editVendor);
+router.patch("/edit",upload.array("vendorFiles", 10),editVendor);
 router.patch("/status", updateVendorStatusController);
 
 export default router;

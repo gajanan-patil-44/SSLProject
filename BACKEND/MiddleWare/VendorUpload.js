@@ -5,7 +5,7 @@ import path from "path";
 import fs from "fs";
 
 const uploadDirectory = path.resolve(
-    process.env.VENDOR_UPLOAD_DIR || "./uploads/Vendors"
+    process.env.VENDOR_UPLOAD_DIR
 );
 
 fs.mkdirSync(uploadDirectory, { recursive: true });
@@ -16,9 +16,7 @@ const storage = multer.diskStorage({
     },
 
     filename: (req, file, cb) => {
-        const extension = path
-            .extname(file.originalname)
-            .toLowerCase();
+        const extension = path.extname(file.originalname).toLowerCase();
 
         const filename =
             `${Date.now()}-${Math.round(Math.random() * 1e9)}` +
@@ -44,9 +42,7 @@ const upload = multer({
             ".webp"
         ];
 
-        const extension = path
-            .extname(file.originalname)
-            .toLowerCase();
+        const extension = path.extname(file.originalname).toLowerCase();
 
         if (allowedExtensions.includes(extension)) {
             return cb(null, true);
