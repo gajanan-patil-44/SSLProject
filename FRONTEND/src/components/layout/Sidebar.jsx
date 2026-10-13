@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { useERPStore } from '../../store/useERPStore';
-import { navigationConfig } from '../../config/navigation';
-import { ChevronRight, ChevronDown, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { ChevronRight, ChevronDown, PanelLeftClose, PanelLeft, ShieldAlert } from 'lucide-react';
 import { Tooltip } from '../ui/index';
 import logo from '../../assets/vite.svg';
 
@@ -108,13 +107,13 @@ const formatPageNode = (page) => {
   };
 };
 
-// Normalize menu into sections with title & items
+// Normalize menu into sections with title & items based strictly on allocated menuPage
 const normalizeNavigation = (menuData) => {
   if (!Array.isArray(menuData) || menuData.length === 0) {
-    return navigationConfig;
+    return [];
   }
 
-  // Already section-based configuration (e.g. navigationConfig format)
+  // Already section-based configuration
   if (menuData[0]?.title && Array.isArray(menuData[0]?.items)) {
     return menuData;
   }
@@ -131,9 +130,11 @@ const normalizeNavigation = (menuData) => {
     let sectionTitle = 'MENU';
     if (item.path && item.path.startsWith('/')) {
       const segment = item.path.split('/')[1];
-      if (segment && segment.toLowerCase() !== 'dashboard') {
-        sectionTitle = segment.toUpperCase();
+      if (segment) {
+        sectionTitle = segment.toLowerCase() === 'dashboard' ? 'MAIN' : segment.toUpperCase();
       }
+    } else if (item.label && Array.isArray(item.children) && item.children.length > 0) {
+      sectionTitle = item.label.toUpperCase();
     }
     if (!sectionsMap.has(sectionTitle)) {
       sectionsMap.set(sectionTitle, []);
@@ -142,27 +143,6 @@ const normalizeNavigation = (menuData) => {
   });
 
   const sections = [];
-
-  // Check if Dashboard is already present in any branch
-  const hasDashboard = (items) => items.some(it => 
-    it.path === '/dashboard' || (it.children && hasDashboard(it.children))
-  );
-
-  if (!hasDashboard(formattedItems)) {
-    sections.push({
-      title: 'MAIN',
-      items: [
-        {
-          id: 'dashboard',
-          label: 'Dashboard',
-          icon: 'dashboard',
-          path: '/dashboard',
-          children: []
-        }
-      ]
-    });
-  }
-
   sectionsMap.forEach((items, title) => {
     sections.push({
       title,
@@ -219,7 +199,8 @@ export default function Sidebar() {
     }));
   };
 
-  const sections = normalizeNavigation(userMenu || sessionMenu);
+  const activeMenu = Array.isArray(userMenu) ? userMenu : (Array.isArray(sessionMenu) ? sessionMenu : []);
+  const sections = normalizeNavigation(activeMenu);
 
   // Recursive menu item renderer
   const renderMenuItem = (item, level = 0, keyPrefix = '') => {
@@ -398,23 +379,35 @@ export default function Sidebar() {
 
       {/* Scrollable Navigation */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-3.5 py-4 space-y-5">
-        {sections.map((section, sIdx) => (
-          <div key={sIdx} className="space-y-1.5">
-            {/* Section Title */}
-            {!sidebarCollapsed ? (
-              <h5 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5">
-                {section.title}
-              </h5>
-            ) : (
-              <div className="border-t border-slate-200/50 dark:border-slate-800/80 my-2 mx-1"></div>
+        {sections.length === 0 ? (
+          <div className="px-3 py-8 text-center flex flex-col items-center justify-center gap-2.5 text-slate-400 dark:text-slate-500">
+            <ShieldAlert className="w-8 h-8 opacity-40 stroke-1 text-slate-400" />
+            {!sidebarCollapsed && (
+              <>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">No pages assigned</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">You don't have access to any menu pages yet.</span>
+              </>
             )}
-
-            {/* Section Items */}
-            <div className="space-y-1">
-              {section.items.map((item, iIdx) => renderMenuItem(item, 0, `s${sIdx}-i${iIdx}`))}
-            </div>
           </div>
-        ))}
+        ) : (
+          sections.map((section, sIdx) => (
+            <div key={sIdx} className="space-y-1.5">
+              {/* Section Title */}
+              {!sidebarCollapsed ? (
+                <h5 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5">
+                  {section.title}
+                </h5>
+              ) : (
+                <div className="border-t border-slate-200/50 dark:border-slate-800/80 my-2 mx-1"></div>
+              )}
+
+              {/* Section Items */}
+              <div className="space-y-1">
+                {section.items.map((item, iIdx) => renderMenuItem(item, 0, `s${sIdx}-i${iIdx}`))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
