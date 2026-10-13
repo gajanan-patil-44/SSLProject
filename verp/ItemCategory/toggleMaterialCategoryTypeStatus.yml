@@ -6,6 +6,15 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/itemCategoryCreation/toggleMaterialCategoryTypeStatus
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":4,
+        "IsDisabled":false,
+        "UpdatedByUserName":"kss",
+        "MaterialCategoryTypeId":2
+      }
   auth: inherit
 
 settings:

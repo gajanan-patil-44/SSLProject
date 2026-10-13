@@ -5,7 +5,17 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/itemCategoryCreation/addItemCategory
+  url: http://localhost:9004/verp-service/itemCategoryCreation/addMaterialCategoryType
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":2,
+        "MaterialCategoryTypeName":"abcd",
+        "MaterialCategoryTypeCode":"EL",
+        "IsDisabled":false,
+        "CreatedByUserName":"kavya"
+      }
   auth: inherit
 
 settings:
