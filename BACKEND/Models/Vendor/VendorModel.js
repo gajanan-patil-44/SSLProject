@@ -303,3 +303,20 @@ export const updateVendorStatus = async (
 
     return result.rows[0] || null;
 };
+
+export const fetchVendorFilePath = async (VendorFileId) => {
+    const query = `
+        SELECT
+            "VendorFileId",
+            "VendorId",
+            "VendorFileTypeId",
+            "VendorFilePath"
+        FROM "DATA"."VendorFile"
+        WHERE "VendorFileId" = $1
+          AND "IsDisabled" = false
+    `;
+
+    const result = await pool.query(query, [VendorFileId]);
+
+    return result.rows;
+};

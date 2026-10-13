@@ -13,7 +13,8 @@ import {
     getProjectDropdown,
     getRoleDropdown,
     getUserReportingManagerDropdown,
-    getDesignationById
+    getDesignationById,
+       getUserCount
 
 
 } from "../../Models/UserModels.js";
@@ -134,29 +135,45 @@ export const createUserController = async (req, res) => {
         // COMMON REQUIRED FIELDS
         // ==========================================================
 
-        const requiredFields = [
-            "EmployeeId",
-            "FirstName",
-            "PhoneNumber",
-            "DateOfBirth",
-            "DateOfJoining",
-            "GenderId",
-            "MaritalStatusId",
-            "Email",
-            "LoginName",
-            "Password",
-            "RoleId",
-            "CreatedByUserName"
-        ];
+    
+const requiredFields = [
+    "EmployeeId",
+    "FirstName",
+    "PhoneNumber",
+    "DateOfBirth",
+    "DateOfJoining",
+    "GenderId",
+    "MaritalStatusId",
+    "Email",
+    "LoginName",
+    "Password",
+    "RoleId"
+];
 
-        for (const field of requiredFields) {
-            if (isEmpty(userData[field])) {
-                return res.status(400).json({
-                    status: "error",
-                    message: `${field} is required`
-                });
-            }
-        }
+for (const field of requiredFields) {
+    if (isEmpty(userData[field])) {
+        return res.status(400).json({
+            status: "error",
+            message: `${field} is required`
+        });
+    }
+}
+
+// CreatedByUserName is optional for the first Super Admin
+const userCount = await getUserCount();
+
+if (
+    parseInt(userData.RoleId) === 1 &&
+    userCount === 0
+) {
+    // First user: initial Super Admin
+    userData.CreatedByUserName = null;
+} else if (isEmpty(userData.CreatedByUserName)) {
+    return res.status(400).json({
+        status: "error",
+        message: "CreatedByUserName is required"
+    });
+}
 
         // ==========================================================
         // ROLE ID
