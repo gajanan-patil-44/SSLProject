@@ -184,17 +184,17 @@ export const Radio = forwardRef(({ label, className = '', ...props }, ref) => {
 
 export const Switch = forwardRef(({ label, className = '', checked, onChange, ...props }, ref) => {
   return (
-    <label className={`inline-flex items-center gap-3 cursor-pointer text-sm text-slate-700 dark:text-slate-300 select-none ${className}`}>
-      <div className="relative">
+    <label className={`inline-flex items-center gap-3 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 select-none ${className}`}>
+      <div className="relative inline-flex items-center">
         <input
           ref={ref}
           type="checkbox"
-          checked={checked}
+          checked={!!checked}
           onChange={onChange}
           className="sr-only peer"
           {...props}
         />
-        <div className="w-10 h-5.5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-indigo-600 peer-checked:to-violet-600"></div>
+        <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-indigo-600 peer-checked:to-violet-600"></div>
       </div>
       {label && <span>{label}</span>}
     </label>

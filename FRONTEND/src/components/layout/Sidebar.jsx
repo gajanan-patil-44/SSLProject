@@ -46,10 +46,16 @@ const ICON_MAP = {
   designations: Icons.Briefcase,
   designation: Icons.Briefcase,
   roles: Icons.Shield,
-  role: Icons.Shield,
   'manage-page': Icons.Layers,
   managepage: Icons.Layers,
   layers: Icons.Layers,
+  'vendor-management': Icons.Store,
+  vendormanagement: Icons.Store,
+  'vendor_management': Icons.Store,
+  vendors: Icons.Store,
+  vendor: Icons.Store,
+  store: Icons.Store,
+  truck: Icons.Truck,
 };
 
 const resolveIcon = (iconName) => {

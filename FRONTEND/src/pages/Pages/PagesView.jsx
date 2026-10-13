@@ -1,4 +1,4 @@
-﻿// src/pages/Pages/PagesView.jsx
+// src/pages/Pages/PagesView.jsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -80,13 +80,17 @@ export default function PagesView() {
           localStorage.removeItem('remembered_credentials');
         }
 
+        const menuPages = Array.isArray(response.data?.menuPage)
+          ? response.data.menuPage
+          : (Array.isArray(response.menuPage) ? response.menuPage : []);
+
         setAuthData({
           token: response.token?.accessToken,
           user: response.data?.user,
           context: response.data?.context,
           session: response.session,
           photo: response.photo,
-          userMenu: response.data?.menuPage || response.menuPage || response.data?.userMenu || response.userMenu || null,
+          userMenu: menuPages,
           rawResponse: response
         });
         showToast('Login successful! Welcome back.', 'success');

@@ -16,3 +16,4 @@ export * from './api';
 
 export { default as materialCategoryTypeService } from './materialCategoryTypeService';
 export { default as itemCreationService } from './itemCreationService';
+export { default as vendorService } from './vendorService';
