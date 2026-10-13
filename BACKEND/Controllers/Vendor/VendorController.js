@@ -159,25 +159,42 @@ export const getVendorDropdowns = async (req, res) => {
     const { FlagId } = req.body;
 
     try {
+        // =========================================
+        // FLAG ID 2: VENDOR TYPE DROPDOWN
+        // =========================================
         if (parseInt(FlagId) === 2) {
-            const [vendorTypes, vendorFileTypes] = await Promise.all([
-                getVendorTypeDropdown(),
-                getVendorFileTypeDropdown()
-            ]);
+            const vendorTypes = await getVendorTypeDropdown();
 
             return res.status(200).json({
                 status: "success",
-                message: "Vendor dropdowns fetched successfully",
+                message: "Vendor types fetched successfully",
                 data: {
-                    VendorTypes: vendorTypes,
+                    VendorTypes: vendorTypes
+                }
+            });
+        }
+
+        // =========================================
+        // FLAG ID 3: VENDOR FILE TYPE DROPDOWN
+        // =========================================
+        if (parseInt(FlagId) === 3) {
+            const vendorFileTypes = await getVendorFileTypeDropdown();
+
+            return res.status(200).json({
+                status: "success",
+                message: "Vendor file types fetched successfully",
+                data: {
                     VendorFileTypes: vendorFileTypes
                 }
             });
         }
 
+        // =========================================
+        // INVALID FLAG ID
+        // =========================================
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId."
+            message: "Invalid FlagId. Use 2 for Vendor Types or 3 for Vendor File Types."
         });
 
     } catch (error) {
@@ -199,7 +216,7 @@ export const createVendor = async (req, res) => {
     const { FlagId } = req.body;
 
     try {
-        if (parseInt(FlagId) === 3) {
+        if (parseInt(FlagId) === 4) {
             const data = req.body;
 
             const validationError = validateVendor(data);
@@ -243,7 +260,7 @@ export const editVendor = async (req, res) => {
     const { FlagId } = req.body;
 
     try {
-        if (parseInt(FlagId) === 4) {
+        if (parseInt(FlagId) === 5) {
             const data = req.body;
 
             if (!data.VendorId) {
@@ -299,7 +316,7 @@ export const updateVendorStatusController = async (req, res) => {
     const { FlagId, VendorId, IsDisabled } = req.body;
 
     try {
-        if (parseInt(FlagId) === 5) {
+        if (parseInt(FlagId) === 6) {
             const result = await updateVendorStatus(VendorId, IsDisabled);
 
             if (!result) {

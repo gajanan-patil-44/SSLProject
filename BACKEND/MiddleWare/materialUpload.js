@@ -9,7 +9,7 @@ import fs from "fs";
 // =====================================================
 
 const uploadDirectory = path.resolve(
-    process.env.MATERIAL_UPLOAD_DIR || "./uploads/Materials"
+    process.env.MATERIAL_UPLOAD_DIR 
 );
 
 // Create upload directory if it does not exist
