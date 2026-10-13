@@ -20,6 +20,7 @@ import ManageUserView from './pages/UserManagement/ManageUserView';
 import MaterialCategoryCreation from './pages/MaterialCategoryCreation';
 import MaterialSubCategoryCreation from './pages/MaterialSubCategoryCreation';
 import ItemCreation from './pages/ItemCreation';
+import VendorManagement from './pages/VendorManagement';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -90,7 +91,11 @@ export default function App() {
           <Route path="master/material-category" element={<MaterialCategoryCreation />} />
           <Route path="master/material-sub-category" element={<MaterialSubCategoryCreation />} />
           <Route path="master/item-creation" element={<ItemCreation />} />
+          <Route path="master/material-creation" element={<ItemCreation />} />
           <Route path="master/items" element={<ItemCreation />} />
+          <Route path="master/vendor-management" element={<VendorManagement />} />
+          <Route path="master/vendors" element={<VendorManagement />} />
+          <Route path="vendor-management" element={<VendorManagement />} />
 
           {/* Documents */}
           <Route path="documents/letter-builder" element={<LetterBuilderView />} />
