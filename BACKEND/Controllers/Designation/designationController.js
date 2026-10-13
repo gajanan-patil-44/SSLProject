@@ -733,7 +733,8 @@ export const editDesignationController = async (req, res) => {
                 DesignationName: DesignationName.trim(),
                 DesignationCode: DesignationCode.trim(),
                 IsDisabled,
-                UpdateByUserName: UpdateByUserName.trim()
+                UpdateByUserName: UpdateByUserName.trim(),
+                CanBeReportingManager
             });
 
             // NOT FOUND

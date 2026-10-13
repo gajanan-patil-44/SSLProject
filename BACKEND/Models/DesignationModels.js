@@ -20,10 +20,11 @@ export const getAllDesignations = async () => {
                 cd."CreatedByUserName",
                 cd."UpdateByUserName",
                 cd."UpdatedAt",
-                cd."DesignationLevel"
+                cd."DesignationLevel",
+                cd."CanBeReportingManager"
             
             FROM "LKP"."CompanyDesignation" cd
-            INNER JOIN "LKP"."Company" 
+            INNER JOIN "LKP"."Company" c
                 ON c."CompanyId" = cd."CompanyId"
             ORDER BY cd."CompanyDesignationId" ASC
         `;
@@ -181,7 +182,8 @@ export const addDesignation = async (designationData) => {
                 "DesignationLevel",
                 "IsDisabled",
                 "CreatedAt",
-                "CreatedByUserName"
+                "CreatedByUserName",
+                "CanBeReportingManager"
             )
 
             VALUES
@@ -192,7 +194,8 @@ export const addDesignation = async (designationData) => {
                 $4,
                 $5,
                 CURRENT_TIMESTAMP,
-                $6
+                $6,
+                true
             )
 
             RETURNING
@@ -309,9 +312,10 @@ export const editDesignation = async (designationData) => {
                 "IsDisabled" = $4,
                 "UpdateByUserName" = $5,
                 "UpdatedAt" = CURRENT_TIMESTAMP
+                "CanBeReportingManager = $6
 
             WHERE
-                "CompanyDesignationId" = $6;
+                "CompanyDesignationId" = $7;
         `;
 
 
@@ -321,7 +325,8 @@ export const editDesignation = async (designationData) => {
             designationData.DesignationCode,
             designationData.IsDisabled,
             designationData.UpdateByUserName,
-            designationData.CompanyDesignationId
+            designationData.CompanyDesignationId,
+            designationData.CanBeReportingManager
         ];
 
 
