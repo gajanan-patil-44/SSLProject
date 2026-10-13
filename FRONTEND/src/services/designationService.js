@@ -46,6 +46,7 @@ export const designationService = {
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
       DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
+      CanBeReportingManager: data.CanBeReportingManager !== undefined ? Boolean(data.CanBeReportingManager) : true,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       CreatedByUserName: userName
     });
@@ -62,7 +63,7 @@ export const designationService = {
 
   /**
    * Edit existing designation (flagId: 2)
-   * @param {Object} data - { CompanyDesignationId, CompanyId, DesignationName, DesignationCode, IsDisabled, UpdateByUserName }
+   * @param {Object} data - { CompanyDesignationId, CompanyId, DesignationName, DesignationCode, IsDisabled, UpdateByUserName, CanBeReportingManager }
    */
   editDesignation: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
@@ -86,6 +87,7 @@ export const designationService = {
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
       DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
+      CanBeReportingManager: data.CanBeReportingManager !== undefined ? Boolean(data.CanBeReportingManager) : true,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       UpdateByUserName: userName
     });

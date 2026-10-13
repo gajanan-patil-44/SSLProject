@@ -11,6 +11,7 @@ import userService from './userService';
 import birthdayService from './birthdayService';
 import companyProductService from './companyProductService';
 import pageService from './pageService';
+import vendorService from './vendorService';
 
 export const api = {
   auth: authService,
@@ -24,6 +25,7 @@ export const api = {
   user: userService,
   birthday: birthdayService,
   page: pageService,
+  vendor: vendorService,
   client: apiClient
 };
 

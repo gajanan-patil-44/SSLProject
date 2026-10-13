@@ -307,8 +307,16 @@ export default function UserCreationView() {
       setGenders(toOpts(genderRes.value?.data ?? genderRes.value, 'GenderId', 'GenderName'));
     if (maritalRes.status === 'fulfilled')
       setMaritalStatuses(toOpts(maritalRes.value?.data ?? maritalRes.value, 'MaritalStatusId', 'MaritalStatusName'));
-    if (desigRes.status === 'fulfilled')
-      setDesignations(toOpts(desigRes.value?.data ?? desigRes.value, 'CompanyDesignationId', 'DesignationName'));
+    if (desigRes.status === 'fulfilled') {
+      const raw = desigRes.value?.data ?? desigRes.value;
+      const normalized = Array.isArray(raw)
+        ? raw.map(d => ({
+            ...d,
+            DesignationId: d.DesignationId ?? d.CompanyDesignationId
+          }))
+        : [];
+      setDesignations(toOpts(normalized, 'DesignationId', 'DesignationName'));
+    }
     if (compRes.status === 'fulfilled')
       setCompanies(toOpts(compRes.value?.data ?? compRes.value, 'CompanyId', 'CompanyName'));
     if (rolesRes.status === 'fulfilled')
@@ -323,12 +331,18 @@ export default function UserCreationView() {
   const toOpts = (arr, vk, lk) => {
     if (!Array.isArray(arr)) return [];
     return arr
-      .filter(i => i[vk] !== null && i[vk] !== undefined && i[vk] !== '')
-      .map((i, idx) => ({
-        value: String(i[vk]),
-        label:  i[lk] ?? String(i[vk]),
-        key:    `${String(i[vk])}_${idx}`,   // guaranteed unique key
-      }));
+      .filter(i => {
+        const val = i[vk] ?? (vk === 'DesignationId' ? i.CompanyDesignationId : undefined);
+        return val !== null && val !== undefined && val !== '';
+      })
+      .map((i, idx) => {
+        const val = i[vk] ?? (vk === 'DesignationId' ? i.CompanyDesignationId : undefined);
+        return {
+          value: String(val),
+          label:  i[lk] ?? String(val),
+          key:    `${String(val)}_${idx}`,   // guaranteed unique key
+        };
+      });
   };
 
   // ── Fetch Reporting Managers — requires BOTH CompanyId AND DesignationId (FlagId:4) ──

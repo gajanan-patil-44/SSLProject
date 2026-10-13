@@ -58,9 +58,14 @@ export const navigationConfig = [
         path: "/master/material-sub-category"
       },
       {
-        label: "Item Creation",
+        label: "Material Creation",
         icon: "Package",
         path: "/master/item-creation"
+      },
+      {
+        label: "Vendor Management",
+        icon: "Store",
+        path: "/master/vendor-management"
       }
     ]
   },

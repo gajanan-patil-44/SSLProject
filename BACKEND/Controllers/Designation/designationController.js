@@ -369,22 +369,22 @@ export const designationController = async (req, res) => {
                 // DUPLICATE NAME
                 // ---------------------------------------------
 
-                if (
-                    duplicate.DesignationName &&
-                    duplicate.DesignationName
-                        .trim()
-                        .toLowerCase() ===
-                    DesignationName
-                        .trim()
-                        .toLowerCase()
-                ) {
+                // if (
+                //     duplicate.DesignationName &&
+                //     duplicate.DesignationName
+                //         .trim()
+                //         .toLowerCase() ===
+                //     DesignationName
+                //         .trim()
+                //         .toLowerCase()
+                // ) {
 
-                    return res.status(409).json({
-                        status: "error",
-                        message:
-                            "Designation name already exists for this company"
-                    });
-                }
+                //     return res.status(409).json({
+                //         status: "error",
+                //         message:
+                //             "Designation name already exists for this company"
+                //     });
+                // }
 
 
                 // ---------------------------------------------
@@ -508,8 +508,11 @@ export const editDesignationController = async (req, res) => {
                 DesignationName,
                 DesignationCode,
                 IsDisabled,
-                UpdateByUserName
+                UpdateByUserName,
+                CanBeReportingManager
             } = req.body;
+
+            console.log(req.body)
 
 
             // VALIDATE COMPANY DESIGNATION ID
@@ -644,6 +647,16 @@ export const editDesignationController = async (req, res) => {
             }
 
 
+            // VALIDATE IS CanBeReportingManager
+            // if (typeof CanBeReportingManager !== "boolean") {
+
+            //     return res.status(400).json({
+            //         status: "error",
+            //         message: "CanBeReportingManager must be true or false"
+            //     });
+            // }
+
+
             // VALIDATE UPDATED BY USER NAME
 
             if (
@@ -733,7 +746,8 @@ export const editDesignationController = async (req, res) => {
                 DesignationName: DesignationName.trim(),
                 DesignationCode: DesignationCode.trim(),
                 IsDisabled,
-                UpdateByUserName: UpdateByUserName.trim()
+                UpdateByUserName: UpdateByUserName.trim(),
+                CanBeReportingManager
             });
 
             // NOT FOUND

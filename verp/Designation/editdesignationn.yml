@@ -1,17 +1,11 @@
 info:
-  name: view copy copy
+  name: editdesignationn
   type: http
-  seq: 3
+  seq: 7
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/vendor/view
-  body:
-    type: json
-    data: |-
-      {
-      "FlagId": 1
-      }
+  url: http://192.168.23.76:9004/verp-service/designationCreation/editdesignation
   auth: inherit
 
 settings:

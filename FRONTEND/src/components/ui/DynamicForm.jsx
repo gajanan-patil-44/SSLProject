@@ -17,6 +17,20 @@ export const DynamicForm = ({
   gridCols = 2 // Number of columns for form layout
 }) => {
 
+  // Precompute defaultValues from field definitions
+  const computedDefaultValues = React.useMemo(() => {
+    const flatFields = fields.some(f => f.section)
+      ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
+      : fields;
+    const initial = {};
+    flatFields.forEach(f => {
+      if (f.defaultValue !== undefined) {
+        initial[f.key] = f.defaultValue;
+      }
+    });
+    return { ...initial, ...(defaultValues || {}) };
+  }, [fields, defaultValues]);
+
   // 1. Programmatically build a Zod validation schema if not supplied
   const validationSchema = schema || useFormSchema(fields);
 
@@ -29,12 +43,12 @@ export const DynamicForm = ({
     formState: { errors }
   } = useForm({
     resolver: zodResolver(validationSchema),
-    defaultValues
+    defaultValues: computedDefaultValues
   });
 
   React.useEffect(() => {
-    reset(defaultValues || {});
-  }, [defaultValues, reset]);
+    reset(computedDefaultValues);
+  }, [computedDefaultValues, reset]);
 
   // Render a single form field control
   const renderField = (field) => {
@@ -116,24 +130,33 @@ export const DynamicForm = ({
         );
 
       case 'toggle':
-      case 'switch':
+      case 'switch': {
+        const isInverted = Boolean(field.invertToggle || field.key === 'CanBeReportingManager');
         return (
           <div key={field.key} className={`flex flex-col justify-center pt-2 ${field.gridSpan || "col-span-1"}`}>
             <Controller
               name={field.key}
               control={control}
-              render={({ field: { value, onChange } }) => (
-                <Switch
-                  label={field.label}
-                  checked={!!value}
-                  onChange={(e) => onChange(e.target.checked)}
-                  disabled={field.disabled}
-                />
-              )}
+              render={({ field: { value, onChange } }) => {
+                const actualValue = value !== undefined ? Boolean(value) : (field.defaultValue !== undefined ? Boolean(field.defaultValue) : true);
+                const isChecked = isInverted ? !actualValue : actualValue;
+                return (
+                  <Switch
+                    label={field.label}
+                    checked={isChecked}
+                    onChange={(e) => {
+                      const nextVal = isInverted ? !e.target.checked : e.target.checked;
+                      onChange(nextVal);
+                    }}
+                    disabled={field.disabled}
+                  />
+                );
+              }}
             />
             {field.helpText && <span className="text-xs text-slate-400 mt-1">{field.helpText}</span>}
           </div>
         );
+      }
 
       case 'radio':
         return (
@@ -271,7 +294,10 @@ function useFormSchema(fields) {
         if (field.required && field.type === 'checkbox') {
           validator = z.preprocess(val => Boolean(val), z.boolean().refine(val => val === true, { message: "Must check this box" }));
         } else {
-          validator = z.preprocess(val => (val === undefined || val === null) ? false : Boolean(val), z.boolean().optional());
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? (field.defaultValue !== undefined ? Boolean(field.defaultValue) : false) : Boolean(val),
+            z.boolean().optional()
+          );
         }
       } else if (field.type === 'select') {
         if (field.required) {

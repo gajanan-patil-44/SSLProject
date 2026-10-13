@@ -6,6 +6,16 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/itemCategoryCreation/updateMaterialCategoryType
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":3,
+        "MaterialCategoryTypeName":"Mechanical Materials",
+        "MaterialCategoryTypeCode":"MECH",
+        "UpdatedByUserName":"kavv",
+        "MaterialCategoryTypeId":2
+      }
   auth: inherit
 
 settings:

@@ -46,18 +46,21 @@ export const getMaritalStatusDropdown = async () => {
 // FLAG ID 3 - GET DESIGNATION
 // ==========================================================
 
+
 export const getDesignationDropdown = async () => {
     const query = `
         SELECT
-            "CompanyDesignationId",
+            "CompanyDesignationId" AS "DesignationId",
             "DesignationName"
         FROM "LKP"."CompanyDesignation"
         WHERE "IsDisabled" = false
         ORDER BY "DesignationName";
     `;
+
     const result = await pool.query(query);
     return result.rows;
 };
+
 
 // =====================================================
 // GET USER REPORTING MANAGER DROPDOWN
@@ -1258,17 +1261,19 @@ export const getAllRoles = async (CompanyId) => {
 
 
 
-export const getDesignationById = async (DesignationId) => {
 
+export const getDesignationById = async (DesignationId) => {
     const query = `
         SELECT
-            "DesignationName"
+            "CompanyDesignationId" AS "DesignationId",
+            "DesignationName",
+            "CompanyId",
+            "DesignationLevel"
         FROM "LKP"."CompanyDesignation"
         WHERE "CompanyDesignationId" = $1
-          AND "IsDisabled" = false
+          AND "IsDisabled" = false;
     `;
 
     const result = await pool.query(query, [DesignationId]);
-
-    return result.rows[0];
+    return result.rows[0] || null;
 };

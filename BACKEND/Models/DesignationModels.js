@@ -20,7 +20,8 @@ export const getAllDesignations = async () => {
                 cd."CreatedByUserName",
                 cd."UpdateByUserName",
                 cd."UpdatedAt",
-                cd."DesignationLevel"
+                cd."DesignationLevel",
+                cd."CanBeReportingManager"
             
             FROM "LKP"."CompanyDesignation" cd
             INNER JOIN "LKP"."Company" c
@@ -298,6 +299,7 @@ export const checkDesignationExistsForUpdate = async (
 // EDIT DESIGNATION
 
 export const editDesignation = async (designationData) => {
+    console.log(designationData)
 
     try {
 
@@ -310,10 +312,12 @@ export const editDesignation = async (designationData) => {
                 "DesignationCode" = $3,
                 "IsDisabled" = $4,
                 "UpdateByUserName" = $5,
-                "UpdatedAt" = CURRENT_TIMESTAMP
-
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "CanBeReportingManager"= $6
+                
             WHERE
-                "CompanyDesignationId" = $6;
+                "CompanyDesignationId" = $7;
+            
         `;
 
 
@@ -323,6 +327,7 @@ export const editDesignation = async (designationData) => {
             designationData.DesignationCode,
             designationData.IsDisabled,
             designationData.UpdateByUserName,
+            designationData.CanBeReportingManager,
             designationData.CompanyDesignationId
         ];
 
@@ -331,6 +336,7 @@ export const editDesignation = async (designationData) => {
             query,
             values
         );
+        console.log(result)
 
 
         return result.rowCount;
