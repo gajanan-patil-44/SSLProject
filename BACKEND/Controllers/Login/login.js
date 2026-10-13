@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { readFile } from "fs/promises";
 
 import { findUserForLogin, updateFailedLogin, setTempBlock, clearTempBlock, resetAttempts, setPermanentBlock, logoutUserLoginDetail, createUserLoginDetail } from "../../Models/LoginModel.js"
 
@@ -183,21 +184,22 @@ export const login = async (req, res) => {
         // PHOTO BASE64
         // ==========================================================
         let photo = null;
-        if (user.Photo) {
 
-            if (Buffer.isBuffer(user.Photo)) {
-                photo = user.Photo.toString("base64");
-            } else if (
-                user.Photo instanceof Uint8Array
-            ) {
-                photo = Buffer.from(user.Photo).toString("base64");
-            } else if (
-                typeof user.Photo === "string"
-            ) {
-
-                photo = user.Photo;
-            }
+if (user.Photo) {
+    try {
+        if (Buffer.isBuffer(user.Photo)) {
+            photo = user.Photo.toString("base64");
+        } else if (user.Photo instanceof Uint8Array) {
+            photo = Buffer.from(user.Photo).toString("base64");
+        } else if (typeof user.Photo === "string") {
+            const photoBuffer = await readFile(user.Photo);
+            photo = photoBuffer.toString("base64");
         }
+    } catch (error) {
+        console.error("Photo conversion error:", error.message);
+        photo = null;
+    }
+}
         // ==========================================================
         // FINAL RESPONSE
         // ==========================================================
