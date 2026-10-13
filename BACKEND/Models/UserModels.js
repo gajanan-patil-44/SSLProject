@@ -89,7 +89,7 @@ export const getUserReportingManagerDropdown = async (CompanyId, DesignationId) 
             managerDesignation."CompanyId" = $1
 
             -- Manager's designation is active
-            AND managerDesignation."IsDisabled" = false
+            AND managerDesignation."IsDisabled" = true
 
             -- Manager is allowed to be a reporting manager
             AND managerDesignation."CanBeReportingManager" = true

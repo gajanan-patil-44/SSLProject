@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.69:9004/verp-service/auth/login
+  url: http://192.168.23.99:9004/verp-service/auth/login
   body:
     type: json
     data: |-

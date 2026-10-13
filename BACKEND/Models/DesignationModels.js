@@ -181,7 +181,8 @@ export const addDesignation = async (designationData) => {
                 "DesignationLevel",
                 "IsDisabled",
                 "CreatedAt",
-                "CreatedByUserName"
+                "CreatedByUserName",
+                "CanBeReportingManager"
             )
 
             VALUES
@@ -192,7 +193,8 @@ export const addDesignation = async (designationData) => {
                 $4,
                 $5,
                 CURRENT_TIMESTAMP,
-                $6
+                $6,
+                true
             )
 
             RETURNING
