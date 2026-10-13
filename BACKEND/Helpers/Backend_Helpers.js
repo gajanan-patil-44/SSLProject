@@ -15,3 +15,5 @@ export const USER_EDIT="/verp-service/userEdit"
 export const ITEM_CATEGORY_CREATION="/verp-service/itemCategoryCreation"
 
 export const MATERIAL_SUB_CATEGORY_TYPE="/verp-service/materialSubCategoryType"
+export const MATERIAL="/verp-service/material"
+export const VENDOR="/verp-service/vendor"

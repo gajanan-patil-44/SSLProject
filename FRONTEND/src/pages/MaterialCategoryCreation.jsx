@@ -264,6 +264,7 @@ export default function MaterialCategoryCreation() {
         onViewClick={(row) => handleOpenModal(row, 'view')}
         onToggleStatusClick={(row) => handleToggleStatus(row, row.status !== 'Active')}
         onRefresh={fetchCategories}
+        hideExport
       />
 
       {/* Create / Edit Modal */}

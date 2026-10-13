@@ -41,7 +41,8 @@ export const DataTable = ({
   actions,
   bulkActions,
   loading = false,
-  onRefresh
+  onRefresh,
+  hideExport = false
 }) => {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -239,9 +240,11 @@ export const DataTable = ({
           </Dropdown>
 
           {/* Export CSV */}
-          <Button variant="outline" size="sm" icon={Download} onClick={handleExportCSV}>
-            Export
-          </Button>
+          {!hideExport && (
+            <Button variant="outline" size="sm" icon={Download} onClick={handleExportCSV}>
+              Export
+            </Button>
+          )}
 
           {/* Custom actions or Add New */}
           {actions}

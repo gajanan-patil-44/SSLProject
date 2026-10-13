@@ -56,6 +56,11 @@ export const navigationConfig = [
         label: "Material Sub Category",
         icon: "Tag",
         path: "/master/material-sub-category"
+      },
+      {
+        label: "Item Creation",
+        icon: "Package",
+        path: "/master/item-creation"
       }
     ]
   },

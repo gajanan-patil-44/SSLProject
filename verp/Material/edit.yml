@@ -1,0 +1,72 @@
+info:
+  name: edit
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/material/edit
+  body:
+    type: multipart-form
+    data:
+      - name: FlagId
+        type: text
+        value: "9"
+      - name: MaterialName
+        type: text
+        value: HP Laptop
+      - name: MaterialCode
+        type: text
+        value: MAT001
+      - name: MaterialCategoryTypeId
+        type: text
+        value: "1"
+      - name: MaterialSubCategoryTypeId
+        type: text
+        value: "1"
+      - name: MaterialBrandName
+        type: text
+        value: HP
+      - name: ModelNo
+        type: text
+        value: Latitude 5450
+      - name: UOMId
+        type: text
+        value: "1"
+      - name: GSTTypeId
+        type: text
+        value: "1"
+      - name: GSTRateId
+        type: text
+        value: "1"
+      - name: HSNSAC
+        type: text
+        value: "84713010"
+      - name: WarrantyYears
+        type: text
+        value: "3"
+      - name: DescriptionSpecification
+        type: text
+        value: Business  HP laptop
+      - name: CreatedByUserId
+        type: text
+        value: "3"
+      - name: FileTypeIds
+        type: text
+        value: "4"
+      - name: files
+        type: file
+        value:
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\1_5_Pedestrian.jpg
+        contentType: image/jpeg
+      - name: MaterialId
+        type: text
+        value: "2"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

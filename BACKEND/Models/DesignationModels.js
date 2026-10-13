@@ -299,6 +299,7 @@ export const checkDesignationExistsForUpdate = async (
 // EDIT DESIGNATION
 
 export const editDesignation = async (designationData) => {
+    console.log(designationData)
 
     try {
 
@@ -311,11 +312,12 @@ export const editDesignation = async (designationData) => {
                 "DesignationCode" = $3,
                 "IsDisabled" = $4,
                 "UpdateByUserName" = $5,
-                "UpdatedAt" = CURRENT_TIMESTAMP
-                "CanBeReportingManager = $6
-
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "CanBeReportingManager"= $6
+                
             WHERE
                 "CompanyDesignationId" = $7;
+            
         `;
 
 
@@ -325,8 +327,8 @@ export const editDesignation = async (designationData) => {
             designationData.DesignationCode,
             designationData.IsDisabled,
             designationData.UpdateByUserName,
-            designationData.CompanyDesignationId,
-            designationData.CanBeReportingManager
+            designationData.CanBeReportingManager,
+            designationData.CompanyDesignationId
         ];
 
 
@@ -334,6 +336,7 @@ export const editDesignation = async (designationData) => {
             query,
             values
         );
+        console.log(result)
 
 
         return result.rowCount;
