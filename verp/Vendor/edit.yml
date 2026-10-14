@@ -4,8 +4,8 @@ info:
   seq: 5
 
 http:
-  method: POST
-  url: http://localhost:9004/verp-service/vendor/add
+  method: PATCH
+  url: http://localhost:9004/verp-service/vendor/edit
   body:
     type: multipart-form
     data:
@@ -14,7 +14,7 @@ http:
         value: "4"
       - name: VendorName
         type: text
-        value: ABC Suppliers
+        value: vishvin Suppliers
       - name: VendorCode
         type: text
         value: VEN001
@@ -26,7 +26,7 @@ http:
         value: "9876543210"
       - name: Email
         type: text
-        value: rahul@gmial.com
+        value: rahulkumar@gmial.com
       - name: GSTINUINNumber
         type: text
         value: 29ABCDE1234F1Z5
@@ -57,6 +57,9 @@ http:
       - name: CreatedByUserId
         type: text
         value: "2"
+      - name: VendorId
+        type: text
+        value: "1"
   auth: inherit
 
 settings:

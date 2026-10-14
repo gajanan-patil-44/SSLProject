@@ -151,13 +151,11 @@ export const getGSTRateDropdown = async () => {
         SELECT
             r."GSTRateId",
             r."GSTTypeId",
-            t."GSTTypeName",
             r."GSTPercentage"
         FROM "LKP"."GSTRate" r
         WHERE r."IsDisabled" = false
-         AND r."GSTTypeId" = $1
         ORDER BY
-            t."GSTTypeName" ASC,
+            r."GSTTypeId" ASC,
             r."GSTPercentage" ASC
     `;
 
