@@ -735,7 +735,7 @@ export default function ItemCreation() {
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Material Creation', path: '/master/item-creation' }
+          { label: 'Material Creation', path: '/master/material-creation' }
         ]}
       />
 
