@@ -23,6 +23,7 @@ import {
 import { useERPStore } from '../store/useERPStore';
 
 import { materialSubCategoryTypeService } from '../services';
+import { validateCode } from '../utils/validators';
 
 export default function MaterialSubCategoryCreation() {
   const showToast = useERPStore((state) => state.showToast);
@@ -46,6 +47,30 @@ export default function MaterialSubCategoryCreation() {
     name: '',
     status: 'Active'
   });
+  const [formErrors, setFormErrors] = useState({});
+
+  // Validate form
+  const validateForm = () => {
+    const errs = {};
+    if (!formData.category) {
+      errs.category = 'Material Category selection is required';
+    }
+
+    const codeErr = validateCode(formData.code, 'Sub Category Code', true);
+    if (codeErr) errs.code = codeErr;
+
+    const trimmedName = (formData.name || '').trim();
+    if (!trimmedName) {
+      errs.name = 'Sub Category Name is required';
+    } else if (trimmedName.length < 2) {
+      errs.name = 'Sub Category Name must be at least 2 characters';
+    } else if (trimmedName.length > 100) {
+      errs.name = 'Sub Category Name cannot exceed 100 characters';
+    }
+
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   // Fetch dropdown values (only when modal opens)
   const fetchCategoryDropdown = async () => {
@@ -81,6 +106,7 @@ export default function MaterialSubCategoryCreation() {
     await fetchCategoryDropdown();
     
     setIsViewing(mode === 'view');
+    setFormErrors({});
     
     if (item) {
       setIsEditing(mode === 'edit');
@@ -113,10 +139,15 @@ export default function MaterialSubCategoryCreation() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setIsViewing(false);
+    setFormErrors({});
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      showToast('Please fix the validation errors.', 'error');
+      return;
+    }
     setSubmitting(true);
     
     const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
@@ -329,11 +360,15 @@ export default function MaterialSubCategoryCreation() {
             </label>
             <div className="relative">
               <select 
-                required
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, category: e.target.value });
+                  if (formErrors.category) setFormErrors({ ...formErrors, category: '' });
+                }}
                 disabled={isViewing}
-                className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${isViewing ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                className={`w-full px-3.5 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${
+                  formErrors.category ? 'border-rose-400 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-indigo-600'
+                } ${isViewing ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
               >
                 <option value="" disabled>Select Material Category</option>
                 {categoryDropdown.map(cat => (
@@ -348,6 +383,9 @@ export default function MaterialSubCategoryCreation() {
                 </svg>
               )}
             </div>
+            {formErrors.category && (
+              <span className="text-[11px] text-rose-500 font-medium block">{formErrors.category}</span>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -355,12 +393,18 @@ export default function MaterialSubCategoryCreation() {
               Sub Category Code {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
-              required
               value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              placeholder="Enter Sub Category Code"
+              onChange={(e) => {
+                setFormData({ ...formData, code: e.target.value });
+                if (formErrors.code) setFormErrors({ ...formErrors, code: '' });
+              }}
+              placeholder="e.g. SUB-001"
               disabled={isViewing}
+              className={formErrors.code ? 'border-rose-400 focus:border-rose-500' : ''}
             />
+            {formErrors.code && (
+              <span className="text-[11px] text-rose-500 font-medium block">{formErrors.code}</span>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -368,12 +412,18 @@ export default function MaterialSubCategoryCreation() {
               Sub Category Name {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
-              required
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter Sub Category Name"
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (formErrors.name) setFormErrors({ ...formErrors, name: '' });
+              }}
+              placeholder="e.g. Transformers & Power"
               disabled={isViewing}
+              className={formErrors.name ? 'border-rose-400 focus:border-rose-500' : ''}
             />
+            {formErrors.name && (
+              <span className="text-[11px] text-rose-500 font-medium block">{formErrors.name}</span>
+            )}
           </div>
 
           {isViewing && (

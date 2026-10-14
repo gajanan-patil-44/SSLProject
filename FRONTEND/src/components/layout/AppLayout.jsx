@@ -4,30 +4,51 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useERPStore } from '../../store/useERPStore';
 import ToastContainer from '../ui/Toast';
+import { isRouteAllowed } from '../../utils/permissionGuard';
 
 export default function AppLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const theme = useERPStore((state) => state.theme);
   const isAuthenticated = useERPStore((state) => state.isAuthenticated);
+  const user = useERPStore((state) => state.user);
+  const userContext = useERPStore((state) => state.userContext);
+  const userMenu = useERPStore((state) => state.userMenu);
+  const showToast = useERPStore((state) => state.showToast);
   const mainContentRef = useRef(null);
+  const lastDeniedRef = useRef(null);
+
+  // Directly retrieve session menu as fallback to eliminate any store sync delay
+  const sessionMenu = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed?.data?.menuPage || parsed?.menuPage || parsed?.data?.userMenu || parsed?.userMenu || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const activeMenu = Array.isArray(userMenu) && userMenu.length > 0
+    ? userMenu
+    : (Array.isArray(sessionMenu) ? sessionMenu : []);
 
   // Determine if it is a full-page view (like login, signup, errors)
   const isAuthOrErrorPage = pathname.includes('/pages/auth/') || pathname.includes('/pages/error/');
 
-  // Redirect to main page (/dashboard) on browser page refresh
-  useEffect(() => {
-    try {
-      const navEntries = performance.getEntriesByType('navigation');
-      const isReload = navEntries && navEntries.length > 0 
-        ? navEntries[0].type === 'reload' 
-        : (performance.navigation && performance.navigation.type === 1);
+  // Permission Guard: Validate whether user is authorized to access the requested route
+  const isPermitted = isAuthOrErrorPage || isRouteAllowed(pathname, activeMenu, user, userContext);
 
-      if (isReload && pathname !== '/dashboard' && !isAuthOrErrorPage) {
-        navigate('/dashboard', { replace: true });
+  // Show notification when unauthorized URL access is blocked
+  useEffect(() => {
+    if (isAuthenticated && !isAuthOrErrorPage && !isPermitted) {
+      if (lastDeniedRef.current !== pathname) {
+        lastDeniedRef.current = pathname;
+        showToast('Access Denied: You do not have permission to access this screen.', 'error');
       }
-    } catch {}
-  }, []);
+    }
+  }, [pathname, isAuthenticated, isAuthOrErrorPage, isPermitted, showToast]);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -55,9 +76,14 @@ export default function AppLayout() {
     );
   }
 
-  // Guard protected routes
+  // Guard protected routes against unauthenticated users
   if (!isAuthenticated) {
     return <Navigate to="/pages/auth/login" replace state={{ from: pathname }} />;
+  }
+
+  // Guard protected routes against unauthorized users (no permission for this URL)
+  if (!isPermitted) {
+    return <Navigate to="/pages/error/403" replace state={{ attemptedPath: pathname }} />;
   }
 
   return (
