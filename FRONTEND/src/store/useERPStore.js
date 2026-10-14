@@ -123,8 +123,8 @@ export const useERPStore = create((set) => ({
       displayName = user.loginName;
     }
 
-    const displayRole = user?.designation?.name || context?.roles?.[0]?.RoleName || 'Administrator';
-    const avatarUrl = photo ? (photo.startsWith('data:') ? photo : `data:image/jpeg;base64,${photo}`) : (user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80');
+    const displayRole = user?.designation?.name || context?.roles?.[0]?.RoleName || '';
+    const avatarUrl = photo ? (photo.startsWith('data:') ? photo : `data:image/jpeg;base64,${photo}`) : (user?.avatar || '');
 
     const normalizedUser = {
       ...user,
@@ -134,7 +134,7 @@ export const useERPStore = create((set) => ({
       avatar: avatarUrl
     };
 
-    const firstCompanyName = context?.companies?.[0]?.name || 'Falcon LLP';
+    const firstCompanyName = context?.companies?.[0]?.name || context?.companies?.[0]?.CompanyName || '';
     const dynamicMenu = Array.isArray(userMenu)
       ? userMenu
       : (Array.isArray(rawResponse?.data?.menuPage)
