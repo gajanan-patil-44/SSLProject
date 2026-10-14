@@ -254,6 +254,8 @@ export default function ItemCreation() {
     gstRates: [],      // FlagId: 6
     fileTypes: []      // FlagId: 7
   });
+  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
+  const [loadingGSTRates, setLoadingGSTRates] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -323,17 +325,10 @@ export default function ItemCreation() {
   };
 
   // Fetch all 6 dropdowns dynamically from /verp-service/material/dropdown (FlagIds 2 to 7)
-  const fetchAllDropdowns = async () => {
+  const fetchAllDropdowns = async (categoryId = null, gstTypeId = null) => {
     try {
-      const data = await itemCreationService.getAllDropdowns();
+      const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId);
       setDropdowns(data);
-      if (data.fileTypes && data.fileTypes.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          fileTypeId: prev.fileTypeId ?? data.fileTypes[0].id,
-          fileTypeName: prev.fileTypeName || data.fileTypes[0].name
-        }));
-      }
     } catch (error) {
       console.error("Failed to load dropdowns:", error);
     }
@@ -360,7 +355,9 @@ export default function ItemCreation() {
   }, []);
 
   const handleOpenModal = async (item = null, mode = 'create') => {
-    await fetchAllDropdowns();
+    const existingCategoryId = item?.categoryId || item?.raw?.MaterialCategoryTypeId || null;
+    const existingGSTTypeId = item?.gstTypeId || item?.raw?.GSTTypeId || null;
+    await fetchAllDropdowns(existingCategoryId, existingGSTTypeId);
     setIsViewing(mode === 'view');
     setActiveModalTab('details');
     setSelectedFile(null);
@@ -375,7 +372,7 @@ export default function ItemCreation() {
         : (Array.isArray(item.raw?.Files) ? item.raw.Files.map(f => {
             const rawPath = f.FilePatch || f.FilePath || '';
             const path = rawPath ? rawPath.replace(/\\/g, '/') : '';
-            const name = path ? path.split('/').pop() : 'Material Document';
+            const name = path ? path.split('/').pop() : '';
             return {
               id: f.MaterialFileId,
               fileTypeId: f.FileTypeId,
@@ -400,8 +397,8 @@ export default function ItemCreation() {
         gstTypeName: item.gstTypeName || '',
         gstRateId: item.gstRateId || '',
         gstPercentage: item.gstPercentage || '',
-        fileTypeId: item.fileTypeId ? Number(item.fileTypeId) : (dropdowns.fileTypes?.[0]?.id ?? null),
-        fileTypeName: item.fileTypeName || (dropdowns.fileTypes?.[0]?.name ?? ''),
+        fileTypeId: item.fileTypeId ? Number(item.fileTypeId) : '',
+        fileTypeName: item.fileTypeName || '',
         hsnSac: item.hsnSac || '',
         warrantyYears: item.warrantyYears || '',
         description: item.description || '',
@@ -409,7 +406,7 @@ export default function ItemCreation() {
         status: item.status || 'Active',
         createdBy: item.createdBy || item.userName || currentUserName,
         createdAt: item.createdAt || '',
-        updatedBy: item.updatedBy || (item.raw?.UpdatedByUserName || (item.raw?.UpdatedByUserId ? `User #${item.raw?.UpdatedByUserId}` : '')),
+        updatedBy: item.updatedBy || (item.raw?.UpdatedByUserName || ''),
         updatedAt: item.updatedAt || (item.raw?.UpdatedAt ? new Date(item.raw.UpdatedAt).toLocaleDateString('en-GB') : '')
       });
     } else {
@@ -431,8 +428,8 @@ export default function ItemCreation() {
         gstTypeName: '',
         gstRateId: '',
         gstPercentage: '',
-        fileTypeId: dropdowns.fileTypes?.[0]?.id ?? null,
-        fileTypeName: dropdowns.fileTypes?.[0]?.name ?? '',
+        fileTypeId: '',
+        fileTypeName: '',
         hsnSac: '',
         warrantyYears: '',
         description: '',
@@ -474,7 +471,7 @@ export default function ItemCreation() {
   };
 
   // Dropdown Change Handlers
-  const handleCategoryChange = (e) => {
+  const handleCategoryChange = async (e) => {
     const selectedId = e.target.value;
     const selected = dropdowns.categories.find(c => String(c.id) === String(selectedId));
     setFormData(prev => ({
@@ -484,6 +481,27 @@ export default function ItemCreation() {
       subCategoryId: '',
       subCategoryName: ''
     }));
+
+    if (selectedId) {
+      setLoadingSubCategories(true);
+      try {
+        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId);
+        setDropdowns(prev => ({
+          ...prev,
+          subCategories: subCats || []
+        }));
+      } catch (err) {
+        console.error("Failed to load subcategories for category:", selectedId, err);
+        setDropdowns(prev => ({ ...prev, subCategories: [] }));
+      } finally {
+        setLoadingSubCategories(false);
+      }
+    } else {
+      setDropdowns(prev => ({
+        ...prev,
+        subCategories: []
+      }));
+    }
   };
 
   const handleSubCategoryChange = (e) => {
@@ -506,7 +524,7 @@ export default function ItemCreation() {
     }));
   };
 
-  const handleGSTTypeChange = (e) => {
+  const handleGSTTypeChange = async (e) => {
     const selectedId = e.target.value;
     const selected = dropdowns.gstTypes.find(g => String(g.GSTTypeId) === String(selectedId));
     setFormData(prev => ({
@@ -516,6 +534,27 @@ export default function ItemCreation() {
       gstRateId: '',
       gstPercentage: ''
     }));
+
+    if (selectedId) {
+      setLoadingGSTRates(true);
+      try {
+        const rates = await itemCreationService.getGSTRateDropdown(selectedId);
+        setDropdowns(prev => ({
+          ...prev,
+          gstRates: rates || []
+        }));
+      } catch (err) {
+        console.error("Failed to load GST rates for type:", selectedId, err);
+        setDropdowns(prev => ({ ...prev, gstRates: [] }));
+      } finally {
+        setLoadingGSTRates(false);
+      }
+    } else {
+      setDropdowns(prev => ({
+        ...prev,
+        gstRates: []
+      }));
+    }
   };
 
   const handleGSTRateChange = (e) => {
@@ -529,12 +568,12 @@ export default function ItemCreation() {
   };
 
   const handleFileTypeChange = (e) => {
-    const selectedId = Number(e.target.value);
+    const selectedId = e.target.value ? Number(e.target.value) : '';
     const selected = dropdowns.fileTypes.find(f => Number(f.id) === selectedId);
     setFormData(prev => ({
       ...prev,
-      fileTypeId: 4,
-      fileTypeName: selected ? selected.name : 'Material'
+      fileTypeId: selectedId,
+      fileTypeName: selected ? selected.name : ''
     }));
   };
 
@@ -568,7 +607,7 @@ export default function ItemCreation() {
           CreatedByUserId: formData.createdByUserId ? Number(formData.createdByUserId) : (currentUserId ? Number(currentUserId) : undefined),
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
-          FileTypeIds: selectedFile ? Number(formData.fileTypeId || dropdowns.fileTypes?.[0]?.id) : undefined,
+          FileTypeIds: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
@@ -597,7 +636,7 @@ export default function ItemCreation() {
           CreatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
-          FileTypeIds: selectedFile ? Number(formData.fileTypeId || dropdowns.fileTypes?.[0]?.id) : undefined,
+          FileTypeIds: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
@@ -662,15 +701,11 @@ export default function ItemCreation() {
     }
   };
 
-  // Filter sub-categories by selected category (FlagId: 3)
-  const availableSubCategories = formData.categoryId
-    ? dropdowns.subCategories.filter(sc => String(sc.categoryId) === String(formData.categoryId))
-    : dropdowns.subCategories;
+  // Sub-categories dynamically loaded from backend for selected Category (FlagId: 3 with MaterialCategoryTypeId)
+  const availableSubCategories = formData.categoryId ? dropdowns.subCategories : [];
 
-  // Filter GST Rates by selected GST Type (FlagId: 6 filtered by FlagId: 5)
-  const availableGSTRates = formData.gstTypeId
-    ? dropdowns.gstRates.filter(r => String(r.gstTypeId) === String(formData.gstTypeId))
-    : dropdowns.gstRates;
+  // GST Rates dynamically loaded from backend for selected GST Type (FlagId: 6 with GSTTypeId)
+  const availableGSTRates = formData.gstTypeId ? dropdowns.gstRates : [];
 
   const filteredData = items.filter(item =>
     (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -955,7 +990,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || loadingSubCategories || !formData.categoryId}
                     value={formData.subCategoryId}
                     onChange={(e) => {
                       handleSubCategoryChange(e);
@@ -965,7 +1000,15 @@ export default function ItemCreation() {
                       formErrors.subCategoryId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    <option value="">Select Sub Category</option>
+                    <option value="">
+                      {loadingSubCategories
+                        ? 'Loading Sub Categories...'
+                        : (!formData.categoryId
+                            ? 'Select Category first'
+                            : (availableSubCategories.length === 0
+                                ? 'No Sub Categories found'
+                                : 'Select Sub Category'))}
+                    </option>
                     {availableSubCategories.map((sc) => (
                       <option key={sc.id} value={sc.id}>
                         {sc.name} {sc.code ? `(${sc.code})` : ''}
@@ -1158,7 +1201,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || loadingGSTRates || !formData.gstTypeId}
                     value={formData.gstRateId}
                     onChange={(e) => {
                       handleGSTRateChange(e);
@@ -1168,7 +1211,15 @@ export default function ItemCreation() {
                       formErrors.gstRateId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    <option value="">Select GST Rate</option>
+                    <option value="">
+                      {loadingGSTRates
+                        ? 'Loading GST Rates...'
+                        : (!formData.gstTypeId
+                            ? 'Select GST Type first'
+                            : (availableGSTRates.length === 0
+                                ? 'No GST Rates found'
+                                : 'Select GST Rate'))}
+                    </option>
                     {availableGSTRates.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.percentage}% {r.gstTypeName ? `(${r.gstTypeName})` : ''}

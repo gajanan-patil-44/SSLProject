@@ -85,22 +85,23 @@ const itemCreationService = {
 
   /**
    * Fetch Sub Category Dropdown (FlagId: 3)
+   * Sends FlagId: 3 along with MaterialCategoryTypeId
    */
   getSubCategoryDropdown: async (categoryId = null) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 3 });
+      const payload = { FlagId: 3 };
+      if (categoryId !== null && categoryId !== undefined && categoryId !== '') {
+        payload.MaterialCategoryTypeId = Number(categoryId);
+      }
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
       if (response && response.status === 'success' && Array.isArray(response.data)) {
-        const list = response.data.map(sc => ({
+        return response.data.map(sc => ({
           id: sc.MaterialSubCategoryTypeId,
           categoryId: sc.MaterialCategoryTypeId,
           categoryName: sc.MaterialCategoryTypeName,
           name: sc.MaterialSubCategoryTypeName,
           code: sc.MaterialSubCategoryTypeCode
         }));
-        if (categoryId) {
-          return list.filter(sc => String(sc.categoryId) === String(categoryId));
-        }
-        return list;
       }
     } catch (error) {
       console.error("Failed to load subcategory dropdown:", error);
@@ -144,10 +145,15 @@ const itemCreationService = {
 
   /**
    * Fetch GST Rates (FlagId: 6)
+   * Sends FlagId: 6 along with GSTTypeId
    */
-  getGSTRateDropdown: async () => {
+  getGSTRateDropdown: async (gstTypeId = null) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 6 });
+      const payload = { FlagId: 6 };
+      if (gstTypeId !== null && gstTypeId !== undefined && gstTypeId !== '') {
+        payload.GSTTypeId = Number(gstTypeId);
+      }
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
       if (response && response.status === 'success' && Array.isArray(response.data)) {
         return response.data.map(r => ({
           id: r.GSTRateId,
@@ -164,20 +170,16 @@ const itemCreationService = {
 
   /**
    * Fetch File Types (FlagId: 7)
-   * Dynamically filters for FileTypeId 4 from backend response
    */
   getFileTypeDropdown: async () => {
     try {
       const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 7 });
       if (response && response.status === 'success' && Array.isArray(response.data)) {
-        const materialOnly = response.data.filter(f => Number(f.FileTypeId) === 4);
-        if (materialOnly.length > 0) {
-          return materialOnly.map(f => ({
-            id: Number(f.FileTypeId),
-            name: f.FileTypeName,
-            description: f.Description
-          }));
-        }
+        return response.data.map(f => ({
+          id: Number(f.FileTypeId),
+          name: f.FileTypeName,
+          description: f.Description
+        }));
       }
     } catch (error) {
       console.error("Failed to load file types:", error);
@@ -186,16 +188,18 @@ const itemCreationService = {
   },
 
   /**
-   * Fetch all 6 dropdowns in parallel
-   * Hits /verp-service/material/dropdown with FlagIds 2, 3, 4, 5, 6, 7
+   * Fetch dropdowns
+   * Hits /verp-service/material/dropdown
+   * Pass categoryId to fetch subcategories with FlagId: 3 and MaterialCategoryTypeId
+   * Pass gstTypeId to fetch GST rates with FlagId: 6 and GSTTypeId
    */
-  getAllDropdowns: async () => {
+  getAllDropdowns: async (categoryId = null, gstTypeId = null) => {
     const [categories, subCategories, uoms, gstTypes, gstRates, fileTypes] = await Promise.all([
       itemCreationService.getCategoryDropdown(),   // FlagId: 2
-      itemCreationService.getSubCategoryDropdown(),// FlagId: 3
+      categoryId ? itemCreationService.getSubCategoryDropdown(categoryId) : Promise.resolve([]), // FlagId: 3
       itemCreationService.getUOMDropdown(),        // FlagId: 4
       itemCreationService.getGSTTypeDropdown(),    // FlagId: 5
-      itemCreationService.getGSTRateDropdown(),    // FlagId: 6
+      gstTypeId ? itemCreationService.getGSTRateDropdown(gstTypeId) : Promise.resolve([]),       // FlagId: 6
       itemCreationService.getFileTypeDropdown()    // FlagId: 7
     ]);
     return {
