@@ -1,5 +1,5 @@
 info:
-  name: designation
+  name: add designation
   type: http
   seq: 2
 
@@ -20,6 +20,7 @@ http:
         "DesignationName":"MANAGERRRr",
         "DesignationCode":"MG00011",
         "IsDisabled":false,
+        "DesignationLevel":80,
         "CreatedByUserName":"kavv"
       }
   auth: inherit

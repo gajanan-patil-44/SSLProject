@@ -403,8 +403,7 @@ export const designationController = async (req, res) => {
 
                     return res.status(409).json({
                         status: "error",
-                        message:
-                            "Designation code already exists for this company"
+                        message: "Designation code already exists for this company"
                     });
                 }
             }
@@ -414,26 +413,14 @@ export const designationController = async (req, res) => {
             // ADD DESIGNATION
             // =================================================
 
-            const designation =
-                await addDesignation({
+            const designation = await addDesignation({
 
-                    CompanyId:
-                        Number(CompanyId),
-
-                    DesignationName:
-                        DesignationName.trim(),
-
-                    DesignationCode:
-                        DesignationCode.trim(),
-
-                    DesignationLevel:
-                        Number(DesignationLevel),
-
-                    IsDisabled:
-                        IsDisabled,
-
-                    CreatedByUserName:
-                        CreatedByUserName.trim()
+                    CompanyId: Number(CompanyId),
+                    DesignationName: DesignationName.trim(),
+                    DesignationCode: DesignationCode.trim(),
+                    DesignationLevel: Number(DesignationLevel),
+                    IsDisabled: IsDisabled,
+                    CreatedByUserName: CreatedByUserName.trim()
                 });
 
 
@@ -444,10 +431,7 @@ export const designationController = async (req, res) => {
             return res.status(201).json({
 
                 status: "success",
-
-                message:
-                    "Designation added successfully",
-
+                message: "Designation added successfully",
                 data: designation
             });
         }
@@ -466,10 +450,8 @@ export const designationController = async (req, res) => {
 
         return res.status(500).json({
             status: "error",
-            message:
-                "Failed to process designation",
-            error:
-                error.message
+            message:"Failed to process designation",
+            error:error.message
         });
     }
 };
@@ -512,7 +494,7 @@ export const editDesignationController = async (req, res) => {
                 CanBeReportingManager
             } = req.body;
 
-            console.log(req.body)
+           
 
 
             // VALIDATE COMPANY DESIGNATION ID

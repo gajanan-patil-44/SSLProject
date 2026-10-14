@@ -299,7 +299,7 @@ export const checkDesignationExistsForUpdate = async (
 // EDIT DESIGNATION
 
 export const editDesignation = async (designationData) => {
-    console.log(designationData)
+   
 
     try {
 
@@ -336,7 +336,7 @@ export const editDesignation = async (designationData) => {
             query,
             values
         );
-        console.log(result)
+       
 
 
         return result.rowCount;
