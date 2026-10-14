@@ -5,12 +5,13 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/vendor/dropdown
+  url: http://localhost:9004/verp-service/vendor/view-file
   body:
     type: json
     data: |-
       {
-      "FlagId": 3
+          "FlagId": 6,
+          "VendorFileId": 1
       }
   auth: inherit
 
