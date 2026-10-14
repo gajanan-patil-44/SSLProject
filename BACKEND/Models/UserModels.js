@@ -1277,3 +1277,15 @@ export const getDesignationById = async (DesignationId) => {
     const result = await pool.query(query, [DesignationId]);
     return result.rows[0] || null;
 };
+
+
+export const getUserCount = async () => {
+    const query = `
+        SELECT COUNT(*)::int AS "UserCount"
+        FROM "DATA"."User"
+    `;
+
+    const result = await pool.query(query);
+
+    return result.rows[0].UserCount;
+};

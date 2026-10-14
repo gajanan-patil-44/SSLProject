@@ -4,10 +4,12 @@ import {
     getVendorFileTypeDropdown,
     addVendor,
     updateVendor,
-    updateVendorStatus
+    updateVendorStatus,
+    fetchVendorFilePath
 } from "../../Models/Vendor/VendorModel.js";
 
 import path from "path";
+import fs from "fs";
 
 // =====================================================
 // HELPER - PREPARE OPTIONAL VENDOR FILES
@@ -212,6 +214,7 @@ export const getVendorDropdowns = async (req, res) => {
 // FLAG ID 3 - ADD VENDOR
 // =====================================================
 
+
 export const createVendor = async (req, res) => {
     const { FlagId } = req.body;
 
@@ -219,6 +222,7 @@ export const createVendor = async (req, res) => {
         if (parseInt(FlagId) === 4) {
             const data = req.body;
 
+            // Validate vendor fields
             const validationError = validateVendor(data);
 
             if (validationError) {
@@ -228,7 +232,11 @@ export const createVendor = async (req, res) => {
                 });
             }
 
+            // Prepare uploaded vendor files
             const files = prepareVendorFiles(req);
+
+            // Insert vendor and its files
+            // addVendor must insert into VendorFile using VendorId
             const result = await addVendor(data, files);
 
             return res.status(201).json({
@@ -240,10 +248,24 @@ export const createVendor = async (req, res) => {
 
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId."
+            message: "Invalid FlagId. Use FlagId 4."
         });
 
     } catch (error) {
+        console.error("Create vendor error:", error);
+
+        if (
+            error.message.startsWith("VendorFileTypeIds") ||
+            error.message.startsWith("Provide one VendorFileTypeId") ||
+            error.message.startsWith("Uploaded") ||
+            error.message.startsWith("Invalid VendorFileTypeId")
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: error.message
+            });
+        }
+
         return res.status(500).json({
             status: "error",
             message: "Failed to add vendor",
@@ -346,6 +368,151 @@ export const updateVendorStatusController = async (req, res) => {
         return res.status(500).json({
             status: "error",
             message: "Failed to update vendor status",
+            error: error.message
+        });
+    }
+};
+
+export const viewVendorFile = async (req, res) => {
+    const { FlagId, VendorFileId } = req.body || {};
+
+    try {
+        if (parseInt(FlagId) === 6) {
+
+            // Validate VendorFileId
+            if (
+                VendorFileId === undefined ||
+                VendorFileId === null ||
+                String(VendorFileId).trim() === "" ||
+                !Number.isSafeInteger(Number(VendorFileId)) ||
+                Number(VendorFileId) <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "A valid VendorFileId is required"
+                });
+            }
+
+            // Fetch file path from database
+            const files = await fetchVendorFilePath(
+                Number(VendorFileId)
+            );
+
+            if (!files || files.length === 0) {
+                return res.status(404).json({
+                    status: "error",
+                    message: "Vendor file not found"
+                });
+            }
+
+            const filePath = files[0].VendorFilePath;
+
+            if (typeof filePath !== "string" || !filePath.trim()) {
+                return res.status(404).json({
+                    status: "error",
+                    message: "Vendor file path not available"
+                });
+            }
+
+            // Same directory used for vendor uploads
+            const uploadDirectory = path.resolve(
+                process.env.VENDOR_UPLOAD_DIR || "./uploads/Vendors"
+            );
+
+            // Get stored filename
+            const fileName = path.basename(
+                filePath.trim().replace(/\\/g, "/")
+            );
+
+            const absolutePath = path.join(
+                uploadDirectory,
+                fileName
+            );
+
+            // Validate supported file types
+            const ext = path.extname(fileName).toLowerCase();
+
+            const contentTypes = {
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".png": "image/png",
+                ".webp": "image/webp",
+                ".pdf": "application/pdf"
+            };
+
+            if (!contentTypes[ext]) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Unsupported vendor file type"
+                });
+            }
+
+            // Check file exists
+            let fileStats;
+
+            try {
+                fileStats = await fs.promises.stat(absolutePath);
+            } catch (error) {
+                if (error.code === "ENOENT") {
+                    return res.status(404).json({
+                        status: "error",
+                        message: "Vendor file does not exist on server"
+                    });
+                }
+
+                throw error;
+            }
+
+            if (!fileStats.isFile()) {
+                return res.status(404).json({
+                    status: "error",
+                    message: "Vendor file not found on server"
+                });
+            }
+
+            // Display image or PDF inline
+            res.setHeader("Content-Type", contentTypes[ext]);
+
+            res.setHeader(
+                "Content-Disposition",
+                `inline; filename="${fileName}"`
+            );
+
+            res.setHeader("X-Content-Type-Options", "nosniff");
+
+            const fileStream = fs.createReadStream(absolutePath);
+
+            fileStream.on("error", (error) => {
+                console.error("Vendor file stream error:", error);
+
+                if (!res.headersSent) {
+                    return res.status(500).json({
+                        status: "error",
+                        message: "Unable to read vendor file"
+                    });
+                }
+
+                res.destroy(error);
+            });
+
+            return fileStream.pipe(res);
+        }
+
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid FlagId. Use FlagId 6."
+        });
+
+    } catch (error) {
+        console.error("View vendor file error:", error);
+
+        if (res.headersSent) {
+            return res.end();
+        }
+
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to view vendor file",
             error: error.message
         });
     }
