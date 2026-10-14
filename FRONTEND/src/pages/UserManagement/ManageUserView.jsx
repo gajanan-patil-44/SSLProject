@@ -11,6 +11,14 @@ import { Modal } from '../../components/ui/Modal';
 import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
 import {
+  validateName,
+  validatePhone,
+  validateEmail,
+  validateCode,
+  validateDateOfBirth,
+  validateDateOfJoining
+} from '../../utils/validators';
+import {
   Building2,
   Package,
   Shield,
@@ -288,14 +296,52 @@ export default function ManageUserView() {
   // Form Validation
   const validateForm = () => {
     const errs = {};
-    if (!formData.employeeId.trim()) errs.employeeId = 'Employee ID is required';
-    if (!formData.firstName.trim()) errs.firstName = 'First Name is required';
-    if (!formData.email.trim()) {
-      errs.email = 'Email Address is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errs.email = 'Valid Email Address is required';
+
+    const empErr = validateCode(formData.employeeId, 'Employee ID', true);
+    if (empErr) errs.employeeId = empErr;
+
+    const fnErr = validateName(formData.firstName, 'First Name', true);
+    if (fnErr) errs.firstName = fnErr;
+
+    if (formData.middleName) {
+      const mnErr = validateName(formData.middleName, 'Middle Name', false);
+      if (mnErr) errs.middleName = mnErr;
     }
-    if (!formData.loginName.trim()) errs.loginName = 'Login Username is required';
+
+    if (formData.lastName) {
+      const lnErr = validateName(formData.lastName, 'Last Name', false);
+      if (lnErr) errs.lastName = lnErr;
+    }
+
+    const emailErr = validateEmail(formData.email, 'Email Address', true);
+    if (emailErr) errs.email = emailErr;
+
+    if (!formData.loginName.trim()) {
+      errs.loginName = 'Login Username is required';
+    } else if (formData.loginName.trim().length < 3) {
+      errs.loginName = 'Login Username must be at least 3 characters';
+    }
+
+    if (formData.phoneNumber) {
+      const phoneErr = validatePhone(formData.phoneNumber, 'Phone Number', false);
+      if (phoneErr) errs.phoneNumber = phoneErr;
+    }
+
+    if (formData.altPhoneNumber) {
+      const altErr = validatePhone(formData.altPhoneNumber, 'Alternate Phone Number', false);
+      if (altErr) errs.altPhoneNumber = altErr;
+    }
+
+    if (formData.dateOfBirth) {
+      const dobErr = validateDateOfBirth(formData.dateOfBirth, 18, false);
+      if (dobErr) errs.dateOfBirth = dobErr;
+    }
+
+    if (formData.dateOfJoining && formData.dateOfBirth) {
+      const dojErr = validateDateOfJoining(formData.dateOfJoining, formData.dateOfBirth, false);
+      if (dojErr) errs.dateOfJoining = dojErr;
+    }
+
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };

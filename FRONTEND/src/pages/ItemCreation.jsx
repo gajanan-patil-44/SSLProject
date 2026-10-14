@@ -39,6 +39,7 @@ import {
 import { BASE_URL } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
 import { itemCreationService } from '../services';
+import { validateCode, validateHSN } from '../utils/validators';
 
 export default function ItemCreation() {
   const showToast = useERPStore((state) => state.showToast);
@@ -281,6 +282,45 @@ export default function ItemCreation() {
     createdBy: '',
     createdAt: ''
   });
+  const [formErrors, setFormErrors] = useState({});
+
+  // Validate form
+  const validateForm = () => {
+    const errs = {};
+    if (!formData.categoryId) {
+      errs.categoryId = 'Material Category is required';
+    }
+    if (!formData.subCategoryId) {
+      errs.subCategoryId = 'Material Sub Category is required';
+    }
+    const codeErr = validateCode(formData.code, 'Material Code', true);
+    if (codeErr) errs.code = codeErr;
+
+    const trimmedName = (formData.name || '').trim();
+    if (!trimmedName) {
+      errs.name = 'Material Name is required';
+    } else if (trimmedName.length < 2) {
+      errs.name = 'Material Name must be at least 2 characters';
+    }
+
+    if (!formData.uomId) {
+      errs.uomId = 'UOM selection is required';
+    }
+    if (!formData.gstTypeId) {
+      errs.gstTypeId = 'GST Type is required';
+    }
+    if (!formData.gstRateId) {
+      errs.gstRateId = 'GST Rate is required';
+    }
+
+    if (formData.hsnSac) {
+      const hsnErr = validateHSN(formData.hsnSac, 'HSN/SAC Code', false);
+      if (hsnErr) errs.hsnSac = hsnErr;
+    }
+
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   // Fetch all 6 dropdowns dynamically from /verp-service/material/dropdown (FlagIds 2 to 7)
   const fetchAllDropdowns = async () => {
@@ -404,6 +444,7 @@ export default function ItemCreation() {
         updatedAt: ''
       });
     }
+    setFormErrors({});
     setIsModalOpen(true);
   };
 
@@ -411,6 +452,7 @@ export default function ItemCreation() {
     setIsModalOpen(false);
     setIsViewing(false);
     setIsEditing(false);
+    setFormErrors({});
     setActiveModalTab('details');
     setSelectedFile(null);
     setExistingFiles([]);
@@ -498,6 +540,10 @@ export default function ItemCreation() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      showToast('Please fill all mandatory fields correctly.', 'error');
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -874,11 +920,15 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    required
                     disabled={isViewing}
                     value={formData.categoryId}
-                    onChange={handleCategoryChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleCategoryChange(e);
+                      if (formErrors.categoryId) setFormErrors(prev => ({ ...prev, categoryId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.categoryId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select Category</option>
                     {dropdowns.categories.map((cat) => (
@@ -893,6 +943,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.categoryId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.categoryId}</span>
+                )}
               </div>
 
               {/* Sub Category Dropdown */}
@@ -902,11 +955,15 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    required
                     disabled={isViewing}
                     value={formData.subCategoryId}
-                    onChange={handleSubCategoryChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleSubCategoryChange(e);
+                      if (formErrors.subCategoryId) setFormErrors(prev => ({ ...prev, subCategoryId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.subCategoryId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select Sub Category</option>
                     {availableSubCategories.map((sc) => (
@@ -921,6 +978,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.subCategoryId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.subCategoryId}</span>
+                )}
               </div>
 
               {/* Material Code */}
@@ -929,13 +989,20 @@ export default function ItemCreation() {
                   Material Code {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <input 
-                  required
                   value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, code: e.target.value });
+                    if (formErrors.code) setFormErrors(prev => ({ ...prev, code: '' }));
+                  }}
                   placeholder="e.g. MAT001"
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                    formErrors.code ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.code && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.code}</span>
+                )}
               </div>
 
               {/* Material Name */}
@@ -944,13 +1011,20 @@ export default function ItemCreation() {
                   Material Name {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <input 
-                  required
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
+                  }}
                   placeholder="e.g. Copper Wire"
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                    formErrors.name ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.name && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.name}</span>
+                )}
               </div>
 
               {/* Brand Name */}
@@ -990,8 +1064,13 @@ export default function ItemCreation() {
                   <select
                     disabled={isViewing}
                     value={formData.uomId}
-                    onChange={handleUOMChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleUOMChange(e);
+                      if (formErrors.uomId) setFormErrors(prev => ({ ...prev, uomId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.uomId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select UOM</option>
                     {dropdowns.uoms.map((u) => (
@@ -1006,6 +1085,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.uomId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.uomId}</span>
+                )}
               </div>
 
               {/* Warranty */}
@@ -1043,8 +1125,13 @@ export default function ItemCreation() {
                   <select
                     disabled={isViewing}
                     value={formData.gstTypeId}
-                    onChange={handleGSTTypeChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleGSTTypeChange(e);
+                      if (formErrors.gstTypeId) setFormErrors(prev => ({ ...prev, gstTypeId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.gstTypeId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select GST Type</option>
                     {dropdowns.gstTypes.map((gt) => (
@@ -1059,6 +1146,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.gstTypeId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.gstTypeId}</span>
+                )}
               </div>
 
               {/* GST Rate */}
@@ -1070,8 +1160,13 @@ export default function ItemCreation() {
                   <select
                     disabled={isViewing}
                     value={formData.gstRateId}
-                    onChange={handleGSTRateChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleGSTRateChange(e);
+                      if (formErrors.gstRateId) setFormErrors(prev => ({ ...prev, gstRateId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.gstRateId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select GST Rate</option>
                     {availableGSTRates.map((r) => (
@@ -1086,6 +1181,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.gstRateId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.gstRateId}</span>
+                )}
               </div>
 
               {/* HSN/SAC */}
@@ -1095,11 +1193,19 @@ export default function ItemCreation() {
                 </label>
                 <input 
                   value={formData.hsnSac}
-                  onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, hsnSac: e.target.value });
+                    if (formErrors.hsnSac) setFormErrors(prev => ({ ...prev, hsnSac: '' }));
+                  }}
                   placeholder="e.g. 84713010"
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                    formErrors.hsnSac ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.hsnSac && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.hsnSac}</span>
+                )}
               </div>
 
               {/* Status */}
