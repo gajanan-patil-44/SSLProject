@@ -35,7 +35,7 @@ export const productService = {
    * @param {Object} productData 
    */
   updateProduct: async (productData) => {
-    return apiClient.post(API_ROUTES.PRODUCT.UPDATE_PRODUCT, {
+    return apiClient.patch(API_ROUTES.PRODUCT.UPDATE_PRODUCT, {
       flagId: 3,
       ProductId: Number(productData.ProductId ?? productData.id),
       ProductCode: productData.ProductCode || productData.productCode || '',
@@ -54,7 +54,7 @@ export const productService = {
       ? statusData.IsDisabled
       : (statusData.IsDisabled === 'true' || statusData.IsDisabled === 'Inactive' || statusData.IsDisabled === 'Disabled' || statusData.status === 'Inactive');
 
-    return apiClient.post(API_ROUTES.PRODUCT.TOGGLE_STATUS, {
+    return apiClient.patch(API_ROUTES.PRODUCT.TOGGLE_STATUS, {
       flagId: 4,
       ProductId: Number(statusData.ProductId ?? statusData.id),
       IsDisabled: Boolean(isDisabled),

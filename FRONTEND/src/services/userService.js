@@ -134,7 +134,7 @@ export const userService = {
       UserId: Number(statusData.UserId ?? statusData.userId ?? statusData.id)
     };
 
-    return apiClient.post(API_ROUTES.USER_EDIT.TOGGLE_USER_STATUS, payload);
+    return apiClient.patch(API_ROUTES.USER_EDIT.TOGGLE_USER_STATUS, payload);
   },
 
   /**
