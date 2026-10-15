@@ -171,10 +171,10 @@ export const pageService = {
   },
 
   /**
-   * Update existing page (POST /edit FlagId: 2)
+   * Update existing page (PATCH /edit FlagId: 2)
    */
   updatePage: async (data) => {
-    return apiClient.post(API_ROUTES.PAGE.EDIT, data);
+    return apiClient.patch(API_ROUTES.PAGE.EDIT, data);
   },
 
   /**
