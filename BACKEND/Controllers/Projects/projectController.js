@@ -54,7 +54,7 @@ export const getProject = async (req, res) => {
 
 // ADD PROJECT / COMPANY PRODUCT DROPDOWN
 
-export const projectController = async (req, res) => {
+export const addprojectController = async (req, res) => {
 
     const { flagId } = req.body;
 
@@ -222,7 +222,7 @@ export const projectController = async (req, res) => {
                     ProjectName.trim(),
                     ProjectCode.trim()
                 );
-
+                
 
             if (existingProject.length > 0) {
 

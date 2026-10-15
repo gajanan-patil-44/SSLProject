@@ -16,13 +16,13 @@ http:
 
       {
         "flagId":2,
-        "CompanyDesignationId":9,
+        "CompanyDesignationId":16,
         "CompanyId":1,
-        "DesignationName":"aa",
-        "DesignationCode":"aa1",
+        "DesignationName":"aaaa",
+        "DesignationCode":"aaaa1",
         "IsDisabled":false,
         "UpdateByUserName":"kss",
-        "CanBeReportingManager":false
+        "CanBeReportingManager":true
       }
   auth:
     type: bearer

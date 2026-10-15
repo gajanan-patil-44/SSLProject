@@ -87,7 +87,7 @@ export const getCompanyDropdown = async (req, res) => {
 
 // ADD DESIGNATION / COMPANY DROPDOWN
 
-export const designationController = async (req, res) => {
+export const add_designationController = async (req, res) => {
 
     const { flagId } = req.body;
 
@@ -693,17 +693,17 @@ export const editDesignationController = async (req, res) => {
                 const duplicate = existingDesignation[0];
 
 
-                if (
-                    duplicate.DesignationName &&
-                    duplicate.DesignationName.trim().toLowerCase() ===
-                    DesignationName.trim().toLowerCase()
-                ) {
+                // if (
+                //     duplicate.DesignationName &&
+                //     duplicate.DesignationName.trim().toLowerCase() ===
+                //     DesignationName.trim().toLowerCase()
+                // ) {
 
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Designation name already exists for this company"
-                    });
-                }
+                //     return res.status(409).json({
+                //         status: "error",
+                //         message: "Designation name already exists for this company"
+                //     });
+                // }
 
 
                 if (

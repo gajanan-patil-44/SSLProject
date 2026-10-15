@@ -3,10 +3,11 @@ import { getProduct, addProducts, updateProduct, toggleProductStatus, deleteProd
 import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 const router = express.Router();
 
-router.post("/getProduct", authenticateToken, getProduct);
-router.post("/addProduct", addProducts);
-router.post("/updateProduct", authenticateToken, updateProduct);
-router.post("/deleteProduct", authenticateToken, deleteProduct);
-router.post("/toggleProductStatus", authenticateToken, toggleProductStatus);
+router.post("/getProduct",authenticateToken, getProduct);
+router.post("/addProduct",authenticateToken, addProducts);
+router.post("/updateProduct",authenticateToken, updateProduct);
+router.post("/toggleProductStatus",authenticateToken, toggleProductStatus);
+router.post("/deleteProduct",authenticateToken, deleteProduct);
+
 
 export default router;
