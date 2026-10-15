@@ -118,7 +118,18 @@ export const getMaterialDropdown = async (req, res) => {
         }
 
         if (parseInt(FlagId) === 3) {
-            const data = await getMaterialSubCategoryDropdown();
+            const { MaterialCategoryTypeId } = req.body;
+
+            if (!MaterialCategoryTypeId) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "MaterialCategoryTypeId is required"
+                });
+            }
+
+            const data = await getMaterialSubCategoryDropdown(
+                MaterialCategoryTypeId
+            );
 
             return res.status(200).json({
                 status: "success",

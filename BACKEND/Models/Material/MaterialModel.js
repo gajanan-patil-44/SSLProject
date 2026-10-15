@@ -89,7 +89,7 @@ export const getMaterialCategoryDropdown = async () => {
 // =====================================================
 // FLAG ID 3 - MATERIAL SUB-CATEGORY DROPDOWN
 // =====================================================
-export const getMaterialSubCategoryDropdown = async () => {
+export const getMaterialSubCategoryDropdown = async (MaterialCategoryTypeId) => {
     const query = `
         SELECT
             s."MaterialSubCategoryTypeId",
@@ -103,10 +103,14 @@ export const getMaterialSubCategoryDropdown = async () => {
                s."MaterialCategoryTypeId"
         WHERE s."IsDisabled" = false
           AND c."IsDisabled" = false
+          AND s."MaterialCategoryTypeId" = $1
         ORDER BY s."MaterialSubCategoryTypeName" ASC
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [
+        MaterialCategoryTypeId
+    ]);
+
     return result.rows;
 };
 // =====================================================

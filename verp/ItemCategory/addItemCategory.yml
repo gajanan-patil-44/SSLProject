@@ -16,7 +16,9 @@ http:
         "IsDisabled":false,
         "CreatedByUserName":"kavya"
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkxOTYxNjgyLCJleHAiOjE3OTE5OTA0ODJ9.I0719HKNoOUxUqB01GegKLr5N2_tc0UryTZpasX338Y
 
 settings:
   encodeUrl: true
