@@ -208,6 +208,7 @@ export const MATERIAL_ROUTES = {
   VIEW_FILE: '/verp-service/material/view-file'
 };
 
+export const MATERIAL_DROPDOWN = '/verp-service/material/dropdown';
 export const ITEM_ROUTES = MATERIAL_ROUTES;
 
 /**
