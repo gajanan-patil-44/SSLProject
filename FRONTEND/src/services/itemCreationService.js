@@ -257,10 +257,9 @@ const itemCreationService = {
       if (data.UpdatedByUserId) formData.append('UpdatedByUserId', Number(data.UpdatedByUserId));
       if (data.UpdatedAt) formData.append('UpdatedAt', data.UpdatedAt);
 
-      const fileTypeId = data.FileTypeId ?? data.FileTypeIds ?? data.fileTypeId;
+      const fileTypeId = data.FileTypeId ?? data.fileTypeId;
       if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
         formData.append('FileTypeId', Number(fileTypeId));
-        formData.append('FileTypeIds', Number(fileTypeId));
       }
       formData.append('files', data.file || data.files);
 
@@ -322,10 +321,9 @@ const itemCreationService = {
       if (data.UpdatedByUserId) formData.append('UpdatedByUserId', Number(data.UpdatedByUserId));
       if (data.UpdatedAt) formData.append('UpdatedAt', data.UpdatedAt);
 
-      const fileTypeId = data.FileTypeId ?? data.FileTypeIds ?? data.fileTypeId;
+      const fileTypeId = data.FileTypeId ?? data.fileTypeId;
       if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
         formData.append('FileTypeId', Number(fileTypeId));
-        formData.append('FileTypeIds', Number(fileTypeId));
       }
       formData.append('files', data.file || data.files);
 

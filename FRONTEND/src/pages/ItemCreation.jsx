@@ -654,7 +654,6 @@ export default function ItemCreation() {
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
-          FileTypeIds: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
@@ -684,7 +683,6 @@ export default function ItemCreation() {
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
-          FileTypeIds: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
