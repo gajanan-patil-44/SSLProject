@@ -39,6 +39,7 @@ import {
 import { BASE_URL } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
 import { itemCreationService } from '../services';
+import { validateCode, validateHSN } from '../utils/validators';
 
 export default function ItemCreation() {
   const showToast = useERPStore((state) => state.showToast);
@@ -253,6 +254,8 @@ export default function ItemCreation() {
     gstRates: [],      // FlagId: 6
     fileTypes: []      // FlagId: 7
   });
+  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
+  const [loadingGSTRates, setLoadingGSTRates] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -281,19 +284,51 @@ export default function ItemCreation() {
     createdBy: '',
     createdAt: ''
   });
+  const [formErrors, setFormErrors] = useState({});
+
+  // Validate form
+  const validateForm = () => {
+    const errs = {};
+    if (!formData.categoryId) {
+      errs.categoryId = 'Material Category is required';
+    }
+    if (!formData.subCategoryId) {
+      errs.subCategoryId = 'Material Sub Category is required';
+    }
+    const codeErr = validateCode(formData.code, 'Material Code', true);
+    if (codeErr) errs.code = codeErr;
+
+    const trimmedName = (formData.name || '').trim();
+    if (!trimmedName) {
+      errs.name = 'Material Name is required';
+    } else if (trimmedName.length < 2) {
+      errs.name = 'Material Name must be at least 2 characters';
+    }
+
+    if (!formData.uomId) {
+      errs.uomId = 'UOM selection is required';
+    }
+    if (!formData.gstTypeId) {
+      errs.gstTypeId = 'GST Type is required';
+    }
+    if (!formData.gstRateId) {
+      errs.gstRateId = 'GST Rate is required';
+    }
+
+    if (formData.hsnSac) {
+      const hsnErr = validateHSN(formData.hsnSac, 'HSN/SAC Code', false);
+      if (hsnErr) errs.hsnSac = hsnErr;
+    }
+
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   // Fetch all 6 dropdowns dynamically from /verp-service/material/dropdown (FlagIds 2 to 7)
-  const fetchAllDropdowns = async () => {
+  const fetchAllDropdowns = async (categoryId = null, gstTypeId = null) => {
     try {
-      const data = await itemCreationService.getAllDropdowns();
+      const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId);
       setDropdowns(data);
-      if (data.fileTypes && data.fileTypes.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          fileTypeId: prev.fileTypeId ?? data.fileTypes[0].id,
-          fileTypeName: prev.fileTypeName || data.fileTypes[0].name
-        }));
-      }
     } catch (error) {
       console.error("Failed to load dropdowns:", error);
     }
@@ -320,7 +355,9 @@ export default function ItemCreation() {
   }, []);
 
   const handleOpenModal = async (item = null, mode = 'create') => {
-    await fetchAllDropdowns();
+    const existingCategoryId = item?.categoryId || item?.raw?.MaterialCategoryTypeId || null;
+    const existingGSTTypeId = item?.gstTypeId || item?.raw?.GSTTypeId || null;
+    await fetchAllDropdowns(existingCategoryId, existingGSTTypeId);
     setIsViewing(mode === 'view');
     setActiveModalTab('details');
     setSelectedFile(null);
@@ -335,7 +372,7 @@ export default function ItemCreation() {
         : (Array.isArray(item.raw?.Files) ? item.raw.Files.map(f => {
             const rawPath = f.FilePatch || f.FilePath || '';
             const path = rawPath ? rawPath.replace(/\\/g, '/') : '';
-            const name = path ? path.split('/').pop() : 'Material Document';
+            const name = path ? path.split('/').pop() : '';
             return {
               id: f.MaterialFileId,
               fileTypeId: f.FileTypeId,
@@ -360,8 +397,8 @@ export default function ItemCreation() {
         gstTypeName: item.gstTypeName || '',
         gstRateId: item.gstRateId || '',
         gstPercentage: item.gstPercentage || '',
-        fileTypeId: item.fileTypeId ? Number(item.fileTypeId) : (dropdowns.fileTypes?.[0]?.id ?? null),
-        fileTypeName: item.fileTypeName || (dropdowns.fileTypes?.[0]?.name ?? ''),
+        fileTypeId: item.fileTypeId ? Number(item.fileTypeId) : '',
+        fileTypeName: item.fileTypeName || '',
         hsnSac: item.hsnSac || '',
         warrantyYears: item.warrantyYears || '',
         description: item.description || '',
@@ -369,7 +406,7 @@ export default function ItemCreation() {
         status: item.status || 'Active',
         createdBy: item.createdBy || item.userName || currentUserName,
         createdAt: item.createdAt || '',
-        updatedBy: item.updatedBy || (item.raw?.UpdatedByUserName || (item.raw?.UpdatedByUserId ? `User #${item.raw?.UpdatedByUserId}` : '')),
+        updatedBy: item.updatedBy || (item.raw?.UpdatedByUserName || ''),
         updatedAt: item.updatedAt || (item.raw?.UpdatedAt ? new Date(item.raw.UpdatedAt).toLocaleDateString('en-GB') : '')
       });
     } else {
@@ -391,8 +428,8 @@ export default function ItemCreation() {
         gstTypeName: '',
         gstRateId: '',
         gstPercentage: '',
-        fileTypeId: dropdowns.fileTypes?.[0]?.id ?? null,
-        fileTypeName: dropdowns.fileTypes?.[0]?.name ?? '',
+        fileTypeId: '',
+        fileTypeName: '',
         hsnSac: '',
         warrantyYears: '',
         description: '',
@@ -404,6 +441,7 @@ export default function ItemCreation() {
         updatedAt: ''
       });
     }
+    setFormErrors({});
     setIsModalOpen(true);
   };
 
@@ -411,6 +449,7 @@ export default function ItemCreation() {
     setIsModalOpen(false);
     setIsViewing(false);
     setIsEditing(false);
+    setFormErrors({});
     setActiveModalTab('details');
     setSelectedFile(null);
     setExistingFiles([]);
@@ -432,7 +471,7 @@ export default function ItemCreation() {
   };
 
   // Dropdown Change Handlers
-  const handleCategoryChange = (e) => {
+  const handleCategoryChange = async (e) => {
     const selectedId = e.target.value;
     const selected = dropdowns.categories.find(c => String(c.id) === String(selectedId));
     setFormData(prev => ({
@@ -442,6 +481,27 @@ export default function ItemCreation() {
       subCategoryId: '',
       subCategoryName: ''
     }));
+
+    if (selectedId) {
+      setLoadingSubCategories(true);
+      try {
+        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId);
+        setDropdowns(prev => ({
+          ...prev,
+          subCategories: subCats || []
+        }));
+      } catch (err) {
+        console.error("Failed to load subcategories for category:", selectedId, err);
+        setDropdowns(prev => ({ ...prev, subCategories: [] }));
+      } finally {
+        setLoadingSubCategories(false);
+      }
+    } else {
+      setDropdowns(prev => ({
+        ...prev,
+        subCategories: []
+      }));
+    }
   };
 
   const handleSubCategoryChange = (e) => {
@@ -464,7 +524,7 @@ export default function ItemCreation() {
     }));
   };
 
-  const handleGSTTypeChange = (e) => {
+  const handleGSTTypeChange = async (e) => {
     const selectedId = e.target.value;
     const selected = dropdowns.gstTypes.find(g => String(g.GSTTypeId) === String(selectedId));
     setFormData(prev => ({
@@ -474,6 +534,27 @@ export default function ItemCreation() {
       gstRateId: '',
       gstPercentage: ''
     }));
+
+    if (selectedId) {
+      setLoadingGSTRates(true);
+      try {
+        const rates = await itemCreationService.getGSTRateDropdown(selectedId);
+        setDropdowns(prev => ({
+          ...prev,
+          gstRates: rates || []
+        }));
+      } catch (err) {
+        console.error("Failed to load GST rates for type:", selectedId, err);
+        setDropdowns(prev => ({ ...prev, gstRates: [] }));
+      } finally {
+        setLoadingGSTRates(false);
+      }
+    } else {
+      setDropdowns(prev => ({
+        ...prev,
+        gstRates: []
+      }));
+    }
   };
 
   const handleGSTRateChange = (e) => {
@@ -487,17 +568,21 @@ export default function ItemCreation() {
   };
 
   const handleFileTypeChange = (e) => {
-    const selectedId = Number(e.target.value);
+    const selectedId = e.target.value ? Number(e.target.value) : '';
     const selected = dropdowns.fileTypes.find(f => Number(f.id) === selectedId);
     setFormData(prev => ({
       ...prev,
-      fileTypeId: 4,
-      fileTypeName: selected ? selected.name : 'Material'
+      fileTypeId: selectedId,
+      fileTypeName: selected ? selected.name : ''
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      showToast('Please fill all mandatory fields correctly.', 'error');
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -522,7 +607,7 @@ export default function ItemCreation() {
           CreatedByUserId: formData.createdByUserId ? Number(formData.createdByUserId) : (currentUserId ? Number(currentUserId) : undefined),
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
-          FileTypeIds: selectedFile ? Number(formData.fileTypeId || dropdowns.fileTypes?.[0]?.id) : undefined,
+          FileTypeIds: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
@@ -551,7 +636,7 @@ export default function ItemCreation() {
           CreatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
-          FileTypeIds: selectedFile ? Number(formData.fileTypeId || dropdowns.fileTypes?.[0]?.id) : undefined,
+          FileTypeIds: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
@@ -616,15 +701,11 @@ export default function ItemCreation() {
     }
   };
 
-  // Filter sub-categories by selected category (FlagId: 3)
-  const availableSubCategories = formData.categoryId
-    ? dropdowns.subCategories.filter(sc => String(sc.categoryId) === String(formData.categoryId))
-    : dropdowns.subCategories;
+  // Sub-categories dynamically loaded from backend for selected Category (FlagId: 3 with MaterialCategoryTypeId)
+  const availableSubCategories = formData.categoryId ? dropdowns.subCategories : [];
 
-  // Filter GST Rates by selected GST Type (FlagId: 6 filtered by FlagId: 5)
-  const availableGSTRates = formData.gstTypeId
-    ? dropdowns.gstRates.filter(r => String(r.gstTypeId) === String(formData.gstTypeId))
-    : dropdowns.gstRates;
+  // GST Rates dynamically loaded from backend for selected GST Type (FlagId: 6 with GSTTypeId)
+  const availableGSTRates = formData.gstTypeId ? dropdowns.gstRates : [];
 
   const filteredData = items.filter(item =>
     (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -735,7 +816,7 @@ export default function ItemCreation() {
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Material Creation', path: '/master/item-creation' }
+          { label: 'Material Creation', path: '/master/material-creation' }
         ]}
       />
 
@@ -874,11 +955,15 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    required
                     disabled={isViewing}
                     value={formData.categoryId}
-                    onChange={handleCategoryChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleCategoryChange(e);
+                      if (formErrors.categoryId) setFormErrors(prev => ({ ...prev, categoryId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.categoryId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select Category</option>
                     {dropdowns.categories.map((cat) => (
@@ -893,6 +978,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.categoryId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.categoryId}</span>
+                )}
               </div>
 
               {/* Sub Category Dropdown */}
@@ -902,13 +990,25 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    required
-                    disabled={isViewing}
+                    disabled={isViewing || loadingSubCategories || !formData.categoryId}
                     value={formData.subCategoryId}
-                    onChange={handleSubCategoryChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleSubCategoryChange(e);
+                      if (formErrors.subCategoryId) setFormErrors(prev => ({ ...prev, subCategoryId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.subCategoryId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
-                    <option value="">Select Sub Category</option>
+                    <option value="">
+                      {loadingSubCategories
+                        ? 'Loading Sub Categories...'
+                        : (!formData.categoryId
+                            ? 'Select Category first'
+                            : (availableSubCategories.length === 0
+                                ? 'No Sub Categories found'
+                                : 'Select Sub Category'))}
+                    </option>
                     {availableSubCategories.map((sc) => (
                       <option key={sc.id} value={sc.id}>
                         {sc.name} {sc.code ? `(${sc.code})` : ''}
@@ -921,6 +1021,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.subCategoryId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.subCategoryId}</span>
+                )}
               </div>
 
               {/* Material Code */}
@@ -929,13 +1032,20 @@ export default function ItemCreation() {
                   Material Code {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <input 
-                  required
                   value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, code: e.target.value });
+                    if (formErrors.code) setFormErrors(prev => ({ ...prev, code: '' }));
+                  }}
                   placeholder="e.g. MAT001"
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                    formErrors.code ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.code && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.code}</span>
+                )}
               </div>
 
               {/* Material Name */}
@@ -944,13 +1054,20 @@ export default function ItemCreation() {
                   Material Name {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <input 
-                  required
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
+                  }}
                   placeholder="e.g. Copper Wire"
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                    formErrors.name ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.name && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.name}</span>
+                )}
               </div>
 
               {/* Brand Name */}
@@ -990,8 +1107,13 @@ export default function ItemCreation() {
                   <select
                     disabled={isViewing}
                     value={formData.uomId}
-                    onChange={handleUOMChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleUOMChange(e);
+                      if (formErrors.uomId) setFormErrors(prev => ({ ...prev, uomId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.uomId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select UOM</option>
                     {dropdowns.uoms.map((u) => (
@@ -1006,6 +1128,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.uomId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.uomId}</span>
+                )}
               </div>
 
               {/* Warranty */}
@@ -1043,8 +1168,13 @@ export default function ItemCreation() {
                   <select
                     disabled={isViewing}
                     value={formData.gstTypeId}
-                    onChange={handleGSTTypeChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleGSTTypeChange(e);
+                      if (formErrors.gstTypeId) setFormErrors(prev => ({ ...prev, gstTypeId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.gstTypeId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
                     <option value="">Select GST Type</option>
                     {dropdowns.gstTypes.map((gt) => (
@@ -1059,6 +1189,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.gstTypeId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.gstTypeId}</span>
+                )}
               </div>
 
               {/* GST Rate */}
@@ -1068,12 +1201,25 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || loadingGSTRates || !formData.gstTypeId}
                     value={formData.gstRateId}
-                    onChange={handleGSTRateChange}
-                    className="w-full h-8.5 px-2.5 pr-7 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate"
+                    onChange={(e) => {
+                      handleGSTRateChange(e);
+                      if (formErrors.gstRateId) setFormErrors(prev => ({ ...prev, gstRateId: '' }));
+                    }}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.gstRateId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
                   >
-                    <option value="">Select GST Rate</option>
+                    <option value="">
+                      {loadingGSTRates
+                        ? 'Loading GST Rates...'
+                        : (!formData.gstTypeId
+                            ? 'Select GST Type first'
+                            : (availableGSTRates.length === 0
+                                ? 'No GST Rates found'
+                                : 'Select GST Rate'))}
+                    </option>
                     {availableGSTRates.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.percentage}% {r.gstTypeName ? `(${r.gstTypeName})` : ''}
@@ -1086,6 +1232,9 @@ export default function ItemCreation() {
                     </svg>
                   )}
                 </div>
+                {formErrors.gstRateId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.gstRateId}</span>
+                )}
               </div>
 
               {/* HSN/SAC */}
@@ -1095,11 +1244,19 @@ export default function ItemCreation() {
                 </label>
                 <input 
                   value={formData.hsnSac}
-                  onChange={(e) => setFormData({ ...formData, hsnSac: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, hsnSac: e.target.value });
+                    if (formErrors.hsnSac) setFormErrors(prev => ({ ...prev, hsnSac: '' }));
+                  }}
                   placeholder="e.g. 84713010"
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                    formErrors.hsnSac ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.hsnSac && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.hsnSac}</span>
+                )}
               </div>
 
               {/* Status */}

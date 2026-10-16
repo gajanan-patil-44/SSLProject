@@ -10,8 +10,12 @@ http:
     type: json
     data: |-
       {
+<<<<<<< HEAD
         "FlagId": 6,
         "GSTTypeId":4
+=======
+        "FlagId": 6
+>>>>>>> 7fbf101bd64937072ae81076ef43f5cd0218bdb6
       }
   auth: inherit
 

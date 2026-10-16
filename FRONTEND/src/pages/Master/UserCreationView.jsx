@@ -10,6 +10,15 @@ import {
 import { Button, PageHeader } from '../../components/ui/index';
 import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
+import {
+  validateName,
+  validatePhone,
+  validateEmail,
+  validateCode,
+  validatePassword,
+  validateDateOfBirth,
+  validateDateOfJoining
+} from '../../utils/validators';
 
 // ─── Helper to retrieve logged-in session details ───────────────────────────
 const getSessionAuth = () => {
@@ -501,21 +510,52 @@ export default function UserCreationView() {
     const e = {};
 
     if (step === 1) {
-      if (!form.EmployeeId.trim())                                   e.EmployeeId       = 'Employee ID is required';
-      if (!form.FirstName.trim())                                    e.FirstName        = 'First name is required';
-      if (!form.PhoneNumber.trim())                                   e.PhoneNumber      = 'Phone number is required';
-      else if (!/^\d{10}$/.test(form.PhoneNumber.trim()))            e.PhoneNumber      = 'Must be exactly 10 digits';
-      if (!form.DateOfBirth)                                         e.DateOfBirth      = 'Date of birth is required';
-      if (!form.DateOfJoining)                                       e.DateOfJoining    = 'Date of joining is required';
-      if (!form.GenderId)                                            e.GenderId         = 'Select a gender';
-      if (!form.MaritalStatusId)                                     e.MaritalStatusId  = 'Select marital status';
+      const empErr = validateCode(form.EmployeeId, 'Employee ID', true);
+      if (empErr) e.EmployeeId = empErr;
+
+      const fnErr = validateName(form.FirstName, 'First name', true);
+      if (fnErr) e.FirstName = fnErr;
+
+      if (form.MiddleName) {
+        const mnErr = validateName(form.MiddleName, 'Middle name', false);
+        if (mnErr) e.MiddleName = mnErr;
+      }
+
+      if (form.LastName) {
+        const lnErr = validateName(form.LastName, 'Last name', false);
+        if (lnErr) e.LastName = lnErr;
+      }
+
+      const phoneErr = validatePhone(form.PhoneNumber, 'Phone number', true);
+      if (phoneErr) e.PhoneNumber = phoneErr;
+
+      if (form.AltPhoneNumber) {
+        const altPhoneErr = validatePhone(form.AltPhoneNumber, 'Alternate phone number', false);
+        if (altPhoneErr) e.AltPhoneNumber = altPhoneErr;
+      }
+
+      const dobErr = validateDateOfBirth(form.DateOfBirth, 18, true);
+      if (dobErr) e.DateOfBirth = dobErr;
+
+      const dojErr = validateDateOfJoining(form.DateOfJoining, form.DateOfBirth, true);
+      if (dojErr) e.DateOfJoining = dojErr;
+
+      if (!form.GenderId) e.GenderId = 'Select a gender';
+      if (!form.MaritalStatusId) e.MaritalStatusId = 'Select marital status';
     }
 
     if (step === 2) {
-      if (!form.Email.trim())                                        e.Email            = 'Email is required';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.Email))     e.Email            = 'Invalid email address';
-      if (!form.LoginName.trim())                                    e.LoginName        = 'Login name is required';
-      if (!form.Password.trim())                                     e.Password         = 'Password is required';
+      const emailErr = validateEmail(form.Email, 'Email address', true);
+      if (emailErr) e.Email = emailErr;
+
+      if (!form.LoginName.trim()) {
+        e.LoginName = 'Login username is required';
+      } else if (form.LoginName.trim().length < 3) {
+        e.LoginName = 'Login username must be at least 3 characters';
+      }
+
+      const passErr = validatePassword(form.Password, 'Password', 6, true);
+      if (passErr) e.Password = passErr;
     }
 
     if (step === 3) {

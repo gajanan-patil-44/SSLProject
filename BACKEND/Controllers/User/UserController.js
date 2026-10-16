@@ -13,7 +13,8 @@ import {
     getProjectDropdown,
     getRoleDropdown,
     getUserReportingManagerDropdown,
-    getDesignationById
+    getDesignationById,
+    getUserCount
 
 
 } from "../../Models/UserModels.js";
@@ -134,6 +135,7 @@ export const createUserController = async (req, res) => {
         // COMMON REQUIRED FIELDS
         // ==========================================================
 
+
         const requiredFields = [
             "EmployeeId",
             "FirstName",
@@ -145,8 +147,7 @@ export const createUserController = async (req, res) => {
             "Email",
             "LoginName",
             "Password",
-            "RoleId",
-            "CreatedByUserName"
+            "RoleId"
         ];
 
         for (const field of requiredFields) {
@@ -156,6 +157,22 @@ export const createUserController = async (req, res) => {
                     message: `${field} is required`
                 });
             }
+        }
+
+        // CreatedByUserName is optional for the first Super Admin
+        const userCount = await getUserCount();
+
+        if (
+            parseInt(userData.RoleId) === 1 &&
+            userCount === 0
+        ) {
+            // First user: initial Super Admin
+            userData.CreatedByUserName = null;
+        } else if (isEmpty(userData.CreatedByUserName)) {
+            return res.status(400).json({
+                status: "error",
+                message: "CreatedByUserName is required"
+            });
         }
 
         // ==========================================================
@@ -347,11 +364,8 @@ export const createUserController = async (req, res) => {
                 });
             }
 
-            if (
-                String(designation.DesignationName || "")
-                    .trim()
-                    .toLowerCase() === "managing director"
-            ) {
+
+            if (Number(userData.DesignationId) === 1) {
                 userData.ReportingManagerUserId = null;
             } else {
                 if (
@@ -360,8 +374,7 @@ export const createUserController = async (req, res) => {
                 ) {
                     return res.status(400).json({
                         status: "error",
-                        message:
-                            "ReportingManagerUserId must be a non-empty array"
+                        message: "ReportingManagerUserId must be a non-empty array"
                     });
                 }
             }

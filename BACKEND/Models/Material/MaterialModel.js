@@ -152,7 +152,6 @@ export const getGSTRateDropdown = async (GSTTypeId) => {
         SELECT
             r."GSTRateId",
             r."GSTTypeId",
-            t."GSTTypeName",
             r."GSTPercentage"
         FROM "LKP"."GSTRate" r
         INNER JOIN "LKP"."GSTType" t

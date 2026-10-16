@@ -1,0 +1,23 @@
+info:
+  name: VIEW IMAGE
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/vendor/view-file
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 6,
+          "VendorFileId": 1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useERPStore } from '../../store/useERPStore';
 import { vendorService } from '../../services/vendorService';
+import { validatePhone, validateEmail, validateName, validateCode, validateGSTIN } from '../../utils/validators';
 
 export default function VendorManagementView() {
   const showToast = useERPStore((state) => state.showToast);
@@ -65,65 +66,39 @@ export default function VendorManagementView() {
   const validateField = (name, value, currentFormData = formData) => {
     switch (name) {
       case 'vendorCode': {
-        const val = (value || '').trim();
-        if (!val) return 'Required';
-        if (val.length < 2) return 'Min 2 characters';
-        if (val.length > 50) return 'Max 50 characters';
-        if (!/^[A-Za-z0-9_-]+$/.test(val)) return 'Alphanumeric / - / _';
-        return '';
+        const err = validateCode(value, 'Vendor Code', true);
+        return err || '';
       }
       case 'vendorName': {
         const val = (value || '').trim();
-        if (!val) return 'Required';
+        if (!val) return 'Vendor Name is required';
         if (val.length < 2) return 'Min 2 characters';
         if (val.length > 150) return 'Max 150 characters';
         return '';
       }
       case 'vendorTypeId': {
-        if (!value) return 'Required';
+        if (!value) return 'Vendor Type is required';
         return '';
       }
       case 'contactPerson': {
-        const val = (value || '').trim();
-        if (val) {
-          if (val.length < 2) return 'Min 2 characters';
-          if (val.length > 80) return 'Max 80 characters';
-          if (!/^[a-zA-Z\s.-]+$/.test(val)) return 'Letters only';
-        }
-        return '';
+        const err = validateName(value, 'Contact Person', false, 2, 80);
+        return err || '';
       }
       case 'phone': {
-        const val = (value || '').trim();
-        if (val) {
-          const cleanPhone = val.replace(/[\s-]/g, '');
-          if (!/^[0-9]{10}$/.test(cleanPhone)) return '10 digits required';
-        }
-        return '';
+        const err = validatePhone(value, 'Phone number', false);
+        return err || '';
       }
       case 'email': {
-        const val = (value || '').trim();
-        if (val) {
-          if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val)) return 'Invalid email';
-        }
-        return '';
+        const err = validateEmail(value, 'Email', false);
+        return err || '';
       }
       case 'city': {
-        const val = (value || '').trim();
-        if (val) {
-          if (val.length < 2) return 'Min 2 characters';
-          if (val.length > 50) return 'Max 50 characters';
-          if (!/^[a-zA-Z\s.-]+$/.test(val)) return 'Letters only';
-        }
-        return '';
+        const err = validateName(value, 'City', false, 2, 50);
+        return err || '';
       }
       case 'gstNumber': {
-        const val = (value || '').trim().toUpperCase();
-        if (val) {
-          if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(val)) {
-            return 'Invalid 15-char GSTIN';
-          }
-        }
-        return '';
+        const err = validateGSTIN(value, 'GSTIN', false);
+        return err || '';
       }
       case 'vendorAddress1': {
         const val = (value || '').trim();

@@ -80,7 +80,7 @@ export const designationService = {
 
     const userName = data.UpdateByUserName || data.UpdatedByUserName || data.CreatedByUserName || userState;
 
-    return apiClient.post(API_ROUTES.DESIGNATION.EDIT_DESIGNATION, {
+    return apiClient.patch(API_ROUTES.DESIGNATION.EDIT_DESIGNATION, {
       flagId: Number(data.flagId || 2),
       CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
       CompanyId: Number(data.CompanyId),
@@ -112,7 +112,7 @@ export const designationService = {
 
     const userName = data.UpdateByUserName || data.UpdatedByUserName || userState;
 
-    return apiClient.post(API_ROUTES.DESIGNATION.TOGGLE_STATUS, {
+    return apiClient.patch(API_ROUTES.DESIGNATION.TOGGLE_STATUS, {
       flagId: 4,
       CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled),

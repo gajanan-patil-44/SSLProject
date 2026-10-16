@@ -35,7 +35,7 @@ export const companyService = {
    * @param {Object} companyData 
    */
   updateCompany: async (companyData) => {
-    return apiClient.post(API_ROUTES.COMPANY.UPDATE_COMPANY, {
+    return apiClient.patch(API_ROUTES.COMPANY.UPDATE_COMPANY, {
       flagId: 3,
       CompanyId: Number(companyData.CompanyId ?? companyData.id),
       CompanyName: companyData.CompanyName || companyData.companyName || '',
@@ -52,7 +52,7 @@ export const companyService = {
    * @param {Object} statusData - { CompanyId, IsDisabled, UpdatedByUserName }
    */
   toggleCompanyStatus: async (statusData) => {
-    return apiClient.post(API_ROUTES.COMPANY.TOGGLE_STATUS, {
+    return apiClient.patch(API_ROUTES.COMPANY.TOGGLE_STATUS, {
       flagId: 4,
       CompanyId: Number(statusData.CompanyId ?? statusData.id),
       IsDisabled: typeof statusData.IsDisabled === 'boolean' ? statusData.IsDisabled : Boolean(statusData.IsDisabled),
