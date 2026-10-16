@@ -12,10 +12,11 @@ http:
        {
          "flagId":2,
               "ProductCode": "Product_003",
-              "ProductName": "VERP",
-              "ProductDescription": "VISHVIN ERP",
+              "ProductName": "DMS",
+              "ProductDescription": "DMS",
               "IsDisabled": false,
-              "CreatedByUserName": "nithin"    }
+              "CreatedByUserName": "Praveen"  
+       }
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODg0MTAxNTIsImV4cCI6MTc4ODQ1MzM1Mn0.poZhS2gtv8po1JfdTyDh6BZNOdnLRd6Ip8QuUUSEQF8

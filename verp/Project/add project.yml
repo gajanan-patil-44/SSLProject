@@ -16,10 +16,10 @@ http:
 
       {
         "flagId": 2,
-        "CompanyProductId":3,
-        "ProjectName": "verp",
-        "ProjectCode": "verp001",
-        "Description": "wowww",
+        "CompanyProductId":1,
+        "ProjectName": "VERP",
+        "ProjectCode": "verp01",
+        "Description": "Vishvin ERP",
         "IsDisabled":false,
         "CreatedByUserId":1
       }

@@ -11,8 +11,8 @@ http:
     data: |-
       {
         "flagId":4,
-        "IsDisabled":false,
-        "UpdatedByUserName":"kss",
+        "IsDisabled":true,
+        "UpdatedByUserName":"kavya",
         "MaterialCategoryTypeId":2
       }
   auth: inherit

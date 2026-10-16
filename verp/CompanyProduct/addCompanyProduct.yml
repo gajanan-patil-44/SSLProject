@@ -11,8 +11,8 @@ http:
     data: |-
       {
           "FlagId": 3,
-          "CompanyId": 2,
-          "ProductId": 2,
+          "CompanyId": 1,
+          "ProductId": 1,
           "IsDisabled":false ,
           "CreatedByUserName": "hithin"
       }

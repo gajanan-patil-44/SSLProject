@@ -11,9 +11,9 @@ http:
     data: |-
       {
         "flagId":4,
-        "CompanyDesignationId":10,
+        "CompanyDesignationId":20,
         "IsDisabled":true,
-        "UpdateByUserName":"ksss"
+        "UpdateByUserName":"kavya"
       }
   auth: inherit
 

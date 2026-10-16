@@ -16,8 +16,8 @@ http:
 
       {
         "flagId":2,
-        "ProjectId":8,
-        "CompanyProductId":5,
+        "ProjectId":3,
+        "CompanyProductId":3,
         "ProjectName":"Inventory Managementt",
         "ProjectCode":"INV-MGMTt",
         "IsDisabled":false,

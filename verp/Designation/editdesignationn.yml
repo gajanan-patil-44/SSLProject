@@ -16,10 +16,10 @@ http:
 
       {
         "flagId":2,
-        "CompanyDesignationId":16,
+        "CompanyDesignationId":20,
         "CompanyId":1,
-        "DesignationName":"aaaa",
-        "DesignationCode":"aaaa1",
+        "DesignationName":"MD",
+        "DesignationCode":"MD01",
         "IsDisabled":false,
         "UpdateByUserName":"kss",
         "CanBeReportingManager":true
