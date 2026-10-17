@@ -71,6 +71,21 @@ export const addProducts = async (req, res) => {
         if (parseInt(flagId) === 2) {
 
             const productData = req.body;
+
+            // Validate Product Name: Only alphabets and spaces allowed
+            const productNameRegex = /^[A-Za-z\s]+$/;
+
+            if (
+                !productData.ProductName ||
+                !productNameRegex.test(productData.ProductName)
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Product name should contain only alphabets and spaces"
+                });
+            }
+
+
             // Check Product Name and Product Code
             const existingProduct = await checkProductExists(
                 productData.ProductName,
@@ -89,7 +104,7 @@ export const addProducts = async (req, res) => {
                         message: "Product name and Product code already exists"
                     });
                 }
-                
+
                 // Product Name exists
                 if (product.ProductName === productData.ProductName) {
 
@@ -157,6 +172,19 @@ export const updateProduct = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const productData = req.body;
+
+            // Validate Product Name: Only alphabets and spaces allowed
+            const productNameRegex = /^[A-Za-z\s]+$/;
+
+            if (
+                !productData.ProductName ||
+                !productNameRegex.test(productData.ProductName)
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Product name should contain only alphabets and spaces"
+                });
+            }
 
             // Check whether Product Name and Product Code already exist
             const existingProducts = await checkProductExistsForUpdate(
@@ -253,7 +281,7 @@ export const toggleProductStatus = async (req, res) => {
 
             const productData = req.body;
 
-            
+
 
             const product = await toggleProductStatuses(productData);
 

@@ -101,6 +101,21 @@ export const addMaterialCategoryType = async (req, res) => {
 
 
             // ==================================================
+            // VALIDATE MATERIAL CATEGORY NAME - ONLY ALPHABETS
+            // ==================================================
+
+            const categoryNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!categoryNameRegex.test(String(categoryData.MaterialCategoryTypeName).trim())) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material category Name should contain only alphabets and spaces"
+                });
+            }
+
+
+            // ==================================================
             // REQUIRED FIELD VALIDATION
             // ==================================================
 
@@ -153,7 +168,7 @@ export const addMaterialCategoryType = async (req, res) => {
                 });
             }
 
-            
+
 
             // LENGTH VALIDATION
             // Database varchar = 75
@@ -303,6 +318,18 @@ export const updateMaterialCategoryType = async (req, res) => {
                 });
             }
 
+            // MATERIAL CATEGORY NAME VALIDATION - ONLY ALPHABETS
+
+            const categoryNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!categoryNameRegex.test(String(categoryData.MaterialCategoryTypeName).trim())) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material category Name should contain only alphabets and spaces"
+                });
+            }
+
 
             if (
                 categoryData.MaterialCategoryTypeCode === undefined ||
@@ -356,9 +383,9 @@ export const updateMaterialCategoryType = async (req, res) => {
             // Exclude the current record
 
             const existingCategories = await checkMaterialCategoryTypeCodeExistsForUpdate(
-                    categoryCode,
-                    Number(categoryData.MaterialCategoryTypeId)
-                );
+                categoryCode,
+                Number(categoryData.MaterialCategoryTypeId)
+            );
 
 
             if (existingCategories.length > 0) {
@@ -373,10 +400,10 @@ export const updateMaterialCategoryType = async (req, res) => {
             // UPDATE ITEM CATEGORY
 
             const category = await updateMaterialCategoryTypeModel({
-                    ...categoryData,
-                    MaterialCategoryTypeName: categoryName,
-                    MaterialCategoryTypeCode: categoryCode
-                });
+                ...categoryData,
+                MaterialCategoryTypeName: categoryName,
+                MaterialCategoryTypeCode: categoryCode
+            });
 
 
             // RECORD NOT FOUND

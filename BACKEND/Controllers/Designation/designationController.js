@@ -34,7 +34,7 @@ export const getDesignation = async (req, res) => {
 
 
         // INVALID FLAG ID
-       
+
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
@@ -123,6 +123,19 @@ export const add_designationController = async (req, res) => {
                 IsDisabled,
                 CreatedByUserName
             } = req.body;
+
+
+            // VALIDATE DESIGNATION NAME - ONLY ALPHABETS
+
+            const designationNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!designationNameRegex.test(DesignationName)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Designation name should contain only alphabets and spaces"
+                });
+            }
 
 
             // =================================================
@@ -415,13 +428,13 @@ export const add_designationController = async (req, res) => {
 
             const designation = await addDesignation({
 
-                    CompanyId: Number(CompanyId),
-                    DesignationName: DesignationName.trim(),
-                    DesignationCode: DesignationCode.trim(),
-                    DesignationLevel: Number(DesignationLevel),
-                    IsDisabled: IsDisabled,
-                    CreatedByUserName: CreatedByUserName.trim()
-                });
+                CompanyId: Number(CompanyId),
+                DesignationName: DesignationName.trim(),
+                DesignationCode: DesignationCode.trim(),
+                DesignationLevel: Number(DesignationLevel),
+                IsDisabled: IsDisabled,
+                CreatedByUserName: CreatedByUserName.trim()
+            });
 
 
             // =================================================
@@ -450,8 +463,8 @@ export const add_designationController = async (req, res) => {
 
         return res.status(500).json({
             status: "error",
-            message:"Failed to process designation",
-            error:error.message
+            message: "Failed to process designation",
+            error: error.message
         });
     }
 };
@@ -480,7 +493,7 @@ export const editDesignationController = async (req, res) => {
 
 
         // FLAG ID 2 - EDIT DESIGNATION
- 
+
 
         if (parseInt(flagId) === 2) {
 
@@ -494,7 +507,18 @@ export const editDesignationController = async (req, res) => {
                 CanBeReportingManager
             } = req.body;
 
-           
+            // VALIDATE DESIGNATION NAME - ONLY ALPHABETS
+
+            const designationNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!designationNameRegex.test(DesignationName)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Designation name should contain only alphabets and spaces"
+                });
+            }
+
 
 
             // VALIDATE COMPANY DESIGNATION ID
@@ -585,7 +609,7 @@ export const editDesignationController = async (req, res) => {
 
 
             // VALIDATE DESIGNATION CODE
-        
+
 
             if (
                 DesignationCode === undefined ||
@@ -681,11 +705,11 @@ export const editDesignationController = async (req, res) => {
             // EXCLUDE CURRENT RECORD
 
             const existingDesignation = await checkDesignationExistsForUpdate(
-                    Number(CompanyId),
-                    DesignationName.trim(),
-                    DesignationCode.trim(),
-                    Number(CompanyDesignationId)
-                );
+                Number(CompanyId),
+                DesignationName.trim(),
+                DesignationCode.trim(),
+                Number(CompanyDesignationId)
+            );
 
 
             if (existingDesignation.length > 0) {
@@ -721,9 +745,9 @@ export const editDesignationController = async (req, res) => {
 
 
             // UPDATE DESIGNATION
-      
+
             const result = await editDesignation({
-                CompanyDesignationId:Number(CompanyDesignationId),
+                CompanyDesignationId: Number(CompanyDesignationId),
                 CompanyId: Number(CompanyId),
                 DesignationName: DesignationName.trim(),
                 DesignationCode: DesignationCode.trim(),
@@ -834,7 +858,7 @@ export const toggleDesignationStatus = async (req, res) => {
 
 
             // VALIDATE IS DISABLED
-    
+
             if (typeof IsDisabled !== "boolean") {
 
                 return res.status(400).json({
@@ -862,7 +886,7 @@ export const toggleDesignationStatus = async (req, res) => {
 
 
             // UPDATE DESIGNATION STATUS
-            
+
             const designationData = await toggleDesignationStatuses({
                 CompanyDesignationId: Number(CompanyDesignationId),
                 IsDisabled,
@@ -870,9 +894,9 @@ export const toggleDesignationStatus = async (req, res) => {
             });
 
 
-        
+
             // DESIGNATION DOES NOT EXIST
-            
+
             if (!designationData) {
 
                 return res.status(404).json({
@@ -881,9 +905,9 @@ export const toggleDesignationStatus = async (req, res) => {
                 });
             }
 
-           
+
             // SUCCESS
-           
+
             return res.status(200).json({
                 status: "success",
                 message: "Designation status updated successfully"
@@ -892,7 +916,7 @@ export const toggleDesignationStatus = async (req, res) => {
 
 
         // INVALID FLAG ID
-       
+
         return res.status(400).json({
             status: "error",
             message: "Invalid flagId"
@@ -924,7 +948,7 @@ export const deleteDesignationController = async (req, res) => {
     try {
 
         // FLAG ID 1 - DELETE DESIGNATION
-      
+
 
         if (parseInt(flagId) === 1) {
 
