@@ -139,6 +139,27 @@ export const userService = {
   },
 
   /**
+   * Change user password
+   * Hits /verp-service/userEdit/change-password with:
+   * {
+   *   "FlagId": 1,
+   *   "UserId": <UserId>,
+   *   "NewPassword": "<NewPassword>"
+   * }
+   * @param {number|string} userId
+   * @param {string} newPassword
+   */
+  changePassword: async (userId, newPassword) => {
+    const payload = {
+      FlagId: 1,
+      UserId: Number(userId),
+      NewPassword: String(newPassword)
+    };
+
+    return apiClient.patch(API_ROUTES.USER_EDIT.CHANGE_PASSWORD, payload);
+  },
+
+  /**
    * ==========================================================================
    * User Edit Dropdown Routes (/verp-service/userEdit/...)
    * ==========================================================================

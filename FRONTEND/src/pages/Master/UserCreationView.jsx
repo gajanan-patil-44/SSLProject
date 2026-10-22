@@ -930,7 +930,7 @@ export default function UserCreationView() {
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="EmployeeId" value={form.EmployeeId} onChange={change}
-                    placeholder="e.g. EMP001"
+                    placeholder="Employee ID"
                     className={`${inputCls(errors.EmployeeId)} pl-8`}
                   />
                 </div>
@@ -978,7 +978,7 @@ export default function UserCreationView() {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="PhoneNumber" value={form.PhoneNumber} onChange={change}
-                    placeholder="9999989999" maxLength={10}
+                    placeholder="10-digit mobile number" maxLength={10}
                     className={`${inputCls(errors.PhoneNumber)} pl-8`}
                   />
                 </div>
@@ -1057,7 +1057,7 @@ export default function UserCreationView() {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     type="email" name="Email" value={form.Email} onChange={change}
-                    placeholder="admin5@example.com"
+                    placeholder="Email address"
                     className={`${inputCls(errors.Email)} pl-8`}
                   />
                 </div>
@@ -1069,7 +1069,7 @@ export default function UserCreationView() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="LoginName" value={form.LoginName} onChange={change}
-                    placeholder="admin5"
+                    placeholder="Login username"
                     className={`${inputCls(errors.LoginName)} pl-8`}
                   />
                 </div>
