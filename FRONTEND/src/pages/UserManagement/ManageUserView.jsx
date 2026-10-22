@@ -24,7 +24,11 @@ import {
   Shield,
   UserCheck,
   ChevronDown,
-  FolderGit2
+  FolderGit2,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 const toOpts = (data, idKey, nameKey) => {
@@ -90,6 +94,74 @@ export default function ManageUserView() {
   // View Modal States
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  // Change Password Modal States
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [changePasswordUser, setChangePasswordUser] = useState(null);
+  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+
+  const handleOpenChangePasswordModal = (user) => {
+    setChangePasswordUser(user);
+    setPasswordForm({ newPassword: '', confirmPassword: '' });
+    setPasswordErrors({});
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setIsChangePasswordOpen(true);
+  };
+
+  const validatePasswordForm = () => {
+    const errs = {};
+    const np = (passwordForm.newPassword || '').trim();
+    const cp = (passwordForm.confirmPassword || '').trim();
+
+    if (!np) {
+      errs.newPassword = 'New password is required';
+    } else if (np.length < 6) {
+      errs.newPassword = 'Password must be at least 6 characters';
+    }
+
+    if (!cp) {
+      errs.confirmPassword = 'Confirmation password is required';
+    } else if (np && cp && np !== cp) {
+      errs.confirmPassword = 'Passwords do not match';
+    }
+
+    return errs;
+  };
+
+  const handleChangePasswordSubmit = async (e) => {
+    if (e) e.preventDefault();
+    const errors = validatePasswordForm();
+    if (Object.keys(errors).length > 0) {
+      setPasswordErrors(errors);
+      return;
+    }
+
+    const userId = changePasswordUser?.UserId ?? changePasswordUser?.id;
+    if (!userId) {
+      showToast('User ID is missing.', 'error');
+      return;
+    }
+
+    setPasswordSubmitting(true);
+    try {
+      const response = await userService.changePassword(userId, passwordForm.newPassword.trim());
+      const msg = response?.message || 'Password changed successfully!';
+      showToast(msg, 'success');
+      setIsChangePasswordOpen(false);
+      setPasswordForm({ newPassword: '', confirmPassword: '' });
+      setPasswordErrors({});
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to change password.';
+      showToast(msg, 'error');
+    } finally {
+      setPasswordSubmitting(false);
+    }
+  };
 
   // --------------------------------------------------------------------------
   // Fetch Users via POST /verp-service/userEdit/getAllUserDetails with flagId: 1
@@ -742,6 +814,7 @@ export default function ManageUserView() {
         loading={loading}
         onViewClick={handleOpenViewModal}
         onEditClick={handleOpenEditModal}
+        onChangePasswordClick={handleOpenChangePasswordModal}
         onToggleStatusClick={handleToggleStatus}
         searchPlaceholder="Search users..."
         onRefresh={loadUsers}
@@ -786,7 +859,7 @@ export default function ManageUserView() {
                 Employee ID <span className="text-rose-500">*</span>
               </label>
               <Input
-                placeholder="e.g. EMP001"
+                placeholder="Employee ID"
                 value={formData.employeeId}
                 onChange={(e) => {
                   setFormData({ ...formData, employeeId: e.target.value });
@@ -802,7 +875,7 @@ export default function ManageUserView() {
                 Login Username <span className="text-rose-500">*</span>
               </label>
               <Input
-                placeholder="e.g. jdoe"
+                placeholder="Login username"
                 value={formData.loginName}
                 onChange={(e) => {
                   setFormData({ ...formData, loginName: e.target.value });
@@ -859,7 +932,7 @@ export default function ManageUserView() {
               </label>
               <Input
                 type="email"
-                placeholder="e.g. user@vishvin.com"
+                placeholder="Email address"
                 value={formData.email}
                 onChange={(e) => {
                   setFormData({ ...formData, email: e.target.value });
@@ -875,7 +948,7 @@ export default function ManageUserView() {
                 Phone Number
               </label>
               <Input
-                placeholder="e.g. 9876543210"
+                placeholder="Phone number"
                 value={formData.phoneNumber}
                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
               />
@@ -887,7 +960,7 @@ export default function ManageUserView() {
                 Alt Phone Number
               </label>
               <Input
-                placeholder="e.g. 9876543211"
+                placeholder="Alternate phone number"
                 value={formData.altPhoneNumber}
                 onChange={(e) => setFormData({ ...formData, altPhoneNumber: e.target.value })}
               />
@@ -1313,6 +1386,128 @@ export default function ManageUserView() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Change Password Modal                                              */}
+      {/* ------------------------------------------------------------------ */}
+      <Modal
+        isOpen={isChangePasswordOpen}
+        onClose={() => {
+          if (!passwordSubmitting) {
+            setIsChangePasswordOpen(false);
+            setPasswordErrors({});
+            setPasswordForm({ newPassword: '', confirmPassword: '' });
+          }
+        }}
+        title="Change Password"
+        size="md"
+        actions={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsChangePasswordOpen(false);
+                setPasswordErrors({});
+                setPasswordForm({ newPassword: '', confirmPassword: '' });
+              }}
+              disabled={passwordSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleChangePasswordSubmit}
+              disabled={passwordSubmitting}
+            >
+              {passwordSubmitting ? 'Changing Password...' : 'Change Password'}
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
+          {/* New Password */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+              New Password <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <Lock className="w-4 h-4" />
+              </div>
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={passwordForm.newPassword}
+                onChange={(e) => {
+                  setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }));
+                  if (passwordErrors.newPassword) {
+                    setPasswordErrors((prev) => ({ ...prev, newPassword: '' }));
+                  }
+                }}
+                placeholder="Enter new password"
+                className={`w-full pl-9 pr-10 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white ${
+                  passwordErrors.newPassword
+                    ? 'border-rose-400 focus:ring-rose-500 focus:border-rose-500'
+                    : 'border-slate-200 dark:border-slate-700 focus:ring-indigo-500/20 focus:border-indigo-600'
+                }`}
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowNewPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors"
+              >
+                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {passwordErrors.newPassword && (
+              <p className="text-[11px] text-rose-500 font-medium">
+                {passwordErrors.newPassword}
+              </p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+              Confirm New Password <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <Lock className="w-4 h-4" />
+              </div>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={passwordForm.confirmPassword}
+                onChange={(e) => {
+                  setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }));
+                  if (passwordErrors.confirmPassword) {
+                    setPasswordErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                  }
+                }}
+                placeholder="Re-enter new password"
+                className={`w-full pl-9 pr-10 py-2.5 text-sm border rounded-lg focus:outline-hidden focus:ring-2 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white ${
+                  passwordErrors.confirmPassword
+                    ? 'border-rose-400 focus:ring-rose-500 focus:border-rose-500'
+                    : 'border-slate-200 dark:border-slate-700 focus:ring-indigo-500/20 focus:border-indigo-600'
+                }`}
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {passwordErrors.confirmPassword && (
+              <p className="text-[11px] text-rose-500 font-medium">
+                {passwordErrors.confirmPassword}
+              </p>
+            )}
+          </div>
+        </form>
       </Modal>
     </div>
   );
