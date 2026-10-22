@@ -4,18 +4,20 @@ info:
   seq: 4
 
 http:
-  method: POST
+  method: PATCH
   url: http://localhost:9004/verp-service/itemCategoryCreation/toggleMaterialCategoryTypeStatus
   body:
     type: json
     data: |-
-      {
-        "flagId":4,
-        "IsDisabled":false,
-        "UpdatedByUserName":"kss",
-        "MaterialCategoryTypeId":2
+      {  
+      "IsDisabled": false,
+      "MaterialCategoryTypeId": 1,
+      "UpdatedByUserName": "admin1",
+      "flagId": 4
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkyMDYyMjYyLCJleHAiOjE3OTIwOTEwNjJ9.gYOFfl1ZmHLjtRmttPoLl-dfHBlWAyVIOH3MUaQ4aEM
 
 settings:
   encodeUrl: true

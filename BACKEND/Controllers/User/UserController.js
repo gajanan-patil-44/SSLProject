@@ -77,14 +77,38 @@ export const userDropdownController = async (req, res) => {
         // FLAG 3 = DESIGNATION
         // ==========================================
 
-        if (parseInt(FlagId) === 3) {
-            const result = await getDesignationDropdown();
-            return res.status(200).json({
-                status: "success",
-                message: "Designation data fetched successfully",
-                data: result
-            });
-        }
+     // FLAG 3 = DESIGNATION BASED ON COMPANY
+
+if (parseInt(FlagId) === 3) {
+
+    if (
+        CompanyId === undefined ||
+        CompanyId === null ||
+        String(CompanyId).trim() === ""
+    ) {
+        return res.status(400).json({
+            status: "error",
+            message: "CompanyId is required"
+        });
+    }
+
+    const companyId = Number(CompanyId);
+
+    if (!Number.isInteger(companyId) || companyId <= 0) {
+        return res.status(400).json({
+            status: "error",
+            message: "CompanyId must be a valid positive integer"
+        });
+    }
+
+    const result = await getDesignationDropdown(companyId);
+
+    return res.status(200).json({
+        status: "success",
+        message: "Designation data fetched successfully",
+        data: result
+    });
+}
         // ==========================================
         // FLAG 4 = USER REPORTING MANAGER
         // ==========================================
@@ -114,6 +138,7 @@ export const userDropdownController = async (req, res) => {
 // ==========================================================
 // CREATE USER
 // ==========================================================
+
 export const createUserController = async (req, res) => {
     try {
         // ==========================================================
@@ -121,10 +146,6 @@ export const createUserController = async (req, res) => {
         // ==========================================================
 
         const userData = req.body;
-
-        // ==========================================================
-        // EMPTY VALUE CHECK
-        // ==========================================================
 
         const isEmpty = (value) =>
             value === undefined ||
@@ -134,7 +155,6 @@ export const createUserController = async (req, res) => {
         // ==========================================================
         // COMMON REQUIRED FIELDS
         // ==========================================================
-
 
         const requiredFields = [
             "EmployeeId",
@@ -159,14 +179,48 @@ export const createUserController = async (req, res) => {
             }
         }
 
-        // CreatedByUserName is optional for the first Super Admin
+        // ==========================================================
+        // EMPLOYEE ID VALIDATION
+        // ==========================================================
+
+        const employeeId = String(userData.EmployeeId).trim();
+
+        if (!/^[A-Za-z0-9]+$/.test(employeeId)) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "EmployeeId must contain only alphanumeric characters"
+            });
+        }
+
+        userData.EmployeeId = employeeId;
+
+        // ==========================================================
+        // PHONE AND ALTERNATE NUMBER VALIDATION
+        // ==========================================================
+
+        if (
+            !isEmpty(userData.AlternateNumber) &&
+            String(userData.PhoneNumber).trim() ===
+                String(userData.AlternateNumber).trim()
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "PhoneNumber and AlternateNumber must not be the same"
+            });
+        }
+
+        // ==========================================================
+        // CREATED BY USER VALIDATION
+        // ==========================================================
+
         const userCount = await getUserCount();
 
         if (
-            parseInt(userData.RoleId) === 1 &&
+            Number(userData.RoleId) === 1 &&
             userCount === 0
         ) {
-            // First user: initial Super Admin
             userData.CreatedByUserName = null;
         } else if (isEmpty(userData.CreatedByUserName)) {
             return res.status(400).json({
@@ -176,7 +230,7 @@ export const createUserController = async (req, res) => {
         }
 
         // ==========================================================
-        // ROLE ID
+        // ROLE ID VALIDATION
         // ==========================================================
 
         userData.RoleId = Number(userData.RoleId);
@@ -350,7 +404,7 @@ export const createUserController = async (req, res) => {
 
             // ------------------------------------------------------
             // REPORTING MANAGER
-            // Managing Director does not require a manager
+            // DesignationLevel 100 does not require a manager
             // ------------------------------------------------------
 
             const designation = await getDesignationById(
@@ -364,17 +418,19 @@ export const createUserController = async (req, res) => {
                 });
             }
 
-
-            if (Number(userData.DesignationId) === 1) {
+            if (Number(designation.DesignationLevel) === 100) {
+                // Reporting manager is not required for level 100
                 userData.ReportingManagerUserId = null;
             } else {
+                // Other designation levels require a manager
                 if (
                     !Array.isArray(userData.ReportingManagerUserId) ||
                     userData.ReportingManagerUserId.length === 0
                 ) {
                     return res.status(400).json({
                         status: "error",
-                        message: "ReportingManagerUserId must be a non-empty array"
+                        message:
+                            "ReportingManagerUserId must be a non-empty array"
                     });
                 }
             }
@@ -483,23 +539,41 @@ export const createUserController = async (req, res) => {
             }
         };
 
-        for (const field of Object.keys(duplicateFields)) {
-            const config = duplicateFields[field];
+        const duplicateErrors = [];
 
-            let value = userData[field];
+        for (const [field, config] of Object.entries(
+            duplicateFields
+        )) {
+            const value = userData[field];
 
-            if (config.transform) {
-                value = config.transform(value);
+            if (
+                value === undefined ||
+                value === null ||
+                value === ""
+            ) {
+                continue;
             }
 
-            const existingRecord = await config.check(value);
+            const checkValue = config.transform
+                ? config.transform(value)
+                : value;
 
-            if (existingRecord.length > 0) {
-                return res.status(409).json({
-                    status: "error",
+            const exists = await config.check(checkValue);
+
+            if (exists) {
+                duplicateErrors.push({
+                    field,
                     message: config.message
                 });
             }
+        }
+
+        if (duplicateErrors.length > 0) {
+            return res.status(409).json({
+                status: "error",
+                message: "Duplicate records found",
+                errors: duplicateErrors
+            });
         }
 
         // ==========================================================
@@ -527,23 +601,19 @@ export const createUserController = async (req, res) => {
             : Object.values(req.files || {}).flat();
 
         // ==========================================================
-        // PHOTO - CONVERT TO BINARY BUFFER
-        // NO BASE64 CONVERSION
+        // PHOTO - STORE AS BINARY BUFFER
         // ==========================================================
 
         const uploadedPhoto = uploadedFiles.find(
             (file) => file.fieldname === "Photo"
         );
 
-        // Photo is optional
         userData.Photo = null;
 
         if (uploadedPhoto) {
             if (uploadedPhoto.buffer) {
-                // Memory storage already provides binary data
                 userData.Photo = uploadedPhoto.buffer;
             } else if (uploadedPhoto.path) {
-                // Disk storage: read actual binary file contents
                 userData.Photo = await readFile(uploadedPhoto.path);
             } else {
                 return res.status(400).json({
@@ -552,14 +622,6 @@ export const createUserController = async (req, res) => {
                         "Photo was uploaded but its binary data could not be read"
                 });
             }
-
-            // Verify binary data before calling the model
-            console.log("Photo binary verification:", {
-                fieldname: uploadedPhoto.fieldname,
-                mimetype: uploadedPhoto.mimetype,
-                size: userData.Photo.length,
-                isBuffer: Buffer.isBuffer(userData.Photo)
-            });
 
             if (
                 !Buffer.isBuffer(userData.Photo) ||
@@ -605,7 +667,7 @@ export const createUserController = async (req, res) => {
         // CREATE USER
         // ==========================================================
 
-        const createdUser = await createUser(
+        await createUser(
             userData,
             req.files
         );
@@ -629,6 +691,7 @@ export const createUserController = async (req, res) => {
         });
     }
 };
+
 // ==========================================================
 // COMPANY / PRODUCT / PROJECT DROPDOWN
 //

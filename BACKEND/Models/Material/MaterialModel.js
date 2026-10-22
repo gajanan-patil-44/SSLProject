@@ -150,20 +150,25 @@ export const getGSTTypeDropdown = async () => {
 // =====================================================
 // FLAG ID 6 - GST RATE DROPDOWN
 // =====================================================
-export const getGSTRateDropdown = async () => {
+// =====================================================
+// FLAG ID 6 - GST RATE DROPDOWN
+// =====================================================
+export const getGSTRateDropdown = async (GSTTypeId) => {
     const query = `
         SELECT
             r."GSTRateId",
             r."GSTTypeId",
             r."GSTPercentage"
         FROM "LKP"."GSTRate" r
+        INNER JOIN "LKP"."GSTType" t
+            ON t."GSTTypeId" = r."GSTTypeId"
         WHERE r."IsDisabled" = false
-        ORDER BY
-            r."GSTTypeId" ASC,
-            r."GSTPercentage" ASC
+          AND t."IsDisabled" = false
+          AND r."GSTTypeId" = $1
+        ORDER BY r."GSTPercentage" ASC
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [GSTTypeId]);
     return result.rows;
 };
 // =====================================================
@@ -177,6 +182,7 @@ export const getFileTypeDropdown = async () => {
             "Description"
         FROM "LKP"."FileType"
         WHERE "IsDisabled" = false
+        and "FileTypeId" IN (4)
         ORDER BY "FileTypeName" ASC
     `;
 

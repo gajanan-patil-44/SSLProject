@@ -69,12 +69,20 @@ export const addRoles = async (req, res) => {
                 roleData.CompanyId = null;
             }
             // ---------------------------------------------
-            // VALIDATE ROLE NAME
-            // ---------------------------------------------
-            if (!roleData.RoleName) {
+            if (!roleData.RoleName || !roleData.RoleName.trim()) {
                 return res.status(400).json({
                     status: "error",
                     message: "RoleName is required"
+                });
+            }
+
+            // Allow only letters and spaces
+            const roleNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!roleNameRegex.test(roleData.RoleName.trim())) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "RoleName must contain only letters and spaces. Numbers and special characters are not allowed."
                 });
             }
             // ---------------------------------------------
@@ -100,22 +108,36 @@ export const addRoles = async (req, res) => {
             // ---------------------------------------------
             const existingRole = await checkRoleExists(roleData.RoleName, roleData.Role_Code);
 
-            if (existingRole.length > 0) {
-                const role = existingRole[0];
-                if (role.RoleName === roleData.RoleName) {
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Role name already exists"
-                    });
-                }
+           if (existingRole.length > 0) {
+    const roleNameExists = existingRole.some(
+        role => role.RoleName === roleData.RoleName
+    );
 
-                if (role.RoleCode === roleData.Role_Code) {
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Role code already exists"
-                    });
-                }
-            }
+    const roleCodeExists = existingRole.some(
+        role => role.RoleCode === roleData.Role_Code
+    );
+
+    if (roleNameExists && roleCodeExists) {
+        return res.status(409).json({
+            status: "error",
+            message: "Role name and role code already exist"
+        });
+    }
+
+    if (roleNameExists) {
+        return res.status(409).json({
+            status: "error",
+            message: "Role name already exists"
+        });
+    }
+
+    if (roleCodeExists) {
+        return res.status(409).json({
+            status: "error",
+            message: "Role code already exists"
+        });
+    }
+}
             // ---------------------------------------------
             // ADD ROLE
             // ---------------------------------------------
@@ -220,11 +242,20 @@ export const updateRole = async (req, res) => {
             // ---------------------------------------------
             // VALIDATE ROLE NAME
             // ---------------------------------------------
-            if (!roleData.RoleName) {
-
+            if (!roleData.RoleName || !roleData.RoleName.trim()) {
                 return res.status(400).json({
                     status: "error",
                     message: "RoleName is required"
+                });
+            }
+
+            // Allow only letters and spaces
+            const roleNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!roleNameRegex.test(roleData.RoleName.trim())) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "RoleName must contain only letters and spaces. Numbers and special characters are not allowed."
                 });
             }
             // ---------------------------------------------

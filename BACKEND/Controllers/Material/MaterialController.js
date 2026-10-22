@@ -159,7 +159,16 @@ export const getMaterialDropdown = async (req, res) => {
         }
 
         if (parseInt(FlagId) === 6) {
-            const data = await getGSTRateDropdown();
+            const { GSTTypeId } = req.body;
+
+            if (!GSTTypeId) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "GSTTypeId is required"
+                });
+            }
+
+            const data = await getGSTRateDropdown(GSTTypeId);
 
             return res.status(200).json({
                 status: "success",

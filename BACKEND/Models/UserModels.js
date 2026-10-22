@@ -47,17 +47,20 @@ export const getMaritalStatusDropdown = async () => {
 // ==========================================================
 
 
-export const getDesignationDropdown = async () => {
+export const getDesignationDropdown = async (CompanyId) => {
     const query = `
         SELECT
             "CompanyDesignationId" AS "DesignationId",
-            "DesignationName"
+            "DesignationName",
+            "DesignationLevel"
         FROM "LKP"."CompanyDesignation"
-        WHERE "IsDisabled" = false
+        WHERE "CompanyId" = $1
+          AND "IsDisabled" = false
         ORDER BY "DesignationName";
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [CompanyId]);
+
     return result.rows;
 };
 
