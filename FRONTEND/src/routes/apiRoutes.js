@@ -135,7 +135,8 @@ export const USER_ROUTES = {
   CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown',
   GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
   EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
-  TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus'
+  TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus',
+  CHANGE_PASSWORD: '/verp-service/userEdit/change-password'
 };
 
 /**
@@ -173,6 +174,7 @@ export const USER_EDIT_ROUTES = {
   GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
   EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
   TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus',
+  CHANGE_PASSWORD: '/verp-service/userEdit/change-password',
   GET_GENDER: '/verp-service/userEdit/getGender',
   GET_MARITAL_STATUS: '/verp-service/userEdit/getMaritalStatus',
   GET_DESIGNATION: '/verp-service/userEdit/getDesignation',
