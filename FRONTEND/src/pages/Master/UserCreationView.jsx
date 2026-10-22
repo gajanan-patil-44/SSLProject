@@ -304,10 +304,9 @@ export default function UserCreationView() {
   useEffect(() => { loadDropdowns(); }, []);
 
   const loadDropdowns = async () => {
-    const [genderRes, maritalRes, desigRes, compRes, rolesRes, fileTypesRes] = await Promise.allSettled([
+    const [genderRes, maritalRes, compRes, rolesRes, fileTypesRes] = await Promise.allSettled([
       userService.getGenderDropdown(),
       userService.getMaritalStatusDropdown(),
-      userService.getDesignationDropdown(),
       userService.getCompanyDropdown(),
       userService.getRoleDropdown(),         // FlagId: 4 → /companyproductprojectdropdown
       userService.getFileTypes(),            // FlagId: 1 → /fileType/getfiletypes
@@ -316,16 +315,6 @@ export default function UserCreationView() {
       setGenders(toOpts(genderRes.value?.data ?? genderRes.value, 'GenderId', 'GenderName'));
     if (maritalRes.status === 'fulfilled')
       setMaritalStatuses(toOpts(maritalRes.value?.data ?? maritalRes.value, 'MaritalStatusId', 'MaritalStatusName'));
-    if (desigRes.status === 'fulfilled') {
-      const raw = desigRes.value?.data ?? desigRes.value;
-      const normalized = Array.isArray(raw)
-        ? raw.map(d => ({
-            ...d,
-            DesignationId: d.DesignationId ?? d.CompanyDesignationId
-          }))
-        : [];
-      setDesignations(toOpts(normalized, 'DesignationId', 'DesignationName'));
-    }
     if (compRes.status === 'fulfilled')
       setCompanies(toOpts(compRes.value?.data ?? compRes.value, 'CompanyId', 'CompanyName'));
     if (rolesRes.status === 'fulfilled')
@@ -366,9 +355,9 @@ export default function UserCreationView() {
             .filter(i => (i.UserId ?? i.ReportingManagerUserId ?? i.Id) != null && (i.UserId ?? i.ReportingManagerUserId ?? i.Id) !== '')
             .map((i, idx) => {
               const val = String(i.UserId ?? i.ReportingManagerUserId ?? i.Id);
-              const nm  = i.ReportingManagerName ?? i.UserName ?? i.FullName ?? `User #${val}`;
+              const nm  = i.ReportingManagerName || i.UserName || i.FullName || val;
               const desig = i.DesignationName ? ` (${i.DesignationName})` : '';
-              return { value: val, label: `${nm}${desig}`, key: `${val}_${idx}` };
+              return { value: val, label: `${nm}${desig}`.trim(), key: `${val}_${idx}` };
             })
         );
       } else {
@@ -396,12 +385,15 @@ export default function UserCreationView() {
     }
 
     if (name === 'CompanyId') {
-      setForm(f => ({ ...f, CompanyId: value, CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
+      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
       setProducts([]);
       setProjects([]);
+      setDesignations([]);
       setReportingManagers([]);
-      setErrors(er => ({ ...er, CompanyId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
       if (!value) return;
+
+      // 1. Fetch Company Products
       try {
         const r = await userService.getProductDropdown(value);
         const raw = r?.data ?? r;
@@ -420,9 +412,21 @@ export default function UserCreationView() {
       } catch (err) {
         setProducts([]);
       }
-      // Fetch Reporting Managers only if Designation is already selected
-      if (form.DesignationId) {
-        fetchReportingManagers(value, form.DesignationId);
+
+      // 2. Fetch Designations for selected Company (FlagId: 3 with CompanyId)
+      try {
+        const dRes = await userService.getDesignationDropdown(value);
+        const rawList = dRes?.data?.Designations || dRes?.data?.designations || (Array.isArray(dRes?.data) ? dRes.data : null) || (Array.isArray(dRes) ? dRes : []);
+        const normalized = Array.isArray(rawList)
+          ? rawList.map(d => ({
+              ...d,
+              DesignationId: d.DesignationId ?? d.CompanyDesignationId ?? d.id,
+              DesignationName: d.DesignationName ?? d.name
+            }))
+          : [];
+        setDesignations(toOpts(normalized, 'DesignationId', 'DesignationName'));
+      } catch (err) {
+        setDesignations([]);
       }
       return;
     }
@@ -638,7 +642,7 @@ export default function UserCreationView() {
     }
 
     const sessionAuth = getSessionAuth();
-    const empId = form.EmployeeId.trim() || sessionAuth.EmployeeId;
+    const empId = form.EmployeeId.trim();
     const createdBy = sessionAuth.loginName;
 
     const fd = new FormData();
@@ -725,6 +729,7 @@ export default function UserCreationView() {
     setUserFiles({});
     setProducts([]);
     setProjects([]);
+    setDesignations([]);
     setReportingManagers([]);
     setCompletedSteps([]);
     setCurrentStep(1);
@@ -925,7 +930,7 @@ export default function UserCreationView() {
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="EmployeeId" value={form.EmployeeId} onChange={change}
-                    placeholder="EMP5"
+                    placeholder="e.g. EMP001"
                     className={`${inputCls(errors.EmployeeId)} pl-8`}
                   />
                 </div>
@@ -1162,8 +1167,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
                   <select name="DesignationId" value={form.DesignationId} onChange={change}
-                    className={`${selectCls(errors.DesignationId)} pl-8`}>
-                    <option value="">— Select Designation —</option>
+                    disabled={!form.CompanyId}
+                    className={`${selectCls(errors.DesignationId)} pl-8 ${!form.CompanyId ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}>
+                    <option value="">{form.CompanyId ? '— Select Designation —' : '— Select Company first —'}</option>
                     {designations.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>

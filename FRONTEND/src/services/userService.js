@@ -22,9 +22,10 @@ export const userService = {
     });
   },
 
-  getDesignationDropdown: async () => {
+  getDesignationDropdown: async (companyId) => {
     return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
-      FlagId: 3
+      FlagId: 3,
+      CompanyId: Number(companyId)
     });
   },
 
