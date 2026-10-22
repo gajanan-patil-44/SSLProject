@@ -298,8 +298,8 @@ export const checkDesignationExistsForUpdate = async (
 
 // EDIT DESIGNATION
 
+
 export const editDesignation = async (designationData) => {
-   
 
     try {
 
@@ -310,34 +310,31 @@ export const editDesignation = async (designationData) => {
                 "CompanyId" = $1,
                 "DesignationName" = $2,
                 "DesignationCode" = $3,
-                "IsDisabled" = $4,
-                "UpdateByUserName" = $5,
+                "DesignationLevel" = $4,
+                "IsDisabled" = $5,
+                "UpdateByUserName" = $6,
                 "UpdatedAt" = CURRENT_TIMESTAMP,
-                "CanBeReportingManager"= $6
-                
-            WHERE
-                "CompanyDesignationId" = $7;
-            
-        `;
+                "CanBeReportingManager" = $7
 
+            WHERE
+                "CompanyDesignationId" = $8;
+        `;
 
         const values = [
             designationData.CompanyId,
             designationData.DesignationName,
             designationData.DesignationCode,
+            designationData.DesignationLevel,
             designationData.IsDisabled,
             designationData.UpdateByUserName,
             designationData.CanBeReportingManager,
             designationData.CompanyDesignationId
         ];
 
-
         const result = await pool.query(
             query,
             values
         );
-       
-
 
         return result.rowCount;
 
@@ -348,6 +345,7 @@ export const editDesignation = async (designationData) => {
         throw error;
     }
 };
+
 
 
 

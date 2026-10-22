@@ -502,6 +502,7 @@ export const editDesignationController = async (req, res) => {
                 CompanyId,
                 DesignationName,
                 DesignationCode,
+                DesignationLevel,
                 IsDisabled,
                 UpdateByUserName,
                 CanBeReportingManager
@@ -652,6 +653,29 @@ export const editDesignationController = async (req, res) => {
                 });
             }
 
+            // VALIDATE DESIGNATION LEVEL
+
+            if (
+                DesignationLevel === undefined ||
+                DesignationLevel === null ||
+                DesignationLevel === ""
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationLevel is required"
+                });
+            }
+
+            if (
+                !Number.isInteger(Number(DesignationLevel)) ||
+                Number(DesignationLevel) < 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationLevel must be a valid non-negative integer"
+                });
+            }
+
 
             // VALIDATE IS CanBeReportingManager
             // if (typeof CanBeReportingManager !== "boolean") {
@@ -751,6 +775,7 @@ export const editDesignationController = async (req, res) => {
                 CompanyId: Number(CompanyId),
                 DesignationName: DesignationName.trim(),
                 DesignationCode: DesignationCode.trim(),
+                DesignationLevel: Number(DesignationLevel),
                 IsDisabled,
                 UpdateByUserName: UpdateByUserName.trim(),
                 CanBeReportingManager
