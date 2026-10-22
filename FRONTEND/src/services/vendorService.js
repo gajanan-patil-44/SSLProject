@@ -184,24 +184,31 @@ export const vendorService = {
         formData.append('CreatedByUserId', Number(userId));
       }
 
-      // Append files if available
-      if (data.file instanceof File) {
-        formData.append('Files', data.file);
-      }
-      if (Array.isArray(data.files)) {
-        data.files.forEach((f) => {
-          if (f instanceof File) {
-            formData.append('Files', f);
-          } else if (f.fileInstance instanceof File) {
-            formData.append('Files', f.fileInstance);
+      // Append files and their corresponding file types if available
+      const rawFiles = data.files || data.Files || (data.file ? [data.file] : []);
+      const fileList = Array.isArray(rawFiles)
+        ? rawFiles
+        : (data.file instanceof File ? [{ fileInstance: data.file, VendorFileTypeId: data.VendorFileTypeId }] : []);
+
+      fileList.forEach((f) => {
+        const fileObj = f instanceof File ? f : (f.fileInstance instanceof File ? f.fileInstance : null);
+        const fileTypeId = f.VendorFileTypeId ?? f.vendorFileTypeId ?? f.FileTypeId ?? f.fileTypeId ?? data.VendorFileTypeId ?? data.vendorFileTypeId;
+        if (fileObj) {
+          if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
+            formData.append('VendorFileTypeIds', Number(fileTypeId));
           }
-        });
-      }
+          formData.append('VendorFiles', fileObj);
+        }
+      });
 
       body = formData;
     }
 
-    return await apiClient.post(API_ROUTES.VENDOR.ADD, body);
+    return await apiClient.post(API_ROUTES.VENDOR.ADD, body, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   },
 
   /**
@@ -241,25 +248,35 @@ export const vendorService = {
         formData.append('CreatedByUserId', Number(userId));
         formData.append('UpdatedByUserId', Number(userId));
       }
+      if (data.UpdatedByUserName || data.updatedByUserName || data.CreatedByUserName) {
+        formData.append('UpdatedByUserName', data.UpdatedByUserName || data.updatedByUserName || data.CreatedByUserName);
+      }
 
-      // Append files if available
-      if (data.file instanceof File) {
-        formData.append('Files', data.file);
-      }
-      if (Array.isArray(data.files)) {
-        data.files.forEach((f) => {
-          if (f instanceof File) {
-            formData.append('Files', f);
-          } else if (f.fileInstance instanceof File) {
-            formData.append('Files', f.fileInstance);
+      // Append files and their corresponding file types if available
+      const rawFiles = data.files || data.Files || (data.file ? [data.file] : []);
+      const fileList = Array.isArray(rawFiles)
+        ? rawFiles
+        : (data.file instanceof File ? [{ fileInstance: data.file, VendorFileTypeId: data.VendorFileTypeId }] : []);
+
+      fileList.forEach((f) => {
+        const fileObj = f instanceof File ? f : (f.fileInstance instanceof File ? f.fileInstance : null);
+        const fileTypeId = f.VendorFileTypeId ?? f.vendorFileTypeId ?? f.FileTypeId ?? f.fileTypeId ?? data.VendorFileTypeId ?? data.vendorFileTypeId;
+        if (fileObj) {
+          if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
+            formData.append('VendorFileTypeIds', Number(fileTypeId));
           }
-        });
-      }
+          formData.append('VendorFiles', fileObj);
+        }
+      });
 
       body = formData;
     }
 
-    return await apiClient.patch(API_ROUTES.VENDOR.EDIT, body);
+    return await apiClient.patch(API_ROUTES.VENDOR.EDIT, body, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   },
 
   /**
