@@ -23,7 +23,7 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-        value: "99995955955"
+        value: "9999999999"
       - name: AltPhoneNumber
         type: text
         value: "7838432136"
@@ -103,6 +103,7 @@ http:
       - name: ReportingManagerUserId
         type: text
         value: "[2]"
+        disabled: true
       - name: DateOfJoining
         type: text
         value: 2024-08-12

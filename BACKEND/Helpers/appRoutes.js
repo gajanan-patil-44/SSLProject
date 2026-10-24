@@ -30,9 +30,9 @@ app.use(backendHelpers.DESIGNATION_CREATION, DesignationRoutes);  //Done by kavy
 app.use(backendHelpers.PROJECT_CREATION, ProjectRoutes);  //Done by kavya
 app.use(backendHelpers.MANAGE_PAGES, ManagePagesRoutes);  
 app.use(backendHelpers.USER_EDIT,Usereditroute);
+
 app.use(backendHelpers.ITEM_CATEGORY_CREATION, ItemCategoryRoutes);
 app.use(backendHelpers.MATERIAL_SUB_CATEGORY_TYPE, MaterialSubCategoryTypeRoutes);  
-
 app.use(backendHelpers.MATERIAL, materialRoutes);
 app.use(backendHelpers.VENDOR, VendorRoutes);
 };

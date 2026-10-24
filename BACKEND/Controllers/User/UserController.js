@@ -77,38 +77,38 @@ export const userDropdownController = async (req, res) => {
         // FLAG 3 = DESIGNATION
         // ==========================================
 
-     // FLAG 3 = DESIGNATION BASED ON COMPANY
+        // FLAG 3 = DESIGNATION BASED ON COMPANY
 
-if (parseInt(FlagId) === 3) {
+        if (parseInt(FlagId) === 3) {
 
-    if (
-        CompanyId === undefined ||
-        CompanyId === null ||
-        String(CompanyId).trim() === ""
-    ) {
-        return res.status(400).json({
-            status: "error",
-            message: "CompanyId is required"
-        });
-    }
+            if (
+                CompanyId === undefined ||
+                CompanyId === null ||
+                String(CompanyId).trim() === ""
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+            }
 
-    const companyId = Number(CompanyId);
+            const companyId = Number(CompanyId);
 
-    if (!Number.isInteger(companyId) || companyId <= 0) {
-        return res.status(400).json({
-            status: "error",
-            message: "CompanyId must be a valid positive integer"
-        });
-    }
+            if (!Number.isInteger(companyId) || companyId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId must be a valid positive integer"
+                });
+            }
 
-    const result = await getDesignationDropdown(companyId);
+            const result = await getDesignationDropdown(companyId);
 
-    return res.status(200).json({
-        status: "success",
-        message: "Designation data fetched successfully",
-        data: result
-    });
-}
+            return res.status(200).json({
+                status: "success",
+                message: "Designation data fetched successfully",
+                data: result
+            });
+        }
         // ==========================================
         // FLAG 4 = USER REPORTING MANAGER
         // ==========================================
@@ -202,7 +202,7 @@ export const createUserController = async (req, res) => {
         if (
             !isEmpty(userData.AlternateNumber) &&
             String(userData.PhoneNumber).trim() ===
-                String(userData.AlternateNumber).trim()
+            String(userData.AlternateNumber).trim()
         ) {
             return res.status(400).json({
                 status: "error",
@@ -229,6 +229,23 @@ export const createUserController = async (req, res) => {
             });
         }
 
+
+        // ==========================================================
+        // EMAIL FORMAT VALIDATION
+        // ==========================================================
+
+        const email = String(userData.Email).trim();
+
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                status: "error",
+                message: "Please enter a valid email address"
+            });
+        }
+
+        userData.Email = email;
         // ==========================================================
         // ROLE ID VALIDATION
         // ==========================================================
@@ -245,6 +262,22 @@ export const createUserController = async (req, res) => {
             });
         }
 
+        // ==========================================================
+        // STRONG PASSWORD VALIDATION
+        // ==========================================================
+
+        const password = String(userData.Password);
+
+        const passwordRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=])[A-Za-z\d@$!%*?&#^()_+\-=]{8,}$/;
+
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+            });
+        }
         // ==========================================================
         // PARSE FORM-DATA ARRAY FIELDS
         // ==========================================================
@@ -518,61 +551,38 @@ export const createUserController = async (req, res) => {
         // ==========================================================
         // DUPLICATE CHECKS
         // ==========================================================
-
-        const duplicateFields = {
-            Email: {
-                check: checkEmailExists,
-                message: "Email already exists"
-            },
-            LoginName: {
-                check: checkLoginNameExists,
-                message: "Login name already exists"
-            },
-            PhoneNumber: {
-                check: checkPhoneNumberExists,
-                message: "Phone number already exists"
-            },
-            EmployeeId: {
-                check: checkEmployeeIdExists,
-                message: "Employee ID already exists",
-                transform: (value) => String(value)
-            }
-        };
-
-        const duplicateErrors = [];
-
-        for (const [field, config] of Object.entries(
-            duplicateFields
-        )) {
-            const value = userData[field];
-
-            if (
-                value === undefined ||
-                value === null ||
-                value === ""
-            ) {
-                continue;
-            }
-
-            const checkValue = config.transform
-                ? config.transform(value)
-                : value;
-
-            const exists = await config.check(checkValue);
-
-            if (exists) {
-                duplicateErrors.push({
-                    field,
-                    message: config.message
-                });
-            }
-        }
-
-        if (duplicateErrors.length > 0) {
+        // Check Email
+        if (userData.Email && await checkEmailExists(userData.Email)) {
             return res.status(409).json({
                 status: "error",
-                message: "Duplicate records found",
-                errors: duplicateErrors
+                message: "Email already exists"
+            });
+        }
+
+        // Check LoginName
+        if (userData.LoginName && await checkLoginNameExists(userData.LoginName)) {
+            return res.status(409).json({
+                status: "error",
+                message: "Login name already exists"
+            });
+        }
+
+        // Check PhoneNumber
+        if (userData.PhoneNumber && await checkPhoneNumberExists(userData.PhoneNumber)) {
+            return res.status(409).json({
+                status: "error",
+                message: "Phone number already exists"
+            });
+        }
+
+        // Check EmployeeId
+        if (
+            userData.EmployeeId &&
+            await checkEmployeeIdExists(String(userData.EmployeeId))
+        ) {
+            return res.status(409).json({
+                status: "error",
+                message: "Employee ID already exists"
             });
         }
 
