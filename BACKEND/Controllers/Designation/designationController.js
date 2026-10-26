@@ -288,6 +288,15 @@ export const add_designationController = async (req, res) => {
             }
 
 
+            if (Number(DesignationLevel) > 100) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationLevel must not exceed 100"
+                });
+            }
+
+
+
             // =================================================
             // VALIDATE IS DISABLED
             // =================================================
@@ -675,6 +684,15 @@ export const editDesignationController = async (req, res) => {
                     message: "DesignationLevel must be a valid non-negative integer"
                 });
             }
+
+
+            if (Number(DesignationLevel) > 100) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationLevel must not exceed 100"
+                });
+            }
+
 
 
             // VALIDATE IS CanBeReportingManager

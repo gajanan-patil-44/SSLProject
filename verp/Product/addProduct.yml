@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.65:9004/verp-service/productCreation/addProduct
+  url: http://192.168.23.115:9004/verp-service/productCreation/addProduct
   body:
     type: json
     data: |2-

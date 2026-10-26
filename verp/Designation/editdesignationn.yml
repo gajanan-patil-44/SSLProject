@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.65:9004/verp-service/designationCreation/editdesignation
+  url: http://192.168.23.115:9004/verp-service/designationCreation/editdesignation
   body:
     type: json
     data: |-
@@ -16,10 +16,11 @@ http:
 
       {
         "flagId":2,
-        "CompanyDesignationId":20,
-        "CompanyId":1,
-        "DesignationName":"MD",
-        "DesignationCode":"MD01",
+        "CompanyDesignationId":24,
+        "CompanyId":23,
+        "DesignationName":"TEAM LEAddD",
+        "DesignationCode":"Testtt",
+        "DesignationLevel":1000,
         "IsDisabled":false,
         "UpdateByUserName":"kss",
         "CanBeReportingManager":true
