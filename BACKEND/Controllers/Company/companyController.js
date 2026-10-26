@@ -2,6 +2,8 @@ import {
     getAllCompanies,
     addCompany,
     checkCompanyExists,
+    checkCompanyPhoneExists,
+    checkCompanyEmailExists,
     checkCompanyExistsForUpdate,
     updateCompanies,
     toggleCompanyStatuses,
@@ -73,6 +75,68 @@ export const addCompanies = async (req, res) => {
         // flagId 2 = Add Company
         if (parseInt(flagId) === 2) {
             const companyData = req.body;
+
+            // Validate Company Name: Only alphabets and spaces allowed
+            const companyNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!companyData.CompanyName || !companyNameRegex.test(companyData.CompanyName)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name should contain only alphabets and spaces"
+                });
+            }
+
+
+
+            // PHONE NUMBER VALIDATION
+
+            const phoneNumber = String(companyData.PhoneNumber || "").trim();
+            const phoneRegex = /^[0-9]{10}$/;
+
+            if (!phoneRegex.test(phoneNumber)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Phone number must contain exactly 10 digits"
+                });
+            }
+
+            // EMAIL VALIDATION
+
+            const email = String(companyData.Email || "").trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Please enter a valid email address"
+                });
+            }
+
+            // CHECK DUPLICATE PHONE NUMBER
+
+            const existingPhone = await checkCompanyPhoneExists(phoneNumber);
+
+            if (existingPhone.length > 0) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Phone number already exists"
+                });
+            }
+
+            // CHECK DUPLICATE EMAIL
+
+            const existingEmail = await checkCompanyEmailExists(email);
+
+            if (existingEmail.length > 0) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Email already exists"
+                });
+            }
+
+
+
+
 
             // Check Company Name and Company Code
             const existingCompany = await checkCompanyExists(
@@ -163,6 +227,19 @@ export const updateCompany = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const companyData = req.body;
+
+            // Validate Company Name: Only alphabets and spaces allowed
+            const companyNameRegex = /^[A-Za-z\s]+$/;
+
+            if (
+                !companyData.CompanyName ||
+                !companyNameRegex.test(companyData.CompanyName)
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name should contain only alphabets and spaces"
+                });
+            }
 
             // Check whether Company Name and Company Code already exist
             const existingCompanies = await checkCompanyExistsForUpdate(

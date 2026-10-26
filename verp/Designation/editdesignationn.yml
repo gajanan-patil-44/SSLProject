@@ -1,12 +1,33 @@
 info:
   name: editdesignationn
   type: http
-  seq: 7
+  seq: 5
 
 http:
   method: POST
-  url: http://192.168.23.76:9004/verp-service/designationCreation/editdesignation
-  auth: inherit
+  url: http://192.168.23.115:9004/verp-service/designationCreation/editdesignation
+  body:
+    type: json
+    data: |-
+      // {
+      //   "flagId":1
+      // }
+
+
+      {
+        "flagId":2,
+        "CompanyDesignationId":24,
+        "CompanyId":23,
+        "DesignationName":"TEAM LEAddD",
+        "DesignationCode":"Testtt",
+        "DesignationLevel":1000,
+        "IsDisabled":false,
+        "UpdateByUserName":"kss",
+        "CanBeReportingManager":true
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkxODgzNDY1LCJleHAiOjE3OTE5MTIyNjV9.Xnmhdiuiw0AC0V0Klo-5Cd-UMnF1swTEK_9SesiQIKA
 
 settings:
   encodeUrl: true

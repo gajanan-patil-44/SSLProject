@@ -5,13 +5,22 @@ info:
 
 http:
   method: POST
+<<<<<<< HEAD
+  url: http://192.168.23.85:9004/verp-service/auth/login
+=======
   url: http://localhost:9004/verp-service/auth/login
+>>>>>>> 7fbf101bd64937072ae81076ef43f5cd0218bdb6
   body:
     type: json
     data: |-
       {
+<<<<<<< HEAD
+          "username": "admin1",
+          "password": "Admin1@123"
+=======
           "username": "EMP6",
           "password": "Admin@123"
+>>>>>>> 7fbf101bd64937072ae81076ef43f5cd0218bdb6
       }
   auth: inherit
 
