@@ -81,6 +81,8 @@ const STEPS = [
   { id: 5, title: 'User Documents', short: 'Documents', desc: 'Certificates & files', icon: FileText },
 ];
 
+const MAX_PHOTO_SIZE = 1 * 1024 * 1024; // 1 MB limit for profile photo
+
 // ─── Initial Form Factory ──────────────────────────────────────────────────
 const getInitialForm = () => ({
   EmployeeId: '',
@@ -488,12 +490,33 @@ export default function UserCreationView() {
   };
 
   const onPhotoChange = e => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrors(er => ({ ...er, Photo: 'Please select a valid image file (JPG, PNG, WEBP).' }));
+      useERPStore.getState().showToast('Please select a valid image file.', 'error');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+
+    // Restrict size to max 1 MB
+    if (file.size > MAX_PHOTO_SIZE) {
+      setErrors(er => ({ ...er, Photo: 'Image size exceeds the 1 MB limit. Please select an image of 1 MB or less.' }));
+      useERPStore.getState().showToast('Image size exceeds 1 MB limit.', 'error');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+
     setPhoto({ file, preview: URL.createObjectURL(file) });
     setErrors(er => ({ ...er, Photo: '' }));
   };
-  const removePhoto = () => { setPhoto(null); if (photoRef.current) photoRef.current.value = ''; };
+  const removePhoto = () => {
+    setPhoto(null);
+    if (photoRef.current) photoRef.current.value = '';
+    setErrors(er => ({ ...er, Photo: '' }));
+  };
 
   // ── Per-FileType upload handlers ──────────────────────────────────────────
   const onAddFiles = () => {}; // kept for ref compat
@@ -568,7 +591,11 @@ export default function UserCreationView() {
     }
 
     if (step === 4) {
-      if (!photo)                                                    e.Photo            = 'Profile photo is required';
+      if (!photo) {
+        e.Photo = 'Profile photo is required';
+      } else if (photo.file && photo.file.size > MAX_PHOTO_SIZE) {
+        e.Photo = 'Profile photo size must not exceed 1 MB';
+      }
     }
 
     if (step === 5) {
@@ -1227,7 +1254,7 @@ export default function UserCreationView() {
 
               {/* Upload controls */}
               <div className="flex flex-col gap-3 flex-1 text-center sm:text-left">
-                <input ref={photoRef} type="file" accept="image/*" onChange={onPhotoChange} className="hidden" id="photo-inp" />
+                <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp,image/*" onChange={onPhotoChange} className="hidden" id="photo-inp" />
                 <label
                   htmlFor="photo-inp"
                   className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-750 cursor-pointer transition-all shadow-xs w-fit mx-auto sm:mx-0"
@@ -1236,7 +1263,7 @@ export default function UserCreationView() {
                   {photo ? 'Change Profile Photo' : 'Upload Profile Photo'}
                 </label>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Supported formats: JPG, PNG, WEBP · Max size: 5 MB<br />
+                  Supported formats: JPG, PNG, WEBP · Max size: 1 MB<br />
                   {photo && (
                     <span className="text-primary font-semibold block mt-1">
                       {photo.file.name} ({(photo.file.size / 1024).toFixed(1)} KB)
