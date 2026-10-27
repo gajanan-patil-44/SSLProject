@@ -16,8 +16,8 @@ const router = express.Router();
 
 router.post("/view",authenticateToken, getDesignation); // VIEW DESIGNATIONS
 router.post("/add_designation",authenticateToken, add_designationController);  // ADD DESIGNATION / COMPANY DROPDOWN
-router.post("/editdesignation",authenticateToken, editDesignationController);  // EDIT DESIGNATION / COMPANY DROPDOWN
-router.post("/toggleDesignationStatus",authenticateToken, toggleDesignationStatus);  // TOGGLE DESIGNATION STATUS
+router.patch("/editdesignation",authenticateToken, editDesignationController);  // EDIT DESIGNATION / COMPANY DROPDOWN
+router.patch("/toggleDesignationStatus",authenticateToken, toggleDesignationStatus);  // TOGGLE DESIGNATION STATUS
 router.post("/deleteDesignation",authenticateToken, deleteDesignationController);  // DELETE DESIGNATION
  
 

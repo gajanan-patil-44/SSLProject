@@ -12,7 +12,9 @@ import {
 // GET ALL ACTIVE PRODUCTS
 
 export const getProduct = async (req, res) => {
+    
     const { flagId } = req.body;
+
     try {
 
         if (!flagId) {
@@ -21,7 +23,6 @@ export const getProduct = async (req, res) => {
                 message: "flagId is required"
             });
         }
-
 
         if (parseInt(flagId) === 1) {
             const rows = await getAllProducts();
@@ -281,8 +282,6 @@ export const toggleProductStatus = async (req, res) => {
 
             const productData = req.body;
 
-
-
             const product = await toggleProductStatuses(productData);
 
             // Product does not exist
@@ -324,7 +323,9 @@ export const toggleProductStatus = async (req, res) => {
 // DELETE / DISABLE PRODUCT
 
 export const deleteProduct = async (req, res) => {
+
     const { flagId } = req.body;
+
     try {
 
         if (!flagId) {
@@ -337,6 +338,7 @@ export const deleteProduct = async (req, res) => {
 
 
         if (parseInt(flagId) == 5) {
+
             const productData = req.body;
 
             console.log("Received delete product data:", productData);

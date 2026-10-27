@@ -93,9 +93,7 @@ export const add_designationController = async (req, res) => {
 
     try {
 
-        // =====================================================
         // FLAG ID 1 - GET COMPANIES FOR DROPDOWN
-        // =====================================================
 
         if (parseInt(flagId) === 1) {
 
@@ -109,9 +107,8 @@ export const add_designationController = async (req, res) => {
         }
 
 
-        // =====================================================
         // FLAG ID 2 - ADD DESIGNATION
-        // =====================================================
+        
 
         if (parseInt(flagId) === 2) {
 
@@ -138,9 +135,7 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // VALIDATE COMPANY ID
-            // =================================================
 
             if (
                 CompanyId === undefined ||
@@ -162,15 +157,12 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyId must be a valid positive integer"
+                    message: "CompanyId must be a valid positive integer"
                 });
             }
 
 
-            // =================================================
             // VALIDATE DESIGNATION NAME
-            // =================================================
 
             if (
                 DesignationName === undefined ||
@@ -207,15 +199,12 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "DesignationName must not exceed 150 characters"
+                    message: "DesignationName must not exceed 150 characters"
                 });
             }
 
 
-            // =================================================
             // VALIDATE DESIGNATION CODE
-            // =================================================
 
             if (
                 DesignationCode === undefined ||
@@ -258,10 +247,8 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // VALIDATE DESIGNATION LEVEL
-            // =================================================
-
+        
             if (
                 DesignationLevel === undefined ||
                 DesignationLevel === null ||
@@ -296,11 +283,8 @@ export const add_designationController = async (req, res) => {
             }
 
 
-
-            // =================================================
             // VALIDATE IS DISABLED
-            // =================================================
-
+            
             if (typeof IsDisabled !== "boolean") {
 
                 return res.status(400).json({
@@ -311,10 +295,8 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // VALIDATE CREATED BY USER NAME
-            // =================================================
-
+            
             if (
                 CreatedByUserName === undefined ||
                 CreatedByUserName === null ||
@@ -323,8 +305,7 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CreatedByUserName is required"
+                    message: "CreatedByUserName is required"
                 });
             }
 
@@ -333,8 +314,7 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CreatedByUserName must be a string"
+                    message: "CreatedByUserName must be a string"
                 });
             }
 
@@ -343,15 +323,12 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CreatedByUserName is required"
+                    message: "CreatedByUserName is required"
                 });
             }
 
 
-            // =================================================
             // CHECK COMPANY
-            // =================================================
 
             const companyData =
                 await checkCompanyExists(
@@ -369,9 +346,7 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // CHECK DUPLICATE DESIGNATION
-            // =================================================
 
             const existingDesignation =
                 await checkDesignationExists(
@@ -387,9 +362,7 @@ export const add_designationController = async (req, res) => {
                     existingDesignation[0];
 
 
-                // ---------------------------------------------
                 // DUPLICATE NAME
-                // ---------------------------------------------
 
                 // if (
                 //     duplicate.DesignationName &&
@@ -409,18 +382,12 @@ export const add_designationController = async (req, res) => {
                 // }
 
 
-                // ---------------------------------------------
                 // DUPLICATE CODE
-                // ---------------------------------------------
 
                 if (
                     duplicate.DesignationCode &&
-                    duplicate.DesignationCode
-                        .trim()
-                        .toLowerCase() ===
-                    DesignationCode
-                        .trim()
-                        .toLowerCase()
+                    duplicate.DesignationCode.trim().toLowerCase() ===
+                    DesignationCode.trim().toLowerCase()
                 ) {
 
                     return res.status(409).json({
@@ -431,9 +398,7 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // ADD DESIGNATION
-            // =================================================
 
             const designation = await addDesignation({
 
@@ -446,9 +411,7 @@ export const add_designationController = async (req, res) => {
             });
 
 
-            // =================================================
             // SUCCESS
-            // =================================================
 
             return res.status(201).json({
 
@@ -459,9 +422,7 @@ export const add_designationController = async (req, res) => {
         }
 
 
-        // =====================================================
         // INVALID FLAG ID
-        // =====================================================
 
         return res.status(400).json({
             status: "error",
@@ -503,7 +464,6 @@ export const editDesignationController = async (req, res) => {
 
         // FLAG ID 2 - EDIT DESIGNATION
 
-
         if (parseInt(flagId) === 2) {
 
             const {
@@ -528,7 +488,6 @@ export const editDesignationController = async (req, res) => {
                     message: "Designation name should contain only alphabets and spaces"
                 });
             }
-
 
 
             // VALIDATE COMPANY DESIGNATION ID
@@ -617,9 +576,7 @@ export const editDesignationController = async (req, res) => {
                 });
             }
 
-
             // VALIDATE DESIGNATION CODE
-
 
             if (
                 DesignationCode === undefined ||
@@ -696,6 +653,7 @@ export const editDesignationController = async (req, res) => {
 
 
             // VALIDATE IS CanBeReportingManager
+
             // if (typeof CanBeReportingManager !== "boolean") {
 
             //     return res.status(400).json({
@@ -991,7 +949,6 @@ export const deleteDesignationController = async (req, res) => {
     try {
 
         // FLAG ID 1 - DELETE DESIGNATION
-
 
         if (parseInt(flagId) === 1) {
 

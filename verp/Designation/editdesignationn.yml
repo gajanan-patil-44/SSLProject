@@ -16,8 +16,8 @@ http:
 
       {
         "flagId":2,
-        "CompanyDesignationId":24,
-        "CompanyId":23,
+        "CompanyDesignationId":2,
+        "CompanyId":18,
         "DesignationName":"TEAM LEAddD",
         "DesignationCode":"Testtt",
         "DesignationLevel":1000,

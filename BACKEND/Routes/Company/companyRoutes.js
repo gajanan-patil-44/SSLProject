@@ -14,8 +14,8 @@ const router = express.Router();
 
 router.post("/getCompany",authenticateToken, getCompany);
 router.post("/addCompany",authenticateToken, addCompanies);
-router.post("/updateCompany",authenticateToken, updateCompany);
-router.post("/toggleCompanyStatus",authenticateToken, toggleCompanyStatus);
+router.patch("/updateCompany",authenticateToken, updateCompany);
+router.patch("/toggleCompanyStatus",authenticateToken, toggleCompanyStatus);
 router.post("/deleteCompany",authenticateToken, deleteCompany);
 
 export default router;
