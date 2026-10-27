@@ -23,9 +23,7 @@ export const getAllMaterialCategoryTypes = async () => {
             ORDER BY "MaterialCategoryTypeName"
         `;
 
-
         const result = await pool.query(query);
-
 
         return result.rows;
 
@@ -52,9 +50,7 @@ export const checkMaterialCategoryTypeCodeExists = async (MaterialCategoryTypeCo
             WHERE "MaterialCategoryTypeCode" = $1
         `;
 
-
         const values = [MaterialCategoryTypeCode];
-
 
         const result = await pool.query(
             query,
@@ -148,12 +144,10 @@ export const checkMaterialCategoryTypeCodeExistsForUpdate = async (
             MaterialCategoryTypeId
         ];
 
-
         const result = await pool.query(
             query,
             values
         );
-
 
         return result.rows;
 
@@ -182,14 +176,12 @@ export const updateMaterialCategoryTypeModel = async (categoryData) => {
             WHERE "MaterialCategoryTypeId" = $4
         `;
 
-
         const values = [
             categoryData.MaterialCategoryTypeName,
             categoryData.MaterialCategoryTypeCode,
             categoryData.UpdatedByUserName || null,
             categoryData.MaterialCategoryTypeId
         ];
-
 
         const result = await pool.query(
             query,
@@ -231,19 +223,16 @@ export const toggleMaterialCategoryTypeStatusModel = async (categoryData) => {
                 "UpdatedByUserName";
         `;
 
-
         const values = [
             categoryData.IsDisabled,
             categoryData.UpdatedByUserName || null,
             categoryData.MaterialCategoryTypeId
         ];
 
-
         const result = await pool.query(
             query,
             values
         );
-
 
         return result.rows[0];
 
@@ -252,5 +241,3 @@ export const toggleMaterialCategoryTypeStatusModel = async (categoryData) => {
         throw error;
     }
 };
-
-

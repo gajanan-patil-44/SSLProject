@@ -165,7 +165,6 @@ export const checkCompanyExistsForUpdate = async (
 };
 
 
-
 export const checkCompanyPhoneExists = async (PhoneNumber) => {
 
     try {
@@ -209,9 +208,7 @@ export const checkCompanyEmailExists = async (Email) => {
 
 
 
-// ==========================================
 // UPDATE COMPANY
-// ==========================================
 
 export const updateCompanies = async (companyData) => {
 
@@ -287,7 +284,6 @@ export const toggleCompanyStatuses = async (companyData) => {
         throw error;
     }
 };
-
 
 
 // DELETE / DISABLE COMPANY

@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/getMaterialCategoryType", authenticateToken, getMaterialCategoryTypes);  // GET ALL ITEM CATEGORIES
 router.post("/addMaterialCategoryType",authenticateToken, addMaterialCategoryType);  // ADD ITEM CATEGORY
 router.post("/updateMaterialCategoryType", authenticateToken, updateMaterialCategoryType);  // UPDATE ITEM CATEGORY
-router.post("/toggleMaterialCategoryTypeStatus", authenticateToken, toggleMaterialCategoryTypeStatus);   // TOGGLE ITEM CATEGORY STATUS
+router.patch("/toggleMaterialCategoryTypeStatus", authenticateToken, toggleMaterialCategoryTypeStatus);   // TOGGLE ITEM CATEGORY STATUS
 
 
 export default router;

@@ -11,7 +11,6 @@ import {
 } from "../../Models/CompanyModels.js";
 
 
-
 // GET ALL ACTIVE COMPANIES
 
 export const getCompany = async (req, res) => {
@@ -35,6 +34,7 @@ export const getCompany = async (req, res) => {
                 message: "Companies fetched successfully",
                 data: rows
             });
+
         } else {
             return res.status(400).json({
                 status: "error",
@@ -86,8 +86,6 @@ export const addCompanies = async (req, res) => {
                 });
             }
 
-
-
             // PHONE NUMBER VALIDATION
 
             const phoneNumber = String(companyData.PhoneNumber || "").trim();
@@ -133,10 +131,6 @@ export const addCompanies = async (req, res) => {
                     message: "Email already exists"
                 });
             }
-
-
-
-
 
             // Check Company Name and Company Code
             const existingCompany = await checkCompanyExists(
@@ -373,7 +367,9 @@ export const toggleCompanyStatus = async (req, res) => {
 // DELETE / DISABLE COMPANY
 
 export const deleteCompany = async (req, res) => {
+
     const { flagId } = req.body;
+    
     try {
 
         if (!flagId) {
