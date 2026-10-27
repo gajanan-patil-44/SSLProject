@@ -150,9 +150,13 @@ export const getGSTTypeDropdown = async () => {
 // =====================================================
 // FLAG ID 6 - GST RATE DROPDOWN
 // =====================================================
+<<<<<<< HEAD
 // =====================================================
 // FLAG ID 6 - GST RATE DROPDOWN
 // =====================================================
+=======
+
+>>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
 export const getGSTRateDropdown = async (GSTTypeId) => {
     const query = `
         SELECT
@@ -161,16 +165,24 @@ export const getGSTRateDropdown = async (GSTTypeId) => {
             r."GSTPercentage"
         FROM "LKP"."GSTRate" r
         INNER JOIN "LKP"."GSTType" t
+<<<<<<< HEAD
             ON t."GSTTypeId" = r."GSTTypeId"
         WHERE r."IsDisabled" = false
           AND t."IsDisabled" = false
           AND r."GSTTypeId" = $1
+=======
+            ON r."GSTTypeId" = t."GSTTypeId"
+        WHERE r."GSTTypeId" = $1
+          AND r."IsDisabled" = false
+          AND t."IsDisabled" = false
+>>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
         ORDER BY r."GSTPercentage" ASC
     `;
 
     const result = await pool.query(query, [GSTTypeId]);
     return result.rows;
 };
+
 // =====================================================
 // FLAG ID 7 - FILE TYPE DROPDOWN
 // =====================================================

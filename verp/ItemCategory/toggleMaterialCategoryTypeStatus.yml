@@ -9,11 +9,19 @@ http:
   body:
     type: json
     data: |-
+<<<<<<< HEAD
       {  
       "IsDisabled": false,
       "MaterialCategoryTypeId": 1,
       "UpdatedByUserName": "admin1",
       "flagId": 4
+=======
+      {
+        "flagId":4,
+        "IsDisabled":true,
+        "UpdatedByUserName":"kavya",
+        "MaterialCategoryTypeId":2
+>>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
       }
   auth:
     type: bearer

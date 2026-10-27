@@ -2,7 +2,7 @@ import express from "express";
 
 import {
     getProject,
-    projectController,
+    addprojectController,
     editProjectController,
     toggleProjectStatus,
     deleteProjectController

@@ -148,10 +148,7 @@ export const checkCompanyProductExists = async (CompanyProductId) => {
         const values = [CompanyProductId];
 
 
-        const result =await pool.query(
-                query,
-                values
-            );
+        const result =await pool.query(query, values);
 
 
         return result.rows;
