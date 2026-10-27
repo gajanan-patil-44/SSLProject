@@ -93,9 +93,7 @@ export const add_designationController = async (req, res) => {
 
     try {
 
-        // =====================================================
         // FLAG ID 1 - GET COMPANIES FOR DROPDOWN
-        // =====================================================
 
         if (parseInt(flagId) === 1) {
 
@@ -109,9 +107,8 @@ export const add_designationController = async (req, res) => {
         }
 
 
-        // =====================================================
         // FLAG ID 2 - ADD DESIGNATION
-        // =====================================================
+        
 
         if (parseInt(flagId) === 2) {
 
@@ -138,9 +135,7 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // VALIDATE COMPANY ID
-            // =================================================
 
             if (
                 CompanyId === undefined ||
@@ -162,15 +157,12 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyId must be a valid positive integer"
+                    message: "CompanyId must be a valid positive integer"
                 });
             }
 
 
-            // =================================================
             // VALIDATE DESIGNATION NAME
-            // =================================================
 
             if (
                 DesignationName === undefined ||
@@ -207,15 +199,12 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "DesignationName must not exceed 150 characters"
+                    message: "DesignationName must not exceed 150 characters"
                 });
             }
 
 
-            // =================================================
             // VALIDATE DESIGNATION CODE
-            // =================================================
 
             if (
                 DesignationCode === undefined ||
@@ -258,10 +247,8 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // VALIDATE DESIGNATION LEVEL
-            // =================================================
-
+        
             if (
                 DesignationLevel === undefined ||
                 DesignationLevel === null ||
@@ -296,11 +283,8 @@ export const add_designationController = async (req, res) => {
             }
 
 
-
-            // =================================================
             // VALIDATE IS DISABLED
-            // =================================================
-
+            
             if (typeof IsDisabled !== "boolean") {
 
                 return res.status(400).json({
@@ -311,10 +295,8 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // VALIDATE CREATED BY USER NAME
-            // =================================================
-
+            
             if (
                 CreatedByUserName === undefined ||
                 CreatedByUserName === null ||
@@ -323,8 +305,7 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CreatedByUserName is required"
+                    message: "CreatedByUserName is required"
                 });
             }
 
@@ -333,8 +314,7 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CreatedByUserName must be a string"
+                    message: "CreatedByUserName must be a string"
                 });
             }
 
@@ -343,15 +323,12 @@ export const add_designationController = async (req, res) => {
 
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CreatedByUserName is required"
+                    message: "CreatedByUserName is required"
                 });
             }
 
 
-            // =================================================
             // CHECK COMPANY
-            // =================================================
 
             const companyData =
                 await checkCompanyExists(
@@ -369,9 +346,7 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // CHECK DUPLICATE DESIGNATION
-            // =================================================
 
             const existingDesignation =
                 await checkDesignationExists(
@@ -387,9 +362,7 @@ export const add_designationController = async (req, res) => {
                     existingDesignation[0];
 
 
-                // ---------------------------------------------
                 // DUPLICATE NAME
-                // ---------------------------------------------
 
                 // if (
                 //     duplicate.DesignationName &&
@@ -409,18 +382,12 @@ export const add_designationController = async (req, res) => {
                 // }
 
 
-                // ---------------------------------------------
                 // DUPLICATE CODE
-                // ---------------------------------------------
 
                 if (
                     duplicate.DesignationCode &&
-                    duplicate.DesignationCode
-                        .trim()
-                        .toLowerCase() ===
-                    DesignationCode
-                        .trim()
-                        .toLowerCase()
+                    duplicate.DesignationCode.trim().toLowerCase() ===
+                    DesignationCode.trim().toLowerCase()
                 ) {
 
                     return res.status(409).json({
@@ -431,9 +398,7 @@ export const add_designationController = async (req, res) => {
             }
 
 
-            // =================================================
             // ADD DESIGNATION
-            // =================================================
 
             const designation = await addDesignation({
 
@@ -446,9 +411,7 @@ export const add_designationController = async (req, res) => {
             });
 
 
-            // =================================================
             // SUCCESS
-            // =================================================
 
             return res.status(201).json({
 
@@ -459,9 +422,7 @@ export const add_designationController = async (req, res) => {
         }
 
 
-        // =====================================================
         // INVALID FLAG ID
-        // =====================================================
 
         return res.status(400).json({
             status: "error",
@@ -481,31 +442,16 @@ export const add_designationController = async (req, res) => {
 
 // EDIT DESIGNATION
 
-
 export const editDesignationController = async (req, res) => {
+
+    const { flagId } = req.body;
+
     try {
-        const { flagId } = req.body;
 
-        // ==========================================================
-        // FLAG ID VALIDATION
-        // ==========================================================
-
-        if (
-            flagId === undefined ||
-            flagId === null ||
-            String(flagId).trim() === ""
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "FlagId is required"
-            });
-        }
-
-        // ==========================================================
         // FLAG ID 1 - GET COMPANIES
-        // ==========================================================
 
-        if (Number(flagId) === 1) {
+        if (parseInt(flagId) === 1) {
+
             const companies = await getCompaniesForDropdown();
 
             return res.status(200).json({
@@ -515,17 +461,11 @@ export const editDesignationController = async (req, res) => {
             });
         }
 
-        // ==========================================================
-        // FLAG ID 2 - EDIT DESIGNATION
-<<<<<<< HEAD
-        // ==========================================================
-=======
 
+        // FLAG ID 2 - EDIT DESIGNATION
 
         if (parseInt(flagId) === 2) {
->>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
 
-        if (Number(flagId) === 2) {
             const {
                 CompanyDesignationId,
                 CompanyId,
@@ -537,9 +477,6 @@ export const editDesignationController = async (req, res) => {
                 CanBeReportingManager
             } = req.body;
 
-<<<<<<< HEAD
-            // ------------------------------------------------------
-=======
             // VALIDATE DESIGNATION NAME - ONLY ALPHABETS
 
             const designationNameRegex = /^[A-Za-z\s]+$/;
@@ -553,132 +490,135 @@ export const editDesignationController = async (req, res) => {
             }
 
 
-
->>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
             // VALIDATE COMPANY DESIGNATION ID
-            // ------------------------------------------------------
 
             if (
                 CompanyDesignationId === undefined ||
                 CompanyDesignationId === null ||
-                String(CompanyDesignationId).trim() === ""
+                CompanyDesignationId === ""
             ) {
+
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyDesignationId is required"
                 });
             }
 
-            const designationId = Number(CompanyDesignationId);
 
             if (
-                !Number.isInteger(designationId) ||
-                designationId <= 0
+                !Number.isInteger(Number(CompanyDesignationId)) ||
+                Number(CompanyDesignationId) <= 0
             ) {
+
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "CompanyDesignationId must be a valid positive integer"
+                    message: "CompanyDesignationId must be a valid positive integer"
                 });
             }
 
-            // ------------------------------------------------------
+
             // VALIDATE COMPANY ID
-            // ------------------------------------------------------
 
             if (
                 CompanyId === undefined ||
                 CompanyId === null ||
-                String(CompanyId).trim() === ""
+                CompanyId === ""
             ) {
+
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyId is required"
                 });
             }
 
-            const companyId = Number(CompanyId);
 
-            if (!Number.isInteger(companyId) || companyId <= 0) {
+            if (
+                !Number.isInteger(Number(CompanyId)) ||
+                Number(CompanyId) <= 0
+            ) {
+
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyId must be a valid positive integer"
                 });
             }
 
-            // ------------------------------------------------------
+
             // VALIDATE DESIGNATION NAME
-            // ------------------------------------------------------
 
             if (
-                typeof DesignationName !== "string" ||
+                DesignationName === undefined ||
+                DesignationName === null ||
                 DesignationName.trim() === ""
             ) {
+
                 return res.status(400).json({
                     status: "error",
-                    message: "DesignationName is required and must be a string"
+                    message: "DesignationName is required"
                 });
             }
 
-            const designationName = DesignationName.trim();
 
-            if (designationName.length > 150) {
+            if (typeof DesignationName !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationName must be a string"
+                });
+            }
+
+
+            if (DesignationName.trim().length > 150) {
+
                 return res.status(400).json({
                     status: "error",
                     message: "DesignationName must not exceed 150 characters"
                 });
             }
 
-            // ------------------------------------------------------
             // VALIDATE DESIGNATION CODE
-<<<<<<< HEAD
-            // ------------------------------------------------------
-=======
-
->>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
 
             if (
-                typeof DesignationCode !== "string" ||
+                DesignationCode === undefined ||
+                DesignationCode === null ||
                 DesignationCode.trim() === ""
             ) {
+
                 return res.status(400).json({
                     status: "error",
-                    message: "DesignationCode is required and must be a string"
+                    message: "DesignationCode is required"
                 });
             }
 
-            const designationCode = DesignationCode.trim();
 
-            if (designationCode.length > 150) {
+            if (typeof DesignationCode !== "string") {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationCode must be a string"
+                });
+            }
+
+
+            if (DesignationCode.trim().length > 150) {
+
                 return res.status(400).json({
                     status: "error",
                     message: "DesignationCode must not exceed 150 characters"
                 });
             }
 
-            // ------------------------------------------------------
+
             // VALIDATE IS DISABLED
-            // Supports boolean values and form-data strings
-            // ------------------------------------------------------
 
-            let isDisabled;
+            if (typeof IsDisabled !== "boolean") {
 
-            if (typeof IsDisabled === "boolean") {
-                isDisabled = IsDisabled;
-            } else if (IsDisabled === "true") {
-                isDisabled = true;
-            } else if (IsDisabled === "false") {
-                isDisabled = false;
-            } else {
                 return res.status(400).json({
                     status: "error",
                     message: "IsDisabled must be true or false"
                 });
             }
 
-<<<<<<< HEAD
-            // ------------------------------------------------------
-=======
             // VALIDATE DESIGNATION LEVEL
 
             if (
@@ -713,6 +653,7 @@ export const editDesignationController = async (req, res) => {
 
 
             // VALIDATE IS CanBeReportingManager
+
             // if (typeof CanBeReportingManager !== "boolean") {
 
             //     return res.status(400).json({
@@ -722,110 +663,55 @@ export const editDesignationController = async (req, res) => {
             // }
 
 
->>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
             // VALIDATE UPDATED BY USER NAME
-            // ------------------------------------------------------
 
             if (
-                typeof UpdateByUserName !== "string" ||
+                UpdateByUserName === undefined ||
+                UpdateByUserName === null ||
                 UpdateByUserName.trim() === ""
             ) {
+
                 return res.status(400).json({
                     status: "error",
                     message: "UpdateByUserName is required"
                 });
             }
 
-            const updatedBy = UpdateByUserName.trim();
 
-            // ------------------------------------------------------
-            // VALIDATE CAN BE REPORTING MANAGER
-            // Optional if not supplied
-            // ------------------------------------------------------
+            if (typeof UpdateByUserName !== "string") {
 
-            let canBeReportingManager;
-
-            if (
-                CanBeReportingManager === undefined ||
-                CanBeReportingManager === null ||
-                CanBeReportingManager === ""
-            ) {
-                canBeReportingManager = undefined;
-            } else if (typeof CanBeReportingManager === "boolean") {
-                canBeReportingManager = CanBeReportingManager;
-            } else if (CanBeReportingManager === "true") {
-                canBeReportingManager = true;
-            } else if (CanBeReportingManager === "false") {
-                canBeReportingManager = false;
-            } else {
                 return res.status(400).json({
                     status: "error",
-                    message: "CanBeReportingManager must be true or false"
+                    message: "UpdateByUserName must be a string"
                 });
             }
 
-            // ------------------------------------------------------
-            // CHECK COMPANY EXISTS
-            // ------------------------------------------------------
 
-            const companyData = await checkCompanyExists(companyId);
+            // CHECK COMPANY
 
-            if (!companyData || companyData.length === 0) {
+            const companyData = await checkCompanyExists(Number(CompanyId));
+
+
+            if (companyData.length === 0) {
+
                 return res.status(400).json({
                     status: "error",
                     message: "Invalid or inactive CompanyId"
                 });
             }
 
-            // ------------------------------------------------------
-            // CHECK DUPLICATE DESIGNATION
-            // Exclude current designation record
-            // ------------------------------------------------------
 
-<<<<<<< HEAD
-            const existingDesignation =
-                await checkDesignationExistsForUpdate(
-                    companyId,
-                    designationName,
-                    designationCode,
-                    designationId
-                );
-=======
+            // CHECK DUPLICATE DESIGNATION
+            // EXCLUDE CURRENT RECORD
+
             const existingDesignation = await checkDesignationExistsForUpdate(
                 Number(CompanyId),
                 DesignationName.trim(),
                 DesignationCode.trim(),
                 Number(CompanyDesignationId)
             );
->>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
 
-            if (
-                existingDesignation &&
-                existingDesignation.length > 0
-            ) {
-                const duplicateName = existingDesignation.some(
-                    (item) =>
-                        item.DesignationName &&
-                        item.DesignationName.trim().toLowerCase() ===
-                            designationName.toLowerCase()
-                );
 
-<<<<<<< HEAD
-                const duplicateCode = existingDesignation.some(
-                    (item) =>
-                        item.DesignationCode &&
-                        item.DesignationCode.trim().toLowerCase() ===
-                            designationCode.toLowerCase()
-                );
-
-                if (duplicateName) {
-                    return res.status(409).json({
-                        status: "error",
-                        message:
-                            "Designation name already exists for this company"
-                    });
-                }
-=======
             if (existingDesignation.length > 0) {
 
                 const duplicate = existingDesignation[0];
@@ -842,22 +728,23 @@ export const editDesignationController = async (req, res) => {
                 //         message: "Designation name already exists for this company"
                 //     });
                 // }
->>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
 
-                if (duplicateCode) {
+
+                if (
+                    duplicate.DesignationCode &&
+                    duplicate.DesignationCode.trim().toLowerCase() ===
+                    DesignationCode.trim().toLowerCase()
+                ) {
+
                     return res.status(409).json({
                         status: "error",
-                        message:
-                            "Designation code already exists for this company"
+                        message: "Designation code already exists for this company"
                     });
                 }
             }
 
-            // ------------------------------------------------------
+
             // UPDATE DESIGNATION
-<<<<<<< HEAD
-            // ------------------------------------------------------
-=======
 
             const result = await editDesignation({
                 CompanyDesignationId: Number(CompanyDesignationId),
@@ -869,44 +756,18 @@ export const editDesignationController = async (req, res) => {
                 UpdateByUserName: UpdateByUserName.trim(),
                 CanBeReportingManager
             });
->>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
 
-            const updateData = {
-                CompanyDesignationId: designationId,
-                CompanyId: companyId,
-                DesignationName: designationName,
-                DesignationCode: designationCode,
-                IsDisabled: isDisabled,
-                UpdateByUserName: updatedBy
-            };
+            // NOT FOUND
 
-            // Preserve the existing value if the optional field
-            // was not provided. The model must support this behavior.
-            if (canBeReportingManager !== undefined) {
-                updateData.CanBeReportingManager =
-                    canBeReportingManager;
-            }
+            if (result === 0) {
 
-            const result = await editDesignation(updateData);
-
-            // ------------------------------------------------------
-            // CHECK UPDATE RESULT
-            // ------------------------------------------------------
-
-            if (
-                result === 0 ||
-                result === null ||
-                result === undefined
-            ) {
                 return res.status(404).json({
                     status: "error",
-                    message: "Designation not found or no record updated"
+                    message: "Designation not found"
                 });
             }
 
-            // ------------------------------------------------------
             // SUCCESS
-            // ------------------------------------------------------
 
             return res.status(200).json({
                 status: "success",
@@ -915,17 +776,16 @@ export const editDesignationController = async (req, res) => {
             });
         }
 
-        // ==========================================================
         // INVALID FLAG ID
-        // ==========================================================
 
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId. Use 1 or 2"
+            message: "Invalid FlagId."
         });
 
     } catch (error) {
-        console.error("Error editing designation:", error);
+
+        // console.error("Error editing designation:", error);
 
         return res.status(500).json({
             status: "error",
@@ -934,7 +794,6 @@ export const editDesignationController = async (req, res) => {
         });
     }
 };
-
 
 
 
@@ -1090,7 +949,6 @@ export const deleteDesignationController = async (req, res) => {
     try {
 
         // FLAG ID 1 - DELETE DESIGNATION
-
 
         if (parseInt(flagId) === 1) {
 
