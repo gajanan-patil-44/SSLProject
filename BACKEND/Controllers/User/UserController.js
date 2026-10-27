@@ -179,35 +179,47 @@ export const createUserController = async (req, res) => {
             }
         }
 
-        // ==========================================================
-        // EMPLOYEE ID VALIDATION
-        // ==========================================================
+        // EMPLOYEE ID AND LOGIN NAME VALIDATION
 
-        const employeeId = String(userData.EmployeeId).trim();
+        const employeeId = String(userData.EmployeeId ?? "").trim();
 
         if (!/^[A-Za-z0-9]+$/.test(employeeId)) {
             return res.status(400).json({
                 status: "error",
-                message:
-                    "EmployeeId must contain only alphanumeric characters"
+                message: "EmployeeId must contain only alphanumeric characters"
             });
         }
 
         userData.EmployeeId = employeeId;
 
+
+        const loginName = String(userData.LoginName ?? "").trim();
+
+        if (!/^[A-Za-z0-9]+$/.test(loginName)) {
+            return res.status(400).json({
+                status: "error",
+                message: "LoginName must contain only alphanumeric characters"
+            });
+        }
+
+        userData.LoginName = loginName;
+
+
         // ==========================================================
         // PHONE AND ALTERNATE NUMBER VALIDATION
         // ==========================================================
 
+
+        const phoneNumber = String(userData.PhoneNumber ?? "").trim();
+        const alternateNumber = String(userData.AltPhoneNumber ?? "").trim();
+
         if (
-            !isEmpty(userData.AlternateNumber) &&
-            String(userData.PhoneNumber).trim() ===
-            String(userData.AlternateNumber).trim()
+            alternateNumber !== "" &&
+            phoneNumber === alternateNumber
         ) {
             return res.status(400).json({
                 status: "error",
-                message:
-                    "PhoneNumber and AlternateNumber must not be the same"
+                message: "PhoneNumber and AltPhoneNumber must not be the same"
             });
         }
 

@@ -17,7 +17,7 @@ if (!uploadDirectory) {
 }
 
 const MB = 1024 * 1024;
-const MAX_FILE_SIZE = 10 * MB;
+const MAX_FILE_SIZE = 1 * MB;
 
 // ==========================================================
 // ALLOWED FILE EXTENSIONS
