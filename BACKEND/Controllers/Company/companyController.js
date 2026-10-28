@@ -236,9 +236,11 @@ export const updateCompany = async (req, res) => {
             }
 
             // Check whether Company Name and Company Code already exist
+            // Exclude the current CompanyId from the duplicate check
             const existingCompanies = await checkCompanyExistsForUpdate(
                 companyData.CompanyName,
-                companyData.CompanyCode
+                companyData.CompanyCode,
+                companyData.CompanyId
             );
 
             // Check duplicate Company Name / Company Code
@@ -369,7 +371,7 @@ export const toggleCompanyStatus = async (req, res) => {
 export const deleteCompany = async (req, res) => {
 
     const { flagId } = req.body;
-    
+
     try {
 
         if (!flagId) {
