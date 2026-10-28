@@ -23,7 +23,8 @@ import {
   SlidersHorizontal,
   Trash2,
   Edit,
-  Grid3X3
+  Grid3X3,
+  KeyRound
 } from 'lucide-react';
 import { Button, IconButton, Input, Select, Badge, Switch } from './index';
 import { Dropdown, DropdownItem } from './Dropdown';
@@ -34,6 +35,7 @@ export const DataTable = ({
   onAddClick,
   onViewClick,
   onEditClick,
+  onChangePasswordClick,
   onDeleteClick,
   onToggleStatusClick,
   searchPlaceholder = "Search records...",
@@ -41,7 +43,8 @@ export const DataTable = ({
   actions,
   bulkActions,
   loading = false,
-  onRefresh
+  onRefresh,
+  hideExport = false
 }) => {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -54,7 +57,7 @@ export const DataTable = ({
     const cols = [...columns];
 
     // Add actions column if handlers are provided
-    if (onViewClick || onEditClick || onDeleteClick || onToggleStatusClick) {
+    if (onViewClick || onEditClick || onChangePasswordClick || onDeleteClick || onToggleStatusClick) {
       cols.push({
         id: 'actions',
         header: 'Actions',
@@ -92,6 +95,16 @@ export const DataTable = ({
                   title="Edit record"
                 />
               )}
+              {onChangePasswordClick && (
+                <IconButton
+                  icon={KeyRound}
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onChangePasswordClick(row.original)}
+                  title="Change Password"
+                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                />
+              )}
               {onDeleteClick && (
                 <IconButton
                   icon={Trash2}
@@ -108,7 +121,7 @@ export const DataTable = ({
       });
     }
     return cols;
-  }, [columns, onViewClick, onEditClick, onDeleteClick, onToggleStatusClick]);
+  }, [columns, onViewClick, onEditClick, onChangePasswordClick, onDeleteClick, onToggleStatusClick]);
 
   const table = useReactTable({
     data,
@@ -239,9 +252,11 @@ export const DataTable = ({
           </Dropdown>
 
           {/* Export CSV */}
-          <Button variant="outline" size="sm" icon={Download} onClick={handleExportCSV}>
-            Export
-          </Button>
+          {!hideExport && (
+            <Button variant="outline" size="sm" icon={Download} onClick={handleExportCSV}>
+              Export
+            </Button>
+          )}
 
           {/* Custom actions or Add New */}
           {actions}

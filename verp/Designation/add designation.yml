@@ -1,11 +1,11 @@
 info:
-  name: designation
+  name: add designation
   type: http
   seq: 2
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/designationCreation/designation
+  url: http://localhost:9004/verp-service/designationCreation/add_designation
   body:
     type: json
     data: |-
@@ -17,9 +17,10 @@ http:
       {
         "flagId":2,
         "CompanyId":1,
-        "DesignationName":"MANAGERRRr",
-        "DesignationCode":"MG00011",
+        "DesignationName":"MANAGER",
+        "DesignationCode":"MG001",
         "IsDisabled":false,
+        "DesignationLevel":800,
         "CreatedByUserName":"kavv"
       }
   auth: inherit

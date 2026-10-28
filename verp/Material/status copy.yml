@@ -1,0 +1,23 @@
+info:
+  name: status copy
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/material/view-file
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 11,
+          "MaterialFileId": 4
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

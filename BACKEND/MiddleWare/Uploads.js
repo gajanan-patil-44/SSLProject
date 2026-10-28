@@ -1,162 +1,146 @@
+
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 
 // ==========================================================
+// UPLOAD CONFIGURATION
+// ==========================================================
+
+// Read the base directory from .env
+const uploadDirectory = process.env.UPLOADS_DIRECTORY;
+
+if (!uploadDirectory) {
+    throw new Error(
+        "UPLOADS_DIRECTORY is missing in the .env file"
+    );
+}
+
+const MB = 1024 * 1024;
+const MAX_FILE_SIZE = 10 * MB;
+
+// ==========================================================
+// ALLOWED FILE EXTENSIONS
+// ==========================================================
+
+const allowedExtensions = [
+    // Images
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+
+    // Documents
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".csv",
+    ".txt"
+];
+
+// ==========================================================
+// UPLOAD CONFIGURATION BY FIELD NAME
+// ==========================================================
+
+const uploadConfig = {
+    Photo: {
+        directory: path.join(uploadDirectory, "photos"),
+        allowedExtensions: [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp"
+        ]
+    },
+
+    UserFile: {
+        directory: path.join(uploadDirectory, "userfiles"),
+        allowedExtensions
+    }
+};
+
+// ==========================================================
 // CREATE UPLOAD DIRECTORIES
 // ==========================================================
 
-const uploadDirectory = "uploads";
-
-const photoDirectory = path.join(
-    uploadDirectory,
-    "photos"
-);
-
-const userFileDirectory = path.join(
-    uploadDirectory,
-    "userfiles"
-);
-
-if (!fs.existsSync(photoDirectory)) {
-    fs.mkdirSync(photoDirectory, {
+Object.values(uploadConfig).forEach(({ directory }) => {
+    fs.mkdirSync(directory, {
         recursive: true
     });
-}
-
-if (!fs.existsSync(userFileDirectory)) {
-    fs.mkdirSync(userFileDirectory, {
-        recursive: true
-    });
-}
-
+});
 
 // ==========================================================
 // DISK STORAGE
 // ==========================================================
 
 const storage = multer.diskStorage({
-
     destination: (req, file, cb) => {
+        const config = uploadConfig[file.fieldname];
 
-        if (file.fieldname === "Photo") {
-
-            cb(null, photoDirectory);
-
-        }
-        else if (file.fieldname === "UserFile") {
-
-            cb(null, userFileDirectory);
-
-        }
-        else {
-
-            cb(
-                new Error("Invalid file field"),
-                false
+        if (!config) {
+            return cb(
+                new Error(
+                    `Unsupported file field: ${file.fieldname}`
+                )
             );
-
         }
+
+        cb(null, config.directory);
     },
 
-
     filename: (req, file, cb) => {
+        const extension = path
+            .extname(file.originalname)
+            .toLowerCase();
 
-        const extension =
-            path
-                .extname(file.originalname)
-                .toLowerCase();
+        const uniqueFileName =
+            `${Date.now()}-${Math.round(Math.random() * 1E9)}${extension}`;
 
-        const fileName =
-            `${Date.now()}-${Math.round(
-                Math.random() * 1E9
-            )}${extension}`;
-
-        cb(null, fileName);
+        cb(null, uniqueFileName);
     }
-
 });
-
 
 // ==========================================================
 // FILE FILTER
 // ==========================================================
 
 const fileFilter = (req, file, cb) => {
+    const config = uploadConfig[file.fieldname];
 
-    console.log(
-        "Uploading file:",
-        file.originalname
-    );
-
-    console.log(
-        "File MIME type:",
-        file.mimetype
-    );
-
-
-    // ------------------------------------------------------
-    // ALLOWED EXTENSIONS
-    // ------------------------------------------------------
-
-    const allowedExtensions = [
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".webp",
-        ".pdf"
-    ];
-
-
-    // ------------------------------------------------------
-    // GET EXTENSION
-    // ------------------------------------------------------
-
-    const extension =
-        path
-            .extname(file.originalname)
-            .toLowerCase();
-
-
-    // ------------------------------------------------------
-    // CHECK EXTENSION
-    // ------------------------------------------------------
-
-    if (
-        !allowedExtensions.includes(extension)
-    ) {
-
+    if (!config) {
         return cb(
             new Error(
-                "Only JPG, JPEG, PNG, WEBP and PDF files are allowed"
-            ),
-            false
+                `Unsupported file field: ${file.fieldname}`
+            )
         );
-
     }
 
+    const extension = path
+        .extname(file.originalname)
+        .toLowerCase();
 
-    // ------------------------------------------------------
-    // FILE IS VALID
-    // ------------------------------------------------------
+    if (!config.allowedExtensions.includes(extension)) {
+        return cb(
+            new Error(
+                `Unsupported file type for ${file.fieldname}. ` +
+                `Allowed formats: ${config.allowedExtensions.join(", ")}`
+            )
+        );
+    }
 
     cb(null, true);
-
 };
-
 
 // ==========================================================
 // MULTER CONFIGURATION
 // ==========================================================
 
 export const uploadUserPhoto = multer({
-
-    storage: storage,
-
-    fileFilter: fileFilter,
-
+    storage,
+    fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024
+        fileSize: MAX_FILE_SIZE
     }
-
 });

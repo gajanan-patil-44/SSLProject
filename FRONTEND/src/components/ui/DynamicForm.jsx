@@ -17,6 +17,20 @@ export const DynamicForm = ({
   gridCols = 2 // Number of columns for form layout
 }) => {
 
+  // Precompute defaultValues from field definitions
+  const computedDefaultValues = React.useMemo(() => {
+    const flatFields = fields.some(f => f.section)
+      ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
+      : fields;
+    const initial = {};
+    flatFields.forEach(f => {
+      if (f.defaultValue !== undefined) {
+        initial[f.key] = f.defaultValue;
+      }
+    });
+    return { ...initial, ...(defaultValues || {}) };
+  }, [fields, defaultValues]);
+
   // 1. Programmatically build a Zod validation schema if not supplied
   const validationSchema = schema || useFormSchema(fields);
 
@@ -29,12 +43,12 @@ export const DynamicForm = ({
     formState: { errors }
   } = useForm({
     resolver: zodResolver(validationSchema),
-    defaultValues
+    defaultValues: computedDefaultValues
   });
 
   React.useEffect(() => {
-    reset(defaultValues || {});
-  }, [defaultValues, reset]);
+    reset(computedDefaultValues);
+  }, [computedDefaultValues, reset]);
 
   // Render a single form field control
   const renderField = (field) => {
@@ -116,24 +130,33 @@ export const DynamicForm = ({
         );
 
       case 'toggle':
-      case 'switch':
+      case 'switch': {
+        const isInverted = Boolean(field.invertToggle || field.key === 'CanBeReportingManager');
         return (
           <div key={field.key} className={`flex flex-col justify-center pt-2 ${field.gridSpan || "col-span-1"}`}>
             <Controller
               name={field.key}
               control={control}
-              render={({ field: { value, onChange } }) => (
-                <Switch
-                  label={field.label}
-                  checked={!!value}
-                  onChange={(e) => onChange(e.target.checked)}
-                  disabled={field.disabled}
-                />
-              )}
+              render={({ field: { value, onChange } }) => {
+                const actualValue = value !== undefined ? Boolean(value) : (field.defaultValue !== undefined ? Boolean(field.defaultValue) : true);
+                const isChecked = isInverted ? !actualValue : actualValue;
+                return (
+                  <Switch
+                    label={field.label}
+                    checked={isChecked}
+                    onChange={(e) => {
+                      const nextVal = isInverted ? !e.target.checked : e.target.checked;
+                      onChange(nextVal);
+                    }}
+                    disabled={field.disabled}
+                  />
+                );
+              }}
             />
             {field.helpText && <span className="text-xs text-slate-400 mt-1">{field.helpText}</span>}
           </div>
         );
+      }
 
       case 'radio':
         return (
@@ -243,16 +266,80 @@ function useFormSchema(fields) {
     flatFields.forEach(field => {
       let validator = z.any();
 
-      if (field.type === 'email') {
+      const keyLower = String(field.key || '').toLowerCase();
+      const isEmail = field.type === 'email' || keyLower.includes('email');
+      const isPhone = field.type === 'tel' || keyLower.includes('phone') || keyLower.includes('mobile');
+      const isCode = keyLower.endsWith('code') || keyLower.includes('code');
+      const isPersonName = keyLower.includes('firstname') || keyLower.includes('lastname') || keyLower.includes('contactperson');
+
+      if (isEmail) {
         if (field.required) {
           validator = z.preprocess(
-            val => (val === undefined || val === null) ? '' : String(val),
-            z.string().min(1, { message: `${field.label || 'Email'} is required` }).email({ message: "Invalid email address" })
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .min(1, { message: `${field.label || 'Email'} is required` })
+              .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, { message: "Enter a valid email address (e.g. user@domain.com)" })
           );
         } else {
           validator = z.preprocess(
-            val => (val === undefined || val === null) ? '' : String(val),
-            z.string().email({ message: "Invalid email address" }).optional().or(z.literal(''))
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, { message: "Enter a valid email address" })
+              .optional()
+              .or(z.literal(''))
+          );
+        }
+      } else if (isPhone) {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim().replace(/[\s\-()+]/g, ''),
+            z.string()
+              .min(1, { message: `${field.label || 'Phone number'} is required` })
+              .regex(/^[6-9]\d{9}$/, { message: "Must be a valid 10-digit phone number starting with 6-9" })
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim().replace(/[\s\-()+]/g, ''),
+            z.string()
+              .regex(/^[6-9]\d{9}$/, { message: "Must be a valid 10-digit phone number" })
+              .optional()
+              .or(z.literal(''))
+          );
+        }
+      } else if (isCode) {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .min(2, { message: `${field.label || 'Code'} must be at least 2 characters` })
+              .max(50, { message: `${field.label || 'Code'} cannot exceed 50 characters` })
+              .regex(/^[A-Za-z0-9_-]+$/, { message: `${field.label || 'Code'} must be alphanumeric (letters, numbers, '-', '_')` })
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .regex(/^[A-Za-z0-9_-]+$/, { message: "Must be alphanumeric (letters, numbers, '-', '_')" })
+              .optional()
+              .or(z.literal(''))
+          );
+        }
+      } else if (isPersonName) {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .min(2, { message: `${field.label || 'Name'} must be at least 2 characters` })
+              .max(100, { message: `${field.label || 'Name'} cannot exceed 100 characters` })
+              .regex(/^[a-zA-Z\s.'-]+$/, { message: `${field.label || 'Name'} must contain only letters and spaces` })
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .regex(/^[a-zA-Z\s.'-]+$/, { message: "Must contain only letters and spaces" })
+              .optional()
+              .or(z.literal(''))
           );
         }
       } else if (field.type === 'number') {
@@ -271,7 +358,10 @@ function useFormSchema(fields) {
         if (field.required && field.type === 'checkbox') {
           validator = z.preprocess(val => Boolean(val), z.boolean().refine(val => val === true, { message: "Must check this box" }));
         } else {
-          validator = z.preprocess(val => (val === undefined || val === null) ? false : Boolean(val), z.boolean().optional());
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? (field.defaultValue !== undefined ? Boolean(field.defaultValue) : false) : Boolean(val),
+            z.boolean().optional()
+          );
         }
       } else if (field.type === 'select') {
         if (field.required) {
@@ -292,12 +382,12 @@ function useFormSchema(fields) {
         // text, textarea, and general inputs
         if (field.required) {
           validator = z.preprocess(
-            val => (val === undefined || val === null) ? '' : String(val),
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
             z.string().min(1, { message: `${field.label || 'Field'} is required` })
           );
         } else {
           validator = z.preprocess(
-            val => (val === undefined || val === null) ? '' : String(val),
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
             z.string().optional().nullable().or(z.literal(''))
           );
         }

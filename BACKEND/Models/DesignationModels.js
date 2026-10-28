@@ -20,7 +20,8 @@ export const getAllDesignations = async () => {
                 cd."CreatedByUserName",
                 cd."UpdateByUserName",
                 cd."UpdatedAt",
-                cd."DesignationLevel"
+                cd."DesignationLevel",
+                cd."CanBeReportingManager"
             
             FROM "LKP"."CompanyDesignation" cd
             INNER JOIN "LKP"."Company" c
@@ -54,7 +55,6 @@ export const getCompaniesForDropdown = async () => {
                 "CompanyId",
                 "CompanyName"
             FROM "LKP"."Company"
-            
             ORDER BY "CompanyName";
         `;
 
@@ -153,7 +153,6 @@ export const checkDesignationExists = async (
             values
         );
 
-
         return result.rows;
 
     } catch (error) {
@@ -181,7 +180,8 @@ export const addDesignation = async (designationData) => {
                 "DesignationLevel",
                 "IsDisabled",
                 "CreatedAt",
-                "CreatedByUserName"
+                "CreatedByUserName",
+                "CanBeReportingManager"
             )
 
             VALUES
@@ -192,7 +192,8 @@ export const addDesignation = async (designationData) => {
                 $4,
                 $5,
                 CURRENT_TIMESTAMP,
-                $6
+                $6,
+                true
             )
 
             RETURNING
@@ -206,7 +207,6 @@ export const addDesignation = async (designationData) => {
                 "CreatedByUserName";
         `;
 
-
         const values = [
             designationData.CompanyId,
             designationData.DesignationName,
@@ -215,7 +215,6 @@ export const addDesignation = async (designationData) => {
             designationData.IsDisabled,
             designationData.CreatedByUserName
         ];
-
 
         const result = await pool.query(
             query,
@@ -295,6 +294,7 @@ export const checkDesignationExistsForUpdate = async (
 
 // EDIT DESIGNATION
 
+
 export const editDesignation = async (designationData) => {
 
     try {
@@ -306,30 +306,31 @@ export const editDesignation = async (designationData) => {
                 "CompanyId" = $1,
                 "DesignationName" = $2,
                 "DesignationCode" = $3,
-                "IsDisabled" = $4,
-                "UpdateByUserName" = $5,
-                "UpdatedAt" = CURRENT_TIMESTAMP
+                "DesignationLevel" = $4,
+                "IsDisabled" = $5,
+                "UpdateByUserName" = $6,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "CanBeReportingManager" = $7
 
             WHERE
-                "CompanyDesignationId" = $6;
+                "CompanyDesignationId" = $8;
         `;
-
 
         const values = [
             designationData.CompanyId,
             designationData.DesignationName,
             designationData.DesignationCode,
+            designationData.DesignationLevel,
             designationData.IsDisabled,
             designationData.UpdateByUserName,
+            designationData.CanBeReportingManager,
             designationData.CompanyDesignationId
         ];
-
 
         const result = await pool.query(
             query,
             values
         );
-
 
         return result.rowCount;
 
@@ -340,6 +341,7 @@ export const editDesignation = async (designationData) => {
         throw error;
     }
 };
+
 
 
 
@@ -382,7 +384,6 @@ export const toggleDesignationStatuses = async (designationData) => {
             values
         );
 
-
         return result.rows[0];
 
     } catch (error) {
@@ -407,7 +408,6 @@ export const deleteDesignation = async (CompanyDesignationId) => {
 
         const values = [CompanyDesignationId];
 
-
         const result = await pool.query(
             query,
             values
@@ -423,6 +423,3 @@ export const deleteDesignation = async (CompanyDesignationId) => {
         throw error;
     }
 };
-
-
-

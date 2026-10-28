@@ -19,6 +19,8 @@ import ManagePageView from './pages/Master/ManagePageView';
 import ManageUserView from './pages/UserManagement/ManageUserView';
 import MaterialCategoryCreation from './pages/MaterialCategoryCreation';
 import MaterialSubCategoryCreation from './pages/MaterialSubCategoryCreation';
+import ItemCreation from './pages/ItemCreation';
+import VendorManagement from './pages/VendorManagement';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -41,16 +43,37 @@ export default function App() {
           {/* Main Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
 
-          {/* Main Single Segment routes */}
-          <Route path="roles" element={<KeyedModuleRenderer />} />
-          <Route path="companies" element={<KeyedModuleRenderer />} />
-          <Route path="designations" element={<KeyedModuleRenderer />} />
-          <Route path="projects" element={<KeyedModuleRenderer />} />
-          <Route path="applications" element={<KeyedModuleRenderer />} />
-          <Route path="layouts" element={<KeyedModuleRenderer />} />
-          <Route path="manage-page" element={<ManagePageView />} />
-          <Route path="manage-users" element={<ManageUserView />} />
-          <Route path="users" element={<ManageUserView />} />
+          {/* Canonical Master Special Pages */}
+          <Route path="master/companies" element={<KeyedModuleRenderer />} />
+          <Route path="master/products" element={<KeyedModuleRenderer />} />
+          <Route path="master/company-products" element={<KeyedModuleRenderer />} />
+          <Route path="master/projects" element={<KeyedModuleRenderer />} />
+          <Route path="master/designations" element={<KeyedModuleRenderer />} />
+          <Route path="master/roles" element={<KeyedModuleRenderer />} />
+          <Route path="master/user-creation" element={<UserCreationView />} />
+          <Route path="master/manage-users" element={<ManageUserView />} />
+          <Route path="master/manage-page" element={<ManagePageView />} />
+          <Route path="master/material-category" element={<MaterialCategoryCreation />} />
+          <Route path="master/material-sub-category" element={<MaterialSubCategoryCreation />} />
+          <Route path="master/material-creation" element={<ItemCreation />} />
+          <Route path="master/vendor-management" element={<VendorManagement />} />
+
+          {/* Legacy / Alternate Redirects to Standard Canonical URLs */}
+          <Route path="master/item-creation" element={<Navigate to="/master/material-creation" replace />} />
+          <Route path="master/items" element={<Navigate to="/master/material-creation" replace />} />
+          <Route path="master/vendors" element={<Navigate to="/master/vendor-management" replace />} />
+          <Route path="vendor-management" element={<Navigate to="/master/vendor-management" replace />} />
+          <Route path="vendors" element={<Navigate to="/master/vendor-management" replace />} />
+          <Route path="master/manage-user" element={<Navigate to="/master/manage-users" replace />} />
+          <Route path="master/users" element={<Navigate to="/master/manage-users" replace />} />
+          <Route path="user-management/*" element={<Navigate to="/master/manage-users" replace />} />
+          <Route path="manage-users" element={<Navigate to="/master/manage-users" replace />} />
+          <Route path="users" element={<Navigate to="/master/manage-users" replace />} />
+          <Route path="roles" element={<Navigate to="/master/roles" replace />} />
+          <Route path="companies" element={<Navigate to="/master/companies" replace />} />
+          <Route path="designations" element={<Navigate to="/master/designations" replace />} />
+          <Route path="projects" element={<Navigate to="/master/projects" replace />} />
+          <Route path="manage-page" element={<Navigate to="/master/manage-page" replace />} />
 
           {/* HRM Special Pages */}
           <Route path="hrm/employees" element={<EmployeesView />} />
@@ -69,7 +92,7 @@ export default function App() {
           {/* UI Design System Showcases */}
           <Route path="ui/:subpage" element={<ShowcaseView />} />
 
-          {/* General Auth/Error Full screens (handled by layout class toggles) */}
+          {/* General Auth/Error Full screens */}
           <Route path="pages/auth/:subpage" element={<PagesView />} />
           <Route path="pages/error/:subpage" element={<PagesView />} />
           <Route path="pages/utilities" element={<PagesView />} />
@@ -77,17 +100,6 @@ export default function App() {
           {/* Help & Support Docs */}
           <Route path="help/:subpage" element={<HelpView />} />
           <Route path="help/multilevel/:subid" element={<HelpView />} />
-
-          {/* Master Special Pages */}
-          <Route path="master/user-creation" element={<UserCreationView />} />
-          <Route path="master/manage-users" element={<ManageUserView />} />
-          <Route path="master/manage-user" element={<ManageUserView />} />
-          <Route path="master/users" element={<ManageUserView />} />
-          <Route path="user-management/manage-users" element={<ManageUserView />} />
-          <Route path="user-management/users" element={<ManageUserView />} />
-          <Route path="master/manage-page" element={<ManagePageView />} />
-          <Route path="master/material-category" element={<MaterialCategoryCreation />} />
-          <Route path="master/material-sub-category" element={<MaterialSubCategoryCreation />} />
 
           {/* Documents */}
           <Route path="documents/letter-builder" element={<LetterBuilderView />} />

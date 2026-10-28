@@ -135,7 +135,8 @@ export const USER_ROUTES = {
   CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown',
   GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
   EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
-  TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus'
+  TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus',
+  CHANGE_PASSWORD: '/verp-service/userEdit/change-password'
 };
 
 /**
@@ -173,6 +174,7 @@ export const USER_EDIT_ROUTES = {
   GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
   EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
   TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus',
+  CHANGE_PASSWORD: '/verp-service/userEdit/change-password',
   GET_GENDER: '/verp-service/userEdit/getGender',
   GET_MARITAL_STATUS: '/verp-service/userEdit/getMaritalStatus',
   GET_DESIGNATION: '/verp-service/userEdit/getDesignation',
@@ -196,6 +198,37 @@ export const BIRTHDAY_ROUTES = {
 
 /**
  * ============================================================================
+ * 13. MATERIAL / ITEM CREATION ROUTES
+ * ============================================================================
+ */
+export const MATERIAL_ROUTES = {
+  VIEW: '/verp-service/material/view',
+  ADD: '/verp-service/material/add',
+  EDIT: '/verp-service/material/edit',
+  STATUS: '/verp-service/material/status',
+  DROPDOWN: '/verp-service/material/dropdown',
+  VIEW_FILE: '/verp-service/material/view-file'
+};
+
+export const MATERIAL_DROPDOWN = '/verp-service/material/dropdown';
+export const ITEM_ROUTES = MATERIAL_ROUTES;
+
+/**
+ * ============================================================================
+ * 15. VENDOR MANAGEMENT ROUTES
+ * ============================================================================
+ */
+export const VENDOR_ROUTES = {
+  VIEW: '/verp-service/vendor/view',
+  DROPDOWN: '/verp-service/vendor/dropdown',
+  ADD: '/verp-service/vendor/add',
+  EDIT: '/verp-service/vendor/edit',
+  STATUS: '/verp-service/vendor/status',
+  DELETE: '/verp-service/vendor/delete'
+};
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -211,7 +244,10 @@ export const API_ROUTES = {
   USER_EDIT: USER_EDIT_ROUTES,
   FILE_TYPE: FILE_TYPE_ROUTES,
   PAGE: PAGE_ROUTES,
-  BIRTHDAY: BIRTHDAY_ROUTES
+  BIRTHDAY: BIRTHDAY_ROUTES,
+  ITEM: ITEM_ROUTES,
+  MATERIAL: MATERIAL_ROUTES,
+  VENDOR: VENDOR_ROUTES
 };
 
 export default API_ROUTES;

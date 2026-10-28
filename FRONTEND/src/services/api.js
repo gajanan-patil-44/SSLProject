@@ -11,6 +11,10 @@ import userService from './userService';
 import birthdayService from './birthdayService';
 import companyProductService from './companyProductService';
 import pageService from './pageService';
+import vendorService from './vendorService';
+import itemCreationService from './itemCreationService';
+import materialCategoryTypeService from './materialCategoryTypeService';
+import materialSubCategoryTypeService from './materialSubCategoryTypeService';
 
 export const api = {
   auth: authService,
@@ -24,6 +28,11 @@ export const api = {
   user: userService,
   birthday: birthdayService,
   page: pageService,
+  vendor: vendorService,
+  item: itemCreationService,
+  material: itemCreationService,
+  materialCategory: materialCategoryTypeService,
+  materialSubCategory: materialSubCategoryTypeService,
   client: apiClient
 };
 

@@ -46,6 +46,7 @@ export const designationService = {
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
       DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
+      CanBeReportingManager: data.CanBeReportingManager !== undefined ? Boolean(data.CanBeReportingManager) : true,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       CreatedByUserName: userName
     });
@@ -62,7 +63,7 @@ export const designationService = {
 
   /**
    * Edit existing designation (flagId: 2)
-   * @param {Object} data - { CompanyDesignationId, CompanyId, DesignationName, DesignationCode, IsDisabled, UpdateByUserName }
+   * @param {Object} data - { CompanyDesignationId, CompanyId, DesignationName, DesignationCode, IsDisabled, UpdateByUserName, CanBeReportingManager }
    */
   editDesignation: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
@@ -79,13 +80,14 @@ export const designationService = {
 
     const userName = data.UpdateByUserName || data.UpdatedByUserName || data.CreatedByUserName || userState;
 
-    return apiClient.post(API_ROUTES.DESIGNATION.EDIT_DESIGNATION, {
+    return apiClient.patch(API_ROUTES.DESIGNATION.EDIT_DESIGNATION, {
       flagId: Number(data.flagId || 2),
       CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
       CompanyId: Number(data.CompanyId),
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
       DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
+      CanBeReportingManager: data.CanBeReportingManager !== undefined ? Boolean(data.CanBeReportingManager) : true,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       UpdateByUserName: userName
     });
@@ -110,7 +112,7 @@ export const designationService = {
 
     const userName = data.UpdateByUserName || data.UpdatedByUserName || userState;
 
-    return apiClient.post(API_ROUTES.DESIGNATION.TOGGLE_STATUS, {
+    return apiClient.patch(API_ROUTES.DESIGNATION.TOGGLE_STATUS, {
       flagId: 4,
       CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled),

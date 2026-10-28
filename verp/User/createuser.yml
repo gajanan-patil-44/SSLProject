@@ -23,7 +23,7 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-        value: "99999999999"
+        value: "99995955955"
       - name: AltPhoneNumber
         type: text
         value: "7838432136"
@@ -38,7 +38,8 @@ http:
         value: "1"
       - name: DesignationId
         type: text
-        value: ""
+        value: "3"
+        disabled: true
       - name: Email
         type: text
         value: admin1@gmail.com
@@ -52,19 +53,22 @@ http:
         contentType: image/jpeg
       - name: Password
         type: text
-        value: admin1@123
+        value: Admin@123
       - name: CreatedByUserName
         type: text
-        value: admin
+        value: ""
       - name: CompanyId
         type: text
-        value: ""
+        value: "1"
+        disabled: true
       - name: CompanyProductId
         type: text
-        value: ""
+        value: "[1]"
+        disabled: true
       - name: ProjectId
         type: text
-        value: ""
+        value: "[1]"
+        disabled: true
       - name: RoleId
         type: text
         value: "1"
@@ -98,7 +102,7 @@ http:
         disabled: true
       - name: ReportingManagerUserId
         type: text
-        value: ""
+        value: "[2]"
       - name: DateOfJoining
         type: text
         value: 2024-08-12

@@ -44,7 +44,7 @@ const materialCategoryTypeService = {
 
   // Update Category
   updateCategory: async (payload) => {
-    return await apiClient.post(API_ENDPOINTS.update, payload);
+    return await apiClient.patch(API_ENDPOINTS.update, payload);
   },
 
   // Delete Category
@@ -55,7 +55,7 @@ const materialCategoryTypeService = {
 
   // Toggle Category Status
   toggleStatus: async (payload) => {
-    return await apiClient.post(API_ENDPOINTS.status, payload);
+    return await apiClient.patch(API_ENDPOINTS.status, payload);
   }
 };
 

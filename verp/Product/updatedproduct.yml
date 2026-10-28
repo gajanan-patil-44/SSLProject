@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.76:9004/verp-service/productCreation/updateProduct
+  url: http://192.168.23.115:9004/verp-service/productCreation/updateProduct
   body:
     type: json
     data: |-
@@ -13,7 +13,7 @@ http:
           "flagId": 3,
           "ProductId": 1,
           "ProductCode": "P001",
-          "ProductName": "Updated Product",
+          "ProductName": "WFMS",
           "ProductDescription": "Updated product description",
           "UpdatedByUserName": "Praveen"
       }

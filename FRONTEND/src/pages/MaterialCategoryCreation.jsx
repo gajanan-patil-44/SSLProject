@@ -23,6 +23,7 @@ import {
 import { useERPStore } from '../store/useERPStore';
 
 import { materialCategoryTypeService } from '../services';
+import { validateCode } from '../utils/validators';
 
 export default function MaterialCategoryCreation() {
   const showToast = useERPStore((state) => state.showToast);
@@ -44,6 +45,26 @@ export default function MaterialCategoryCreation() {
     name: '',
     status: 'Active'
   });
+  const [formErrors, setFormErrors] = useState({});
+
+  // Validate form
+  const validateForm = () => {
+    const errs = {};
+    const codeErr = validateCode(formData.code, 'Category Code', true);
+    if (codeErr) errs.code = codeErr;
+
+    const trimmedName = (formData.name || '').trim();
+    if (!trimmedName) {
+      errs.name = 'Category Name is required';
+    } else if (trimmedName.length < 2) {
+      errs.name = 'Category Name must be at least 2 characters';
+    } else if (trimmedName.length > 100) {
+      errs.name = 'Category Name cannot exceed 100 characters';
+    }
+
+    setFormErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   // Fetch all categories
   const fetchCategories = async () => {
@@ -65,6 +86,7 @@ export default function MaterialCategoryCreation() {
 
   const handleOpenModal = (item = null, mode = 'create') => {
     setIsViewing(mode === 'view');
+    setFormErrors({});
     
     if (item) {
       setIsEditing(mode === 'edit');
@@ -93,10 +115,15 @@ export default function MaterialCategoryCreation() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setIsViewing(false);
+    setFormErrors({});
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      showToast('Please fix the validation errors.', 'error');
+      return;
+    }
     setSubmitting(true);
     
     const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
@@ -264,6 +291,7 @@ export default function MaterialCategoryCreation() {
         onViewClick={(row) => handleOpenModal(row, 'view')}
         onToggleStatusClick={(row) => handleToggleStatus(row, row.status !== 'Active')}
         onRefresh={fetchCategories}
+        hideExport
       />
 
       {/* Create / Edit Modal */}
@@ -307,12 +335,18 @@ export default function MaterialCategoryCreation() {
               Category Code {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
-              required
               value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              placeholder="Enter Category Code"
+              onChange={(e) => {
+                setFormData({ ...formData, code: e.target.value });
+                if (formErrors.code) setFormErrors({ ...formErrors, code: '' });
+              }}
+              placeholder="e.g. CAT-001"
               disabled={isViewing}
+              className={formErrors.code ? 'border-rose-400 focus:border-rose-500' : ''}
             />
+            {formErrors.code && (
+              <span className="text-[11px] text-rose-500 font-medium block">{formErrors.code}</span>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -320,12 +354,18 @@ export default function MaterialCategoryCreation() {
               Category Name {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
-              required
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter Category Name"
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (formErrors.name) setFormErrors({ ...formErrors, name: '' });
+              }}
+              placeholder="e.g. Electrical Components"
               disabled={isViewing}
+              className={formErrors.name ? 'border-rose-400 focus:border-rose-500' : ''}
             />
+            {formErrors.name && (
+              <span className="text-[11px] text-rose-500 font-medium block">{formErrors.name}</span>
+            )}
           </div>
 
           {isViewing && (

@@ -22,9 +22,10 @@ export const userService = {
     });
   },
 
-  getDesignationDropdown: async () => {
+  getDesignationDropdown: async (companyId) => {
     return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
-      FlagId: 3
+      FlagId: 3,
+      CompanyId: Number(companyId)
     });
   },
 
@@ -134,7 +135,28 @@ export const userService = {
       UserId: Number(statusData.UserId ?? statusData.userId ?? statusData.id)
     };
 
-    return apiClient.post(API_ROUTES.USER_EDIT.TOGGLE_USER_STATUS, payload);
+    return apiClient.patch(API_ROUTES.USER_EDIT.TOGGLE_USER_STATUS, payload);
+  },
+
+  /**
+   * Change user password
+   * Hits /verp-service/userEdit/change-password with:
+   * {
+   *   "FlagId": 1,
+   *   "UserId": <UserId>,
+   *   "NewPassword": "<NewPassword>"
+   * }
+   * @param {number|string} userId
+   * @param {string} newPassword
+   */
+  changePassword: async (userId, newPassword) => {
+    const payload = {
+      FlagId: 1,
+      UserId: Number(userId),
+      NewPassword: String(newPassword)
+    };
+
+    return apiClient.patch(API_ROUTES.USER_EDIT.CHANGE_PASSWORD, payload);
   },
 
   /**

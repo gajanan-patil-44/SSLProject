@@ -679,6 +679,7 @@ export default function ManagePageView() {
         onEditClick={handleOpenEditModal}
         onToggleStatusClick={handleToggleStatus}
         searchPlaceholder="Search pages..."
+        hideExport
       />
 
       {/* Add / Update Page Modal */}

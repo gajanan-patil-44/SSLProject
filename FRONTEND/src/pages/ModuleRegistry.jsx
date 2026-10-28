@@ -688,7 +688,8 @@ export const registryConfigs = {
           DesignationCode: d.DesignationCode || '',
           companyName: d.CompanyName || '—',
           CompanyName: d.CompanyName || '',
-          DesignationLevel: d.DesignationLevel || '',
+          DesignationLevel: d.DesignationLevel !== undefined && d.DesignationLevel !== null ? d.DesignationLevel : '',
+          CanBeReportingManager: d.CanBeReportingManager !== undefined ? Boolean(d.CanBeReportingManager) : true,
           status: isDisabled ? "Inactive" : "Active",
           IsDisabled: Boolean(isDisabled),
           isEnabled: isEnabled,
@@ -748,6 +749,14 @@ export const registryConfigs = {
           type: "number",
           required: false,
           placeholder: "e.g. 1"
+        },
+        {
+          key: "CanBeReportingManager",
+          label: "Can Be Reporting Manager",
+          type: "toggle",
+          required: false,
+          defaultValue: true,
+          invertToggle: true
         }
       ];
     },
@@ -765,6 +774,7 @@ export const registryConfigs = {
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
         DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
+        CanBeReportingManager: formData.CanBeReportingManager !== undefined ? Boolean(formData.CanBeReportingManager) : true,
         IsDisabled: false,
         Description: '',
         CreatedByUserName: userName,
@@ -789,6 +799,7 @@ export const registryConfigs = {
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
         DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
+        CanBeReportingManager: formData.CanBeReportingManager !== undefined ? Boolean(formData.CanBeReportingManager) : true,
         IsDisabled: Boolean(formData.IsDisabled),
         Description: '',
         UpdateByUserName: userName,
@@ -831,7 +842,8 @@ export const registryConfigs = {
       { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "DesignationCode", label: "Designation Code", type: "text", required: true, placeholder: "e.g. DES-SE" },
       { key: "DesignationName", label: "Designation Name", type: "text", required: true, placeholder: "e.g. Software Engineer" },
-      { key: "DesignationLevel", label: "Designation Level", type: "number", required: false, placeholder: "e.g. 1" }
+      { key: "DesignationLevel", label: "Designation Level", type: "number", required: false, placeholder: "e.g. 1" },
+      { key: "CanBeReportingManager", label: "Can Be Reporting Manager", type: "toggle", required: false, defaultValue: true, invertToggle: true }
     ]
   },
 
@@ -953,6 +965,57 @@ export const registryConfigs = {
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ]
+  },
+
+  // 7. Vendor Management Master
+  master_vendor_management: {
+    title: "Vendor Management",
+    description: "Manage suppliers, vendors, categories, and business credentials.",
+    apiFetch: async () => {
+      const res = await api.vendor.getVendors();
+      const items = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      return items.map((v) => ({
+        id: v.id ?? v.VendorId,
+        vendorCode: v.vendorCode || v.VendorCode || '',
+        vendorName: v.vendorName || v.VendorName || '',
+        category: v.vendorTypeName || v.VendorTypeName || '',
+        contactPerson: v.contactPerson || v.ContactPerson || '',
+        email: v.email || v.Email || '',
+        phone: v.phone || v.MobileNumber || v.Phone || '',
+        gstNumber: v.gstNumber || v.GSTINUINNumber || v.GSTNumber || '',
+        city: v.city || v.City || '',
+        status: v.status || (v.IsDisabled ? 'Inactive' : 'Active'),
+        raw: v
+      }));
+    },
+    apiCreate: async (formData) => {
+      return await api.vendor.addVendor(formData);
+    },
+    apiUpdate: async (formData) => {
+      return await api.vendor.updateVendor(formData);
+    },
+    apiToggleStatus: async (record) => {
+      return await api.vendor.toggleStatus(record, record.status);
+    },
+    columns: [
+      { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
+      { id: 'vendorCode', header: 'Vendor Code', accessorKey: 'vendorCode', key: 'vendorCode' },
+      { id: 'vendorName', header: 'Vendor Name', accessorKey: 'vendorName', key: 'vendorName' },
+      { id: 'category', header: 'Vendor Type', accessorKey: 'category', key: 'category' },
+      { id: 'contactPerson', header: 'Contact Person', accessorKey: 'contactPerson', key: 'contactPerson' },
+      { id: 'gstNumber', header: 'GSTIN / UIN', accessorKey: 'gstNumber', key: 'gstNumber' },
+      { id: 'city', header: 'City', accessorKey: 'city', key: 'city' },
+      { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
+    ],
+    formFields: [
+      { key: "vendorCode", label: "Vendor Code", type: "text", required: true, placeholder: "e.g. VEN-001" },
+      { key: "vendorName", label: "Vendor Name", type: "text", required: true, placeholder: "e.g. Acme Supplies Ltd" },
+      { key: "contactPerson", label: "Contact Person", type: "text", placeholder: "e.g. Rajesh Sharma" },
+      { key: "email", label: "Email Address", type: "email", placeholder: "e.g. contact@vendor.com" },
+      { key: "phone", label: "Phone", type: "text", placeholder: "e.g. +91 9876543210" },
+      { key: "gstNumber", label: "GSTIN / UIN", type: "text", placeholder: "e.g. 29ABCDE1234F1Z5" },
+      { key: "city", label: "City", type: "text", placeholder: "e.g. Bengaluru" }
+    ]
   }
 };
 
@@ -980,6 +1043,10 @@ registryConfigs.roles = registryConfigs.master_roles;
 registryConfigs.master_role = registryConfigs.master_roles;
 registryConfigs.system_roles = registryConfigs.master_roles;
 registryConfigs.user_management_roles = registryConfigs.master_roles;
+
+registryConfigs.vendor_management = registryConfigs.master_vendor_management;
+registryConfigs.master_vendors = registryConfigs.master_vendor_management;
+registryConfigs.vendors = registryConfigs.master_vendor_management;
 
 export function ModuleRenderer() {
   const { module, subpage } = useParams();

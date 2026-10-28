@@ -46,7 +46,7 @@ export const roleService = {
     if (!API_ROUTES.ROLE.UPDATE_ROLE) {
       throw new Error('UPDATE_ROLE endpoint has not been registered yet.');
     }
-    return apiClient.post(API_ROUTES.ROLE.UPDATE_ROLE, {
+    return apiClient.patch(API_ROUTES.ROLE.UPDATE_ROLE, {
       FlagId: 4,
       ...roleData
     });
@@ -75,7 +75,7 @@ export const roleService = {
     if (!API_ROUTES.ROLE.UPDATE_ROLE_STATUS) {
       throw new Error('UPDATE_ROLE_STATUS endpoint has not been registered yet.');
     }
-    return apiClient.post(API_ROUTES.ROLE.UPDATE_ROLE_STATUS, {
+    return apiClient.patch(API_ROUTES.ROLE.UPDATE_ROLE_STATUS, {
       FlagId: 6,
       RoleId: Number(roleId),
       IsDisabled: Boolean(isDisabled)

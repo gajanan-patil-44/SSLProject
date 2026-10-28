@@ -1,0 +1,75 @@
+info:
+  name: add
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/vendor/add
+  body:
+    type: multipart-form
+    data:
+      - name: FlagId
+        type: text
+        value: "4"
+      - name: VendorName
+        type: text
+        value: ROCK Suppliers
+      - name: VendorCode
+        type: text
+        value: ROCK001
+      - name: ContactPerson
+        type: text
+        value: Rahul Kumar
+      - name: MobileNumber
+        type: text
+        value: "9876533210"
+      - name: Email
+        type: text
+        value: ROCK@gmial.com
+      - name: GSTINUINNumber
+        type: text
+        value: 29ADCDE1234F1Z5
+      - name: City
+        type: text
+        value: Bengaluru
+      - name: BankName
+        type: text
+        value: HDFC Bank
+      - name: AccountHolderName
+        type: text
+        value: ROCK Suppliers
+      - name: IFSCCode
+        type: text
+        value: HDFC0002234
+      - name: VendorAddress1
+        type: text
+        value: No. 10, Main Road
+      - name: VendorAddress2
+        type: text
+        value: Regular supplier
+      - name: Remarks
+        type: text
+        value: Regular supplier
+      - name: VendorTypeId
+        type: text
+        value: "1"
+      - name: CreatedByUserId
+        type: text
+        value: "2"
+      - name: VendorFileTypeIds
+        type: text
+        value: "1"
+      - name: VendorFiles
+        type: file
+        value:
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\1_5_Pedestrian.jpg
+        contentType: image/jpeg
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

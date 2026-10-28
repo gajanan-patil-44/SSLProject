@@ -57,7 +57,7 @@ export const companyProductService = {
    * Payload: { "FlagId": 3, "CompanyProductId": ..., "CompanyId": ..., "ProductId": ..., "IsDisabled": ..., "UpdatedByUserName": "" }
    */
   updateCompanyProduct: async (data) => {
-    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.EDIT_COMPANY_PRODUCT, {
+    return apiClient.patch(API_ROUTES.COMPANY_PRODUCT.EDIT_COMPANY_PRODUCT, {
       FlagId: 3,
       CompanyProductId: Number(data.CompanyProductId || data.id),
       CompanyId: Number(data.CompanyId),
@@ -68,7 +68,7 @@ export const companyProductService = {
   },
 
   editCompanyProduct: async (data) => {
-    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.EDIT_COMPANY_PRODUCT, {
+    return apiClient.patch(API_ROUTES.COMPANY_PRODUCT.EDIT_COMPANY_PRODUCT, {
       FlagId: 3,
       CompanyProductId: Number(data.CompanyProductId || data.id),
       CompanyId: Number(data.CompanyId),
@@ -97,7 +97,7 @@ export const companyProductService = {
    * Payload: { "FlagId": 1, "CompanyProductId": ..., "IsDisabled": ... }
    */
   toggleCompanyProductStatus: async (data) => {
-    return apiClient.post(API_ROUTES.COMPANY_PRODUCT.UPDATE_STATUS, {
+    return apiClient.patch(API_ROUTES.COMPANY_PRODUCT.UPDATE_STATUS, {
       FlagId: 1,
       CompanyProductId: Number(data.CompanyProductId || data.id),
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.isDisabled)

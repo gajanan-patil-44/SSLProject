@@ -76,12 +76,22 @@ const normalizedInitialUser = initialUser ? {
 
 const firstCompany = initialContext?.companies?.[0]?.name || '';
 
-const initialMenu = initialSession?.data?.menuPage 
-  || initialSession?.menuPage 
-  || initialSession?.data?.userMenu 
-  || initialSession?.data?.menu 
-  || initialSession?.userMenu 
-  || null;
+const extractMenuFromSession = (session) => {
+  if (!session) return [];
+  const candidates = [
+    session?.data?.menuPage,
+    session?.menuPage,
+    session?.data?.userMenu,
+    session?.data?.menu,
+    session?.userMenu
+  ];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+  return [];
+};
+
+const initialMenu = extractMenuFromSession(initialSession);
 
 export const useERPStore = create((set) => ({
   theme: localStorage.getItem('erp_theme') || 'light',
@@ -99,7 +109,7 @@ export const useERPStore = create((set) => ({
   session: initialSessionMeta,
   userPhoto: initialPhoto,
 
-  setUserMenu: (menu) => set({ userMenu: menu }),
+  setUserMenu: (menu) => set({ userMenu: Array.isArray(menu) ? menu : [] }),
 
   setAuthData: ({ token, user, context, session, photo, rawResponse, userMenu }) => {
     let displayName = 'User';
@@ -113,8 +123,8 @@ export const useERPStore = create((set) => ({
       displayName = user.loginName;
     }
 
-    const displayRole = user?.designation?.name || context?.roles?.[0]?.RoleName || 'Administrator';
-    const avatarUrl = photo ? (photo.startsWith('data:') ? photo : `data:image/jpeg;base64,${photo}`) : (user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80');
+    const displayRole = user?.designation?.name || context?.roles?.[0]?.RoleName || '';
+    const avatarUrl = photo ? (photo.startsWith('data:') ? photo : `data:image/jpeg;base64,${photo}`) : (user?.avatar || '');
 
     const normalizedUser = {
       ...user,
@@ -124,14 +134,16 @@ export const useERPStore = create((set) => ({
       avatar: avatarUrl
     };
 
-    const firstCompanyName = context?.companies?.[0]?.name || 'Falcon LLP';
-    const dynamicMenu = userMenu 
-      || rawResponse?.data?.menuPage 
-      || rawResponse?.menuPage 
-      || rawResponse?.data?.userMenu 
-      || rawResponse?.data?.menu 
-      || rawResponse?.userMenu 
-      || null;
+    const firstCompanyName = context?.companies?.[0]?.name || context?.companies?.[0]?.CompanyName || '';
+    const dynamicMenu = Array.isArray(userMenu)
+      ? userMenu
+      : (Array.isArray(rawResponse?.data?.menuPage)
+          ? rawResponse.data.menuPage
+          : (Array.isArray(rawResponse?.menuPage)
+              ? rawResponse.menuPage
+              : (Array.isArray(rawResponse?.data?.userMenu)
+                  ? rawResponse.data.userMenu
+                  : [])));
 
     // Purge any legacy individual storage items
     const legacyKeys = [
