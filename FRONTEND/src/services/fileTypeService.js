@@ -28,7 +28,7 @@ export const fileTypeService = {
    * @param {Object} data - { FileTypeId, FileTypeName, Description, UpdatedByUserName }
    */
   updateFileType: async (data) => {
-    return apiClient.post(API_ROUTES.FILE_TYPE.UPDATE_FILE_TYPE, {
+    return apiClient.patch(API_ROUTES.FILE_TYPE.UPDATE_FILE_TYPE, {
       FlagId: 3,
       ...data
     });
@@ -52,7 +52,7 @@ export const fileTypeService = {
    * @param {string} updatedBy 
    */
   updateFileTypeStatus: async (fileTypeId, isDisabled, updatedBy) => {
-    return apiClient.post(API_ROUTES.FILE_TYPE.UPDATE_STATUS, {
+    return apiClient.patch(API_ROUTES.FILE_TYPE.UPDATE_STATUS, {
       FlagId: 5,
       FileTypeId: fileTypeId,
       IsDisabled: isDisabled,

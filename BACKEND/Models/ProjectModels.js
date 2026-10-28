@@ -43,9 +43,7 @@ export const getAllProjects = async () => {
                 PR."CreatedAt" DESC;
         `;
 
-
         const result = await pool.query(query);
-
 
         return result.rows;
 
@@ -99,9 +97,7 @@ export const getCompanyProductsForDropdown = async () => {
                 P."ProductName";
         `;
 
-
         const result = await pool.query(query);
-
 
         return result.rows;
 
@@ -147,12 +143,7 @@ export const checkCompanyProductExists = async (CompanyProductId) => {
 
         const values = [CompanyProductId];
 
-
-        const result =await pool.query(
-                query,
-                values
-            );
-
+        const result =await pool.query(query, values);
 
         return result.rows;
 
@@ -183,9 +174,7 @@ export const getProjectById = async (ProjectId) => {
             WHERE "ProjectId" = $1;
         `;
 
-
         const values = [ProjectId];
-
 
         const result = await pool.query(
                 query,
@@ -301,7 +290,6 @@ export const addProject = async (projectData) => {
                 "CreatedByUserId";
         `;
 
-
         const values = [
             projectData.CompanyProductId,
             projectData.ProjectName,
@@ -310,7 +298,6 @@ export const addProject = async (projectData) => {
             projectData.Description,
             projectData.CreatedByUserId
         ];
-
 
         const result = await pool.query(
                 query,
@@ -374,7 +361,6 @@ export const checkProjectExistsForUpdate = async (
             ProjectId
         ];
 
-
         const result = await pool.query(
                 query,
                 values
@@ -413,7 +399,6 @@ export const editProject = async (projectData) => {
                 "ProjectId" = $7;
         `;
 
-
         const values = [
             projectData.CompanyProductId,
             projectData.ProjectName,
@@ -442,7 +427,6 @@ export const editProject = async (projectData) => {
 
 // TOGGLE PROJECT STATUS
 
-
 export const toggleProjectStatuses = async (projectData) => {
 
     try {
@@ -469,13 +453,11 @@ export const toggleProjectStatuses = async (projectData) => {
                 "UpdatedByUserId";
         `;
 
-
         const values = [
             projectData.IsDisabled,
             projectData.UpdatedByUserId,
             projectData.ProjectId
         ];
-
 
         const result = await pool.query(
                 query,
@@ -505,9 +487,7 @@ export const deleteProject = async (ProjectId) => {
                 "ProjectId" = $1;
         `;
 
-
         const values = [ProjectId];
-
 
         const result = await pool.query(
                 query,

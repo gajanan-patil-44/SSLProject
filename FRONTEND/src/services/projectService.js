@@ -54,7 +54,7 @@ export const projectService = {
    * @param {Object} data - { ProjectId, CompanyProductId, ProjectName, ProjectCode, IsDisabled, Description, UpdatedByUserId, UpdatedByUserName }
    */
   editProject: async (data) => {
-    return apiClient.post(API_ROUTES.PROJECT.EDIT_PROJECT, {
+    return apiClient.patch(API_ROUTES.PROJECT.EDIT_PROJECT, {
       flagId: 2,
       FlagId: 2,
       ProjectId: Number(data.ProjectId ?? data.id),
@@ -78,7 +78,7 @@ export const projectService = {
       ? data.IsDisabled
       : (data.IsDisabled === 'true' || data.IsDisabled === 'Inactive' || data.IsDisabled === 'Disabled' || data.status === 'Inactive');
 
-    return apiClient.post(API_ROUTES.PROJECT.TOGGLE_STATUS, {
+    return apiClient.patch(API_ROUTES.PROJECT.TOGGLE_STATUS, {
       flagId: 4,
       FlagId: 4,
       ProjectId: Number(id),

@@ -165,9 +165,50 @@ export const checkCompanyExistsForUpdate = async (
 };
 
 
-// ==========================================
+export const checkCompanyPhoneExists = async (PhoneNumber) => {
+
+    try {
+
+        const query = `
+            SELECT "CompanyId"
+            FROM "LKP"."Company"
+            WHERE "PhoneNumber" = $1
+        `;
+
+        const result = await pool.query(query, [PhoneNumber]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+export const checkCompanyEmailExists = async (Email) => {
+
+    try {
+
+        const query = `
+            SELECT "CompanyId"
+            FROM "LKP"."Company"
+            WHERE LOWER("Email") = LOWER($1)
+        `;
+
+        const result = await pool.query(query, [Email]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+
 // UPDATE COMPANY
-// ==========================================
 
 export const updateCompanies = async (companyData) => {
 
@@ -243,7 +284,6 @@ export const toggleCompanyStatuses = async (companyData) => {
         throw error;
     }
 };
-
 
 
 // DELETE / DISABLE COMPANY

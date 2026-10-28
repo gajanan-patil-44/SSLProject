@@ -1,13 +1,14 @@
 import apiClient from './apiClient';
+import { MATERIAL_ROUTES, API_ROUTES } from '../routes/apiRoutes';
 
 // Configured API Routes for Material / Item Operations
 const API_ENDPOINTS = {
-  view: '/verp-service/material/view',
-  add: '/verp-service/material/add',
-  edit: '/verp-service/material/edit',
-  status: '/verp-service/material/status',
-  dropdown: '/verp-service/material/dropdown',
-  viewFile: '/verp-service/material/view-file'
+  view: MATERIAL_ROUTES?.VIEW || '/verp-service/material/view',
+  add: MATERIAL_ROUTES?.ADD || '/verp-service/material/add',
+  edit: MATERIAL_ROUTES?.EDIT || '/verp-service/material/edit',
+  status: MATERIAL_ROUTES?.STATUS || '/verp-service/material/status',
+  dropdown: MATERIAL_ROUTES?.DROPDOWN || '/verp-service/material/dropdown',
+  viewFile: MATERIAL_ROUTES?.VIEW_FILE || '/verp-service/material/view-file'
 };
 
 const itemCreationService = {
@@ -85,22 +86,23 @@ const itemCreationService = {
 
   /**
    * Fetch Sub Category Dropdown (FlagId: 3)
+   * Sends FlagId: 3 along with MaterialCategoryTypeId
    */
   getSubCategoryDropdown: async (categoryId = null) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 3 });
+      const payload = { FlagId: 3 };
+      if (categoryId !== null && categoryId !== undefined && categoryId !== '') {
+        payload.MaterialCategoryTypeId = Number(categoryId);
+      }
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
       if (response && response.status === 'success' && Array.isArray(response.data)) {
-        const list = response.data.map(sc => ({
+        return response.data.map(sc => ({
           id: sc.MaterialSubCategoryTypeId,
           categoryId: sc.MaterialCategoryTypeId,
           categoryName: sc.MaterialCategoryTypeName,
           name: sc.MaterialSubCategoryTypeName,
           code: sc.MaterialSubCategoryTypeCode
         }));
-        if (categoryId) {
-          return list.filter(sc => String(sc.categoryId) === String(categoryId));
-        }
-        return list;
       }
     } catch (error) {
       console.error("Failed to load subcategory dropdown:", error);
@@ -144,10 +146,15 @@ const itemCreationService = {
 
   /**
    * Fetch GST Rates (FlagId: 6)
+   * Sends FlagId: 6 along with GSTTypeId
    */
-  getGSTRateDropdown: async () => {
+  getGSTRateDropdown: async (gstTypeId = null) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 6 });
+      const payload = { FlagId: 6 };
+      if (gstTypeId !== null && gstTypeId !== undefined && gstTypeId !== '') {
+        payload.GSTTypeId = Number(gstTypeId);
+      }
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
       if (response && response.status === 'success' && Array.isArray(response.data)) {
         return response.data.map(r => ({
           id: r.GSTRateId,
@@ -164,38 +171,50 @@ const itemCreationService = {
 
   /**
    * Fetch File Types (FlagId: 7)
-   * Dynamically filters for FileTypeId 4 from backend response
+   * Hits POST /verp-service/material/dropdown with payload { FlagId: 7 }
    */
   getFileTypeDropdown: async () => {
     try {
       const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 7 });
-      if (response && response.status === 'success' && Array.isArray(response.data)) {
-        const materialOnly = response.data.filter(f => Number(f.FileTypeId) === 4);
-        if (materialOnly.length > 0) {
-          return materialOnly.map(f => ({
-            id: Number(f.FileTypeId),
-            name: f.FileTypeName,
-            description: f.Description
-          }));
-        }
+      let list = [];
+      if (Array.isArray(response?.data)) {
+        list = response.data;
+      } else if (Array.isArray(response?.data?.data)) {
+        list = response.data.data;
+      } else if (Array.isArray(response)) {
+        list = response;
       }
+      return list.map(f => ({
+        id: Number(f.FileTypeId ?? f.fileTypeId ?? f.id),
+        FileTypeId: Number(f.FileTypeId ?? f.fileTypeId ?? f.id),
+        name: f.FileTypeName || f.fileTypeName || f.name || '',
+        FileTypeName: f.FileTypeName || f.fileTypeName || f.name || '',
+        description: f.Description || f.description || '',
+        Description: f.Description || f.description || ''
+      }));
     } catch (error) {
-      console.error("Failed to load file types:", error);
+      console.error("Failed to load file types from /verp-service/material/dropdown:", error);
     }
     return [];
   },
 
+  getFileTypes: async () => {
+    return await itemCreationService.getFileTypeDropdown();
+  },
+
   /**
-   * Fetch all 6 dropdowns in parallel
-   * Hits /verp-service/material/dropdown with FlagIds 2, 3, 4, 5, 6, 7
+   * Fetch dropdowns
+   * Hits /verp-service/material/dropdown
+   * Pass categoryId to fetch subcategories with FlagId: 3 and MaterialCategoryTypeId
+   * Pass gstTypeId to fetch GST rates with FlagId: 6 and GSTTypeId
    */
-  getAllDropdowns: async () => {
+  getAllDropdowns: async (categoryId = null, gstTypeId = null) => {
     const [categories, subCategories, uoms, gstTypes, gstRates, fileTypes] = await Promise.all([
       itemCreationService.getCategoryDropdown(),   // FlagId: 2
-      itemCreationService.getSubCategoryDropdown(),// FlagId: 3
+      categoryId ? itemCreationService.getSubCategoryDropdown(categoryId) : Promise.resolve([]), // FlagId: 3
       itemCreationService.getUOMDropdown(),        // FlagId: 4
       itemCreationService.getGSTTypeDropdown(),    // FlagId: 5
-      itemCreationService.getGSTRateDropdown(),    // FlagId: 6
+      gstTypeId ? itemCreationService.getGSTRateDropdown(gstTypeId) : Promise.resolve([]),       // FlagId: 6
       itemCreationService.getFileTypeDropdown()    // FlagId: 7
     ]);
     return {
@@ -222,25 +241,25 @@ const itemCreationService = {
     if (data.file || data.files) {
       const formData = new FormData();
       formData.append('FlagId', 8);
-      formData.append('MaterialName', data.MaterialName || '');
-      formData.append('MaterialCode', data.MaterialCode || '');
-      formData.append('MaterialCategoryTypeId', Number(data.MaterialCategoryTypeId));
-      formData.append('MaterialSubCategoryTypeId', Number(data.MaterialSubCategoryTypeId));
-      formData.append('MaterialBrandName', data.MaterialBrandName || '');
-      formData.append('ModelNo', data.ModelNo || '');
-      formData.append('UOMId', Number(data.UOMId));
-      formData.append('GSTTypeId', Number(data.GSTTypeId));
-      formData.append('GSTRateId', Number(data.GSTRateId));
-      formData.append('HSNSAC', data.HSNSAC || '');
-      formData.append('WarrantyYears', Number(data.WarrantyYears) || 0);
-      formData.append('DescriptionSpecification', data.DescriptionSpecification || '');
+      formData.append('MaterialName', data.MaterialName || data.name || '');
+      formData.append('MaterialCode', data.MaterialCode || data.code || '');
+      formData.append('MaterialCategoryTypeId', Number(data.MaterialCategoryTypeId || data.categoryId));
+      formData.append('MaterialSubCategoryTypeId', Number(data.MaterialSubCategoryTypeId || data.subCategoryId));
+      formData.append('MaterialBrandName', data.MaterialBrandName || data.brand || '');
+      formData.append('ModelNo', data.ModelNo || data.model || '');
+      formData.append('UOMId', Number(data.UOMId || data.uomId));
+      formData.append('GSTTypeId', Number(data.GSTTypeId || data.gstTypeId));
+      formData.append('GSTRateId', Number(data.GSTRateId || data.gstRateId));
+      formData.append('HSNSAC', data.HSNSAC || data.hsnSac || '');
+      formData.append('WarrantyYears', Number(data.WarrantyYears || data.warrantyYears) || 0);
+      formData.append('DescriptionSpecification', data.DescriptionSpecification || data.description || '');
       if (data.CreatedByUserId) formData.append('CreatedByUserId', Number(data.CreatedByUserId));
       if (data.UpdatedByUserId) formData.append('UpdatedByUserId', Number(data.UpdatedByUserId));
       if (data.UpdatedAt) formData.append('UpdatedAt', data.UpdatedAt);
 
-      const fileTypeId = data.FileTypeIds || data.fileTypeId;
-      if (fileTypeId) {
-        formData.append('FileTypeIds', Number(fileTypeId));
+      const fileTypeId = data.FileTypeId ?? data.fileTypeId;
+      if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
+        formData.append('FileTypeId', Number(fileTypeId));
       }
       formData.append('files', data.file || data.files);
 
@@ -251,18 +270,18 @@ const itemCreationService = {
 
     const payload = {
       FlagId: 8,
-      MaterialName: data.MaterialName || '',
-      MaterialCode: data.MaterialCode || '',
-      MaterialCategoryTypeId: Number(data.MaterialCategoryTypeId),
-      MaterialSubCategoryTypeId: Number(data.MaterialSubCategoryTypeId),
-      MaterialBrandName: data.MaterialBrandName || '',
-      ModelNo: data.ModelNo || '',
-      UOMId: Number(data.UOMId),
-      GSTTypeId: Number(data.GSTTypeId),
-      GSTRateId: Number(data.GSTRateId),
-      HSNSAC: data.HSNSAC || '',
-      WarrantyYears: Number(data.WarrantyYears) || 0,
-      DescriptionSpecification: data.DescriptionSpecification || '',
+      MaterialName: data.MaterialName || data.name || '',
+      MaterialCode: data.MaterialCode || data.code || '',
+      MaterialCategoryTypeId: Number(data.MaterialCategoryTypeId || data.categoryId),
+      MaterialSubCategoryTypeId: Number(data.MaterialSubCategoryTypeId || data.subCategoryId),
+      MaterialBrandName: data.MaterialBrandName || data.brand || '',
+      ModelNo: data.ModelNo || data.model || '',
+      UOMId: Number(data.UOMId || data.uomId),
+      GSTTypeId: Number(data.GSTTypeId || data.gstTypeId),
+      GSTRateId: Number(data.GSTRateId || data.gstRateId),
+      HSNSAC: data.HSNSAC || data.hsnSac || '',
+      WarrantyYears: Number(data.WarrantyYears || data.warrantyYears) || 0,
+      DescriptionSpecification: data.DescriptionSpecification || data.description || '',
       CreatedByUserId: data.CreatedByUserId ? Number(data.CreatedByUserId) : undefined,
       UpdatedByUserId: data.UpdatedByUserId ? Number(data.UpdatedByUserId) : undefined,
       UpdatedAt: data.UpdatedAt || undefined
@@ -286,25 +305,25 @@ const itemCreationService = {
       const formData = new FormData();
       formData.append('FlagId', 9);
       formData.append('MaterialId', Number(data.MaterialId || data.id));
-      formData.append('MaterialName', data.MaterialName || '');
-      formData.append('MaterialCode', data.MaterialCode || '');
-      formData.append('MaterialCategoryTypeId', Number(data.MaterialCategoryTypeId));
-      formData.append('MaterialSubCategoryTypeId', Number(data.MaterialSubCategoryTypeId));
-      formData.append('MaterialBrandName', data.MaterialBrandName || '');
-      formData.append('ModelNo', data.ModelNo || '');
-      formData.append('UOMId', Number(data.UOMId));
-      formData.append('GSTTypeId', Number(data.GSTTypeId));
-      formData.append('GSTRateId', Number(data.GSTRateId));
-      formData.append('HSNSAC', data.HSNSAC || '');
-      formData.append('WarrantyYears', Number(data.WarrantyYears) || 0);
-      formData.append('DescriptionSpecification', data.DescriptionSpecification || '');
+      formData.append('MaterialName', data.MaterialName || data.name || '');
+      formData.append('MaterialCode', data.MaterialCode || data.code || '');
+      formData.append('MaterialCategoryTypeId', Number(data.MaterialCategoryTypeId || data.categoryId));
+      formData.append('MaterialSubCategoryTypeId', Number(data.MaterialSubCategoryTypeId || data.subCategoryId));
+      formData.append('MaterialBrandName', data.MaterialBrandName || data.brand || '');
+      formData.append('ModelNo', data.ModelNo || data.model || '');
+      formData.append('UOMId', Number(data.UOMId || data.uomId));
+      formData.append('GSTTypeId', Number(data.GSTTypeId || data.gstTypeId));
+      formData.append('GSTRateId', Number(data.GSTRateId || data.gstRateId));
+      formData.append('HSNSAC', data.HSNSAC || data.hsnSac || '');
+      formData.append('WarrantyYears', Number(data.WarrantyYears || data.warrantyYears) || 0);
+      formData.append('DescriptionSpecification', data.DescriptionSpecification || data.description || '');
       if (data.CreatedByUserId) formData.append('CreatedByUserId', Number(data.CreatedByUserId));
       if (data.UpdatedByUserId) formData.append('UpdatedByUserId', Number(data.UpdatedByUserId));
       if (data.UpdatedAt) formData.append('UpdatedAt', data.UpdatedAt);
 
-      const fileTypeId = data.FileTypeIds || data.fileTypeId;
-      if (fileTypeId) {
-        formData.append('FileTypeIds', Number(fileTypeId));
+      const fileTypeId = data.FileTypeId ?? data.fileTypeId;
+      if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
+        formData.append('FileTypeId', Number(fileTypeId));
       }
       formData.append('files', data.file || data.files);
 

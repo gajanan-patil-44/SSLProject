@@ -1,7 +1,7 @@
 info:
   name: toggleDesignationStatus
   type: http
-  seq: 4
+  seq: 3
 
 http:
   method: POST
@@ -11,9 +11,9 @@ http:
     data: |-
       {
         "flagId":4,
-        "CompanyDesignationId":12,
+        "CompanyDesignationId":20,
         "IsDisabled":true,
-        "UpdateByUserName":"ksss"
+        "UpdateByUserName":"kavya"
       }
   auth: inherit
 

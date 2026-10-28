@@ -11,8 +11,8 @@ http:
     data: |-
       {
         "flagId":2,
-        "MaterialCategoryTypeName":"abcd",
-        "MaterialCategoryTypeCode":"EL",
+        "MaterialCategoryTypeName":"Switch",
+        "MaterialCategoryTypeCode":"SW01",
         "IsDisabled":false,
         "CreatedByUserName":"kavya"
       }

@@ -254,6 +254,8 @@ export default function ItemCreation() {
     gstRates: [],      // FlagId: 6
     fileTypes: []      // FlagId: 7
   });
+  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
+  const [loadingGSTRates, setLoadingGSTRates] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -318,24 +320,24 @@ export default function ItemCreation() {
       if (hsnErr) errs.hsnSac = hsnErr;
     }
 
+    if (selectedFile && !formData.fileTypeId) {
+      const fallbackId = dropdowns.fileTypes?.[0]?.id || dropdowns.fileTypes?.[0]?.FileTypeId || 4;
+      formData.fileTypeId = Number(fallbackId);
+    }
+
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   // Fetch all 6 dropdowns dynamically from /verp-service/material/dropdown (FlagIds 2 to 7)
-  const fetchAllDropdowns = async () => {
+  const fetchAllDropdowns = async (categoryId = null, gstTypeId = null) => {
     try {
-      const data = await itemCreationService.getAllDropdowns();
+      const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId);
       setDropdowns(data);
-      if (data.fileTypes && data.fileTypes.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          fileTypeId: prev.fileTypeId ?? data.fileTypes[0].id,
-          fileTypeName: prev.fileTypeName || data.fileTypes[0].name
-        }));
-      }
+      return data;
     } catch (error) {
       console.error("Failed to load dropdowns:", error);
+      return null;
     }
   };
 
@@ -360,13 +362,17 @@ export default function ItemCreation() {
   }, []);
 
   const handleOpenModal = async (item = null, mode = 'create') => {
-    await fetchAllDropdowns();
+    const existingCategoryId = item?.categoryId || item?.raw?.MaterialCategoryTypeId || null;
+    const existingGSTTypeId = item?.gstTypeId || item?.raw?.GSTTypeId || null;
+    const freshData = await fetchAllDropdowns(existingCategoryId, existingGSTTypeId);
     setIsViewing(mode === 'view');
     setActiveModalTab('details');
     setSelectedFile(null);
     setSelectedPreviewFile(null);
     setDocumentPreviewUrl(null);
     setPreviewError(null);
+
+    const availableFileTypes = freshData?.fileTypes || dropdowns.fileTypes || [];
 
     if (item) {
       setIsEditing(mode === 'edit');
@@ -375,15 +381,23 @@ export default function ItemCreation() {
         : (Array.isArray(item.raw?.Files) ? item.raw.Files.map(f => {
             const rawPath = f.FilePatch || f.FilePath || '';
             const path = rawPath ? rawPath.replace(/\\/g, '/') : '';
-            const name = path ? path.split('/').pop() : 'Material Document';
+            const name = path ? path.split('/').pop() : '';
             return {
               id: f.MaterialFileId,
               fileTypeId: f.FileTypeId,
+              fileTypeName: f.FileTypeName || '',
               filePath: path,
               fileName: name
             };
           }) : []);
       setExistingFiles(itemFiles);
+
+      const existingFileTypeId = item.fileTypeId 
+        || itemFiles[0]?.fileTypeId 
+        || item.raw?.Files?.[0]?.FileTypeId 
+        || '';
+      const matchedFileType = availableFileTypes.find(f => Number(f.id) === Number(existingFileTypeId));
+
       setFormData({
         id: item.id,
         categoryId: item.categoryId || '',
@@ -400,8 +414,8 @@ export default function ItemCreation() {
         gstTypeName: item.gstTypeName || '',
         gstRateId: item.gstRateId || '',
         gstPercentage: item.gstPercentage || '',
-        fileTypeId: item.fileTypeId ? Number(item.fileTypeId) : (dropdowns.fileTypes?.[0]?.id ?? null),
-        fileTypeName: item.fileTypeName || (dropdowns.fileTypes?.[0]?.name ?? ''),
+        fileTypeId: existingFileTypeId ? Number(existingFileTypeId) : '',
+        fileTypeName: matchedFileType?.name || item.fileTypeName || '',
         hsnSac: item.hsnSac || '',
         warrantyYears: item.warrantyYears || '',
         description: item.description || '',
@@ -409,12 +423,15 @@ export default function ItemCreation() {
         status: item.status || 'Active',
         createdBy: item.createdBy || item.userName || currentUserName,
         createdAt: item.createdAt || '',
-        updatedBy: item.updatedBy || (item.raw?.UpdatedByUserName || (item.raw?.UpdatedByUserId ? `User #${item.raw?.UpdatedByUserId}` : '')),
+        updatedBy: item.updatedBy || (item.raw?.UpdatedByUserName || ''),
         updatedAt: item.updatedAt || (item.raw?.UpdatedAt ? new Date(item.raw.UpdatedAt).toLocaleDateString('en-GB') : '')
       });
     } else {
       setIsEditing(false);
       setExistingFiles([]);
+
+      const defaultType = availableFileTypes.length === 1 ? availableFileTypes[0] : null;
+
       setFormData({
         id: null,
         categoryId: '',
@@ -431,8 +448,8 @@ export default function ItemCreation() {
         gstTypeName: '',
         gstRateId: '',
         gstPercentage: '',
-        fileTypeId: dropdowns.fileTypes?.[0]?.id ?? null,
-        fileTypeName: dropdowns.fileTypes?.[0]?.name ?? '',
+        fileTypeId: defaultType ? defaultType.id : '',
+        fileTypeName: defaultType ? defaultType.name : '',
         hsnSac: '',
         warrantyYears: '',
         description: '',
@@ -474,7 +491,7 @@ export default function ItemCreation() {
   };
 
   // Dropdown Change Handlers
-  const handleCategoryChange = (e) => {
+  const handleCategoryChange = async (e) => {
     const selectedId = e.target.value;
     const selected = dropdowns.categories.find(c => String(c.id) === String(selectedId));
     setFormData(prev => ({
@@ -484,6 +501,27 @@ export default function ItemCreation() {
       subCategoryId: '',
       subCategoryName: ''
     }));
+
+    if (selectedId) {
+      setLoadingSubCategories(true);
+      try {
+        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId);
+        setDropdowns(prev => ({
+          ...prev,
+          subCategories: subCats || []
+        }));
+      } catch (err) {
+        console.error("Failed to load subcategories for category:", selectedId, err);
+        setDropdowns(prev => ({ ...prev, subCategories: [] }));
+      } finally {
+        setLoadingSubCategories(false);
+      }
+    } else {
+      setDropdowns(prev => ({
+        ...prev,
+        subCategories: []
+      }));
+    }
   };
 
   const handleSubCategoryChange = (e) => {
@@ -506,7 +544,7 @@ export default function ItemCreation() {
     }));
   };
 
-  const handleGSTTypeChange = (e) => {
+  const handleGSTTypeChange = async (e) => {
     const selectedId = e.target.value;
     const selected = dropdowns.gstTypes.find(g => String(g.GSTTypeId) === String(selectedId));
     setFormData(prev => ({
@@ -516,6 +554,27 @@ export default function ItemCreation() {
       gstRateId: '',
       gstPercentage: ''
     }));
+
+    if (selectedId) {
+      setLoadingGSTRates(true);
+      try {
+        const rates = await itemCreationService.getGSTRateDropdown(selectedId);
+        setDropdowns(prev => ({
+          ...prev,
+          gstRates: rates || []
+        }));
+      } catch (err) {
+        console.error("Failed to load GST rates for type:", selectedId, err);
+        setDropdowns(prev => ({ ...prev, gstRates: [] }));
+      } finally {
+        setLoadingGSTRates(false);
+      }
+    } else {
+      setDropdowns(prev => ({
+        ...prev,
+        gstRates: []
+      }));
+    }
   };
 
   const handleGSTRateChange = (e) => {
@@ -529,13 +588,39 @@ export default function ItemCreation() {
   };
 
   const handleFileTypeChange = (e) => {
-    const selectedId = Number(e.target.value);
-    const selected = dropdowns.fileTypes.find(f => Number(f.id) === selectedId);
+    const selectedId = e.target.value ? Number(e.target.value) : '';
+    const selected = dropdowns.fileTypes.find(f => Number(f.id) === selectedId || Number(f.FileTypeId) === selectedId);
     setFormData(prev => ({
       ...prev,
-      fileTypeId: 4,
-      fileTypeName: selected ? selected.name : 'Material'
+      fileTypeId: selectedId,
+      fileTypeName: selected ? (selected.name || selected.FileTypeName) : ''
     }));
+    if (formErrors.fileTypeId) {
+      setFormErrors(prev => ({ ...prev, fileTypeId: '' }));
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedFile(file);
+    if (file && !formData.fileTypeId && dropdowns.fileTypes?.length > 0) {
+      const firstType = dropdowns.fileTypes[0];
+      setFormData(prev => ({
+        ...prev,
+        fileTypeId: firstType.id || firstType.FileTypeId,
+        fileTypeName: firstType.name || firstType.FileTypeName
+      }));
+    }
+    if (formErrors.fileTypeId) {
+      setFormErrors(prev => ({ ...prev, fileTypeId: '' }));
+    }
+  };
+
+  const handleClearSelectedFile = () => {
+    setSelectedFile(null);
+    if (formErrors.fileTypeId) {
+      setFormErrors(prev => ({ ...prev, fileTypeId: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -568,7 +653,7 @@ export default function ItemCreation() {
           CreatedByUserId: formData.createdByUserId ? Number(formData.createdByUserId) : (currentUserId ? Number(currentUserId) : undefined),
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
-          FileTypeIds: selectedFile ? Number(formData.fileTypeId || dropdowns.fileTypes?.[0]?.id) : undefined,
+          FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
@@ -597,7 +682,7 @@ export default function ItemCreation() {
           CreatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
-          FileTypeIds: selectedFile ? Number(formData.fileTypeId || dropdowns.fileTypes?.[0]?.id) : undefined,
+          FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile
         };
 
@@ -662,15 +747,11 @@ export default function ItemCreation() {
     }
   };
 
-  // Filter sub-categories by selected category (FlagId: 3)
-  const availableSubCategories = formData.categoryId
-    ? dropdowns.subCategories.filter(sc => String(sc.categoryId) === String(formData.categoryId))
-    : dropdowns.subCategories;
+  // Sub-categories dynamically loaded from backend for selected Category (FlagId: 3 with MaterialCategoryTypeId)
+  const availableSubCategories = formData.categoryId ? dropdowns.subCategories : [];
 
-  // Filter GST Rates by selected GST Type (FlagId: 6 filtered by FlagId: 5)
-  const availableGSTRates = formData.gstTypeId
-    ? dropdowns.gstRates.filter(r => String(r.gstTypeId) === String(formData.gstTypeId))
-    : dropdowns.gstRates;
+  // GST Rates dynamically loaded from backend for selected GST Type (FlagId: 6 with GSTTypeId)
+  const availableGSTRates = formData.gstTypeId ? dropdowns.gstRates : [];
 
   const filteredData = items.filter(item =>
     (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -955,7 +1036,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || loadingSubCategories || !formData.categoryId}
                     value={formData.subCategoryId}
                     onChange={(e) => {
                       handleSubCategoryChange(e);
@@ -965,7 +1046,15 @@ export default function ItemCreation() {
                       formErrors.subCategoryId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    <option value="">Select Sub Category</option>
+                    <option value="">
+                      {loadingSubCategories
+                        ? 'Loading Sub Categories...'
+                        : (!formData.categoryId
+                            ? 'Select Category first'
+                            : (availableSubCategories.length === 0
+                                ? 'No Sub Categories found'
+                                : 'Select Sub Category'))}
+                    </option>
                     {availableSubCategories.map((sc) => (
                       <option key={sc.id} value={sc.id}>
                         {sc.name} {sc.code ? `(${sc.code})` : ''}
@@ -1158,7 +1247,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || loadingGSTRates || !formData.gstTypeId}
                     value={formData.gstRateId}
                     onChange={(e) => {
                       handleGSTRateChange(e);
@@ -1168,7 +1257,15 @@ export default function ItemCreation() {
                       formErrors.gstRateId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    <option value="">Select GST Rate</option>
+                    <option value="">
+                      {loadingGSTRates
+                        ? 'Loading GST Rates...'
+                        : (!formData.gstTypeId
+                            ? 'Select GST Type first'
+                            : (availableGSTRates.length === 0
+                                ? 'No GST Rates found'
+                                : 'Select GST Rate'))}
+                    </option>
                     {availableGSTRates.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.percentage}% {r.gstTypeName ? `(${r.gstTypeName})` : ''}
@@ -1229,38 +1326,48 @@ export default function ItemCreation() {
                 )}
               </div>
 
-              {/* Material Document (spans 2 cols) */}
+              {/* Material Document Upload (Directly based on Backend FileType response, without dropdown) */}
               <div className="space-y-1 sm:col-span-2">
-                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
-                  Material Document
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
+                    {formData.fileTypeName || (dropdowns.fileTypes?.[0]?.name) || 'Material'} Document {isViewing ? '' : '(Optional)'}
+                  </label>
+                  {dropdowns.fileTypes?.[0]?.description && (
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline truncate max-w-[220px]" title={dropdowns.fileTypes[0].description}>
+                      {dropdowns.fileTypes[0].description}
+                    </span>
+                  )}
+                </div>
+
                 {isViewing ? (
                   existingFiles.length > 0 ? (
                     <div className="space-y-1">
-                      {existingFiles.map((file, idx) => {
-                        const fileUrl = getFileUrl(file.filePath);
-                        return (
-                          <div
-                            key={file.id || idx}
-                            className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs h-8.5"
-                          >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
-                              <span className="font-medium text-slate-800 dark:text-slate-200 truncate text-[11px]" title={file.fileName}>
-                                {file.fileName || 'Material Document'}
+                      {existingFiles.map((file, idx) => (
+                        <div
+                          key={file.id || idx}
+                          className="flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs h-8.5"
+                        >
+                          <div className="flex items-center gap-1 min-w-0">
+                            <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="font-medium text-slate-800 dark:text-slate-200 truncate text-[11px]" title={file.fileName}>
+                              {file.fileName || `${formData.fileTypeName || 'Material'} Document`}
+                            </span>
+                            {file.fileTypeName && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium shrink-0">
+                                {file.fileTypeName}
                               </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleViewFile(file)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-primary text-white text-[10px] font-semibold hover:bg-primary/90 shrink-0 cursor-pointer transition-colors"
-                            >
-                              <Eye className="w-2.5 h-2.5" />
-                              <span>View Document</span>
-                            </button>
+                            )}
                           </div>
-                        );
-                      })}
+                          <button
+                            type="button"
+                            onClick={() => handleViewFile(file)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-primary text-white text-[10px] font-semibold hover:bg-primary/90 shrink-0 cursor-pointer transition-colors"
+                          >
+                            <Eye className="w-2.5 h-2.5" />
+                            <span>View Document</span>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="h-8.5 flex items-center px-2.5 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 text-[11px] text-slate-400">
@@ -1269,9 +1376,9 @@ export default function ItemCreation() {
                   )
                 ) : (
                   <div className="space-y-1">
-                    {existingFiles.length > 0 && (
+                    {existingFiles.length > 0 && !selectedFile && (
                       <div className="flex items-center justify-between gap-1 text-[11px] bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                        <span className="truncate flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                        <span className="truncate flex items-center gap-1 text-slate-600 dark:text-slate-300 text-[10px]">
                           <FileText className="w-3 h-3 text-primary shrink-0" />
                           Current: {existingFiles[0].fileName}
                         </span>
@@ -1280,26 +1387,27 @@ export default function ItemCreation() {
                           onClick={() => handleViewFile(existingFiles[0])}
                           className="text-primary hover:underline font-medium shrink-0 flex items-center gap-0.5 text-[10px] cursor-pointer"
                         >
-                          View Document
+                          View Current
                         </button>
                       </div>
                     )}
                     <input
                       type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+                      onChange={handleFileChange}
                       className="w-full h-8.5 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-primary/10 file:text-primary cursor-pointer"
                     />
                     {selectedFile && (
                       <div className="flex items-center justify-between text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 px-2 py-0.5 rounded">
-                        <span className="truncate flex items-center gap-1">
+                        <span className="truncate flex items-center gap-1 text-[10px]">
                           <FileCheck className="w-3 h-3 text-emerald-600 shrink-0" />
                           {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                         </span>
                         <button
                           type="button"
-                          onClick={() => setSelectedFile(null)}
+                          onClick={handleClearSelectedFile}
                           className="text-slate-400 hover:text-red-500 font-bold px-1"
+                          title="Remove file"
                         >
                           ✕
                         </button>

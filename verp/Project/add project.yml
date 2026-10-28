@@ -1,11 +1,11 @@
 info:
-  name: project
+  name: add project
   type: http
   seq: 2
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/projectCreation/project
+  url: http://localhost:9004/verp-service/projectCreation/addproject
   body:
     type: json
     data: |-
@@ -16,10 +16,10 @@ http:
 
       {
         "flagId": 2,
-        "CompanyProductId":3,
-        "ProjectName": "verp",
-        "ProjectCode": "verp001",
-        "Description": "wowww",
+        "CompanyProductId":1,
+        "ProjectName": "VERP",
+        "ProjectCode": "verp01",
+        "Description": "Vishvin ERP",
         "IsDisabled":false,
         "CreatedByUserId":1
       }

@@ -33,7 +33,6 @@ export const getProject = async (req, res) => {
             });
         }
 
-
         // INVALID FLAG ID
 
         return res.status(400).json({
@@ -54,7 +53,7 @@ export const getProject = async (req, res) => {
 
 // ADD PROJECT / COMPANY PRODUCT DROPDOWN
 
-export const projectController = async (req, res) => {
+export const addprojectController = async (req, res) => {
 
     const { flagId } = req.body;
 
@@ -127,6 +126,18 @@ export const projectController = async (req, res) => {
                 return res.status(400).json({
                     status: "error",
                     message: "ProjectName is required"
+                });
+            }
+
+            // VALIDATE PROJECT NAME - ONLY ALPHABETS
+
+            const projectNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!projectNameRegex.test(ProjectName)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Project name should contain only alphabets and spaces"
                 });
             }
 
@@ -205,7 +216,6 @@ export const projectController = async (req, res) => {
 
             const companyProductData = await checkCompanyProductExists(Number(CompanyProductId));
 
-
             if (companyProductData.length === 0) {
 
                 return res.status(400).json({
@@ -217,11 +227,11 @@ export const projectController = async (req, res) => {
 
             // CHECK DUPLICATE PROJECT
 
-            const existingProject =await checkProjectExists(
-                    Number(CompanyProductId),
-                    ProjectName.trim(),
-                    ProjectCode.trim()
-                );
+            const existingProject = await checkProjectExists(
+                Number(CompanyProductId),
+                ProjectName.trim(),
+                ProjectCode.trim()
+            );
 
 
             if (existingProject.length > 0) {
@@ -407,6 +417,18 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
+            // VALIDATE PROJECT NAME - ONLY ALPHABETS
+
+            const projectNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!projectNameRegex.test(ProjectName)) {
+
+                return res.status(400).json({
+                    status: "error",
+                    message: "Project name should contain only alphabets and spaces"
+                });
+            }
+
 
             // VALIDATE PROJECT CODE
 
@@ -480,8 +502,7 @@ export const editProjectController = async (req, res) => {
 
             // CHECK PROJECT EXISTS
 
-            const projectExists =await getProjectById(Number(ProjectId));
-
+            const projectExists = await getProjectById(Number(ProjectId));
 
             if (projectExists.length === 0) {
 
@@ -494,8 +515,7 @@ export const editProjectController = async (req, res) => {
 
             // CHECK COMPANY PRODUCT
 
-            const companyProductData =await checkCompanyProductExists(Number(CompanyProductId));
-
+            const companyProductData = await checkCompanyProductExists(Number(CompanyProductId));
 
             if (companyProductData.length === 0) {
 
@@ -509,12 +529,12 @@ export const editProjectController = async (req, res) => {
             // CHECK DUPLICATE PROJECT
             // EXCLUDE CURRENT PROJECT
 
-            const existingProject =await checkProjectExistsForUpdate(
-                    Number(CompanyProductId),
-                    ProjectName.trim(),
-                    ProjectCode.trim(),
-                    Number(ProjectId)
-                );
+            const existingProject = await checkProjectExistsForUpdate(
+                Number(CompanyProductId),
+                ProjectName.trim(),
+                ProjectCode.trim(),
+                Number(ProjectId)
+            );
 
 
             if (existingProject.length > 0) {
@@ -629,7 +649,6 @@ export const toggleProjectStatus = async (req, res) => {
 
         // FLAG ID 4 - TOGGLE PROJECT STATUS
 
-
         if (parseInt(flagId) === 4) {
 
             const {
@@ -637,7 +656,6 @@ export const toggleProjectStatus = async (req, res) => {
                 IsDisabled,
                 UpdatedByUserId
             } = req.body;
-
 
             // VALIDATE PROJECT ID
 
@@ -708,10 +726,10 @@ export const toggleProjectStatus = async (req, res) => {
 
             const projectData = await toggleProjectStatuses({
 
-                    ProjectId: Number(ProjectId),
-                    IsDisabled,
-                    UpdatedByUserId: Number(UpdatedByUserId)
-                });
+                ProjectId: Number(ProjectId),
+                IsDisabled,
+                UpdatedByUserId: Number(UpdatedByUserId)
+            });
 
 
             // PROJECT DOES NOT EXIST
@@ -766,7 +784,6 @@ export const deleteProjectController = async (req, res) => {
         if (parseInt(flagId) === 1) {
 
             // VALIDATE PROJECT ID
-   
 
             if (
                 ProjectId === undefined ||
@@ -797,7 +814,6 @@ export const deleteProjectController = async (req, res) => {
 
             const result = await deleteProject(Number(ProjectId));
 
-
             // PROJECT NOT FOUND
 
             if (result === 0) {
@@ -817,7 +833,6 @@ export const deleteProjectController = async (req, res) => {
                 data: result
             });
         }
-
 
         // INVALID FLAG ID
 
