@@ -12,7 +12,7 @@ import {
 // GET ALL ACTIVE PRODUCTS
 
 export const getProduct = async (req, res) => {
-    
+
     const { flagId } = req.body;
 
     try {
@@ -188,9 +188,11 @@ export const updateProduct = async (req, res) => {
             }
 
             // Check whether Product Name and Product Code already exist
+            // Exclude the current ProductId from the duplicate check
             const existingProducts = await checkProductExistsForUpdate(
                 productData.ProductName,
-                productData.ProductCode
+                productData.ProductCode,
+                productData.ProductId
             );
 
             // Check duplicate Product Name / Product Code

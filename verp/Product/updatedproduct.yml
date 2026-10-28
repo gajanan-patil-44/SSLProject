@@ -4,7 +4,7 @@ info:
   seq: 3
 
 http:
-  method: POST
+  method: PATCH
   url: http://192.168.23.115:9004/verp-service/productCreation/updateProduct
   body:
     type: json
