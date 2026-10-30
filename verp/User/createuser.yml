@@ -11,7 +11,7 @@ http:
     data:
       - name: EmployeeId
         type: text
-        value: EMP1
+        value: EMP7
       - name: FirstName
         type: text
         value: htihin
@@ -23,10 +23,10 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-        value: "9999999999"
+        value: "9999989866"
       - name: AltPhoneNumber
         type: text
-        value: "7838432136"
+        value: "9999989866"
       - name: DateOfBirth
         type: text
         value: 2004-08-12
@@ -42,21 +42,21 @@ http:
         disabled: true
       - name: Email
         type: text
-        value: admin1@gmail.com
+        value: admin7@gmail.com
       - name: LoginName
         type: text
-        value: admin1
+        value: ""
       - name: Photo
         type: file
         value:
-          - C:\Users\hithi\Downloads\TbkZyKS-one-peice-wallpaper.jpg
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\a668a0e4c3d82bf4adcbb1ed76b7ee55.jpg
         contentType: image/jpeg
       - name: Password
         type: text
         value: Admin@123
       - name: CreatedByUserName
         type: text
-        value: ""
+        value: admin1
       - name: CompanyId
         type: text
         value: "1"
@@ -78,27 +78,23 @@ http:
       - name: UserFile
         type: file
         value:
-          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\about_kle_img.png
-        contentType: image/png
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\1598765622876.jpeg
+        contentType: image/jpeg
       - name: FileTypeId
         type: text
         value: "1"
         disabled: true
       - name: UserFile
-        type: file
-        value:
-          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\360_F_297585768_NgXBDqvgVxNqW5j4OVZs3GguyIz8t0O6.jpg
-        contentType: image/jpeg
+        type: text
+        value: ""
         disabled: true
       - name: FileTypeId
         type: text
         value: "2"
         disabled: true
       - name: UserFile
-        type: file
-        value:
-          - C:\Users\hithi\Downloads\C Hithin kuamr_ KLE Tech University.pdf
-        contentType: application/pdf
+        type: text
+        value: ""
         disabled: true
       - name: ReportingManagerUserId
         type: text

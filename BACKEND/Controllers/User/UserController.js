@@ -18,6 +18,9 @@ import {
 
 
 } from "../../Models/UserModels.js";
+import {
+    convertUploadedImagesToPdf
+} from "../../Helpers/convertUploadedImagesToPdf.js";
 import { readFile } from "fs/promises";
 import { processUserFilesUsingWorker } from "../../Helpers/userFileWorkerHelper.js";
 
@@ -371,115 +374,125 @@ export const createUserController = async (req, res) => {
         // ROLE ID > 2 : NORMAL USER
         // ==========================================================
 
-        else {
-            // ------------------------------------------------------
-            // COMPANY ID
-            // ------------------------------------------------------
+     
+else {
+    // ------------------------------------------------------
+    // COMPANY ID
+    // ------------------------------------------------------
 
-            if (isEmpty(userData.CompanyId)) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId is required"
-                });
-            }
+    if (isEmpty(userData.CompanyId)) {
+        return res.status(400).json({
+            status: "error",
+            message: "CompanyId is required"
+        });
+    }
 
-            userData.CompanyId = Number(userData.CompanyId);
+    userData.CompanyId = Number(userData.CompanyId);
 
-            if (
-                !Number.isInteger(userData.CompanyId) ||
-                userData.CompanyId <= 0
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId must be a valid number"
-                });
-            }
+    if (
+        !Number.isInteger(userData.CompanyId) ||
+        userData.CompanyId <= 0
+    ) {
+        return res.status(400).json({
+            status: "error",
+            message: "CompanyId must be a valid number"
+        });
+    }
 
-            // ------------------------------------------------------
-            // COMPANY PRODUCT
-            // ------------------------------------------------------
+    // ------------------------------------------------------
+    // DESIGNATION
+    // ------------------------------------------------------
 
-            if (
-                !Array.isArray(userData.CompanyProductId) ||
-                userData.CompanyProductId.length === 0
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message:
-                        "CompanyProductId must be a non-empty array"
-                });
-            }
+    if (isEmpty(userData.DesignationId)) {
+        return res.status(400).json({
+            status: "error",
+            message: "DesignationId is required"
+        });
+    }
 
-            // ------------------------------------------------------
-            // PROJECT
-            // ------------------------------------------------------
+    userData.DesignationId = Number(userData.DesignationId);
 
-            if (
-                !Array.isArray(userData.ProjectId) ||
-                userData.ProjectId.length === 0
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "ProjectId must be a non-empty array"
-                });
-            }
+    if (
+        !Number.isInteger(userData.DesignationId) ||
+        userData.DesignationId <= 0
+    ) {
+        return res.status(400).json({
+            status: "error",
+            message: "DesignationId must be a valid number"
+        });
+    }
 
-            // ------------------------------------------------------
-            // DESIGNATION
-            // ------------------------------------------------------
+    // ------------------------------------------------------
+    // GET DESIGNATION DETAILS
+    // ------------------------------------------------------
 
-            if (isEmpty(userData.DesignationId)) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationId is required"
-                });
-            }
+    const designation = await getDesignationById(
+        userData.DesignationId
+    );
 
-            userData.DesignationId = Number(userData.DesignationId);
+    if (!designation) {
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid DesignationId"
+        });
+    }
 
-            if (
-                !Number.isInteger(userData.DesignationId) ||
-                userData.DesignationId <= 0
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationId must be a valid number"
-                });
-            }
+    // ------------------------------------------------------
+    // DESIGNATION LEVEL 100
+    // CompanyProductId, ProjectId and ReportingManagerUserId
+    // are not required
+    // ------------------------------------------------------
 
-            // ------------------------------------------------------
-            // REPORTING MANAGER
-            // DesignationLevel 100 does not require a manager
-            // ------------------------------------------------------
+    if (Number(designation.DesignationLevel) === 100) {
+        userData.CompanyProductId = null;
+        userData.ProjectId = null;
+        userData.ReportingManagerUserId = null;
+    } else {
+        // --------------------------------------------------
+        // COMPANY PRODUCT
+        // --------------------------------------------------
 
-            const designation = await getDesignationById(
-                userData.DesignationId
-            );
-
-            if (!designation) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "Invalid DesignationId"
-                });
-            }
-
-            if (Number(designation.DesignationLevel) === 100) {
-                // Reporting manager is not required for level 100
-                userData.ReportingManagerUserId = null;
-            } else {
-                // Other designation levels require a manager
-                if (
-                    !Array.isArray(userData.ReportingManagerUserId) ||
-                    userData.ReportingManagerUserId.length === 0
-                ) {
-                    return res.status(400).json({
-                        status: "error",
-                        message:
-                            "ReportingManagerUserId must be a non-empty array"
-                    });
-                }
-            }
+        if (
+            !Array.isArray(userData.CompanyProductId) ||
+            userData.CompanyProductId.length === 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "CompanyProductId must be a non-empty array"
+            });
         }
+
+        // --------------------------------------------------
+        // PROJECT
+        // --------------------------------------------------
+
+        if (
+            !Array.isArray(userData.ProjectId) ||
+            userData.ProjectId.length === 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "ProjectId must be a non-empty array"
+            });
+        }
+
+        // --------------------------------------------------
+        // REPORTING MANAGER
+        // --------------------------------------------------
+
+        if (
+            !Array.isArray(userData.ReportingManagerUserId) ||
+            userData.ReportingManagerUserId.length === 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "ReportingManagerUserId must be a non-empty array"
+            });
+        }
+    }
+}
 
         // ==========================================================
         // CONVERT COMPANY PRODUCT IDS
@@ -618,10 +631,19 @@ export const createUserController = async (req, res) => {
         // Supports multer array() and fields()
         // ==========================================================
 
-        const uploadedFiles = Array.isArray(req.files)
-            ? req.files
-            : Object.values(req.files || {}).flat();
+       const uploadedFiles = Array.isArray(req.files)
+    ? req.files
+    : Object.values(req.files || {}).flat();
 
+try {
+    await convertUploadedImagesToPdf(uploadedFiles);
+} catch (error) {
+    return res.status(400).json({
+        status: "error",
+        message: error.message
+    });
+}
+        
         // ==========================================================
         // PHOTO - STORE AS BINARY BUFFER
         // ==========================================================
@@ -633,17 +655,15 @@ export const createUserController = async (req, res) => {
         userData.Photo = null;
 
         if (uploadedPhoto) {
-            if (uploadedPhoto.buffer) {
-                userData.Photo = uploadedPhoto.buffer;
-            } else if (uploadedPhoto.path) {
-                userData.Photo = await readFile(uploadedPhoto.path);
-            } else {
+            if (!uploadedPhoto.path) {
                 return res.status(400).json({
                     status: "error",
-                    message:
-                        "Photo was uploaded but its binary data could not be read"
+                    message: "Photo PDF path is missing"
                 });
             }
+
+            // Read the converted PDF as binary data.
+            userData.Photo = await readFile(uploadedPhoto.path);
 
             if (
                 !Buffer.isBuffer(userData.Photo) ||
@@ -651,10 +671,11 @@ export const createUserController = async (req, res) => {
             ) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Photo binary data is empty or invalid"
+                    message: "Photo PDF binary data is empty or invalid"
                 });
             }
         }
+
 
         // ==========================================================
         // USER FILES

@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.post("/getProduct",authenticateToken, getProduct);
 router.post("/addProduct",authenticateToken, addProducts);
-router.post("/updateProduct",authenticateToken, updateProduct);
-router.post("/toggleProductStatus",authenticateToken, toggleProductStatus);
+router.patch("/updateProduct",authenticateToken, updateProduct);
+router.patch("/toggleProductStatus",authenticateToken, toggleProductStatus);
 router.post("/deleteProduct",authenticateToken, deleteProduct);
 
 

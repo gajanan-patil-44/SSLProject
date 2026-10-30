@@ -5,7 +5,9 @@ import {userDropdownController,createUserController,companyProductProjectDropdow
 import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
 import {uploadUserPhoto} from "../../MiddleWare/Uploads.js";
-
+import {
+    uploadErrorHandler
+} from "../../MiddleWare/uploadErrorHandler.js";
 //import {getGender, getMaritalStatus, getDesignation, getCompany, getReportingManager, getCompanyProduct, getProject, getRole} from "../../Controllers/User/UserController.js";
 
 const router = express.Router();
@@ -20,6 +22,7 @@ router.post("/createuser",uploadUserPhoto.any(),createUserController);
 router.post("/companyproductprojectdropdown", authenticateToken,companyProductProjectDropdownController);  ///superadmindropdown
 
 
+router.use(uploadErrorHandler);
 
 export default router;
 
