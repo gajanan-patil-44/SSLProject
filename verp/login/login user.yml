@@ -1,11 +1,18 @@
 info:
   name: login user
   type: http
-  seq: 3
+  seq: 2
 
 http:
   method: POST
-  url: ""
+  url: http://localhost:9004/verp-service/auth/login
+  body:
+    type: json
+    data: |-
+      {
+          "username": "admin1@gmail.com",
+          "password": "Admin@123"
+      }
   auth: inherit
 
 settings:
