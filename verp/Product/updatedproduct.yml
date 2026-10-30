@@ -12,7 +12,7 @@ http:
       {
           "flagId": 3,
           "ProductId": 1,
-          "ProductCode": "P001",
+          "ProductCode": "P002",
           "ProductName": "WFMS",
           "ProductDescription": "Updated product description",
           "UpdatedByUserName": "Praveen"

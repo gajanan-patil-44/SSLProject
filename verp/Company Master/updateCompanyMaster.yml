@@ -1,0 +1,31 @@
+info:
+  name: updateCompanyMaster
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: http://192.168.23.115:9004/verp-service/companyMaster/updateCompanyMaster
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":3,
+        "CompanyMasterId":6,
+        "CompanyName":"ABa",
+        "CompanyCode":"abc009",
+        "ContactNumber":"1111645",
+        "EmailId":"kkss@gmail.com",
+        "GSTNo":"29AABCU9603R1ZM",
+        "PanNo":"ABCDE1234G",
+        "Address":"bangloree",
+        "UpdatedByUserName":"kavyaa"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
