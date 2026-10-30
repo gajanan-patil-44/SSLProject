@@ -33,7 +33,6 @@ export const getProject = async (req, res) => {
             });
         }
 
-
         // INVALID FLAG ID
 
         return res.status(400).json({
@@ -216,7 +215,6 @@ export const addprojectController = async (req, res) => {
             // CHECK COMPANY PRODUCT
 
             const companyProductData = await checkCompanyProductExists(Number(CompanyProductId));
-
 
             if (companyProductData.length === 0) {
 
@@ -506,7 +504,6 @@ export const editProjectController = async (req, res) => {
 
             const projectExists = await getProjectById(Number(ProjectId));
 
-
             if (projectExists.length === 0) {
 
                 return res.status(404).json({
@@ -519,7 +516,6 @@ export const editProjectController = async (req, res) => {
             // CHECK COMPANY PRODUCT
 
             const companyProductData = await checkCompanyProductExists(Number(CompanyProductId));
-
 
             if (companyProductData.length === 0) {
 
@@ -653,7 +649,6 @@ export const toggleProjectStatus = async (req, res) => {
 
         // FLAG ID 4 - TOGGLE PROJECT STATUS
 
-
         if (parseInt(flagId) === 4) {
 
             const {
@@ -661,7 +656,6 @@ export const toggleProjectStatus = async (req, res) => {
                 IsDisabled,
                 UpdatedByUserId
             } = req.body;
-
 
             // VALIDATE PROJECT ID
 
@@ -791,7 +785,6 @@ export const deleteProjectController = async (req, res) => {
 
             // VALIDATE PROJECT ID
 
-
             if (
                 ProjectId === undefined ||
                 ProjectId === null ||
@@ -821,7 +814,6 @@ export const deleteProjectController = async (req, res) => {
 
             const result = await deleteProject(Number(ProjectId));
 
-
             // PROJECT NOT FOUND
 
             if (result === 0) {
@@ -841,7 +833,6 @@ export const deleteProjectController = async (req, res) => {
                 data: result
             });
         }
-
 
         // INVALID FLAG ID
 

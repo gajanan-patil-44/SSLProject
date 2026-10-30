@@ -100,9 +100,8 @@ export const addMaterialCategoryType = async (req, res) => {
             const categoryData = req.body;
 
 
-            // ==================================================
             // VALIDATE MATERIAL CATEGORY NAME - ONLY ALPHABETS
-            // ==================================================
+           
 
             const categoryNameRegex = /^[A-Za-z\s]+$/;
 
@@ -115,9 +114,8 @@ export const addMaterialCategoryType = async (req, res) => {
             }
 
 
-            // ==================================================
             // REQUIRED FIELD VALIDATION
-            // ==================================================
+          
 
             if (
                 categoryData.MaterialCategoryTypeName === undefined ||
@@ -167,7 +165,6 @@ export const addMaterialCategoryType = async (req, res) => {
                     message: "CreatedByUserName is required"
                 });
             }
-
 
 
             // LENGTH VALIDATION
@@ -518,7 +515,6 @@ export const toggleMaterialCategoryTypeStatus = async (req, res) => {
             // TOGGLE STATUS
 
             const category = await toggleMaterialCategoryTypeStatusModel(categoryData);
-
 
             // Category does not exist
             if (!category) {

@@ -55,7 +55,6 @@ export const getCompaniesForDropdown = async () => {
                 "CompanyId",
                 "CompanyName"
             FROM "LKP"."Company"
-            
             ORDER BY "CompanyName";
         `;
 
@@ -154,7 +153,6 @@ export const checkDesignationExists = async (
             values
         );
 
-
         return result.rows;
 
     } catch (error) {
@@ -209,7 +207,6 @@ export const addDesignation = async (designationData) => {
                 "CreatedByUserName";
         `;
 
-
         const values = [
             designationData.CompanyId,
             designationData.DesignationName,
@@ -218,7 +215,6 @@ export const addDesignation = async (designationData) => {
             designationData.IsDisabled,
             designationData.CreatedByUserName
         ];
-
 
         const result = await pool.query(
             query,
@@ -388,7 +384,6 @@ export const toggleDesignationStatuses = async (designationData) => {
             values
         );
 
-
         return result.rows[0];
 
     } catch (error) {
@@ -413,7 +408,6 @@ export const deleteDesignation = async (CompanyDesignationId) => {
 
         const values = [CompanyDesignationId];
 
-
         const result = await pool.query(
             query,
             values
@@ -429,6 +423,3 @@ export const deleteDesignation = async (CompanyDesignationId) => {
         throw error;
     }
 };
-
-
-
