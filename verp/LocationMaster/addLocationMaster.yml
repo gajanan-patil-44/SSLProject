@@ -1,0 +1,31 @@
+info:
+  name: /addLocationMaster
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://192.168.23.115:9004/verp-service/locationMaster/addLocationMaster
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":4,
+        "CompanyMasterId":2,
+        "LocationTypeMasterId":2,
+        "ParentLocationMasterId":1,
+        "LocationName":"aaabb",
+        "ContactPerson":"kavyaa",
+        "ContactNumber":"1236547890",
+        "EmailId":"kss@gmail.com",
+        "Address":"banglr",
+        "CreatedByUserName":"ks"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
