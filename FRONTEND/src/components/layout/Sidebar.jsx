@@ -142,6 +142,53 @@ const normalizeNavigation = (menuData) => {
     sectionsMap.get(sectionTitle).push(item);
   });
 
+  // Inject Company Master & Location Type Master under MASTER section if not already present
+  if (sectionsMap.has('MASTER')) {
+    const masterItems = sectionsMap.get('MASTER');
+
+    // Ensure Company Master is present
+    const hasCompanyMaster = masterItems.some(it => 
+      it.path === '/master/company-master' || it.path === '/company-master'
+    );
+    if (!hasCompanyMaster) {
+      const compIndex = masterItems.findIndex(it => it.path === '/master/companies' || it.label?.toLowerCase() === 'companies');
+      const companyMasterItem = {
+        id: 'master_company_master_item',
+        label: 'Company Master',
+        path: '/master/company-master',
+        icon: 'Building2',
+        order: 1.0,
+        children: []
+      };
+      if (compIndex !== -1) {
+        masterItems.splice(compIndex, 0, companyMasterItem);
+      } else {
+        masterItems.unshift(companyMasterItem);
+      }
+    }
+
+    // Ensure Location Type Master is present
+    const hasLoc = masterItems.some(it => 
+      it.path === '/master/location-type-master' || it.path === '/master/location-type'
+    );
+    if (!hasLoc) {
+      const locIndex = masterItems.findIndex(it => it.path === '/master/company-master' || it.path === '/master/companies');
+      const locItem = {
+        id: 'master_location_type_item',
+        label: 'Location Type Master',
+        path: '/master/location-type-master',
+        icon: 'MapPin',
+        order: 1.5,
+        children: []
+      };
+      if (locIndex !== -1) {
+        masterItems.splice(locIndex + 1, 0, locItem);
+      } else {
+        masterItems.push(locItem);
+      }
+    }
+  }
+
   const sections = [];
   sectionsMap.forEach((items, title) => {
     sections.push({

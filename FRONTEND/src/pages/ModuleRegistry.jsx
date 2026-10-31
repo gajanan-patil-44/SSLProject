@@ -689,7 +689,7 @@ export const registryConfigs = {
           companyName: d.CompanyName || '—',
           CompanyName: d.CompanyName || '',
           DesignationLevel: d.DesignationLevel !== undefined && d.DesignationLevel !== null ? d.DesignationLevel : '',
-          CanBeReportingManager: d.CanBeReportingManager !== undefined ? Boolean(d.CanBeReportingManager) : true,
+          CanBeReportingManager: (d.CanBeReportingManager !== undefined && d.CanBeReportingManager !== null) ? Boolean(d.CanBeReportingManager) : true,
           status: isDisabled ? "Inactive" : "Active",
           IsDisabled: Boolean(isDisabled),
           isEnabled: isEnabled,
@@ -755,8 +755,8 @@ export const registryConfigs = {
           label: "Can Be Reporting Manager",
           type: "toggle",
           required: false,
-          defaultValue: true,
-          invertToggle: true
+          defaultValue: true
+
         }
       ];
     },
@@ -774,7 +774,7 @@ export const registryConfigs = {
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
         DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
-        CanBeReportingManager: formData.CanBeReportingManager !== undefined ? Boolean(formData.CanBeReportingManager) : true,
+        CanBeReportingManager: (formData.CanBeReportingManager !== undefined && formData.CanBeReportingManager !== null) ? Boolean(formData.CanBeReportingManager) : true,
         IsDisabled: false,
         Description: '',
         CreatedByUserName: userName,
@@ -799,7 +799,7 @@ export const registryConfigs = {
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
         DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
-        CanBeReportingManager: formData.CanBeReportingManager !== undefined ? Boolean(formData.CanBeReportingManager) : true,
+        CanBeReportingManager: (formData.CanBeReportingManager !== undefined && formData.CanBeReportingManager !== null) ? Boolean(formData.CanBeReportingManager) : true,
         IsDisabled: Boolean(formData.IsDisabled),
         Description: '',
         UpdateByUserName: userName,
@@ -843,7 +843,7 @@ export const registryConfigs = {
       { key: "DesignationCode", label: "Designation Code", type: "text", required: true, placeholder: "e.g. DES-SE" },
       { key: "DesignationName", label: "Designation Name", type: "text", required: true, placeholder: "e.g. Software Engineer" },
       { key: "DesignationLevel", label: "Designation Level", type: "number", required: false, placeholder: "e.g. 1" },
-      { key: "CanBeReportingManager", label: "Can Be Reporting Manager", type: "toggle", required: false, defaultValue: true, invertToggle: true }
+      { key: "CanBeReportingManager", label: "Can Be Reporting Manager", type: "toggle", required: false, defaultValue: true }
     ]
   },
 

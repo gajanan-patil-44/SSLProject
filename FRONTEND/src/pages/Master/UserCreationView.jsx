@@ -81,6 +81,8 @@ const STEPS = [
   { id: 5, title: 'User Documents', short: 'Documents', desc: 'Certificates & files', icon: FileText },
 ];
 
+const MAX_PHOTO_SIZE = 1 * 1024 * 1024; // 1 MB limit for profile photo
+
 // ─── Initial Form Factory ──────────────────────────────────────────────────
 const getInitialForm = () => ({
   EmployeeId: '',
@@ -279,6 +281,7 @@ export default function UserCreationView() {
   const [showPwd, setShowPwd]                 = useState(false);
   const [photo, setPhoto]                     = useState(null);   // { file, preview }
   const [userFiles, setUserFiles]             = useState({});     // { [fileTypeId]: File }
+  const [fileErrors, setFileErrors]           = useState({});     // { [fileTypeId]: string }
   const [designations, setDesignations]       = useState([]);
   const [genders, setGenders]                 = useState([]);
   const [maritalStatuses, setMaritalStatuses] = useState([]);
@@ -488,21 +491,64 @@ export default function UserCreationView() {
   };
 
   const onPhotoChange = e => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrors(er => ({ ...er, Photo: 'Please select a valid image file (JPG, PNG, WEBP).' }));
+      useERPStore.getState().showToast('Please select a valid image file.', 'error');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+
+    // Restrict size to max 1 MB
+    if (file.size > MAX_PHOTO_SIZE) {
+      setErrors(er => ({ ...er, Photo: 'Image size exceeds the 1 MB limit. Please select an image of 1 MB or less.' }));
+      useERPStore.getState().showToast('Image size exceeds 1 MB limit.', 'error');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+
     setPhoto({ file, preview: URL.createObjectURL(file) });
     setErrors(er => ({ ...er, Photo: '' }));
   };
-  const removePhoto = () => { setPhoto(null); if (photoRef.current) photoRef.current.value = ''; };
+  const removePhoto = () => {
+    setPhoto(null);
+    if (photoRef.current) photoRef.current.value = '';
+    setErrors(er => ({ ...er, Photo: '' }));
+  };
 
   // ── Per-FileType upload handlers ──────────────────────────────────────────
   const onAddFiles = () => {}; // kept for ref compat
-  const onFileForType = (fileTypeId, file) => {
+  const onFileForType = (fileTypeId, file, fileTypeLabel = '') => {
     if (!file) return;
+
+    const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(fileTypeLabel);
+    const maxSize = is1MbRestricted ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      const limitText = is1MbRestricted ? '1 MB' : '5 MB';
+      const errorMsg = `File size exceeds ${limitText} limit. Maximum allowed size is ${limitText}.`;
+      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
+      useERPStore.getState().showToast(`${fileTypeLabel || 'Document'} exceeds ${limitText} limit.`, 'error');
+      return;
+    }
+
+    setFileErrors(prev => {
+      const next = { ...prev };
+      delete next[fileTypeId];
+      return next;
+    });
     setUserFiles(prev => ({ ...prev, [fileTypeId]: file }));
   };
   const removeFileForType = (fileTypeId) => {
     setUserFiles(prev => {
+      const next = { ...prev };
+      delete next[fileTypeId];
+      return next;
+    });
+    setFileErrors(prev => {
       const next = { ...prev };
       delete next[fileTypeId];
       return next;
@@ -568,11 +614,24 @@ export default function UserCreationView() {
     }
 
     if (step === 4) {
-      if (!photo)                                                    e.Photo            = 'Profile photo is required';
+      if (!photo) {
+        e.Photo = 'Profile photo is required';
+      } else if (photo.file && photo.file.size > MAX_PHOTO_SIZE) {
+        e.Photo = 'Profile photo size must not exceed 1 MB';
+      }
     }
 
     if (step === 5) {
-      // No mandatory documents — all optional per file type
+      // Validate that no attached files exceed their allowed limits
+      for (const [ftId, file] of Object.entries(userFiles)) {
+        if (!file) continue;
+        const ft = fileTypes.find(t => String(t.value) === String(ftId));
+        const is1Mb = /aadhaar|aadhar|pan\b/i.test(ft?.label || '');
+        const max = is1Mb ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
+        if (file.size > max) {
+          e[`file_${ftId}`] = `${ft?.label || 'File'} exceeds ${is1Mb ? '1 MB' : '5 MB'} limit`;
+        }
+      }
     }
 
     return e;
@@ -727,6 +786,7 @@ export default function UserCreationView() {
     setShowPwd(false);
     setPhoto(null);
     setUserFiles({});
+    setFileErrors({});
     setProducts([]);
     setProjects([]);
     setDesignations([]);
@@ -1227,7 +1287,7 @@ export default function UserCreationView() {
 
               {/* Upload controls */}
               <div className="flex flex-col gap-3 flex-1 text-center sm:text-left">
-                <input ref={photoRef} type="file" accept="image/*" onChange={onPhotoChange} className="hidden" id="photo-inp" />
+                <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp,image/*" onChange={onPhotoChange} className="hidden" id="photo-inp" />
                 <label
                   htmlFor="photo-inp"
                   className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-750 cursor-pointer transition-all shadow-xs w-fit mx-auto sm:mx-0"
@@ -1236,7 +1296,7 @@ export default function UserCreationView() {
                   {photo ? 'Change Profile Photo' : 'Upload Profile Photo'}
                 </label>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Supported formats: JPG, PNG, WEBP · Max size: 5 MB<br />
+                  Supported formats: JPG, PNG, WEBP · Max size: 1 MB<br />
                   {photo && (
                     <span className="text-primary font-semibold block mt-1">
                       {photo.file.name} ({(photo.file.size / 1024).toFixed(1)} KB)
@@ -1273,33 +1333,52 @@ export default function UserCreationView() {
               ) : (
                 fileTypes.map(ft => {
                   const uploaded = userFiles[ft.value];
+                  const hasErr = fileErrors[ft.value];
+                  const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(ft.label || '');
                   return (
                     <div
                       key={ft.key}
                       className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
-                        uploaded
+                        hasErr
+                          ? 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20'
+                          : uploaded
                           ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/60 dark:bg-emerald-950/20'
                           : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-indigo-200 dark:hover:border-indigo-800'
                       }`}
                     >
                       {/* Icon */}
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                        uploaded
+                        hasErr
+                          ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400'
+                          : uploaded
                           ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                           : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
                       }`}>
-                        <FileText className="w-3.5 h-3.5" />
+                        {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
                       </div>
 
                       {/* Name + status */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">{ft.label}</p>
-                        {uploaded ? (
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">{ft.label}</p>
+                          {is1MbRestricted && (
+                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shrink-0">
+                              Max 1 MB
+                            </span>
+                          )}
+                        </div>
+                        {hasErr ? (
+                          <p className="text-[10px] text-rose-500 font-medium truncate leading-tight mt-0.5" title={hasErr}>
+                            {hasErr}
+                          </p>
+                        ) : uploaded ? (
                           <p className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate leading-tight mt-0.5">
-                            ✓ {uploaded.name}
+                            ✓ {uploaded.name} ({(uploaded.size / 1024).toFixed(1)} KB)
                           </p>
                         ) : (
-                          <p className="text-[10px] text-slate-400 leading-tight mt-0.5">No file</p>
+                          <p className="text-[10px] text-slate-400 leading-tight mt-0.5">
+                            No file {is1MbRestricted ? '· Max 1 MB' : ''}
+                          </p>
                         )}
                       </div>
 
@@ -1330,11 +1409,11 @@ export default function UserCreationView() {
                         <input
                           id={`ft-upload-${ft.value}`}
                           type="file"
-                          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                          accept={is1MbRestricted ? "image/jpeg,image/png,image/webp,application/pdf" : "image/*,application/pdf,.doc,.docx,.xls,.xlsx"}
                           className="hidden"
                           onChange={e => {
                             const file = e.target.files?.[0];
-                            if (file) onFileForType(ft.value, file);
+                            if (file) onFileForType(ft.value, file, ft.label);
                             e.target.value = '';
                           }}
                         />

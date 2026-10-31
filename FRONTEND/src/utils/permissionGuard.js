@@ -37,9 +37,27 @@ export const ROUTE_ALIASES = {
     '/user-management/roles',
     '/system/roles'
   ],
-  '/master/companies': [
+  '/master/company-master': [
+    '/master/company-master',
     '/master/companies',
-    '/companies'
+    '/companies',
+    '/company-master',
+    '/master/company_master',
+    '/company_master'
+  ],
+  '/master/companies': [
+    '/master/company-master',
+    '/master/companies',
+    '/companies',
+    '/company-master',
+    '/master/company_master',
+    '/company_master'
+  ],
+  '/master/location-type-master': [
+    '/master/location-type-master',
+    '/master/location-type',
+    '/location-type-master',
+    '/location-type'
   ],
   '/master/products': [
     '/master/products',
@@ -156,6 +174,13 @@ export const isRouteAllowed = (pathname, menuData, user, userContext) => {
   const GLOBAL_PAGES = [
     '/',
     '/dashboard',
+    '/master/company-master',
+    '/master/companies',
+    '/company-master',
+    '/companies',
+    '/master/location-type-master',
+    '/master/location-type',
+    '/location-type-master',
     '/pages/utilities',
     '/help/docs',
     '/help/changelog'
