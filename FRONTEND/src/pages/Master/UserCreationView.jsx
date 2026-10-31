@@ -519,29 +519,87 @@ export default function UserCreationView() {
     setErrors(er => ({ ...er, Photo: '' }));
   };
 
-  // ── Per-FileType upload handlers ──────────────────────────────────────────
+  // ── Per-FileType upload handlers (Multiple Images Only) ────────────────────
   const onAddFiles = () => {}; // kept for ref compat
-  const onFileForType = (fileTypeId, file, fileTypeLabel = '') => {
-    if (!file) return;
 
-    const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(fileTypeLabel);
-    const maxSize = is1MbRestricted ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
+  // Helper to ensure file is strictly an image
+  const isImageFile = (file) => {
+    if (!file) return false;
+    if (file.type && file.type.startsWith('image/')) return true;
+    const name = file.name || '';
+    return /\.(jpe?g|png|webp|gif|bmp|svg|avif)$/i.test(name);
+  };
 
-    if (file.size > maxSize) {
-      const limitText = is1MbRestricted ? '1 MB' : '5 MB';
-      const errorMsg = `File size exceeds ${limitText} limit. Maximum allowed size is ${limitText}.`;
+  const onFilesForType = (fileTypeId, incomingFiles, fileTypeLabel = '') => {
+    if (!incomingFiles || incomingFiles.length === 0) return;
+    const filesArray = Array.from(incomingFiles);
+
+    // 1. Strict Image-Only Validation (reject PDFs, Word, Excel, etc.)
+    const nonImageFiles = filesArray.filter(f => !isImageFile(f));
+    if (nonImageFiles.length > 0) {
+      const invalidNames = nonImageFiles.map(f => f.name).join(', ');
+      const errorMsg = `Only image files (JPG, PNG, WebP) are allowed. Rejected non-image file(s): ${invalidNames}`;
       setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
-      useERPStore.getState().showToast(`${fileTypeLabel || 'Document'} exceeds ${limitText} limit.`, 'error');
+      useERPStore.getState().showToast(`Only image files are allowed for ${fileTypeLabel || 'documents'}.`, 'error');
       return;
     }
 
+    // 2. Size limit per image
+    const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(fileTypeLabel);
+    const maxSize = is1MbRestricted ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
+    const limitText = is1MbRestricted ? '1 MB' : '5 MB';
+
+    const oversizedFiles = filesArray.filter(f => f.size > maxSize);
+    if (oversizedFiles.length > 0) {
+      const oversizedNames = oversizedFiles.map(f => f.name).join(', ');
+      const errorMsg = `Image size exceeds ${limitText} limit (${oversizedNames})`;
+      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
+      useERPStore.getState().showToast(`Image exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
+      return;
+    }
+
+    // Clear previous error
     setFileErrors(prev => {
       const next = { ...prev };
       delete next[fileTypeId];
       return next;
     });
-    setUserFiles(prev => ({ ...prev, [fileTypeId]: file }));
+
+    // Append new images without duplicate name+size
+    setUserFiles(prev => {
+      const currentList = Array.isArray(prev[fileTypeId])
+        ? prev[fileTypeId]
+        : (prev[fileTypeId] ? [prev[fileTypeId]] : []);
+      const combined = [...currentList];
+
+      filesArray.forEach(newFile => {
+        const alreadyExists = combined.some(
+          existing => existing.name === newFile.name && existing.size === newFile.size
+        );
+        if (!alreadyExists) {
+          combined.push(newFile);
+        }
+      });
+      return { ...prev, [fileTypeId]: combined };
+    });
   };
+
+  const removeSingleImageForType = (fileTypeId, indexToRemove) => {
+    setUserFiles(prev => {
+      const currentList = Array.isArray(prev[fileTypeId])
+        ? prev[fileTypeId]
+        : (prev[fileTypeId] ? [prev[fileTypeId]] : []);
+      const updated = currentList.filter((_, idx) => idx !== indexToRemove);
+      const next = { ...prev };
+      if (updated.length > 0) {
+        next[fileTypeId] = updated;
+      } else {
+        delete next[fileTypeId];
+      }
+      return next;
+    });
+  };
+
   const removeFileForType = (fileTypeId) => {
     setUserFiles(prev => {
       const next = { ...prev };
@@ -622,14 +680,23 @@ export default function UserCreationView() {
     }
 
     if (step === 5) {
-      // Validate that no attached files exceed their allowed limits
-      for (const [ftId, file] of Object.entries(userFiles)) {
-        if (!file) continue;
+      // Validate that all attached files are images and within allowed size limits
+      for (const [ftId, files] of Object.entries(userFiles)) {
+        if (!files) continue;
+        const fileList = Array.isArray(files) ? files : [files];
         const ft = fileTypes.find(t => String(t.value) === String(ftId));
         const is1Mb = /aadhaar|aadhar|pan\b/i.test(ft?.label || '');
         const max = is1Mb ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
-        if (file.size > max) {
-          e[`file_${ftId}`] = `${ft?.label || 'File'} exceeds ${is1Mb ? '1 MB' : '5 MB'} limit`;
+
+        for (const file of fileList) {
+          if (!file) continue;
+          if (!isImageFile(file)) {
+            e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain image files only`;
+            break;
+          } else if (file.size > max) {
+            e[`file_${ftId}`] = `${ft?.label || 'File'} (${file.name}) exceeds ${is1Mb ? '1 MB' : '5 MB'} limit`;
+            break;
+          }
         }
       }
     }
@@ -740,10 +807,15 @@ export default function UserCreationView() {
     const projectIds = Array.isArray(form.ProjectId) ? form.ProjectId : (form.ProjectId ? [form.ProjectId] : []);
     fd.append('ProjectId', JSON.stringify(projectIds.map(Number)));
     fd.append('RoleId',             form.RoleId);
-    // User documents — keyed by fileTypeId
-    Object.entries(userFiles).forEach(([ftId, file]) => {
-      fd.append('FileTypeId', ftId);
-      fd.append('UserFile',   file);
+    // User documents — multiple images per fileTypeId
+    Object.entries(userFiles).forEach(([ftId, files]) => {
+      const fileList = Array.isArray(files) ? files : (files ? [files] : []);
+      fileList.forEach(file => {
+        if (file) {
+          fd.append('FileTypeId', ftId);
+          fd.append('UserFile',   file);
+        }
+      });
     });
 
 
@@ -1317,107 +1389,159 @@ export default function UserCreationView() {
         {currentStep === 5 && (
           <div className="animate-in fade-in duration-300">
             <SectionHeader
-              icon={FileText}
+              icon={Image}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Supporting Documents"
-              subtitle="Upload documents for each required file type. All fields are optional."
+              subtitle="Upload multiple images for each required document type (Images only: JPG, PNG, WEBP). Other document formats are not permitted."
             />
 
             {/* File-type compact grid — 3 per row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
               {fileTypes.length === 0 ? (
                 <div className="col-span-3 flex flex-col items-center justify-center py-8 text-slate-400">
-                  <FileText className="w-8 h-8 mb-2 opacity-40" />
+                  <Image className="w-8 h-8 mb-2 opacity-40" />
                   <p className="text-xs font-medium">No document types configured</p>
                 </div>
               ) : (
                 fileTypes.map(ft => {
                   const uploaded = userFiles[ft.value];
+                  const uploadedList = Array.isArray(uploaded) ? uploaded : (uploaded ? [uploaded] : []);
                   const hasErr = fileErrors[ft.value];
                   const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(ft.label || '');
+                  const hasFiles = uploadedList.length > 0;
+
                   return (
                     <div
                       key={ft.key}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
+                      className={`flex flex-col gap-2 p-3 rounded-xl border transition-all duration-200 ${
                         hasErr
                           ? 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20'
-                          : uploaded
-                          ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/60 dark:bg-emerald-950/20'
+                          : hasFiles
+                          ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/40 dark:bg-emerald-950/20'
                           : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-indigo-200 dark:hover:border-indigo-800'
                       }`}
                     >
-                      {/* Icon */}
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                        hasErr
-                          ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400'
-                          : uploaded
-                          ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
-                      }`}>
-                        {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
-                      </div>
-
-                      {/* Name + status */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">{ft.label}</p>
-                          {is1MbRestricted && (
-                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shrink-0">
-                              Max 1 MB
-                            </span>
-                          )}
+                      {/* Top Row: Icon, Label, Badges & Upload Button */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                            hasErr
+                              ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400'
+                              : hasFiles
+                              ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
+                          }`}>
+                            {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <Image className="w-3.5 h-3.5" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">
+                              {ft.label}
+                            </p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {is1MbRestricted ? (
+                                <span className="text-[9px] font-medium px-1 py-0.2 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shrink-0">
+                                  Max 1 MB each
+                                </span>
+                              ) : (
+                                <span className="text-[9px] text-slate-400 shrink-0">
+                                  Images only
+                                </span>
+                              )}
+                              {hasFiles && (
+                                <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                                  {uploadedList.length} {uploadedList.length === 1 ? 'image' : 'images'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        {hasErr ? (
-                          <p className="text-[10px] text-rose-500 font-medium truncate leading-tight mt-0.5" title={hasErr}>
-                            {hasErr}
-                          </p>
-                        ) : uploaded ? (
-                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate leading-tight mt-0.5">
-                            ✓ {uploaded.name} ({(uploaded.size / 1024).toFixed(1)} KB)
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-slate-400 leading-tight mt-0.5">
-                            No file {is1MbRestricted ? '· Max 1 MB' : ''}
-                          </p>
-                        )}
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <label
+                            htmlFor={`ft-upload-${ft.value}`}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-md cursor-pointer transition-colors ${
+                              hasFiles
+                                ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            }`}
+                            title={hasFiles ? 'Add more images' : 'Upload images'}
+                          >
+                            <Upload className="w-3 h-3" />
+                            {hasFiles ? '+ Add' : 'Upload'}
+                          </label>
+                          {hasFiles && (
+                            <button
+                              type="button"
+                              onClick={() => removeFileForType(ft.value)}
+                              className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
+                              title="Clear all images"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <input
+                            id={`ft-upload-${ft.value}`}
+                            type="file"
+                            multiple
+                            accept="image/*,image/jpeg,image/png,image/webp,image/gif"
+                            className="hidden"
+                            onChange={e => {
+                              const files = e.target.files;
+                              if (files && files.length > 0) {
+                                onFilesForType(ft.value, files, ft.label);
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                        </div>
                       </div>
 
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <label
-                          htmlFor={`ft-upload-${ft.value}`}
-                          className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md cursor-pointer transition-colors ${
-                            uploaded
-                              ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
-                              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                          }`}
-                          title={uploaded ? 'Replace file' : 'Upload file'}
-                        >
-                          <Upload className="w-3 h-3" />
-                          {uploaded ? 'Replace' : 'Upload'}
-                        </label>
-                        {uploaded && (
-                          <button
-                            type="button"
-                            onClick={() => removeFileForType(ft.value)}
-                            className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
-                            title="Remove"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                        <input
-                          id={`ft-upload-${ft.value}`}
-                          type="file"
-                          accept={is1MbRestricted ? "image/jpeg,image/png,image/webp,application/pdf" : "image/*,application/pdf,.doc,.docx,.xls,.xlsx"}
-                          className="hidden"
-                          onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (file) onFileForType(ft.value, file, ft.label);
-                            e.target.value = '';
-                          }}
-                        />
-                      </div>
+                      {/* Error Message */}
+                      {hasErr && (
+                        <p className="text-[10px] text-rose-500 font-medium leading-tight flex items-center gap-1 mt-0.5" title={hasErr}>
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {hasErr}
+                        </p>
+                      )}
+
+                      {/* Uploaded Images Strip */}
+                      {hasFiles && (
+                        <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                          {uploadedList.map((file, imgIdx) => (
+                            <span
+                              key={`${file.name}-${imgIdx}`}
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-2xs group"
+                            >
+                              <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                              <span className="truncate max-w-[100px]" title={file.name}>
+                                {file.name}
+                              </span>
+                              <span className="text-[9px] text-slate-400">
+                                ({(file.size / 1024).toFixed(0)} KB)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  removeSingleImageForType(ft.value, imgIdx);
+                                }}
+                                className="text-slate-400 hover:text-rose-500 rounded p-0.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                                title={`Remove ${file.name}`}
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {!hasFiles && !hasErr && (
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          No images uploaded · Images only (JPG, PNG, WebP)
+                        </p>
+                      )}
                     </div>
                   );
                 })
