@@ -15,5 +15,5 @@ router.post("/dropdown", getManagePageDropdown);
 router.post("/view",getManagePages );
 router.patch("/status",updateManagePageStatus);
 router.post("/add", addPage);
-router.post("/edit",editPage);
+router.patch("/edit",editPage);
 export default router;

@@ -1,8 +1,8 @@
-import { getAllUserDetails,editUserdetails } from "../../Models/userEditDetails/UserEdit.js";
+import { getAllUserDetails, editUserdetails } from "../../Models/userEditDetails/UserEdit.js";
 
-import {getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompanies, getAllReportingManagers, getAllCompanyProducts, getAllProjects, getAllRoles, toggleUserStatuses} from "../../Models/userEditDetails/UserEdit.js";
+import { getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompanies, getAllReportingManagers, getAllCompanyProducts, getAllProjects, getAllRoles, toggleUserStatuses, changeUserPassword } from "../../Models/userEditDetails/UserEdit.js";
 
-
+import bcrypt from "bcrypt";
 
 export const getAllUserDetailsController = async (req, res) => {
     const { flagId } = req.body
@@ -923,7 +923,7 @@ export const editUserdetailsController = async (req, res) => {
             success: false,
             message: "Failed to update user details.",
             error: error.message,
-            stack:error.stack
+            stack: error.stack
         });
     }
 };
@@ -1415,6 +1415,114 @@ export const toggleUserStatus = async (req, res) => {
             status: "error",
             message: "Failed to update user status",
             error: error.message
+        });
+    }
+};
+
+
+
+export const changePasswordController = async (req, res) => {
+    try {
+        const { FlagId, UserId, NewPassword } = req.body;
+
+        // ==========================================
+        // VALIDATE FLAG ID
+        // ==========================================
+
+        if (
+            FlagId === undefined ||
+            FlagId === null ||
+            String(FlagId).trim() === ""
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId is required"
+            });
+        }
+
+        // ==========================================
+        // FLAG ID 1 - CHANGE PASSWORD
+        // ==========================================
+
+        if (parseInt(FlagId) === 1) {
+            // Validate UserId
+            if (
+                UserId === undefined ||
+                UserId === null ||
+                String(UserId).trim() === ""
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "UserId is required"
+                });
+            }
+
+            const userId = Number(UserId);
+
+            if (!Number.isInteger(userId) || userId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "UserId must be a valid positive integer"
+                });
+            }
+
+            // Validate NewPassword
+            if (
+                typeof NewPassword !== "string" ||
+                NewPassword.trim() === ""
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "NewPassword is required"
+                });
+            }
+
+            if (NewPassword.length < 8 || NewPassword.length > 72) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "NewPassword must contain 8 to 72 characters"
+                });
+            }
+
+            // Hash the new password
+            const hashedPassword = await bcrypt.hash(NewPassword, 10);
+
+            // Change password
+            const result = await changeUserPassword({
+                UserId: userId,
+                NewPassword,
+                HashedPassword: hashedPassword,
+                UpdatedByUserId: userId
+            });
+
+            if (!result.success) {
+                return res.status(result.status).json({
+                    status: "error",
+                    message: result.message
+                });
+            }
+
+            return res.status(200).json({
+                status: "success",
+                message: "Password changed successfully"
+            });
+        }
+
+        // ==========================================
+        // INVALID FLAG ID
+        // ==========================================
+
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid FlagId. Use FlagId 1 to change password"
+        });
+
+    } catch (error) {
+        console.error("Change Password Error:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Failed to change password"
         });
     }
 };

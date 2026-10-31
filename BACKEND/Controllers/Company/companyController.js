@@ -89,15 +89,33 @@ export const addCompanies = async (req, res) => {
             // PHONE NUMBER VALIDATION
 
             const phoneNumber = String(companyData.PhoneNumber || "").trim();
+
+            // Check whether phone number is empty
+            if (!phoneNumber) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Phone number is required"
+                });
+            }
+
+            // Check whether phone number contains exactly 10 digits
             const phoneRegex = /^[0-9]{10}$/;
 
             if (!phoneRegex.test(phoneNumber)) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Phone number must contain exactly 10 digits"
+                    message: "Phone number must be a 10-digit number"
                 });
             }
+            const companyName = String(companyData.CompanyName || "").trim();
+            const companyCode = String(companyData.CompanyCode || "").trim();
 
+            if (companyName.toLowerCase() === companyCode.toLowerCase()) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name and company code should not be the same"
+                });
+            }
             // EMAIL VALIDATION
 
             const email = String(companyData.Email || "").trim();
@@ -234,7 +252,15 @@ export const updateCompany = async (req, res) => {
                     message: "Company name should contain only alphabets and spaces"
                 });
             }
+            const companyName = String(companyData.CompanyName || "").trim();
+            const companyCode = String(companyData.CompanyCode || "").trim();
 
+            if (companyName.toLowerCase() === companyCode.toLowerCase()) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name and company code should not be the same"
+                });
+            }
             // Check whether Company Name and Company Code already exist
             // Exclude the current CompanyId from the duplicate check
             const existingCompanies = await checkCompanyExistsForUpdate(

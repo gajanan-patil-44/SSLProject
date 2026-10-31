@@ -223,10 +223,6 @@ export const companyProductController = async (req, res) => {
 // EDIT COMPANY PRODUCT CONTROLLER
 // ==========================================
 
-// ==========================================
-// EDIT COMPANY PRODUCT CONTROLLER
-// ==========================================
-
 export const editCompanyProductController = async (req, res) => {
 
     const { FlagId } = req.body;
