@@ -1,0 +1,23 @@
+info:
+  name: /getParentLocationTypes
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://192.168.23.115:9004/verp-service/locationMaster/getParentLocationTypes
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":2,
+        "LocationTypeMasterId":3
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

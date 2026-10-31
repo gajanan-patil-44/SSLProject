@@ -6,6 +6,15 @@ info:
 http:
   method: PATCH
   url: http://192.168.23.115:9004/verp-service/companyMaster/toggleCompanyMasterStatus
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":4,
+        "IsDisabled":true,
+        "UpdatedByUserName":"kavya",
+        "CompanyMasterId":7
+      }
   auth: inherit
 
 settings:
