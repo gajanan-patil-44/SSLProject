@@ -59,6 +59,26 @@ export const COMPANY_MASTER_ROUTES = {
   DELETE_COMPANY_MASTER: '/verp-service/companyMaster/deleteCompanyMaster'
 };
 
+/**
+ * ============================================================================
+ * 5.2. LOCATION TYPE MASTER ROUTES
+ * ============================================================================
+ */
+export const LOCATION_TYPE_MASTER_ROUTES = {
+  VIEW: '/verp-service/locationTypeMaster/view',
+  GET_LOCATION_TYPE_MASTER: '/verp-service/locationTypeMaster/view',
+  GET_LOCATION_TYPES: '/verp-service/locationTypeMaster/view',
+  ADD: '/verp-service/locationTypeMaster/add',
+  ADD_LOCATION_TYPE_MASTER: '/verp-service/locationTypeMaster/add',
+  DROPDOWN: '/verp-service/locationTypeMaster/dropdown',
+  GET_DROPDOWN: '/verp-service/locationTypeMaster/dropdown',
+  EDIT: '/verp-service/locationTypeMaster/edit',
+  UPDATE: '/verp-service/locationTypeMaster/edit',
+  EDIT_LOCATION_TYPE_MASTER: '/verp-service/locationTypeMaster/edit'
+};
+
+export const LOCATION_TYPE_ROUTES = LOCATION_TYPE_MASTER_ROUTES;
+
 export const COMPANY_ROUTES = {
   GET_COMPANY: '/verp-service/companyCreation/getCompany',
   GET_COMPANIES: '/verp-service/companyCreation/getCompany',
@@ -251,6 +271,8 @@ export const API_ROUTES = {
   PRODUCT: PRODUCT_ROUTES,
   COMPANY: COMPANY_ROUTES,
   COMPANY_MASTER: COMPANY_MASTER_ROUTES,
+  LOCATION_TYPE_MASTER: LOCATION_TYPE_MASTER_ROUTES,
+  LOCATION_TYPE: LOCATION_TYPE_ROUTES,
   COMPANY_PRODUCT: COMPANY_PRODUCT_ROUTES,
   DESIGNATION: DESIGNATION_ROUTES,
   PROJECT: PROJECT_ROUTES,

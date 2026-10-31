@@ -210,9 +210,6 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
               </p>
             </div>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
-            ID: #{companyMasterId}
-          </span>
         </div>
 
         {/* Edit Form */}

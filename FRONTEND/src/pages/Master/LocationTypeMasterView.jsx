@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationTypeService, INITIAL_LOCATION_FLOW } from '../../services/locationTypeService';
-import { Modal } from '../../components/ui/Modal';
+import EditLocationTypeMasterModal from './EditLocationTypeMasterModal';
 import {
   PageHeader,
   Card,
@@ -14,14 +14,11 @@ import {
   MapPin,
   Layers,
   Plus,
-  Check,
   RotateCcw,
   Edit2,
-  Trash2,
   AlertCircle,
   ArrowRight,
-  ShieldCheck,
-  Network
+  ShieldCheck
 } from 'lucide-react';
 
 // Form Field Container with theme label & error display
@@ -76,59 +73,135 @@ const inputCls = (err) =>
   } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 transition-all duration-200 font-medium`;
 
 // Theme Select Class helper
-const selectCls = (err) =>
+const selectCls = (err, disabled) =>
   `w-full px-3 py-2.5 text-sm rounded-xl border ${
     err
-      ? 'border-rose-400'
+      ? 'border-rose-400 focus:ring-rose-500'
       : 'border-slate-200 dark:border-slate-700/80 focus:ring-indigo-500/20 focus:border-indigo-500'
-  } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 transition-all duration-200 cursor-pointer font-medium`;
+  } ${
+    disabled
+      ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-75'
+      : 'bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white cursor-pointer'
+  } focus:outline-hidden focus:ring-2 transition-all duration-200 font-medium`;
 
 export default function LocationTypeMasterView() {
   const showToast = useERPStore((state) => state.showToast);
+  const currentUser = useERPStore((state) => state.user);
+  const userName = currentUser?.loginName || currentUser?.name || currentUser?.EmployeeId || '';
 
-  // Flow items state
-  const [items, setItems] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-
-  // Form input state
-  const [locationTypeName, setLocationTypeName] = useState('');
-  const [parentLocationName, setParentLocationName] = useState('');
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  // Load flow data on mount
-  useEffect(() => {
-    loadFlowData();
-  }, []);
-
-  const loadFlowData = async () => {
+  // Extract session username
+  const getSessionUserName = () => {
     try {
-      const data = await locationTypeService.getLocationTypes();
-      setItems(data);
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const user = s?.data?.user || s?.user || s;
+        return user?.loginName || user?.LoginName || user?.EmployeeId || user?.userName || user?.name || '';
+      }
+      const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+      return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || '';
     } catch {
-      setItems([...INITIAL_LOCATION_FLOW]);
+      return '';
     }
   };
 
-  // Parent location dropdown options
-  const parentOptions = useMemo(() => {
-    const set = new Set(['Company', '-']);
-    items.forEach(it => {
-      if (it.childName) set.add(it.childName.trim());
-      if (it.parentName && it.parentName !== '-') set.add(it.parentName.trim());
-    });
-    return Array.from(set);
-  }, [items]);
+  // Flow items state
+  const [items, setItems] = useState([]);
+  const [parentDropdownOptions, setParentDropdownOptions] = useState([]);
+  const [fetching, setFetching] = useState(true);
 
-  // Select row for editing
-  const handleSelectRow = (item) => {
-    if (selectedId === item.id) {
-      handleReset();
-    } else {
-      setSelectedId(item.id);
-      setLocationTypeName(item.childName);
-      setParentLocationName(item.parentName === '-' ? '' : item.parentName);
-      setErrors({});
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingLocationType, setEditingLocationType] = useState(null);
+
+  const handleOpenEditModal = (item) => {
+    setEditingLocationType(item);
+    setIsEditModalOpen(true);
+  };
+
+  // Form input state (Add Mode)
+  const [locationTypeName, setLocationTypeName] = useState('');
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  // Parent location dropdown is visible only from the second one onwards (hidden for the first one)
+  const isFirstLocation = items.length === 0 && parentDropdownOptions.length === 0;
+  const showParentLocationField = !isFirstLocation;
+
+  // Available parent options fetched via /verp-service/locationTypeMaster/dropdown
+  const availableParentOptions = useMemo(() => {
+    return parentDropdownOptions.length > 0
+      ? parentDropdownOptions.map(opt => ({
+          id: opt.LocationTypeMasterId ?? opt.LocationTypeId ?? opt.id ?? opt.value,
+          name: opt.LocationTypeMasterName ?? opt.LocationTypeName ?? opt.name ?? opt.childName ?? opt.label
+        }))
+      : items.map(it => ({
+          id: it.LocationTypeMasterId ?? it.id,
+          name: it.LocationTypeMasterName ?? it.childName
+        }));
+  }, [parentDropdownOptions, items]);
+
+  // Helper to normalize backend row fields to { id, childName, parentName }
+  const normalizeLocationType = (item, idx) => {
+    const id = item.LocationTypeMasterId ?? item.LocationTypeId ?? item.id ?? (idx + 1);
+    const childName = item.LocationTypeMasterName ?? item.ChildName ?? item.childName ?? item.LocationTypeName ?? item.locationTypeName ?? item.Name ?? '';
+    const parentName = item.ParentLocationTypeName ?? item.ParentName ?? item.parentName ?? item.ParentLocationName ?? null;
+
+    return {
+      ...item,
+      id,
+      LocationTypeMasterId: id,
+      LocationTypeMasterName: String(childName || '').trim(),
+      ParentLocationTypeName: parentName ? String(parentName).trim() : null,
+      ParentTypeId: item.ParentTypeId ?? null,
+      childName: String(childName || '').trim(),
+      parentName: parentName && String(parentName).trim() !== '-' ? String(parentName).trim() : '-'
+    };
+  };
+
+  // Load flow data and parent dropdown on mount
+  useEffect(() => {
+    loadFlowData();
+    fetchParentDropdown();
+  }, []);
+
+  const loadFlowData = async () => {
+    setFetching(true);
+    try {
+      // Hit /verp-service/locationTypeMaster/view with FlagId: 1
+      const res = await locationTypeService.getLocationTypeMaster({ FlagId: 1 });
+      const rawList = res?.data?.data || res?.data || res;
+      if (Array.isArray(rawList)) {
+        const list = rawList.map((item, idx) => normalizeLocationType(item, idx));
+        setItems(list);
+      } else {
+        const fallback = await locationTypeService.getLocationTypes();
+        setItems(fallback.map((it, idx) => normalizeLocationType(it, idx)));
+      }
+    } catch (err) {
+      console.warn('Failed to load from /verp-service/locationTypeMaster/view, using fallback:', err);
+      try {
+        const fallback = await locationTypeService.getLocationTypes();
+        setItems(fallback.map((it, idx) => normalizeLocationType(it, idx)));
+      } catch {
+        setItems(INITIAL_LOCATION_FLOW.map((it, idx) => normalizeLocationType(it, idx)));
+      }
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  // Fetch parent dropdown via /verp-service/locationTypeMaster/dropdown with { FlagId: 3 }
+  const fetchParentDropdown = async () => {
+    try {
+      const res = await locationTypeService.getParentDropdown({ FlagId: 3 });
+      const raw = res?.data?.data || res?.data || res;
+      if (Array.isArray(raw)) {
+        setParentDropdownOptions(raw);
+      }
+    } catch (err) {
+      console.warn('Failed to load parent dropdown via /verp-service/locationTypeMaster/dropdown:', err);
     }
   };
 
@@ -143,21 +216,26 @@ export default function LocationTypeMasterView() {
     } else if (trimmed.length > 100) {
       errs.childName = 'Location Type Name must not exceed 100 characters';
     }
+
+    // Require selection only when Parent Location field is visible (second one onwards)
+    if (showParentLocationField && !selectedParentId) {
+      errs.parentName = 'Parent Location is required';
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  // SUBMIT handler: Add new location flow entry
+  // SUBMIT handler: Add new location type via /verp-service/locationTypeMaster/add (FlagId: 2)
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!validate()) return;
 
     const trimmedChild = locationTypeName.trim();
-    const trimmedParent = parentLocationName.trim() || '-';
 
     // Duplicate check
     const duplicate = items.some(
-      item => item.childName.toLowerCase() === trimmedChild.toLowerCase() && item.id !== selectedId
+      item => item.childName.toLowerCase() === trimmedChild.toLowerCase()
     );
     if (duplicate) {
       setErrors({ childName: `"${trimmedChild}" already exists in the flow` });
@@ -167,43 +245,24 @@ export default function LocationTypeMasterView() {
 
     setLoading(true);
     try {
-      const created = await locationTypeService.addLocationType({
-        childName: trimmedChild,
-        parentName: trimmedParent
-      });
-      setItems(prev => [...prev, created]);
+      const sessionUserName = getSessionUserName() || userName || 'Admin';
+
+      // Send payload with FlagId: 2, LocationTypeMasterName, ParentTypeId, and CreatedByUserName
+      const payload = {
+        FlagId: 2,
+        LocationTypeMasterName: trimmedChild,
+        ParentTypeId: showParentLocationField && selectedParentId ? Number(selectedParentId) : null,
+        CreatedByUserName: sessionUserName
+      };
+
+      await locationTypeService.addLocationTypeMaster(payload);
       showToast('Location Type added successfully!', 'success');
       handleReset();
+      await loadFlowData();
+      await fetchParentDropdown();
     } catch (err) {
-      showToast('Failed to add Location Type', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // EDIT handler: Update selected entry
-  const handleEdit = async () => {
-    if (!selectedId) {
-      showToast('Please select a row from the table to edit', 'info');
-      return;
-    }
-    if (!validate()) return;
-
-    const trimmedChild = locationTypeName.trim();
-    const trimmedParent = parentLocationName.trim() || '-';
-
-    setLoading(true);
-    try {
-      const updated = await locationTypeService.updateLocationType(selectedId, {
-        childName: trimmedChild,
-        parentName: trimmedParent
-      });
-
-      setItems(prev => prev.map(item => item.id === selectedId ? updated : item));
-      showToast('Location Type updated successfully!', 'success');
-      handleReset();
-    } catch (err) {
-      showToast('Failed to update Location Type', 'error');
+      console.error('Failed to add Location Type:', err);
+      showToast(err?.response?.data?.message || err?.message || 'Failed to add Location Type', 'error');
     } finally {
       setLoading(false);
     }
@@ -212,36 +271,8 @@ export default function LocationTypeMasterView() {
   // RESET handler: Clear form fields
   const handleReset = () => {
     setLocationTypeName('');
-    setParentLocationName('');
-    setSelectedId(null);
+    setSelectedParentId('');
     setErrors({});
-  };
-
-  // Delete confirmation state
-  const [itemToDelete, setItemToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Delete row prompt handler
-  const handleDeleteRow = (e, item) => {
-    e.stopPropagation();
-    setItemToDelete(item);
-  };
-
-  // Confirm delete handler
-  const handleConfirmDelete = async () => {
-    if (!itemToDelete) return;
-    setIsDeleting(true);
-    try {
-      await locationTypeService.deleteLocationType(itemToDelete.id);
-      setItems(prev => prev.filter(item => item.id !== itemToDelete.id));
-      if (selectedId === itemToDelete.id) handleReset();
-      showToast('Location Type removed from flow', 'success');
-      setItemToDelete(null);
-    } catch {
-      showToast('Failed to delete row', 'error');
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   return (
@@ -275,26 +306,19 @@ export default function LocationTypeMasterView() {
         <SectionHeader
           icon={GitFork}
           iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-          title={selectedId ? 'Edit Location Type' : 'Location Type Definition'}
+          title="Location Type Definition"
           subtitle="Specify the location level name and assign its immediate parent node in the flow hierarchy."
-          badge={
-            selectedId && (
-              <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/50">
-                Editing #{selectedId}
-              </span>
-            )
-          }
         />
 
-        <form onSubmit={selectedId ? handleEdit : handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className={`grid grid-cols-1 ${showParentLocationField ? 'sm:grid-cols-2' : 'max-w-xl'} gap-5`}>
             {/* Field 1: Location Type Name */}
             <Field label="Location Type Name" required error={errors.childName}>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="e.g. Zone, Circle, Division"
+                  placeholder="e.g. Country, State, District"
                   value={locationTypeName}
                   onChange={(e) => {
                     setLocationTypeName(e.target.value);
@@ -305,76 +329,57 @@ export default function LocationTypeMasterView() {
               </div>
             </Field>
 
-            {/* Field 2: Parent Location Name */}
-            <Field label="Parent Location Name" required error={errors.parentName}>
-              <div className="relative">
-                <GitFork className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                <select
-                  value={parentLocationName}
-                  onChange={(e) => setParentLocationName(e.target.value)}
-                  className={`${selectCls(errors.parentName)} pl-9.5`}
-                >
-                  <option value="">-- Select Parent Location --</option>
-                  {parentOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt === '-' ? '- (Top Level / Root)' : opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </Field>
+            {/* Field 2: Parent Location Name (Visible & enabled only from the second one onwards) */}
+            {showParentLocationField && (
+              <Field
+                label="Parent Location Name"
+                required
+                error={errors.parentName}
+              >
+                <div className="relative">
+                  <GitFork className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <select
+                    value={selectedParentId}
+                    onChange={(e) => {
+                      setSelectedParentId(e.target.value);
+                      if (errors.parentName) setErrors(prev => ({ ...prev, parentName: null }));
+                    }}
+                    className={`${selectCls(errors.parentName, false)} pl-9.5`}
+                  >
+                    <option value="">-- Select Parent Location --</option>
+                    {availableParentOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </Field>
+            )}
           </div>
 
           {/* Form Action Buttons matching app button styles */}
           <div className="flex items-center gap-3 pt-2">
-            {selectedId ? (
-              <>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  icon={Check}
-                  onClick={handleEdit}
-                  disabled={loading}
-                  className="px-6 cursor-pointer"
-                >
-                  Update Location Type
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReset}
-                  className="cursor-pointer"
-                >
-                  Cancel Edit
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  icon={Plus}
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="px-6 cursor-pointer"
-                >
-                  Add Location Type
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  icon={RotateCcw}
-                  onClick={handleReset}
-                  className="cursor-pointer"
-                >
-                  Clear Fields
-                </Button>
-              </>
-            )}
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              icon={Plus}
+              disabled={loading}
+              className="px-6 cursor-pointer"
+            >
+              {loading ? 'Adding...' : 'Add Location Type'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              icon={RotateCcw}
+              onClick={handleReset}
+              className="cursor-pointer"
+            >
+              Clear Fields
+            </Button>
           </div>
         </form>
       </Card>
@@ -397,15 +402,21 @@ export default function LocationTypeMasterView() {
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                <th className="py-3 px-4 w-16 text-center">#</th>
+                <th className="py-3 px-4 w-16 text-center">S.No</th>
                 <th className="py-3 px-6">Child Name</th>
                 <th className="py-3 px-6">Parent Name</th>
                 <th className="py-3 px-6 text-center w-32">Relation</th>
-                <th className="py-3 px-4 text-right w-28">Actions</th>
+                <th className="py-3 px-4 text-right w-20">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {items.length === 0 ? (
+              {fetching ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-400">
+                    Loading location flow details...
+                  </td>
+                </tr>
+              ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-slate-400">
                     No location flow details defined yet.
@@ -413,18 +424,12 @@ export default function LocationTypeMasterView() {
                 </tr>
               ) : (
                 items.map((row, idx) => {
-                  const isSelected = selectedId === row.id;
                   const isRoot = !row.parentName || row.parentName === '-';
 
                   return (
                     <tr
                       key={row.id || idx}
-                      onClick={() => handleSelectRow(row)}
-                      className={`cursor-pointer transition-colors ${
-                        isSelected
-                          ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold'
-                          : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/50'
-                      }`}
+                      className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       <td className="py-3.5 px-4 text-center font-semibold text-slate-400 text-xs">
                         {idx + 1}
@@ -458,22 +463,14 @@ export default function LocationTypeMasterView() {
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end">
                           <button
                             type="button"
-                            onClick={() => handleSelectRow(row)}
+                            onClick={() => handleOpenEditModal(row)}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition cursor-pointer"
                             title="Edit Location Type"
                           >
                             <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeleteRow(e, row)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition cursor-pointer"
-                            title="Delete row"
-                          >
-                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -486,53 +483,21 @@ export default function LocationTypeMasterView() {
         </div>
       </Card>
 
-      {/* In-UI Delete Confirmation Modal */}
-      {itemToDelete && (
-        <Modal
-          isOpen={!!itemToDelete}
+      {/* Dedicated Edit Location Type Modal */}
+      {isEditModalOpen && editingLocationType && (
+        <EditLocationTypeMasterModal
+          isOpen={isEditModalOpen}
           onClose={() => {
-            if (!isDeleting) setItemToDelete(null);
+            setIsEditModalOpen(false);
+            setEditingLocationType(null);
           }}
-          title="Remove Location Type"
-          size="sm"
-          actions={
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setItemToDelete(null)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                icon={Trash2}
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Removing...' : 'Remove Entry'}
-              </Button>
-            </>
-          }
-        >
-          <div className="flex items-start gap-3.5 py-1">
-            <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-xs">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                Are you sure you want to remove &ldquo;{itemToDelete.childName}&rdquo; from the flow?
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                This action cannot be undone and will remove this level from the hierarchy flow.
-              </p>
-            </div>
-          </div>
-        </Modal>
+          locationType={editingLocationType}
+          allItems={items}
+          onSaveSuccess={async () => {
+            await loadFlowData();
+            await fetchParentDropdown();
+          }}
+        />
       )}
     </div>
   );

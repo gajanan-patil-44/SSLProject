@@ -155,7 +155,7 @@ export default function CompanyMasterView() {
   const handleConfirmDelete = async () => {
     if (!companyToDelete) return;
     const id = companyToDelete.CompanyMasterId ?? companyToDelete.companyMasterId ?? companyToDelete.CompanyId ?? companyToDelete.companyId ?? companyToDelete.id;
-    const name = companyToDelete.CompanyName || companyToDelete.companyName || `Company #${id}`;
+    const name = companyToDelete.CompanyName || companyToDelete.companyName || 'this company';
 
     setIsDeleting(true);
     try {
@@ -408,7 +408,7 @@ export default function CompanyMasterView() {
           badge={
             selectedId && (
               <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/50">
-                Editing #{selectedId}
+                Edit Mode
               </span>
             )
           }
@@ -615,7 +615,7 @@ export default function CompanyMasterView() {
           <table className="w-full border-collapse text-left text-sm">
             <thead>
               <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                <th className="py-3 px-4 w-16 text-center">#</th>
+                <th className="py-3 px-4 w-16 text-center">S.No</th>
                 <th className="py-3 px-5">Company Code</th>
                 <th className="py-3 px-6">Company Name</th>
                 <th className="py-3 px-5">Contact Number</th>
@@ -789,7 +789,7 @@ export default function CompanyMasterView() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                Are you sure you want to delete &ldquo;{companyToDelete.CompanyName || companyToDelete.companyName || `Company #${companyToDelete.CompanyMasterId || companyToDelete.CompanyId || companyToDelete.id}`}&rdquo;?
+                Are you sure you want to delete &ldquo;{companyToDelete.CompanyName || companyToDelete.companyName || 'this company'}&rdquo;?
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 This action cannot be undone. All associated configuration records for this company will be affected.
