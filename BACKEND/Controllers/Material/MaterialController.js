@@ -118,7 +118,18 @@ export const getMaterialDropdown = async (req, res) => {
         }
 
         if (parseInt(FlagId) === 3) {
-            const data = await getMaterialSubCategoryDropdown();
+            const { MaterialCategoryTypeId } = req.body;
+
+            if (!MaterialCategoryTypeId) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "MaterialCategoryTypeId is required"
+                });
+            }
+
+            const data = await getMaterialSubCategoryDropdown(
+                MaterialCategoryTypeId
+            );
 
             return res.status(200).json({
                 status: "success",
@@ -151,21 +162,14 @@ export const getMaterialDropdown = async (req, res) => {
         if (parseInt(FlagId) === 6) {
             const { GSTTypeId } = req.body;
 
-            // Validate GSTTypeId
-            if (
-                GSTTypeId === undefined ||
-                GSTTypeId === null ||
-                GSTTypeId === "" ||
-                !Number.isInteger(Number(GSTTypeId)) ||
-                Number(GSTTypeId) <= 0
-            ) {
+            if (!GSTTypeId) {
                 return res.status(400).json({
                     status: "error",
-                    message: "A valid GSTTypeId is required to fetch GST rates"
+                    message: "GSTTypeId is required"
                 });
             }
 
-            const data = await getGSTRateDropdown(Number(GSTTypeId));
+            const data = await getGSTRateDropdown(GSTTypeId);
 
             return res.status(200).json({
                 status: "success",

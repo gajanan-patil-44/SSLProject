@@ -8,6 +8,11 @@ export const navigationConfig = [
         path: "/master/companies"
       },
       {
+        label: "Location Type Master",
+        icon: "MapPin",
+        path: "/master/location-type-master"
+      },
+      {
         label: "Products",
         icon: "Package",
         path: "/master/products"

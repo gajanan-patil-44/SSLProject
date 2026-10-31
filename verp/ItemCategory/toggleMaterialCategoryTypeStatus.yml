@@ -9,13 +9,23 @@ http:
   body:
     type: json
     data: |-
+<<<<<<< HEAD
+      {  
+      "IsDisabled": false,
+      "MaterialCategoryTypeId": 1,
+      "UpdatedByUserName": "admin1",
+      "flagId": 4
+=======
       {
         "flagId":4,
         "IsDisabled":true,
         "UpdatedByUserName":"kavya",
         "MaterialCategoryTypeId":2
+>>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkyMDYyMjYyLCJleHAiOjE3OTIwOTEwNjJ9.gYOFfl1ZmHLjtRmttPoLl-dfHBlWAyVIOH3MUaQ4aEM
 
 settings:
   encodeUrl: true

@@ -3,77 +3,31 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// ==========================================================
-// UPLOAD CONFIGURATION
-// ==========================================================
-
-// Read the base directory from .env
 const uploadDirectory = process.env.UPLOADS_DIRECTORY;
 
 if (!uploadDirectory) {
-    throw new Error(
-        "UPLOADS_DIRECTORY is missing in the .env file"
-    );
+    throw new Error("UPLOADS_DIRECTORY is missing in .env");
 }
 
-const MB = 1024 * 1024;
-const MAX_FILE_SIZE = 10 * MB;
+export const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 
-// ==========================================================
-// ALLOWED FILE EXTENSIONS
-// ==========================================================
-
-const allowedExtensions = [
-    // Images
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".webp",
-
-    // Documents
-    ".pdf",
-    ".doc",
-    ".docx",
-    ".xls",
-    ".xlsx",
-    ".csv",
-    ".txt"
-];
-
-// ==========================================================
-// UPLOAD CONFIGURATION BY FIELD NAME
-// ==========================================================
+const imageExtensions = [".jpg", ".jpeg", ".png", ".webp"];
 
 const uploadConfig = {
     Photo: {
         directory: path.join(uploadDirectory, "photos"),
-        allowedExtensions: [
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".webp"
-        ]
+        allowedExtensions: imageExtensions
     },
-
     UserFile: {
         directory: path.join(uploadDirectory, "userfiles"),
-        allowedExtensions
+        allowedExtensions: [...imageExtensions, ".pdf"]
     }
 };
 
-// ==========================================================
-// CREATE UPLOAD DIRECTORIES
-// ==========================================================
-
-Object.values(uploadConfig).forEach(({ directory }) => {
-    fs.mkdirSync(directory, {
-        recursive: true
-    });
-});
-
-// ==========================================================
-// DISK STORAGE
-// ==========================================================
+// Create upload directories.
+for (const config of Object.values(uploadConfig)) {
+    fs.mkdirSync(config.directory, { recursive: true });
+}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -82,7 +36,8 @@ const storage = multer.diskStorage({
         if (!config) {
             return cb(
                 new Error(
-                    `Unsupported file field: ${file.fieldname}`
+                    `Unsupported file field: ${file.fieldname}. ` +
+                    "Allowed fields: Photo, UserFile"
                 )
             );
         }
@@ -91,56 +46,43 @@ const storage = multer.diskStorage({
     },
 
     filename: (req, file, cb) => {
-        const extension = path
-            .extname(file.originalname)
-            .toLowerCase();
+        const extension = path.extname(file.originalname).toLowerCase();
 
-        const uniqueFileName =
-            `${Date.now()}-${Math.round(Math.random() * 1E9)}${extension}`;
+        const filename =
+            `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
 
-        cb(null, uniqueFileName);
+        cb(null, filename);
     }
 });
-
-// ==========================================================
-// FILE FILTER
-// ==========================================================
 
 const fileFilter = (req, file, cb) => {
     const config = uploadConfig[file.fieldname];
 
     if (!config) {
         return cb(
-            new Error(
-                `Unsupported file field: ${file.fieldname}`
-            )
+            new Error(`Unsupported file field: ${file.fieldname}`)
         );
     }
 
-    const extension = path
-        .extname(file.originalname)
-        .toLowerCase();
+    const extension = path.extname(file.originalname).toLowerCase();
 
     if (!config.allowedExtensions.includes(extension)) {
-        return cb(
-            new Error(
-                `Unsupported file type for ${file.fieldname}. ` +
-                `Allowed formats: ${config.allowedExtensions.join(", ")}`
-            )
-        );
-    }
+        const message =
+            file.fieldname === "Photo"
+                ? "Photo must be JPG, JPEG, PNG or WEBP. PDF is not allowed."
+                : "UserFile must be JPG, JPEG, PNG, WEBP or PDF.";
 
+        return cb(new Error(message));
+    }
     cb(null, true);
 };
-
-// ==========================================================
-// MULTER CONFIGURATION
-// ==========================================================
 
 export const uploadUserPhoto = multer({
     storage,
     fileFilter,
     limits: {
-        fileSize: MAX_FILE_SIZE
+        fileSize: MAX_FILE_SIZE,
+        files: 11,
+        fields: 100
     }
 });

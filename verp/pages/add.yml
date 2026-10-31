@@ -26,11 +26,11 @@ http:
 
       {
           "FlagId": 1,
-          "PageName": "company-products",
-          "PageUrl": "/master/company-products",
-          "PageIcon": "company-products page",
-          "PageType": "ParentPage",
-          "ParentPageId": 2,
+          "PageName": "Manage-Page",
+          "PageUrl": "/master/manage-page",
+          "PageIcon": "pages",
+          "PageType": "MainPage",
+          "ParentPageId": null,
           "RoleIds": [1],
           "CreatedByUserName": "admin1"
       }

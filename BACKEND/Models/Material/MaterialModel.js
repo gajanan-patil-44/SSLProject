@@ -89,7 +89,7 @@ export const getMaterialCategoryDropdown = async () => {
 // =====================================================
 // FLAG ID 3 - MATERIAL SUB-CATEGORY DROPDOWN
 // =====================================================
-export const getMaterialSubCategoryDropdown = async () => {
+export const getMaterialSubCategoryDropdown = async (MaterialCategoryTypeId) => {
     const query = `
         SELECT
             s."MaterialSubCategoryTypeId",
@@ -103,10 +103,14 @@ export const getMaterialSubCategoryDropdown = async () => {
                s."MaterialCategoryTypeId"
         WHERE s."IsDisabled" = false
           AND c."IsDisabled" = false
+          AND s."MaterialCategoryTypeId" = $1
         ORDER BY s."MaterialSubCategoryTypeName" ASC
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [
+        MaterialCategoryTypeId
+    ]);
+
     return result.rows;
 };
 // =====================================================
@@ -146,7 +150,9 @@ export const getGSTTypeDropdown = async () => {
 // =====================================================
 // FLAG ID 6 - GST RATE DROPDOWN
 // =====================================================
-
+// =====================================================
+// FLAG ID 6 - GST RATE DROPDOWN
+// =====================================================
 export const getGSTRateDropdown = async (GSTTypeId) => {
     const query = `
         SELECT
@@ -155,10 +161,10 @@ export const getGSTRateDropdown = async (GSTTypeId) => {
             r."GSTPercentage"
         FROM "LKP"."GSTRate" r
         INNER JOIN "LKP"."GSTType" t
-            ON r."GSTTypeId" = t."GSTTypeId"
-        WHERE r."GSTTypeId" = $1
-          AND r."IsDisabled" = false
+            ON t."GSTTypeId" = r."GSTTypeId"
+        WHERE r."IsDisabled" = false
           AND t."IsDisabled" = false
+          AND r."GSTTypeId" = $1
         ORDER BY r."GSTPercentage" ASC
     `;
 
@@ -177,6 +183,7 @@ export const getFileTypeDropdown = async () => {
             "Description"
         FROM "LKP"."FileType"
         WHERE "IsDisabled" = false
+        and "FileTypeId" IN (4)
         ORDER BY "FileTypeName" ASC
     `;
 
