@@ -16,10 +16,10 @@ http:
 
       {
         "flagId":2,
-        "ProjectId":3,
-        "CompanyProductId":3,
-        "ProjectName":"Inventory Managementt",
-        "ProjectCode":"INV-MGMTt",
+        "ProjectId":1,
+        "CompanyProductId":1,
+        "ProjectName":"test project",
+        "ProjectCode":"vish3",
         "IsDisabled":false,
         "Description":"hgdg",
         "UpdatedByUserId":1

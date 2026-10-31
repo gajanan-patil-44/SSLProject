@@ -19,3 +19,4 @@ export const MATERIAL="/verp-service/material"
 export const VENDOR="/verp-service/vendor"
 
 export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
+export const COMPANY_MASTER="/verp-service/companyMaster"
