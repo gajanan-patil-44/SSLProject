@@ -22,6 +22,7 @@ import MaterialSubCategoryCreation from './pages/MaterialSubCategoryCreation';
 import ItemCreation from './pages/ItemCreation';
 import VendorManagement from './pages/VendorManagement';
 import LocationTypeMasterView from './pages/Master/LocationTypeMasterView';
+import LocationMasterView from './pages/Master/LocationMasterView';
 import CompanyMasterView from './pages/Master/CompanyMasterView';
 
 // Reusable dynamic page renderer
@@ -50,6 +51,8 @@ export default function App() {
           <Route path="master/company-master" element={<CompanyMasterView />} />
           <Route path="master/location-type-master" element={<LocationTypeMasterView />} />
           <Route path="master/location-type" element={<LocationTypeMasterView />} />
+          <Route path="master/location-master" element={<LocationMasterView />} />
+          <Route path="master/locations" element={<LocationMasterView />} />
           <Route path="master/products" element={<KeyedModuleRenderer />} />
           <Route path="master/company-products" element={<KeyedModuleRenderer />} />
           <Route path="master/projects" element={<KeyedModuleRenderer />} />
@@ -67,6 +70,8 @@ export default function App() {
           <Route path="master/location" element={<Navigate to="/master/location-type-master" replace />} />
           <Route path="location-type-master" element={<Navigate to="/master/location-type-master" replace />} />
           <Route path="location-type" element={<Navigate to="/master/location-type-master" replace />} />
+          <Route path="location-master" element={<Navigate to="/master/location-master" replace />} />
+          <Route path="locations" element={<Navigate to="/master/location-master" replace />} />
           <Route path="company-master" element={<Navigate to="/master/companies" replace />} />
           <Route path="master/item-creation" element={<Navigate to="/master/material-creation" replace />} />
           <Route path="master/items" element={<Navigate to="/master/material-creation" replace />} />

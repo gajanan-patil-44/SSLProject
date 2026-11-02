@@ -13,6 +13,11 @@ export const navigationConfig = [
         path: "/master/location-type-master"
       },
       {
+        label: "Location Master",
+        icon: "Globe",
+        path: "/master/location-master"
+      },
+      {
         label: "Products",
         icon: "Package",
         path: "/master/products"

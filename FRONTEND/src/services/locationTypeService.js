@@ -2,15 +2,6 @@
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
-const STORAGE_KEY = 'erp_location_type_flow';
-
-export const INITIAL_LOCATION_FLOW = [
-  { LocationTypeMasterId: 1, LocationTypeMasterName: 'Country', ParentTypeId: null, ParentLocationTypeName: null, childName: 'Country', parentName: '-' },
-  { LocationTypeMasterId: 2, LocationTypeMasterName: 'State', ParentTypeId: 1, ParentLocationTypeName: 'Country', childName: 'State', parentName: 'Country' },
-  { LocationTypeMasterId: 3, LocationTypeMasterName: 'District', ParentTypeId: 2, ParentLocationTypeName: 'State', childName: 'District', parentName: 'State' },
-  { LocationTypeMasterId: 4, LocationTypeMasterName: 'Taluk', ParentTypeId: 3, ParentLocationTypeName: 'District', childName: 'Taluk', parentName: 'District' }
-];
-
 export const locationTypeService = {
   /**
    * View / Fetch all location types (FlagId: 1)
@@ -45,36 +36,12 @@ export const locationTypeService = {
   },
 
   /**
-   * Fetch all location flow types with fallback to cached storage
+   * Fetch all location flow types
    */
   getLocationTypes: async () => {
-    try {
-      const res = await locationTypeService.getLocationTypeMaster({ FlagId: 1 });
-      const rawList = res?.data?.data || res?.data || res;
-      if (Array.isArray(rawList) && rawList.length > 0) {
-        return rawList;
-      }
-    } catch (err) {
-      console.warn('API /verp-service/locationTypeMaster/view unavailable, falling back to local flow cache:', err);
-    }
-
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch {
-      // ignore JSON parse error
-    }
-
-    // initialize storage with default flow if empty
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_LOCATION_FLOW));
-    } catch {}
-    return [...INITIAL_LOCATION_FLOW];
+    const res = await locationTypeService.getLocationTypeMaster({ FlagId: 1 });
+    const rawList = res?.data?.data || res?.data || res;
+    return Array.isArray(rawList) ? rawList : [];
   },
 
   /**
@@ -166,61 +133,7 @@ export const locationTypeService = {
       }
       throw err;
     }
-  },
-
-  /**
-   * Save a new location type flow entry
-   */
-  addLocationType: async ({ childName, parentName }) => {
-    const list = await locationTypeService.getLocationTypes();
-    const newId = list.length > 0 ? Math.max(...list.map(item => Number(item.id) || 0)) + 1 : 1;
-    const newItem = {
-      id: newId,
-      childName: childName.trim(),
-      parentName: parentName ? parentName.trim() : '-'
-    };
-    const updated = [...list, newItem];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return newItem;
-  },
-
-  /**
-   * Update an existing location type flow entry
-   */
-  updateLocationType: async (id, { childName, parentName }) => {
-    const list = await locationTypeService.getLocationTypes();
-    const updated = list.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          childName: childName.trim(),
-          parentName: parentName ? parentName.trim() : '-'
-        };
-      }
-      return item;
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return updated.find(item => item.id === id);
-  },
-
-  /**
-   * Delete a location type flow entry
-   */
-  deleteLocationType: async (id) => {
-    const list = await locationTypeService.getLocationTypes();
-    const updated = list.filter(item => item.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return true;
-  },
-
-  /**
-   * Reset flow to initial mock data
-   */
-  resetToDefault: async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_LOCATION_FLOW));
-    return [...INITIAL_LOCATION_FLOW];
   }
 };
 
 export default locationTypeService;
-
