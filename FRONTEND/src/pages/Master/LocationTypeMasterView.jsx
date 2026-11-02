@@ -2,7 +2,7 @@
 // src/pages/Master/LocationTypeMasterView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
-import { locationTypeService, INITIAL_LOCATION_FLOW } from '../../services/locationTypeService';
+import { locationTypeService } from '../../services/locationTypeService';
 import EditLocationTypeMasterModal from './EditLocationTypeMasterModal';
 import {
   PageHeader,
@@ -172,21 +172,12 @@ export default function LocationTypeMasterView() {
       // Hit /verp-service/locationTypeMaster/view with FlagId: 1
       const res = await locationTypeService.getLocationTypeMaster({ FlagId: 1 });
       const rawList = res?.data?.data || res?.data || res;
-      if (Array.isArray(rawList)) {
-        const list = rawList.map((item, idx) => normalizeLocationType(item, idx));
-        setItems(list);
-      } else {
-        const fallback = await locationTypeService.getLocationTypes();
-        setItems(fallback.map((it, idx) => normalizeLocationType(it, idx)));
-      }
+      const list = Array.isArray(rawList) ? rawList.map((item, idx) => normalizeLocationType(item, idx)) : [];
+      setItems(list);
     } catch (err) {
-      console.warn('Failed to load from /verp-service/locationTypeMaster/view, using fallback:', err);
-      try {
-        const fallback = await locationTypeService.getLocationTypes();
-        setItems(fallback.map((it, idx) => normalizeLocationType(it, idx)));
-      } catch {
-        setItems(INITIAL_LOCATION_FLOW.map((it, idx) => normalizeLocationType(it, idx)));
-      }
+      console.error('Failed to load from /verp-service/locationTypeMaster/view:', err);
+      showToast('Failed to load location types', 'error');
+      setItems([]);
     } finally {
       setFetching(false);
     }

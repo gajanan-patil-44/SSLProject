@@ -205,14 +205,8 @@ export default function CompanyMasterView() {
       setCompanies(list);
     } catch (err) {
       console.error('Failed to load company master via getCompanyMaster:', err);
-      // Fallback to legacy getCompanies if getCompanyMaster is unavailable
-      try {
-        const fallbackRes = await companyService.getCompanies();
-        const fallbackList = Array.isArray(fallbackRes?.data) ? fallbackRes.data : (Array.isArray(fallbackRes) ? fallbackRes : []);
-        setCompanies(fallbackList);
-      } catch {
-        showToast('Failed to load companies', 'error');
-      }
+      showToast('Failed to load companies', 'error');
+      setCompanies([]);
     } finally {
       setFetching(false);
     }
