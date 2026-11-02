@@ -249,8 +249,8 @@ export const createUserController = async (req, res) => {
 
         const email = String(userData.Email).trim();
 
-        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-
+        const emailRegex =
+            /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({
                 status: "error",
@@ -372,125 +372,125 @@ export const createUserController = async (req, res) => {
         // ROLE ID > 2 : NORMAL USER
         // ==========================================================
 
-     
-else {
-    // ------------------------------------------------------
-    // COMPANY ID
-    // ------------------------------------------------------
 
-    if (isEmpty(userData.CompanyId)) {
-        return res.status(400).json({
-            status: "error",
-            message: "CompanyId is required"
-        });
-    }
+        else {
+            // ------------------------------------------------------
+            // COMPANY ID
+            // ------------------------------------------------------
 
-    userData.CompanyId = Number(userData.CompanyId);
+            if (isEmpty(userData.CompanyId)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+            }
 
-    if (
-        !Number.isInteger(userData.CompanyId) ||
-        userData.CompanyId <= 0
-    ) {
-        return res.status(400).json({
-            status: "error",
-            message: "CompanyId must be a valid number"
-        });
-    }
+            userData.CompanyId = Number(userData.CompanyId);
 
-    // ------------------------------------------------------
-    // DESIGNATION
-    // ------------------------------------------------------
+            if (
+                !Number.isInteger(userData.CompanyId) ||
+                userData.CompanyId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId must be a valid number"
+                });
+            }
 
-    if (isEmpty(userData.DesignationId)) {
-        return res.status(400).json({
-            status: "error",
-            message: "DesignationId is required"
-        });
-    }
+            // ------------------------------------------------------
+            // DESIGNATION
+            // ------------------------------------------------------
 
-    userData.DesignationId = Number(userData.DesignationId);
+            if (isEmpty(userData.DesignationId)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationId is required"
+                });
+            }
 
-    if (
-        !Number.isInteger(userData.DesignationId) ||
-        userData.DesignationId <= 0
-    ) {
-        return res.status(400).json({
-            status: "error",
-            message: "DesignationId must be a valid number"
-        });
-    }
+            userData.DesignationId = Number(userData.DesignationId);
 
-    // ------------------------------------------------------
-    // GET DESIGNATION DETAILS
-    // ------------------------------------------------------
+            if (
+                !Number.isInteger(userData.DesignationId) ||
+                userData.DesignationId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DesignationId must be a valid number"
+                });
+            }
 
-    const designation = await getDesignationById(
-        userData.DesignationId
-    );
+            // ------------------------------------------------------
+            // GET DESIGNATION DETAILS
+            // ------------------------------------------------------
 
-    if (!designation) {
-        return res.status(400).json({
-            status: "error",
-            message: "Invalid DesignationId"
-        });
-    }
+            const designation = await getDesignationById(
+                userData.DesignationId
+            );
 
-    // ------------------------------------------------------
-    // DESIGNATION LEVEL 100
-    // CompanyProductId, ProjectId and ReportingManagerUserId
-    // are not required
-    // ------------------------------------------------------
+            if (!designation) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid DesignationId"
+                });
+            }
 
-    if (Number(designation.DesignationLevel) === 100) {
-        userData.CompanyProductId = null;
-        userData.ProjectId = null;
-        userData.ReportingManagerUserId = null;
-    } else {
-        // --------------------------------------------------
-        // COMPANY PRODUCT
-        // --------------------------------------------------
+            // ------------------------------------------------------
+            // DESIGNATION LEVEL 100
+            // CompanyProductId, ProjectId and ReportingManagerUserId
+            // are not required
+            // ------------------------------------------------------
 
-        if (
-            !Array.isArray(userData.CompanyProductId) ||
-            userData.CompanyProductId.length === 0
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "CompanyProductId must be a non-empty array"
-            });
+            if (Number(designation.DesignationLevel) === 100) {
+                userData.CompanyProductId = null;
+                userData.ProjectId = null;
+                userData.ReportingManagerUserId = null;
+            } else {
+                // --------------------------------------------------
+                // COMPANY PRODUCT
+                // --------------------------------------------------
+
+                if (
+                    !Array.isArray(userData.CompanyProductId) ||
+                    userData.CompanyProductId.length === 0
+                ) {
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "CompanyProductId must be a non-empty array"
+                    });
+                }
+
+                // --------------------------------------------------
+                // PROJECT
+                // --------------------------------------------------
+
+                if (
+                    !Array.isArray(userData.ProjectId) ||
+                    userData.ProjectId.length === 0
+                ) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "ProjectId must be a non-empty array"
+                    });
+                }
+
+                // --------------------------------------------------
+                // REPORTING MANAGER
+                // --------------------------------------------------
+
+                if (
+                    !Array.isArray(userData.ReportingManagerUserId) ||
+                    userData.ReportingManagerUserId.length === 0
+                ) {
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "ReportingManagerUserId must be a non-empty array"
+                    });
+                }
+            }
         }
-
-        // --------------------------------------------------
-        // PROJECT
-        // --------------------------------------------------
-
-        if (
-            !Array.isArray(userData.ProjectId) ||
-            userData.ProjectId.length === 0
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "ProjectId must be a non-empty array"
-            });
-        }
-
-        // --------------------------------------------------
-        // REPORTING MANAGER
-        // --------------------------------------------------
-
-        if (
-            !Array.isArray(userData.ReportingManagerUserId) ||
-            userData.ReportingManagerUserId.length === 0
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "ReportingManagerUserId must be a non-empty array"
-            });
-        }
-    }
-}
 
         // ==========================================================
         // CONVERT COMPANY PRODUCT IDS
@@ -628,111 +628,82 @@ else {
         // GET UPLOADED FILES
         // Supports multer array() and fields()
         // ==========================================================
+// ==========================================================
+// GET UPLOADED FILES
+// ==========================================================
 
-       const uploadedFiles = Array.isArray(req.files)
+const uploadedFiles = Array.isArray(req.files)
     ? req.files
     : Object.values(req.files || {}).flat();
 
+const fileTypeIds = Array.isArray(userData.FileTypeId)
+    ? userData.FileTypeId
+    : userData.FileTypeId
+        ? [userData.FileTypeId]
+        : [];
+
+let processedFiles;
+
 try {
-    await convertUploadedImagesToPdf(uploadedFiles);
+    processedFiles = await convertUploadedImagesToPdf(
+        uploadedFiles,
+        fileTypeIds
+    );
 } catch (error) {
     return res.status(400).json({
         status: "error",
         message: error.message
     });
 }
-        
-        // ==========================================================
-        // PHOTO - STORE AS BINARY BUFFER
-        // ==========================================================
 
-        const uploadedPhoto = uploadedFiles.find(
-            (file) => file.fieldname === "Photo"
-        );
+// ==========================================================
+// PHOTO - STORE CONVERTED PDF AS BYTEA
+// ==========================================================
 
-        userData.Photo = null;
+const uploadedPhoto = processedFiles.find(
+    file => file.fieldname === "Photo"
+);
 
-        if (uploadedPhoto) {
-            if (!uploadedPhoto.path) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "Photo PDF path is missing"
-                });
-            }
+userData.Photo = null;
 
-            // Read the converted PDF as binary data.
-            userData.Photo = await readFile(uploadedPhoto.path);
+if (uploadedPhoto) {
+    userData.Photo = await readFile(uploadedPhoto.path);
+}
 
-            if (
-                !Buffer.isBuffer(userData.Photo) ||
-                userData.Photo.length === 0
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "Photo PDF binary data is empty or invalid"
-                });
-            }
-        }
+// ==========================================================
+// USER FILES - STORE MERGED PDF PATHS
+// ==========================================================
 
+const uploadedUserFiles = processedFiles.filter(
+    file => file.fieldname === "UserFile"
+);
 
-        // ==========================================================
-        // USER FILES
-        // ==========================================================
+userData.UserFiles = uploadedUserFiles.map(file => ({
+    FileTypeId: Number(file.FileTypeId),
+    FilePath: file.path
+}));
 
-        const uploadedUserFiles = uploadedFiles.filter(
-            (file) => file.fieldname === "UserFile"
-        );
+await createUser(userData, processedFiles);
 
-        const fileTypeIds = Array.isArray(userData.FileTypeId)
-            ? userData.FileTypeId
-            : userData.FileTypeId
-                ? [userData.FileTypeId]
-                : [];
+// ==========================================================
+// SUCCESS RESPONSE
+// ==========================================================
 
-        if (uploadedUserFiles.length !== fileTypeIds.length) {
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "Each UserFile must have a corresponding FileTypeId"
-            });
-        }
+return res.status(201).json({
+    status: "success",
+    message: "User created successfully"
+});
 
-        userData.UserFiles = uploadedUserFiles.map(
-            (file, index) => ({
-                FileTypeId: Number(fileTypeIds[index]),
-                FilePath: file.path
-            })
-        );
+} catch (error) {
+    console.error("Create User Error:", error);
 
-        // ==========================================================
-        // CREATE USER
-        // ==========================================================
-
-        await createUser(
-            userData,
-            req.files
-        );
-
-        // ==========================================================
-        // SUCCESS RESPONSE
-        // ==========================================================
-
-        return res.status(201).json({
-            status: "success",
-            message: "User created successfully"
-        });
-
-    } catch (error) {
-        console.error("Create User Error:", error);
-
-        return res.status(500).json({
-            status: "error",
-            message: "Internal server error",
-            error: error.message
-        });
-    }
+    return res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+        error: error.message
+    });
+}
 };
-
 // ==========================================================
 // COMPANY / PRODUCT / PROJECT DROPDOWN
 //
