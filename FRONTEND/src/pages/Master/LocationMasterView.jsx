@@ -2,8 +2,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationService } from '../../services/locationService';
-import { locationTypeService } from '../../services/locationTypeService';
-import { companyService } from '../../services/companyService';
 import {
   PageHeader,
   Card,
@@ -139,27 +137,16 @@ export default function LocationMasterView() {
   // 1. Fetch Location Types dropdown via /verp-service/locationMaster/getLocationTypes with { flagId: 1 }
   const fetchLocationTypes = async () => {
     try {
-      // Hit /verp-service/locationMaster/getLocationTypes with payload { flagId: 1 }
       const res = await locationService.getLocationTypes({ flagId: 1 });
       const raw = res?.data?.data || res?.data || res;
-      if (Array.isArray(raw) && raw.length > 0) {
+      if (Array.isArray(raw)) {
         setLocationTypes(raw);
       } else {
-        const fallbackRes = await locationTypeService.getLocationTypeMaster({ FlagId: 1 });
-        const fbRaw = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes;
-        if (Array.isArray(fbRaw) && fbRaw.length > 0) {
-          setLocationTypes(fbRaw);
-        }
+        setLocationTypes([]);
       }
     } catch (err) {
-      console.warn('Failed to load location types via /verp-service/locationMaster/getLocationTypes:', err);
-      try {
-        const fallbackRes = await locationTypeService.getLocationTypeMaster({ FlagId: 1 });
-        const fbRaw = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes;
-        if (Array.isArray(fbRaw)) setLocationTypes(fbRaw);
-      } catch (fbErr) {
-        console.warn('Fallback location types load also failed:', fbErr);
-      }
+      console.error('Failed to load location types via /verp-service/locationMaster/getLocationTypes:', err);
+      setLocationTypes([]);
     }
   };
 
@@ -177,23 +164,14 @@ export default function LocationMasterView() {
         LocationTypeMasterId: Number(locTypeId)
       });
       const raw = res?.data?.data || res?.data || res;
-      if (Array.isArray(raw) && raw.length > 0) {
+      if (Array.isArray(raw)) {
         setCompanies(raw);
       } else {
-        // Fallback to general company master if needed
-        const fallbackRes = await companyService.getCompanyMaster({ flagId: 1 });
-        const fbRaw = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes;
-        if (Array.isArray(fbRaw)) setCompanies(fbRaw);
+        setCompanies([]);
       }
     } catch (err) {
-      console.warn('Failed to load companies via /verp-service/locationMaster/getParentLocationTypes:', err);
-      try {
-        const fallbackRes = await companyService.getCompanyMaster({ flagId: 1 });
-        const fbRaw = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes;
-        if (Array.isArray(fbRaw)) setCompanies(fbRaw);
-      } catch (fbErr) {
-        console.warn('Fallback company load also failed:', fbErr);
-      }
+      console.error('Failed to load companies via /verp-service/locationMaster/getParentLocationTypes:', err);
+      setCompanies([]);
     } finally {
       setLoadingCompanies(false);
     }
@@ -216,16 +194,12 @@ export default function LocationMasterView() {
       const raw = res?.data?.data || res?.data || res;
       if (Array.isArray(raw)) {
         setParentLocationsList(raw);
+      } else {
+        setParentLocationsList([]);
       }
     } catch (err) {
-      console.warn('Failed to load parent locations via /verp-service/locationMaster/getParentLocations:', err);
-      try {
-        const fallbackRes = await locationService.getLocationDropdown({ flagId: 3 });
-        const fbRaw = fallbackRes?.data?.data || fallbackRes?.data || fallbackRes;
-        if (Array.isArray(fbRaw)) setParentLocationsList(fbRaw);
-      } catch (fbErr) {
-        console.warn('Fallback parent locations also failed:', fbErr);
-      }
+      console.error('Failed to load parent locations via /verp-service/locationMaster/getParentLocations:', err);
+      setParentLocationsList([]);
     } finally {
       setLoadingParentLocations(false);
     }

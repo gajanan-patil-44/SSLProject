@@ -2,8 +2,6 @@
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
-const STORAGE_KEY = 'erp_location_master_data';
-
 // Helper to extract session username
 const getSessionUserName = () => {
   try {
@@ -20,39 +18,6 @@ const getSessionUserName = () => {
   }
 };
 
-export const INITIAL_LOCATIONS = [
-  {
-    LocationMasterId: 1,
-    LocationTypeMasterId: 1,
-    LocationTypeName: 'Country',
-    CompanyMasterId: null,
-    CompanyName: null,
-    ParentLocationMasterId: null,
-    ParentLocationName: null,
-    LocationName: 'India',
-    ContactPerson: 'National Coordinator',
-    ContactNumber: '9845012345',
-    EmailId: 'india.ops@erpcorp.com',
-    Address: 'Connaught Place, New Delhi',
-    IsDisabled: false
-  },
-  {
-    LocationMasterId: 2,
-    LocationTypeMasterId: 2,
-    LocationTypeName: 'State',
-    CompanyMasterId: 1,
-    CompanyName: 'GSL Corp',
-    ParentLocationMasterId: 1,
-    ParentLocationName: 'India',
-    LocationName: 'Karnataka',
-    ContactPerson: 'Ramesh Kumar',
-    ContactNumber: '9845098765',
-    EmailId: 'karnataka.ops@gsl.com',
-    Address: 'MG Road, Bangalore',
-    IsDisabled: false
-  }
-];
-
 export const locationService = {
   /**
    * Fetch Location Types dropdown
@@ -64,18 +29,11 @@ export const locationService = {
       API_ROUTES?.LOCATION?.GET_LOCATION_TYPES ||
       '/verp-service/locationMaster/getLocationTypes';
 
-    try {
-      return await apiClient.post(endpoint, {
-        flagId: 1,
-        FlagId: 1,
-        ...payload
-      });
-    } catch (err) {
-      console.warn('API /verp-service/locationMaster/getLocationTypes failed, trying fallback:', err);
-      // Fallback to locationTypeService if locationMaster endpoint is unavailable
-      const fallbackEndpoint = '/verp-service/locationTypeMaster/view';
-      return await apiClient.post(fallbackEndpoint, { FlagId: 1, flagId: 1 });
-    }
+    return apiClient.post(endpoint, {
+      flagId: 1,
+      FlagId: 1,
+      ...payload
+    });
   },
 
   /**
@@ -136,24 +94,11 @@ export const locationService = {
       API_ROUTES?.LOCATION?.VIEW ||
       '/verp-service/locationMaster/view';
 
-    try {
-      return await apiClient.post(endpoint, {
-        flagId: 1,
-        FlagId: 1,
-        ...payload
-      });
-    } catch (err) {
-      console.warn('API /verp-service/locationMaster/view unavailable, using local cache:', err);
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          return { data: { data: JSON.parse(stored) } };
-        }
-      } catch {
-        // ignore
-      }
-      return { data: { data: [...INITIAL_LOCATIONS] } };
-    }
+    return apiClient.post(endpoint, {
+      flagId: 1,
+      FlagId: 1,
+      ...payload
+    });
   },
 
   /**
@@ -204,15 +149,7 @@ export const locationService = {
       CreatedByUserName: data.CreatedByUserName || sessionUser
     };
 
-    try {
-      const res = await apiClient.post(endpoint, payload);
-      locationService.syncToLocalCache(payload);
-      return res;
-    } catch (err) {
-      console.warn('API /verp-service/locationMaster/addLocationMaster error, updating local cache:', err);
-      locationService.syncToLocalCache(payload);
-      return { data: { message: 'Location added successfully', status: 'success' } };
-    }
+    return apiClient.post(endpoint, payload);
   },
 
   /**
@@ -224,17 +161,11 @@ export const locationService = {
       API_ROUTES?.LOCATION?.DROPDOWN ||
       '/verp-service/locationMaster/dropdown';
 
-    try {
-      return await apiClient.post(endpoint, {
-        flagId: 3,
-        FlagId: 3,
-        ...payload
-      });
-    } catch (err) {
-      console.warn('API /verp-service/locationMaster/dropdown unavailable, falling back to local list:', err);
-      const res = await locationService.getLocationMaster();
-      return res;
-    }
+    return apiClient.post(endpoint, {
+      flagId: 3,
+      FlagId: 3,
+      ...payload
+    });
   },
 
   /**
@@ -270,31 +201,7 @@ export const locationService = {
       }
       throw err;
     }
-  },
-
-  /**
-   * Helper to sync newly added item to local cache
-   */
-  syncToLocalCache: (newItem) => {
-    try {
-      let list = [...INITIAL_LOCATIONS];
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        list = JSON.parse(stored);
-      }
-      const nextId = list.reduce((max, it) => Math.max(max, it.LocationMasterId || 0), 0) + 1;
-      const formatted = {
-        ...newItem,
-        LocationMasterId: nextId,
-        id: nextId
-      };
-      list.push(formatted);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    } catch {
-      // ignore
-    }
   }
 };
 
 export default locationService;
-
