@@ -18,5 +18,7 @@ export const MATERIAL_SUB_CATEGORY_TYPE="/verp-service/materialSubCategoryType"
 export const MATERIAL="/verp-service/material"
 export const VENDOR="/verp-service/vendor"
 
+export const COMPANY_MASTER="/verp-service/companyMaster"
+export const LOCATION_MASTER="/verp-service/locationMaster"
 export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
 export const COMPANY_MASTER="/verp-service/companyMaster"
