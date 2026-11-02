@@ -307,11 +307,10 @@ export default function UserCreationView() {
   useEffect(() => { loadDropdowns(); }, []);
 
   const loadDropdowns = async () => {
-    const [genderRes, maritalRes, compRes, rolesRes, fileTypesRes] = await Promise.allSettled([
+    const [genderRes, maritalRes, compRes, fileTypesRes] = await Promise.allSettled([
       userService.getGenderDropdown(),
       userService.getMaritalStatusDropdown(),
       userService.getCompanyDropdown(),
-      userService.getRoleDropdown(),         // FlagId: 4 → /companyproductprojectdropdown
       userService.getFileTypes(),            // FlagId: 1 → /fileType/getfiletypes
     ]);
     if (genderRes.status === 'fulfilled')
@@ -320,8 +319,6 @@ export default function UserCreationView() {
       setMaritalStatuses(toOpts(maritalRes.value?.data ?? maritalRes.value, 'MaritalStatusId', 'MaritalStatusName'));
     if (compRes.status === 'fulfilled')
       setCompanies(toOpts(compRes.value?.data ?? compRes.value, 'CompanyId', 'CompanyName'));
-    if (rolesRes.status === 'fulfilled')
-      setRoles(toOpts(rolesRes.value?.data ?? rolesRes.value, 'RoleId', 'RoleName'));
     if (fileTypesRes.status === 'fulfilled') {
       const raw = fileTypesRes.value?.data ?? fileTypesRes.value;
       setFileTypes(toOpts(raw, 'FileTypeId', 'FileTypeName'));
@@ -388,12 +385,13 @@ export default function UserCreationView() {
     }
 
     if (name === 'CompanyId') {
-      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
+      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
       setProducts([]);
       setProjects([]);
       setDesignations([]);
+      setRoles([]);
       setReportingManagers([]);
-      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
       if (!value) return;
 
       // 1. Fetch Company Products
@@ -430,6 +428,18 @@ export default function UserCreationView() {
         setDesignations(toOpts(normalized, 'DesignationId', 'DesignationName'));
       } catch (err) {
         setDesignations([]);
+      }
+
+      // 3. Fetch Roles for selected Company via /verp-service/userCreation/companyproductprojectdropdown { FlagId: 4, CompanyId: value }
+      try {
+        const rolesRes = await userService.getRoleDropdown(value);
+        const rawRoles = rolesRes?.data?.data ?? rolesRes?.data ?? rolesRes;
+        const list = Array.isArray(rawRoles)
+          ? rawRoles
+          : (Array.isArray(rawRoles?.roles) ? rawRoles.roles : []);
+        setRoles(toOpts(list, 'RoleId', 'RoleName'));
+      } catch (err) {
+        setRoles([]);
       }
       return;
     }
@@ -862,6 +872,7 @@ export default function UserCreationView() {
     setProducts([]);
     setProjects([]);
     setDesignations([]);
+    setRoles([]);
     setReportingManagers([]);
     setCompletedSteps([]);
     setCurrentStep(1);
@@ -1287,8 +1298,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
                   <select name="RoleId" value={form.RoleId} onChange={change}
-                    className={`${selectCls(errors.RoleId)} pl-8`}>
-                    <option value="">— Select Role —</option>
+                    disabled={!form.CompanyId}
+                    className={`${selectCls(errors.RoleId)} pl-8 ${!form.CompanyId ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}>
+                    <option value="">{form.CompanyId ? '— Select Role —' : '— Select Company first —'}</option>
                     {roles.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
