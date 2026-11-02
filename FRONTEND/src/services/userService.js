@@ -53,7 +53,7 @@ export const userService = {
    *
    * FlagId: 1 → Company list            (CompanyId, CompanyName)
    * FlagId: 2 → Company Products        (CompanyProductId, ProductName) — requires CompanyId
-    * FlagId: 3 → Projects                (ProjectId, ProjectName)        — requires ProductId and CompanyProductId
+   * FlagId: 3 → Projects                (ProjectId, ProjectName)        — requires ProductId and CompanyProductId
    * FlagId: 4 → Roles                   (RoleId, RoleName)
    */
   getCompanyDropdown: async () => {
@@ -78,12 +78,13 @@ export const userService = {
   },
 
   /**
-   * Roles dropdown via /verp-service/roleCreation/getRole
-   * FlagId: 1 -> (RoleId, RoleName)
+   * Roles dropdown via /verp-service/userCreation/companyproductprojectdropdown
+   * FlagId: 4, CompanyId: number
    */
-  getRoleDropdown: async () => {
-    return apiClient.post(API_ROUTES.ROLE.GET_ROLE, {
-      FlagId: 1
+  getRoleDropdown: async (companyId) => {
+    return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
+      FlagId: 4,
+      CompanyId: Number(companyId)
     });
   },
 
@@ -116,10 +117,18 @@ export const userService = {
    * @param {Object} userData
    */
   editUserDetails: async (userData) => {
-    return apiClient.patch(API_ROUTES.USER_EDIT.EDIT_USER_DETAILS, {
+    const payload = {
       flagId: 2,
       ...userData
-    });
+    };
+    try {
+      return await apiClient.patch(API_ROUTES.USER_EDIT.EDIT_USER_DETAILS, payload);
+    } catch (err) {
+      if (err?.response?.status === 405) {
+        return await apiClient.post(API_ROUTES.USER_EDIT.EDIT_USER_DETAILS, payload);
+      }
+      throw err;
+    }
   },
 
   /**
