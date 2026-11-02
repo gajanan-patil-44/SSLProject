@@ -59,6 +59,12 @@ export const ROUTE_ALIASES = {
     '/location-type-master',
     '/location-type'
   ],
+  '/master/location-master': [
+    '/master/location-master',
+    '/master/locations',
+    '/location-master',
+    '/locations'
+  ],
   '/master/products': [
     '/master/products',
     '/products',
@@ -181,6 +187,10 @@ export const isRouteAllowed = (pathname, menuData, user, userContext) => {
     '/master/location-type-master',
     '/master/location-type',
     '/location-type-master',
+    '/master/location-master',
+    '/master/locations',
+    '/location-master',
+    '/locations',
     '/pages/utilities',
     '/help/docs',
     '/help/changelog'

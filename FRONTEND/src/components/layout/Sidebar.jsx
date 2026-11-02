@@ -187,6 +187,27 @@ const normalizeNavigation = (menuData) => {
         masterItems.push(locItem);
       }
     }
+
+    // Ensure Location Master is present
+    const hasLocationMaster = masterItems.some(it => 
+      it.path === '/master/location-master' || it.path === '/master/locations'
+    );
+    if (!hasLocationMaster) {
+      const locTypeIndex = masterItems.findIndex(it => it.path === '/master/location-type-master' || it.path === '/master/location-type');
+      const locationMasterItem = {
+        id: 'master_location_master_item',
+        label: 'Location Master',
+        path: '/master/location-master',
+        icon: 'Globe',
+        order: 1.6,
+        children: []
+      };
+      if (locTypeIndex !== -1) {
+        masterItems.splice(locTypeIndex + 1, 0, locationMasterItem);
+      } else {
+        masterItems.push(locationMasterItem);
+      }
+    }
   }
 
   const sections = [];
