@@ -142,6 +142,7 @@ const normalizeNavigation = (menuData) => {
     sectionsMap.get(sectionTitle).push(item);
   });
 
+
   const sections = [];
   sectionsMap.forEach((items, title) => {
     sections.push({

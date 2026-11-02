@@ -11,7 +11,7 @@ http:
     data: |-
       {
         "flagId":1,
-        "CompanyDesignationId":20
+        "CompanyDesignationId":3
       }
   auth: inherit
 

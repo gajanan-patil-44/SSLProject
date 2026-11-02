@@ -46,7 +46,7 @@ export const designationService = {
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
       DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
-      CanBeReportingManager: data.CanBeReportingManager !== undefined ? Boolean(data.CanBeReportingManager) : true,
+      CanBeReportingManager: (data.CanBeReportingManager !== undefined && data.CanBeReportingManager !== null) ? Boolean(data.CanBeReportingManager) : true,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       CreatedByUserName: userName
     });
@@ -87,7 +87,7 @@ export const designationService = {
       DesignationName: data.DesignationName || data.designationName || '',
       DesignationCode: data.DesignationCode || data.designationCode || '',
       DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
-      CanBeReportingManager: data.CanBeReportingManager !== undefined ? Boolean(data.CanBeReportingManager) : true,
+      CanBeReportingManager: (data.CanBeReportingManager !== undefined && data.CanBeReportingManager !== null) ? Boolean(data.CanBeReportingManager) : true,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       UpdateByUserName: userName
     });

@@ -38,10 +38,7 @@ export const getAllRoles = async () => {
 // ADD ROLE
 // ==========================================
 
-export const checkRoleExists = async (
-    RoleName,
-    RoleCode
-) => {
+export const checkRoleExists = async (RoleName,RoleCode) => {
 
     const query = `
         SELECT
@@ -63,12 +60,9 @@ export const checkRoleExists = async (
 
     return result.rows;
 };
-
-
 // ==========================================
 // CHECK COMPANY EXISTS
 // ==========================================
-
 export const checkCompanyExists = async (CompanyId) => {
 
     const query = `
@@ -88,12 +82,9 @@ export const checkCompanyExists = async (CompanyId) => {
 
     return result.rows;
 };
-
-
 // ==========================================
 // ADD ROLE
 // ==========================================
-
 export const addRole = async (userRole) => {
 
     const query = `
@@ -122,7 +113,7 @@ export const addRole = async (userRole) => {
         userRole.CompanyId,
         userRole.RoleName,
         userRole.Role_Code,
-        userRole.Description,
+        userRole.Description || null,
         userRole.CreatedByUserName
     ];
 
@@ -131,17 +122,20 @@ export const addRole = async (userRole) => {
     return result.rows[0];
 };
 
+export const getRoleCount = async () => {
+    const query = `
+        SELECT COUNT(*)::int AS "totalRoles"
+        FROM "LKP"."Role";
+    `;
 
+    const result = await pool.query(query);
+    return result.rows[0].totalRoles;
+};
 // ==========================================
 // CHECK ROLE EXISTS FOR UPDATE
 // ==========================================
 
-export const checkRoleExistsForUpdate = async (
-    RoleName,
-    RoleCode,
-    RoleId
-) => {
-
+export const checkRoleExistsForUpdate = async (RoleName, RoleCode,RoleId) => {
     const query = `
         SELECT
             "RoleId",

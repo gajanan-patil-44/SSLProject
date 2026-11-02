@@ -11,7 +11,7 @@ http:
     data:
       - name: EmployeeId
         type: text
-        value: EMP1
+        value: EMP7
       - name: FirstName
         type: text
         value: htihin
@@ -23,10 +23,10 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-        value: "99995955955"
+        value: "9999989866"
       - name: AltPhoneNumber
         type: text
-        value: "7838432136"
+        value: "9999989866"
       - name: DateOfBirth
         type: text
         value: 2004-08-12
@@ -42,21 +42,21 @@ http:
         disabled: true
       - name: Email
         type: text
-        value: admin1@gmail.com
+        value: admin7@gmail.com
       - name: LoginName
         type: text
-        value: admin1
+        value: ""
       - name: Photo
         type: file
         value:
-          - C:\Users\Praveen.VISHVIN\Downloads\WhatsApp Image 2026-09-21 at 5.05.03 PM (2).jpeg
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\a668a0e4c3d82bf4adcbb1ed76b7ee55.jpg
         contentType: image/jpeg
       - name: Password
         type: text
         value: Admin@123
       - name: CreatedByUserName
         type: text
-        value: ""
+        value: admin1
       - name: CompanyId
         type: text
         value: "1"
@@ -78,7 +78,11 @@ http:
       - name: UserFile
         type: file
         value:
+<<<<<<< HEAD
           - C:\Users\Praveen.VISHVIN\Downloads\WhatsApp Image 2026-09-21 at 5.05.02 PM (1).jpeg
+=======
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\1598765622876.jpeg
+>>>>>>> c19e1dc3e4c0f21eade8c29d4ab3d1a80df3824a
         contentType: image/jpeg
       - name: FileTypeId
         type: text
@@ -99,6 +103,7 @@ http:
       - name: ReportingManagerUserId
         type: text
         value: "[2]"
+        disabled: true
       - name: DateOfJoining
         type: text
         value: 2024-08-12

@@ -131,7 +131,8 @@ export const addCompany = async (companyData) => {
 
 export const checkCompanyExistsForUpdate = async (
     CompanyName,
-    CompanyCode
+    CompanyCode,
+    CompanyId
 ) => {
 
     try {
@@ -143,23 +144,22 @@ export const checkCompanyExistsForUpdate = async (
                 "CompanyCode"
             FROM "LKP"."Company"
             WHERE
-                "CompanyName" = $1
-                OR "CompanyCode" = $2
+                (
+                    "CompanyName" = $1
+                    OR "CompanyCode" = $2
+                )
+                AND "CompanyId" != $3
         `;
 
-        const values = [
+        const result = await pool.query(query, [
             CompanyName,
-            CompanyCode
-        ];
-
-        const result = await pool.query(query, values);
+            CompanyCode,
+            CompanyId
+        ]);
 
         return result.rows;
 
     } catch (error) {
-
-        // console.error("Error checking company for update:", error);
-
         throw error;
     }
 };

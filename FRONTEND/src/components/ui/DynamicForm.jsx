@@ -131,14 +131,14 @@ export const DynamicForm = ({
 
       case 'toggle':
       case 'switch': {
-        const isInverted = Boolean(field.invertToggle || field.key === 'CanBeReportingManager');
+        const isInverted = Boolean(field.invertToggle);
         return (
           <div key={field.key} className={`flex flex-col justify-center pt-2 ${field.gridSpan || "col-span-1"}`}>
             <Controller
               name={field.key}
               control={control}
               render={({ field: { value, onChange } }) => {
-                const actualValue = value !== undefined ? Boolean(value) : (field.defaultValue !== undefined ? Boolean(field.defaultValue) : true);
+                const actualValue = value !== undefined ? Boolean(value) : (field.defaultValue !== undefined ? Boolean(field.defaultValue) : false);
                 const isChecked = isInverted ? !actualValue : actualValue;
                 return (
                   <Switch
