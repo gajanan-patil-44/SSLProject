@@ -137,13 +137,12 @@ export default function LocationMasterView() {
   // 1. Fetch Location Types dropdown via /verp-service/locationMaster/getLocationTypes with { flagId: 1 }
   const fetchLocationTypes = async () => {
     try {
-      const res = await locationService.getLocationTypes({ flagId: 1 });
-      const raw = res?.data?.data || res?.data || res;
-      if (Array.isArray(raw)) {
-        setLocationTypes(raw);
-      } else {
-        setLocationTypes([]);
-      }
+      const res = await locationService.getLocationTypes();
+      const raw = res?.data?.data !== undefined ? res?.data?.data : (res?.data !== undefined ? res?.data : res);
+      const list = Array.isArray(raw)
+        ? raw
+        : (raw && typeof raw === 'object' && Object.keys(raw).length > 0 ? [raw] : []);
+      setLocationTypes(list);
     } catch (err) {
       console.error('Failed to load location types via /verp-service/locationMaster/getLocationTypes:', err);
       setLocationTypes([]);
@@ -160,15 +159,13 @@ export default function LocationMasterView() {
     setLoadingCompanies(true);
     try {
       const res = await locationService.getParentLocationTypes({
-        flagId: 2,
         LocationTypeMasterId: Number(locTypeId)
       });
-      const raw = res?.data?.data || res?.data || res;
-      if (Array.isArray(raw)) {
-        setCompanies(raw);
-      } else {
-        setCompanies([]);
-      }
+      const raw = res?.data?.data !== undefined ? res?.data?.data : (res?.data !== undefined ? res?.data : res);
+      const list = Array.isArray(raw)
+        ? raw
+        : (raw && typeof raw === 'object' && Object.keys(raw).length > 0 ? [raw] : []);
+      setCompanies(list);
     } catch (err) {
       console.error('Failed to load companies via /verp-service/locationMaster/getParentLocationTypes:', err);
       setCompanies([]);
@@ -187,16 +184,14 @@ export default function LocationMasterView() {
     setLoadingParentLocations(true);
     try {
       const res = await locationService.getParentLocations({
-        flagId: 3,
         LocationTypeMasterId: Number(locTypeId),
         CompanyMasterId: Number(compId)
       });
-      const raw = res?.data?.data || res?.data || res;
-      if (Array.isArray(raw)) {
-        setParentLocationsList(raw);
-      } else {
-        setParentLocationsList([]);
-      }
+      const raw = res?.data?.data !== undefined ? res?.data?.data : (res?.data !== undefined ? res?.data : res);
+      const list = Array.isArray(raw)
+        ? raw
+        : (raw && typeof raw === 'object' && Object.keys(raw).length > 0 ? [raw] : []);
+      setParentLocationsList(list);
     } catch (err) {
       console.error('Failed to load parent locations via /verp-service/locationMaster/getParentLocations:', err);
       setParentLocationsList([]);
@@ -312,7 +307,6 @@ export default function LocationMasterView() {
       // }
       const payload = {
         flagId: 4,
-        FlagId: 4,
         CompanyMasterId: isParentType || !showDependentDropdowns ? null : (companyMasterId ? Number(companyMasterId) : null),
         LocationTypeMasterId: Number(locationTypeMasterId),
         ParentLocationMasterId: isParentType || !showDependentDropdowns ? null : (parentLocationMasterId ? Number(parentLocationMasterId) : null),
@@ -490,12 +484,12 @@ export default function LocationMasterView() {
                       <option value="">
                         {loadingCompanies ? '-- Loading Companies... --' : '-- Select Company Master --'}
                       </option>
-                      {companies.map((comp) => {
-                        const id = comp.CompanyMasterId ?? comp.CompanyId ?? comp.id ?? comp.value;
-                        const name = comp.CompanyName ?? comp.companyName ?? comp.name ?? comp.label;
+                      {companies.map((comp, idx) => {
+                        const id = comp.CompanyMasterId ?? comp.CompanyId ?? comp.ParentLocationTypeId ?? comp.ParentTypeId ?? comp.LocationTypeMasterId ?? comp.id ?? comp.value;
+                        const name = comp.CompanyName ?? comp.companyName ?? comp.ParentLocationTypeName ?? comp.LocationTypeMasterName ?? comp.name ?? comp.label;
                         const code = comp.CompanyCode ?? comp.companyCode ?? comp.code;
                         return (
-                          <option key={id} value={id}>
+                          <option key={id ?? idx} value={id}>
                             {name} {code ? `(${code})` : ''}
                           </option>
                         );
