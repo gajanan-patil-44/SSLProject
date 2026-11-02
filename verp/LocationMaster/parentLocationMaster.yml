@@ -1,11 +1,11 @@
 info:
-  name: /getParentLocations
+  name: parentLocationMaster
   type: http
   seq: 3
 
 http:
   method: POST
-  url: http://192.168.23.115:9004/verp-service/locationMaster/getParentLocations
+  url: http://192.168.23.76:9004/verp-service/locationMaster/getParentLocations
   body:
     type: json
     data: |-

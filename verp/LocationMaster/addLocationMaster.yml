@@ -1,5 +1,5 @@
 info:
-  name: /addLocationMaster
+  name: addLocationMaster
   type: http
   seq: 4
 
