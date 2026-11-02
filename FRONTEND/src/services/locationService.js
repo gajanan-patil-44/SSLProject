@@ -24,15 +24,13 @@ export const locationService = {
    * Route: /verp-service/locationMaster/getLocationTypes
    * Payload: { "flagId": 1 }
    */
-  getLocationTypes: async (payload = { flagId: 1 }) => {
+  getLocationTypes: async () => {
     const endpoint = API_ROUTES?.LOCATION_MASTER?.GET_LOCATION_TYPES ||
       API_ROUTES?.LOCATION?.GET_LOCATION_TYPES ||
       '/verp-service/locationMaster/getLocationTypes';
 
     return apiClient.post(endpoint, {
-      flagId: 1,
-      FlagId: 1,
-      ...payload
+      flagId: 1
     });
   },
 
@@ -52,9 +50,7 @@ export const locationService = {
 
     return apiClient.post(endpoint, {
       flagId: 2,
-      FlagId: 2,
-      LocationTypeMasterId: locTypeId,
-      ...data
+      LocationTypeMasterId: locTypeId
     });
   },
 
@@ -78,10 +74,8 @@ export const locationService = {
 
     return apiClient.post(endpoint, {
       flagId: 3,
-      FlagId: 3,
       LocationTypeMasterId: locTypeId,
-      CompanyMasterId: companyId,
-      ...data
+      CompanyMasterId: companyId
     });
   },
 
@@ -89,15 +83,13 @@ export const locationService = {
    * View all locations
    * Route: /verp-service/locationMaster/view (flagId: 1)
    */
-  getLocationMaster: async (payload = { flagId: 1 }) => {
+  getLocationMaster: async () => {
     const endpoint = API_ROUTES?.LOCATION_MASTER?.VIEW ||
       API_ROUTES?.LOCATION?.VIEW ||
       '/verp-service/locationMaster/view';
 
     return apiClient.post(endpoint, {
-      flagId: 1,
-      FlagId: 1,
-      ...payload
+      flagId: 1
     });
   },
 
@@ -137,7 +129,6 @@ export const locationService = {
 
     const payload = {
       flagId: 4,
-      FlagId: 4,
       CompanyMasterId: companyId,
       LocationTypeMasterId: locationTypeId,
       ParentLocationMasterId: parentLocationId,
@@ -156,15 +147,13 @@ export const locationService = {
    * Get location dropdown list
    * Route: /verp-service/locationMaster/dropdown (flagId: 3)
    */
-  getLocationDropdown: async (payload = { flagId: 3 }) => {
+  getLocationDropdown: async () => {
     const endpoint = API_ROUTES?.LOCATION_MASTER?.DROPDOWN ||
       API_ROUTES?.LOCATION?.DROPDOWN ||
       '/verp-service/locationMaster/dropdown';
 
     return apiClient.post(endpoint, {
-      flagId: 3,
-      FlagId: 3,
-      ...payload
+      flagId: 3
     });
   },
 
@@ -180,7 +169,6 @@ export const locationService = {
 
     const payload = {
       flagId: 2,
-      FlagId: 2,
       LocationMasterId: Number(data.LocationMasterId),
       CompanyMasterId: data.CompanyMasterId ? Number(data.CompanyMasterId) : null,
       LocationTypeMasterId: Number(data.LocationTypeMasterId),
