@@ -7,6 +7,21 @@ import { useERPStore } from '../store/useERPStore';
 import { Button, StatusBadge, Card, StatCard } from '../components/ui/index';
 import { Modal } from '../components/ui/Modal';
 import { CalendarRange, Coins, TrendingUp, Wallet } from 'lucide-react';
+
+// Dynamic extraction of session company details
+const getSessionCompany = () => {
+  try {
+    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(comps) && comps.length > 0) return comps[0];
+    }
+    const ctx = useERPStore.getState()?.userContext;
+    if (ctx?.companies?.length > 0) return ctx.companies[0];
+  } catch {}
+  return null;
+};
 import {
   ResponsiveContainer,
   AreaChart,
@@ -370,6 +385,9 @@ export const registryConfigs = {
     fetchDropdowns: async (mode = 'add', record = null) => {
       let companyOptions = [];
       let productOptions = [];
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+      const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
 
       try {
         const [compRes, prodRes] = await Promise.all([
@@ -385,12 +403,21 @@ export const registryConfigs = {
           label: c.CompanyName
         }));
 
+        if (sessionCompanyId && !companyOptions.some(c => Number(c.value) === Number(sessionCompanyId))) {
+          companyOptions.unshift({
+            value: Number(sessionCompanyId),
+            label: sessionCompanyName || `Company #${sessionCompanyId}`
+          });
+        }
+
         productOptions = prodList.map((p) => ({
           value: Number(p.ProductId),
           label: p.ProductName
         }));
       } catch (err) {
       }
+
+      const effectiveCompanyId = sessionCompanyId ? Number(sessionCompanyId) : (record?.CompanyId ? Number(record.CompanyId) : undefined);
 
       return [
         {
@@ -399,7 +426,9 @@ export const registryConfigs = {
           type: "select",
           required: true,
           options: companyOptions,
-          placeholder: "Select Company Name"
+          placeholder: sessionCompanyName || "Select Company Name",
+          defaultValue: effectiveCompanyId,
+          disabled: Boolean(sessionCompanyId)
         },
         {
           key: "ProductId",
@@ -450,10 +479,12 @@ export const registryConfigs = {
       const userState = useERPStore.getState().user;
       const session = useERPStore.getState().session;
       const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       const payload = {
         FlagId: 3,
-        CompanyId: Number(formData.CompanyId),
+        CompanyId: Number(formData.CompanyId || sessionCompanyId),
         ProductId: Number(formData.ProductId),
         IsDisabled: Boolean(formData.IsDisabled) || false,
         CreatedByUserName: userName
@@ -466,11 +497,13 @@ export const registryConfigs = {
       const session = useERPStore.getState().session;
       const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const companyProductId = Number(formData.CompanyProductId ?? formData.id);
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       const payload = {
         FlagId: 3,
         CompanyProductId: companyProductId,
-        CompanyId: Number(formData.CompanyId),
+        CompanyId: Number(formData.CompanyId || sessionCompanyId),
         ProductId: Number(formData.ProductId),
         IsDisabled: typeof formData.IsDisabled === 'boolean' ? formData.IsDisabled : false,
         UpdatedByUserName: userName
@@ -877,10 +910,12 @@ export const registryConfigs = {
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       if (api.role.addRole) {
         return await api.role.addRole({
-          CompanyId: Number(formData.CompanyId),
+          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -892,11 +927,13 @@ export const registryConfigs = {
       const userState = useERPStore.getState().user;
       const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const roleId = Number(formData.RoleId ?? formData.id);
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       if (api.role.updateRole) {
         return await api.role.updateRole({
           RoleId: roleId,
-          CompanyId: Number(formData.CompanyId),
+          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -922,8 +959,12 @@ export const registryConfigs = {
       { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
-    fetchDropdowns: async () => {
+    fetchDropdowns: async (mode = 'add', record = null) => {
       let companyOptions = [];
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+      const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
+
       try {
         const res = await api.role.getCompaniesForRole();
         const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
@@ -931,8 +972,17 @@ export const registryConfigs = {
           value: Number(c.CompanyId || c.id),
           label: c.CompanyName || c.name || `Company #${c.CompanyId || c.id}`
         }));
+
+        if (sessionCompanyId && !companyOptions.some(c => Number(c.value) === Number(sessionCompanyId))) {
+          companyOptions.unshift({
+            value: Number(sessionCompanyId),
+            label: sessionCompanyName || `Company #${sessionCompanyId}`
+          });
+        }
       } catch (err) {}
       
+      const effectiveCompanyId = sessionCompanyId ? Number(sessionCompanyId) : (record?.CompanyId ? Number(record.CompanyId) : undefined);
+
       return [
         {
           key: "CompanyId",
@@ -940,7 +990,9 @@ export const registryConfigs = {
           type: "select",
           required: true,
           options: companyOptions,
-          placeholder: "Select Company"
+          placeholder: sessionCompanyName || "Select Company",
+          defaultValue: effectiveCompanyId,
+          disabled: Boolean(sessionCompanyId)
         },
         { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
         { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
@@ -972,7 +1024,9 @@ export const registryConfigs = {
     title: "Vendor Management",
     description: "Manage suppliers, vendors, categories, and business credentials.",
     apiFetch: async () => {
-      const res = await api.vendor.getVendors();
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+      const res = await api.vendor.getVendors({ CompanyId: sessionCompanyId });
       const items = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
       return items.map((v) => ({
         id: v.id ?? v.VendorId,
@@ -989,13 +1043,19 @@ export const registryConfigs = {
       }));
     },
     apiCreate: async (formData) => {
-      return await api.vendor.addVendor(formData);
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+      return await api.vendor.addVendor({ ...formData, CompanyId: formData.CompanyId || sessionCompanyId });
     },
     apiUpdate: async (formData) => {
-      return await api.vendor.updateVendor(formData);
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+      return await api.vendor.updateVendor({ ...formData, CompanyId: formData.CompanyId || sessionCompanyId });
     },
     apiToggleStatus: async (record) => {
-      return await api.vendor.toggleStatus(record, record.status);
+      const sessionCompany = getSessionCompany();
+      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+      return await api.vendor.toggleStatus({ ...record, CompanyId: record.CompanyId || sessionCompanyId }, record.status);
     },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
