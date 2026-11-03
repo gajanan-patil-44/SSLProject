@@ -20,6 +20,21 @@ import {
   validateDateOfJoining
 } from '../../utils/validators';
 
+// ─── Helper to retrieve session company ──────────────────────────────────────
+const getSessionCompany = () => {
+  try {
+    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(comps) && comps.length > 0) return comps[0];
+    }
+    const ctx = useERPStore.getState()?.userContext;
+    if (ctx?.companies?.length > 0) return ctx.companies[0];
+  } catch {}
+  return null;
+};
+
 // ─── Helper to retrieve logged-in session details ───────────────────────────
 const getSessionAuth = () => {
   let employeeId = '';
@@ -84,27 +99,31 @@ const STEPS = [
 const MAX_PHOTO_SIZE = 1 * 1024 * 1024; // 1 MB limit for profile photo
 
 // ─── Initial Form Factory ──────────────────────────────────────────────────
-const getInitialForm = () => ({
-  EmployeeId: '',
-  FirstName: '',
-  MiddleName: '',
-  LastName: '',
-  PhoneNumber: '',
-  AltPhoneNumber: '',
-  DateOfBirth: '',
-  DateOfJoining: '',
-  GenderId: '',
-  MaritalStatusId: '',
-  DesignationId: '',
-  Email: '',
-  LoginName: '',
-  Password: '',
-  CompanyId: '',
-  ReportingManagerUserId: [],  // multi
-  CompanyProductId: [],        // multi
-  ProjectId: [],               // multi
-  RoleId: '',
-});
+const getInitialForm = () => {
+  const sessionComp = getSessionCompany();
+  const sessionCompId = sessionComp?.CompanyId ?? sessionComp?.CompanyMasterId ?? sessionComp?.companyId;
+  return {
+    EmployeeId: '',
+    FirstName: '',
+    MiddleName: '',
+    LastName: '',
+    PhoneNumber: '',
+    AltPhoneNumber: '',
+    DateOfBirth: '',
+    DateOfJoining: '',
+    GenderId: '',
+    MaritalStatusId: '',
+    DesignationId: '',
+    Email: '',
+    LoginName: '',
+    Password: '',
+    CompanyId: sessionCompId ? String(sessionCompId) : '',
+    ReportingManagerUserId: [],  // multi
+    CompanyProductId: [],        // multi
+    ProjectId: [],               // multi
+    RoleId: '',
+  };
+};
 
 // ─── Shared field wrapper (same label/error style as app) ─────────────────
 function Field({ label, error, children, required }) {
@@ -276,6 +295,10 @@ function FileIcon({ mime = '' }) {
 
 // ─── Main Component ────────────────────────────────────────────────────────
 export default function UserCreationView() {
+  const sessionCompany = getSessionCompany();
+  const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+  const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
+
   const [form, setForm]                       = useState(getInitialForm);
   const [errors, setErrors]                   = useState({});
   const [showPwd, setShowPwd]                 = useState(false);
@@ -306,6 +329,54 @@ export default function UserCreationView() {
   // ── Load initial dropdowns ───────────────────────────────────────────────
   useEffect(() => { loadDropdowns(); }, []);
 
+  const loadCompanyDependencies = async (companyId) => {
+    if (!companyId) return;
+    try {
+      const r = await userService.getProductDropdown(companyId);
+      const raw = r?.data ?? r;
+      setProducts(
+        Array.isArray(raw)
+          ? raw
+              .filter(item => item.ProductId !== null && item.ProductId !== undefined && item.ProductId !== '')
+              .map((item, idx) => ({
+                value: String(item.ProductId),
+                label: item.ProductName ?? String(item.ProductId),
+                key: `${String(item.ProductId)}_${idx}`,
+                companyProductId: item.CompanyProductId,
+              }))
+          : []
+      );
+    } catch (err) {
+      setProducts([]);
+    }
+
+    try {
+      const dRes = await userService.getDesignationDropdown(companyId);
+      const rawList = dRes?.data?.Designations || dRes?.data?.designations || (Array.isArray(dRes?.data) ? dRes.data : null) || (Array.isArray(dRes) ? dRes : []);
+      const normalized = Array.isArray(rawList)
+        ? rawList.map(d => ({
+            ...d,
+            DesignationId: d.DesignationId ?? d.CompanyDesignationId ?? d.id,
+            DesignationName: d.DesignationName ?? d.name
+          }))
+        : [];
+      setDesignations(toOpts(normalized, 'DesignationId', 'DesignationName'));
+    } catch (err) {
+      setDesignations([]);
+    }
+
+    try {
+      const rolesRes = await userService.getRoleDropdown(companyId);
+      const rawRoles = rolesRes?.data?.data ?? rolesRes?.data ?? rolesRes;
+      const list = Array.isArray(rawRoles)
+        ? rawRoles
+        : (Array.isArray(rawRoles?.roles) ? rawRoles.roles : []);
+      setRoles(toOpts(list, 'RoleId', 'RoleName'));
+    } catch (err) {
+      setRoles([]);
+    }
+  };
+
   const loadDropdowns = async () => {
     const [genderRes, maritalRes, compRes, fileTypesRes] = await Promise.allSettled([
       userService.getGenderDropdown(),
@@ -322,6 +393,10 @@ export default function UserCreationView() {
     if (fileTypesRes.status === 'fulfilled') {
       const raw = fileTypesRes.value?.data ?? fileTypesRes.value;
       setFileTypes(toOpts(raw, 'FileTypeId', 'FileTypeName'));
+    }
+
+    if (sessionCompanyId) {
+      loadCompanyDependencies(String(sessionCompanyId));
     }
   };
 
@@ -943,6 +1018,9 @@ export default function UserCreationView() {
     setDesignations([]);
     setRoles([]);
     setReportingManagers([]);
+    if (sessionCompanyId) {
+      loadCompanyDependencies(String(sessionCompanyId));
+    }
     setCompletedSteps([]);
     setCurrentStep(1);
     if (photoRef.current) photoRef.current.value = '';
@@ -1325,10 +1403,19 @@ export default function UserCreationView() {
               <Field label="Company" required error={errors.CompanyId}>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="CompanyId" value={form.CompanyId} onChange={change} onBlur={handleBlur}
-                    className={`${selectCls(errors.CompanyId)} pl-8`}>
+                  <select
+                    name="CompanyId"
+                    value={form.CompanyId}
+                    disabled={Boolean(sessionCompanyId)}
+                    onChange={change}
+                    onBlur={handleBlur}
+                    className={`${selectCls(errors.CompanyId)} pl-8 ${sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
+                  >
                     <option value="">— Select Company —</option>
                     {companies.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
+                    {sessionCompanyId && !companies.some(o => String(o.value) === String(sessionCompanyId)) && (
+                      <option value={String(sessionCompanyId)}>{sessionCompanyName || `Company #${sessionCompanyId}`}</option>
+                    )}
                   </select>
                 </div>
               </Field>

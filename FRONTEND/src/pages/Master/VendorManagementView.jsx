@@ -15,10 +15,12 @@ import {
   X
 } from 'lucide-react';
 import { useERPStore } from '../../store/useERPStore';
-import { vendorService } from '../../services/vendorService';
+import { vendorService, getSessionCompanyId } from '../../services/vendorService';
 import { validatePhone, validateEmail, validateName, validateCode, validateGSTIN } from '../../utils/validators';
 
 export default function VendorManagementView() {
+  const sessionCompanyId = getSessionCompanyId();
+
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
   const currentUserName = currentUser?.loginName || currentUser?.name || '';
@@ -214,7 +216,8 @@ export default function VendorManagementView() {
   const loadVendors = async () => {
     setLoading(true);
     try {
-      const data = await vendorService.getVendors();
+      const activeCompId = getSessionCompanyId();
+      const data = await vendorService.getVendors({ CompanyId: activeCompId });
       setVendors(Array.isArray(data) ? data : []);
     } catch {
       showToast('Failed to load vendors', 'error');
@@ -227,9 +230,10 @@ export default function VendorManagementView() {
   const loadDropdowns = async () => {
     setLoadingDropdowns(true);
     try {
+      const activeCompId = getSessionCompanyId();
       const [types, fileTypes] = await Promise.all([
-        vendorService.getVendorTypes(),
-        vendorService.getVendorFileTypes()
+        vendorService.getVendorTypes({ CompanyId: activeCompId }),
+        vendorService.getVendorFileTypes({ CompanyId: activeCompId })
       ]);
       setVendorTypes(Array.isArray(types) ? types : []);
       setVendorFileTypes(Array.isArray(fileTypes) ? fileTypes : []);
@@ -292,7 +296,8 @@ export default function VendorManagementView() {
   // Toggle Status
   const handleToggleStatus = async (vendor) => {
     try {
-      const res = await vendorService.toggleStatus(vendor, vendor.status);
+      const activeCompId = getSessionCompanyId(vendor?.CompanyId);
+      const res = await vendorService.toggleStatus({ ...vendor, CompanyId: activeCompId }, vendor.status);
       showToast(`Vendor marked as ${res.nextStatus}`, 'success');
       loadVendors();
     } catch {
@@ -332,7 +337,9 @@ export default function VendorManagementView() {
 
     setSubmitting(true);
     try {
+      const activeCompId = getSessionCompanyId();
       const payload = {
+        CompanyId: activeCompId ? Number(activeCompId) : undefined,
         VendorId: formData.id || formData.VendorId,
         VendorName: formData.vendorName,
         VendorCode: formData.vendorCode || '',
