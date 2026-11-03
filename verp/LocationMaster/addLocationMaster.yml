@@ -5,21 +5,22 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.115:9004/verp-service/locationMaster/addLocationMaster
+  url: http://192.168.23.76:9004/verp-service/locationMaster/addLocationMaster
   body:
     type: json
     data: |-
       {
-        "flagId":4,
-        "CompanyMasterId":2,
-        "LocationTypeMasterId":2,
-        "ParentLocationMasterId":1,
-        "LocationName":"aaabb",
-        "ContactPerson":"kavyaa",
-        "ContactNumber":"1236547890",
-        "EmailId":"kss@gmail.com",
-        "Address":"banglr",
-        "CreatedByUserName":"ks"
+          "flagId": 4,
+          "CompanyMasterId": 1,
+          "LocationTypeMasterId": 2,
+          "ParentLocationTypeMasterId": 1,
+          "ParentLocationMasterId": 6,
+          "LocationName": "Tamil Nadu",
+          "ContactPerson": "Ramesh Kumar",
+          "ContactNumber": "9845012345",
+          "EmailId": "ramesh@example.com",
+          "Address": "Chennai, Tamil Nadu",
+          "CreatedByUserName": "Admin"
       }
   auth: inherit
 

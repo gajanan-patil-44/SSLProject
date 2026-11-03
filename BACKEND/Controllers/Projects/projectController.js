@@ -13,7 +13,6 @@ import {
 
 
 // GET ALL PROJECTS
-
 export const getProject = async (req, res) => {
 
     const { flagId } = req.body;
@@ -50,16 +49,16 @@ export const getProject = async (req, res) => {
     }
 };
 
-
 // ADD PROJECT / COMPANY PRODUCT DROPDOWN
-
 export const addprojectController = async (req, res) => {
 
     const { flagId } = req.body;
 
     try {
 
+        // ==========================================================
         // FLAG ID 1 - GET COMPANY PRODUCTS
+        // ==========================================================
 
         if (parseInt(flagId) === 1) {
 
@@ -72,8 +71,9 @@ export const addprojectController = async (req, res) => {
             });
         }
 
-
+        // ==========================================================
         // FLAG ID 2 - ADD PROJECT
+        // ==========================================================
 
         if (parseInt(flagId) === 2) {
 
@@ -86,35 +86,34 @@ export const addprojectController = async (req, res) => {
                 CreatedByUserId
             } = req.body;
 
-
+            // =====================================================
             // VALIDATE COMPANY PRODUCT ID
+            // =====================================================
 
             if (
                 CompanyProductId === undefined ||
                 CompanyProductId === null ||
                 CompanyProductId === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId is required"
                 });
             }
 
-
             if (
                 !Number.isInteger(Number(CompanyProductId)) ||
                 Number(CompanyProductId) <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId must be a valid positive integer"
                 });
             }
 
-
+            // =====================================================
             // VALIDATE PROJECT NAME
+            // =====================================================
 
             if (
                 ProjectName === undefined ||
@@ -122,27 +121,31 @@ export const addprojectController = async (req, res) => {
                 typeof ProjectName !== "string" ||
                 ProjectName.trim() === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProjectName is required"
                 });
             }
 
-            // VALIDATE PROJECT NAME - ONLY ALPHABETS
-
+            const projectName = ProjectName.trim();
+            if (projectName.length > 30) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Project name must not exceed 30 characters"
+                });
+            }
             const projectNameRegex = /^[A-Za-z\s]+$/;
 
-            if (!projectNameRegex.test(ProjectName)) {
-
+            if (!projectNameRegex.test(projectName)) {
                 return res.status(400).json({
                     status: "error",
                     message: "Project name should contain only alphabets and spaces"
                 });
             }
 
-
+            // =====================================================
             // VALIDATE PROJECT CODE
+            // =====================================================
 
             if (
                 ProjectCode === undefined ||
@@ -150,118 +153,140 @@ export const addprojectController = async (req, res) => {
                 typeof ProjectCode !== "string" ||
                 ProjectCode.trim() === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProjectCode is required"
                 });
             }
 
+            const projectCode = ProjectCode.trim();
 
-            // VALIDATE DESCRIPTION
-
-            if (
-                Description === undefined ||
-                Description === null ||
-                typeof Description !== "string" ||
-                Description.trim() === ""
-            ) {
-
+            if (!/^[A-Za-z0-9]{1,15}$/.test(projectCode)) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Description is required"
+                    message: "Project Code must contain only alphanumeric characters and must not exceed 15 characters"
                 });
             }
 
+            // =====================================================
+            // VALIDATE DESCRIPTION
+            // =====================================================
 
+            let description = null;
+
+            if (Description !== undefined && Description !== null) {
+
+                if (typeof Description !== "string") {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Description must be a valid string or null"
+                    });
+                }
+
+                description = Description.trim();
+
+                if (description.length > 250) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Description must not exceed 250 characters"
+                    });
+                }
+
+                if (
+                    description !== "" &&
+                    !/[A-Za-z0-9]/.test(description)
+                ) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Description cannot contain only special characters"
+                    });
+                }
+
+                if (description === "") {
+                    description = null;
+                }
+            }
+
+            // =====================================================
             // VALIDATE IS DISABLED
+            // =====================================================
 
             if (typeof IsDisabled !== "boolean") {
-
                 return res.status(400).json({
                     status: "error",
                     message: "IsDisabled must be true or false"
                 });
             }
 
-
+            // =====================================================
             // VALIDATE CREATED BY USER ID
+            // =====================================================
 
             if (
                 CreatedByUserId === undefined ||
                 CreatedByUserId === null ||
                 CreatedByUserId === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CreatedByUserId is required"
                 });
             }
 
-
             if (
                 !Number.isInteger(Number(CreatedByUserId)) ||
                 Number(CreatedByUserId) <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CreatedByUserId must be a valid positive integer"
                 });
             }
 
-
+            // =====================================================
             // CHECK COMPANY PRODUCT
+            // =====================================================
 
-            const companyProductData = await checkCompanyProductExists(Number(CompanyProductId));
+            const companyProductData =
+                await checkCompanyProductExists(Number(CompanyProductId));
 
             if (companyProductData.length === 0) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "Invalid or inactive CompanyProductId"
                 });
             }
 
-
+            // =====================================================
             // CHECK DUPLICATE PROJECT
+            // =====================================================
 
             const existingProject = await checkProjectExists(
                 Number(CompanyProductId),
-                ProjectName.trim(),
-                ProjectCode.trim()
+                projectName,
+                projectCode
             );
-
 
             if (existingProject.length > 0) {
 
                 const duplicate = existingProject[0];
 
-
-                // DUPLICATE PROJECT NAME
-
                 if (
                     duplicate.ProjectName &&
                     duplicate.ProjectName.trim().toLowerCase() ===
-                    ProjectName.trim().toLowerCase()
+                    projectName.toLowerCase()
                 ) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Project name already exists for this company product"
                     });
                 }
 
-
-                // DUPLICATE PROJECT CODE
-
                 if (
                     duplicate.ProjectCode &&
                     duplicate.ProjectCode.trim().toLowerCase() ===
-                    ProjectCode.trim().toLowerCase()
+                    projectCode.toLowerCase()
                 ) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Project code already exists for this company product"
@@ -269,21 +294,24 @@ export const addprojectController = async (req, res) => {
                 }
             }
 
-
+            // =====================================================
             // ADD PROJECT
+            // =====================================================
 
             const project = await addProject({
 
                 CompanyProductId: Number(CompanyProductId),
-                ProjectName: ProjectName.trim(),
-                ProjectCode: ProjectCode.trim(),
+                ProjectName: projectName,
+                ProjectCode: projectCode,
                 IsDisabled,
-                Description: Description.trim(),
+                Description: description,
                 CreatedByUserId: Number(CreatedByUserId)
+
             });
 
-
+            // =====================================================
             // SUCCESS
+            // =====================================================
 
             return res.status(201).json({
                 status: "success",
@@ -292,8 +320,9 @@ export const addprojectController = async (req, res) => {
             });
         }
 
-
+        // ==========================================================
         // INVALID FLAG ID
+        // ==========================================================
 
         return res.status(400).json({
             status: "error",
@@ -310,16 +339,16 @@ export const addprojectController = async (req, res) => {
     }
 };
 
-
 // EDIT PROJECT
-
 export const editProjectController = async (req, res) => {
 
     const { flagId } = req.body;
 
     try {
 
+        // ==========================================================
         // FLAG ID 1 - GET COMPANY PRODUCTS
+        // ==========================================================
 
         if (parseInt(flagId) === 1) {
 
@@ -332,8 +361,9 @@ export const editProjectController = async (req, res) => {
             });
         }
 
-
+        // ==========================================================
         // FLAG ID 2 - EDIT PROJECT
+        // ==========================================================
 
         if (parseInt(flagId) === 2) {
 
@@ -347,62 +377,59 @@ export const editProjectController = async (req, res) => {
                 UpdatedByUserId
             } = req.body;
 
-
+            // =====================================================
             // VALIDATE PROJECT ID
+            // =====================================================
 
             if (
                 ProjectId === undefined ||
                 ProjectId === null ||
                 ProjectId === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProjectId is required"
                 });
             }
 
-
             if (
                 !Number.isInteger(Number(ProjectId)) ||
                 Number(ProjectId) <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProjectId must be a valid positive integer"
                 });
             }
 
-
+            // =====================================================
             // VALIDATE COMPANY PRODUCT ID
+            // =====================================================
 
             if (
                 CompanyProductId === undefined ||
                 CompanyProductId === null ||
                 CompanyProductId === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId is required"
                 });
             }
 
-
             if (
                 !Number.isInteger(Number(CompanyProductId)) ||
                 Number(CompanyProductId) <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId must be a valid positive integer"
                 });
             }
 
-
+            // =====================================================
             // VALIDATE PROJECT NAME
+            // =====================================================
 
             if (
                 ProjectName === undefined ||
@@ -410,27 +437,31 @@ export const editProjectController = async (req, res) => {
                 typeof ProjectName !== "string" ||
                 ProjectName.trim() === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProjectName is required"
                 });
             }
 
-            // VALIDATE PROJECT NAME - ONLY ALPHABETS
-
+            const projectName = ProjectName.trim();
+            if (projectName.length > 30) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Project name must not exceed 30 characters"
+                });
+            }
             const projectNameRegex = /^[A-Za-z\s]+$/;
 
-            if (!projectNameRegex.test(ProjectName)) {
-
+            if (!projectNameRegex.test(projectName)) {
                 return res.status(400).json({
                     status: "error",
                     message: "Project name should contain only alphabets and spaces"
                 });
             }
 
-
+            // =====================================================
             // VALIDATE PROJECT CODE
+            // =====================================================
 
             if (
                 ProjectCode === undefined ||
@@ -438,133 +469,155 @@ export const editProjectController = async (req, res) => {
                 typeof ProjectCode !== "string" ||
                 ProjectCode.trim() === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProjectCode is required"
                 });
             }
 
+            const projectCode = ProjectCode.trim();
 
-            // VALIDATE DESCRIPTION
-
-            if (
-                Description === undefined ||
-                Description === null ||
-                typeof Description !== "string" ||
-                Description.trim() === ""
-            ) {
-
+            if (!/^[A-Za-z0-9]{1,15}$/.test(projectCode)) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Description is required"
+                    message: "Project Code must contain only alphanumeric characters and must not exceed 15 characters"
                 });
             }
 
+            // =====================================================
+            // VALIDATE DESCRIPTION
+            // =====================================================
 
+            let description = null;
+
+            if (Description !== undefined && Description !== null) {
+
+                if (typeof Description !== "string") {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Description must be a valid string or null"
+                    });
+                }
+
+                description = Description.trim();
+
+                if (description.length > 250) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Description must not exceed 250 characters"
+                    });
+                }
+
+                if (
+                    description !== "" &&
+                    !/[A-Za-z0-9]/.test(description)
+                ) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Description cannot contain only special characters"
+                    });
+                }
+
+                if (description === "") {
+                    description = null;
+                }
+            }
+
+            // =====================================================
             // VALIDATE IS DISABLED
+            // =====================================================
 
             if (typeof IsDisabled !== "boolean") {
-
                 return res.status(400).json({
                     status: "error",
                     message: "IsDisabled must be true or false"
                 });
             }
 
-
+            // =====================================================
             // VALIDATE UPDATED BY USER ID
+            // =====================================================
 
             if (
                 UpdatedByUserId === undefined ||
                 UpdatedByUserId === null ||
                 UpdatedByUserId === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "UpdatedByUserId is required"
                 });
             }
 
-
             if (
                 !Number.isInteger(Number(UpdatedByUserId)) ||
                 Number(UpdatedByUserId) <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "UpdatedByUserId must be a valid positive integer"
                 });
             }
 
-
+            // =====================================================
             // CHECK PROJECT EXISTS
+            // =====================================================
 
             const projectExists = await getProjectById(Number(ProjectId));
 
             if (projectExists.length === 0) {
-
                 return res.status(404).json({
                     status: "error",
                     message: "Project not found"
                 });
             }
 
-
+            // =====================================================
             // CHECK COMPANY PRODUCT
+            // =====================================================
 
-            const companyProductData = await checkCompanyProductExists(Number(CompanyProductId));
+            const companyProductData =
+                await checkCompanyProductExists(Number(CompanyProductId));
 
             if (companyProductData.length === 0) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "Invalid or inactive CompanyProductId"
                 });
             }
 
-
+            // =====================================================
             // CHECK DUPLICATE PROJECT
             // EXCLUDE CURRENT PROJECT
+            // =====================================================
 
             const existingProject = await checkProjectExistsForUpdate(
                 Number(CompanyProductId),
-                ProjectName.trim(),
-                ProjectCode.trim(),
+                projectName,
+                projectCode,
                 Number(ProjectId)
             );
-
 
             if (existingProject.length > 0) {
 
                 const duplicate = existingProject[0];
 
-
-                // DUPLICATE PROJECT NAME
-
                 if (
                     duplicate.ProjectName &&
                     duplicate.ProjectName.trim().toLowerCase() ===
-                    ProjectName.trim().toLowerCase()
+                    projectName.toLowerCase()
                 ) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Project name already exists for this company product"
                     });
                 }
 
-
-                // DUPLICATE PROJECT CODE
-
                 if (
                     duplicate.ProjectCode &&
                     duplicate.ProjectCode.trim().toLowerCase() ===
-                    ProjectCode.trim().toLowerCase()
+                    projectCode.toLowerCase()
                 ) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Project code already exists for this company product"
@@ -572,31 +625,36 @@ export const editProjectController = async (req, res) => {
                 }
             }
 
+            // =====================================================
             // UPDATE PROJECT
+            // =====================================================
 
             const result = await editProject({
 
                 ProjectId: Number(ProjectId),
                 CompanyProductId: Number(CompanyProductId),
-                ProjectName: ProjectName.trim(),
-                ProjectCode: ProjectCode.trim(),
+                ProjectName: projectName,
+                ProjectCode: projectCode,
                 IsDisabled,
-                Description: Description.trim(),
+                Description: description,
                 UpdatedByUserId: Number(UpdatedByUserId)
+
             });
 
-
+            // =====================================================
             // PROJECT NOT FOUND
+            // =====================================================
 
             if (result === 0) {
-
                 return res.status(404).json({
                     status: "error",
                     message: "Project not found"
                 });
             }
 
+            // =====================================================
             // SUCCESS
+            // =====================================================
 
             return res.status(200).json({
                 status: "success",
@@ -605,8 +663,9 @@ export const editProjectController = async (req, res) => {
             });
         }
 
-
+        // ==========================================================
         // INVALID FLAG ID
+        // ==========================================================
 
         return res.status(400).json({
             status: "error",
@@ -623,9 +682,7 @@ export const editProjectController = async (req, res) => {
     }
 };
 
-
 // TOGGLE PROJECT STATUS
-
 export const toggleProjectStatus = async (req, res) => {
 
     const { flagId } = req.body;
@@ -769,7 +826,6 @@ export const toggleProjectStatus = async (req, res) => {
 
 
 // DELETE PROJECT
-
 export const deleteProjectController = async (req, res) => {
 
     const {

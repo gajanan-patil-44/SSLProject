@@ -10,13 +10,12 @@ http:
     type: json
     data: |-
       {
-      "FlagId": 3,
-       "CompanyId": 1,
-        "CompanyProductId":4
+      "FlagId": 4,
+       "CompanyId": 1
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJlbXAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkwNzQ2NjA4LCJleHAiOjE3OTA3NzU0MDh9.ShAf-Bz33mElYkT-fsz9qyQxCbVSXjvyIbHBu4u0n3o
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkzNjIxMzQyLCJleHAiOjE3OTM2NTAxNDJ9.kciplHn8NZWcGiS3ZFqV4V4vainJrhrryAityKUJrwo
 
 settings:
   encodeUrl: true
