@@ -307,11 +307,10 @@ export default function UserCreationView() {
   useEffect(() => { loadDropdowns(); }, []);
 
   const loadDropdowns = async () => {
-    const [genderRes, maritalRes, compRes, rolesRes, fileTypesRes] = await Promise.allSettled([
+    const [genderRes, maritalRes, compRes, fileTypesRes] = await Promise.allSettled([
       userService.getGenderDropdown(),
       userService.getMaritalStatusDropdown(),
       userService.getCompanyDropdown(),
-      userService.getRoleDropdown(),         // FlagId: 4 → /companyproductprojectdropdown
       userService.getFileTypes(),            // FlagId: 1 → /fileType/getfiletypes
     ]);
     if (genderRes.status === 'fulfilled')
@@ -320,8 +319,6 @@ export default function UserCreationView() {
       setMaritalStatuses(toOpts(maritalRes.value?.data ?? maritalRes.value, 'MaritalStatusId', 'MaritalStatusName'));
     if (compRes.status === 'fulfilled')
       setCompanies(toOpts(compRes.value?.data ?? compRes.value, 'CompanyId', 'CompanyName'));
-    if (rolesRes.status === 'fulfilled')
-      setRoles(toOpts(rolesRes.value?.data ?? rolesRes.value, 'RoleId', 'RoleName'));
     if (fileTypesRes.status === 'fulfilled') {
       const raw = fileTypesRes.value?.data ?? fileTypesRes.value;
       setFileTypes(toOpts(raw, 'FileTypeId', 'FileTypeName'));
@@ -388,12 +385,13 @@ export default function UserCreationView() {
     }
 
     if (name === 'CompanyId') {
-      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
+      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
       setProducts([]);
       setProjects([]);
       setDesignations([]);
+      setRoles([]);
       setReportingManagers([]);
-      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
       if (!value) return;
 
       // 1. Fetch Company Products
@@ -431,12 +429,72 @@ export default function UserCreationView() {
       } catch (err) {
         setDesignations([]);
       }
+
+      // 3. Fetch Roles for selected Company via /verp-service/userCreation/companyproductprojectdropdown { FlagId: 4, CompanyId: value }
+      try {
+        const rolesRes = await userService.getRoleDropdown(value);
+        const rawRoles = rolesRes?.data?.data ?? rolesRes?.data ?? rolesRes;
+        const list = Array.isArray(rawRoles)
+          ? rawRoles
+          : (Array.isArray(rawRoles?.roles) ? rawRoles.roles : []);
+        setRoles(toOpts(list, 'RoleId', 'RoleName'));
+      } catch (err) {
+        setRoles([]);
+      }
       return;
     }
 
     // Default single-value fields (RoleId, GenderId, etc.)
     setForm(f => ({ ...f, [name]: value }));
     setErrors(er => ({ ...er, [name]: '' }));
+  };
+
+  // ── Field Blur Validation (validates individual field on blur) ────────────
+  const handleBlur = e => {
+    const { name, value } = e.target;
+    let fieldError = '';
+
+    if (name === 'EmployeeId') {
+      fieldError = validateCode(value, 'Employee ID', true);
+    } else if (name === 'FirstName') {
+      fieldError = validateName(value, 'First name', true);
+    } else if (name === 'MiddleName' && value) {
+      fieldError = validateName(value, 'Middle name', false);
+    } else if (name === 'LastName' && value) {
+      fieldError = validateName(value, 'Last name', false);
+    } else if (name === 'PhoneNumber') {
+      fieldError = validatePhone(value, 'Phone number', true);
+    } else if (name === 'AltPhoneNumber' && value) {
+      fieldError = validatePhone(value, 'Alternate phone number', false);
+    } else if (name === 'DateOfBirth') {
+      fieldError = validateDateOfBirth(value, 18, true);
+    } else if (name === 'DateOfJoining') {
+      fieldError = validateDateOfJoining(value, form.DateOfBirth, true);
+    } else if (name === 'GenderId') {
+      if (!value) fieldError = 'Select a gender';
+    } else if (name === 'MaritalStatusId') {
+      if (!value) fieldError = 'Select marital status';
+    } else if (name === 'Email') {
+      fieldError = validateEmail(value, 'Email address', true);
+    } else if (name === 'LoginName') {
+      if (!value || !value.trim()) {
+        fieldError = 'Login username is required';
+      } else if (value.trim().length < 3) {
+        fieldError = 'Login username must be at least 3 characters';
+      }
+    } else if (name === 'Password') {
+      fieldError = validatePassword(value, 'Password', 6, true);
+    } else if (name === 'CompanyId') {
+      if (!value) fieldError = 'Select a company';
+    } else if (name === 'RoleId') {
+      if (!value) fieldError = 'Select a role';
+    }
+
+    if (fieldError) {
+      setErrors(prev => ({ ...prev, [name]: fieldError }));
+    } else {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   // ── Fetch projects for multiple product IDs, merging deduplicated results ─
@@ -735,15 +793,33 @@ export default function UserCreationView() {
   };
 
   const handleStepClick = (stepId) => {
-    // Can jump if already completed or current step
-    if (completedSteps.includes(stepId) || stepId <= currentStep) {
-      setErrors({});
-      setCurrentStep(stepId);
+    if (stepId === currentStep) return;
+
+    // If moving forward, validate current step and all previous steps leading up to target step
+    if (stepId > currentStep) {
+      for (let s = 1; s < stepId; s++) {
+        const stepErrs = validateStep(s);
+        if (Object.keys(stepErrs).length > 0) {
+          setErrors(stepErrs);
+          setCurrentStep(s);
+          return;
+        }
+      }
+    } else {
+      // If moving backward, verify current step validity to update completion tracker
+      const currentErrs = validateStep(currentStep);
+      if (Object.keys(currentErrs).length === 0) {
+        setCompletedSteps(prev => Array.from(new Set([...prev, currentStep])));
+      } else {
+        setCompletedSteps(prev => prev.filter(id => id !== currentStep));
+      }
     }
+
+    setErrors({});
+    setCurrentStep(stepId);
   };
 
   // ── Progress Percentage Calculation ───────────────────────────────────────
-  // 0% at initial, 20% on completing Step 1, 40% on Step 2, 60% on Step 3, 80% on Step 4, 100% on Step 5
   const progressPercent = Math.min(100, Math.round(
     ((completedSteps.length) / STEPS.length) * 100
   ));
@@ -753,18 +829,21 @@ export default function UserCreationView() {
     if (e) e.preventDefault();
     setResult(null);
 
-    const allErr = validateAll();
-    if (Object.keys(allErr).length) {
-      setErrors(allErr);
-      // Jump to the earliest step with an error
-      for (let s = 1; s <= 5; s++) {
-        const stepErrs = validateStep(s);
-        if (Object.keys(stepErrs).length > 0) {
-          setCurrentStep(s);
-          break;
-        }
-      }
+    // Validate Step 5
+    const step5Errs = validateStep(5);
+    if (Object.keys(step5Errs).length > 0) {
+      setErrors(step5Errs);
       return;
+    }
+
+    // Safety guard: if any previous step became invalid, jump to that specific step and show its errors
+    for (let s = 1; s <= 4; s++) {
+      const stepErrs = validateStep(s);
+      if (Object.keys(stepErrs).length > 0) {
+        setErrors(stepErrs);
+        setCurrentStep(s);
+        return;
+      }
     }
 
     const sessionAuth = getSessionAuth();
@@ -862,6 +941,7 @@ export default function UserCreationView() {
     setProducts([]);
     setProjects([]);
     setDesignations([]);
+    setRoles([]);
     setReportingManagers([]);
     setCompletedSteps([]);
     setCurrentStep(1);
@@ -1061,7 +1141,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="EmployeeId" value={form.EmployeeId} onChange={change}
+                    name="EmployeeId" value={form.EmployeeId} onChange={change} onBlur={handleBlur}
                     placeholder="Employee ID"
                     className={`${inputCls(errors.EmployeeId)} pl-8`}
                   />
@@ -1073,7 +1153,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="FirstName" value={form.FirstName} onChange={change}
+                    name="FirstName" value={form.FirstName} onChange={change} onBlur={handleBlur}
                     placeholder="First name"
                     className={`${inputCls(errors.FirstName)} pl-8`}
                   />
@@ -1085,9 +1165,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="MiddleName" value={form.MiddleName} onChange={change}
+                    name="MiddleName" value={form.MiddleName} onChange={change} onBlur={handleBlur}
                     placeholder="Middle name"
-                    className={`${inputCls(false)} pl-8`}
+                    className={`${inputCls(errors.MiddleName)} pl-8`}
                   />
                 </div>
               </Field>
@@ -1097,9 +1177,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="LastName" value={form.LastName} onChange={change}
+                    name="LastName" value={form.LastName} onChange={change} onBlur={handleBlur}
                     placeholder="Last name"
-                    className={`${inputCls(false)} pl-8`}
+                    className={`${inputCls(errors.LastName)} pl-8`}
                   />
                 </div>
               </Field>
@@ -1109,7 +1189,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="PhoneNumber" value={form.PhoneNumber} onChange={change}
+                    name="PhoneNumber" value={form.PhoneNumber} onChange={change} onBlur={handleBlur}
                     placeholder="10-digit mobile number" maxLength={10}
                     className={`${inputCls(errors.PhoneNumber)} pl-8`}
                   />
@@ -1121,9 +1201,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="AltPhoneNumber" value={form.AltPhoneNumber} onChange={change}
+                    name="AltPhoneNumber" value={form.AltPhoneNumber} onChange={change} onBlur={handleBlur}
                     placeholder="Optional" maxLength={10}
-                    className={`${inputCls(false)} pl-8`}
+                    className={`${inputCls(errors.AltPhoneNumber)} pl-8`}
                   />
                 </div>
               </Field>
@@ -1133,7 +1213,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    type="date" name="DateOfBirth" value={form.DateOfBirth} onChange={change}
+                    type="date" name="DateOfBirth" value={form.DateOfBirth} onChange={change} onBlur={handleBlur}
                     className={`${inputCls(errors.DateOfBirth)} pl-8`}
                   />
                 </div>
@@ -1144,7 +1224,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    type="date" name="DateOfJoining" value={form.DateOfJoining} onChange={change}
+                    type="date" name="DateOfJoining" value={form.DateOfJoining} onChange={change} onBlur={handleBlur}
                     className={`${inputCls(errors.DateOfJoining)} pl-8`}
                   />
                 </div>
@@ -1152,7 +1232,7 @@ export default function UserCreationView() {
 
               {/* Gender */}
               <Field label="Gender" required error={errors.GenderId}>
-                <select name="GenderId" value={form.GenderId} onChange={change}
+                <select name="GenderId" value={form.GenderId} onChange={change} onBlur={handleBlur}
                   className={selectCls(errors.GenderId)}>
                   <option value="">— Select Gender —</option>
                   {genders.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
@@ -1161,7 +1241,7 @@ export default function UserCreationView() {
 
               {/* Marital Status */}
               <Field label="Marital Status" required error={errors.MaritalStatusId}>
-                <select name="MaritalStatusId" value={form.MaritalStatusId} onChange={change}
+                <select name="MaritalStatusId" value={form.MaritalStatusId} onChange={change} onBlur={handleBlur}
                   className={selectCls(errors.MaritalStatusId)}>
                   <option value="">— Select Marital Status —</option>
                   {maritalStatuses.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
@@ -1188,7 +1268,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    type="email" name="Email" value={form.Email} onChange={change}
+                    type="email" name="Email" value={form.Email} onChange={change} onBlur={handleBlur}
                     placeholder="Email address"
                     className={`${inputCls(errors.Email)} pl-8`}
                   />
@@ -1200,7 +1280,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="LoginName" value={form.LoginName} onChange={change}
+                    name="LoginName" value={form.LoginName} onChange={change} onBlur={handleBlur}
                     placeholder="Login username"
                     className={`${inputCls(errors.LoginName)} pl-8`}
                   />
@@ -1213,7 +1293,7 @@ export default function UserCreationView() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     type={showPwd ? 'text' : 'password'} name="Password"
-                    value={form.Password} onChange={change} placeholder="••••••••"
+                    value={form.Password} onChange={change} onBlur={handleBlur} placeholder="••••••••"
                     className={`${inputCls(errors.Password)} pl-8 pr-10`}
                   />
                   <button
@@ -1245,7 +1325,7 @@ export default function UserCreationView() {
               <Field label="Company" required error={errors.CompanyId}>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="CompanyId" value={form.CompanyId} onChange={change}
+                  <select name="CompanyId" value={form.CompanyId} onChange={change} onBlur={handleBlur}
                     className={`${selectCls(errors.CompanyId)} pl-8`}>
                     <option value="">— Select Company —</option>
                     {companies.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
@@ -1286,9 +1366,10 @@ export default function UserCreationView() {
               <Field label="Role" required error={errors.RoleId}>
                 <div className="relative">
                   <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="RoleId" value={form.RoleId} onChange={change}
-                    className={`${selectCls(errors.RoleId)} pl-8`}>
-                    <option value="">— Select Role —</option>
+                  <select name="RoleId" value={form.RoleId} onChange={change} onBlur={handleBlur}
+                    disabled={!form.CompanyId}
+                    className={`${selectCls(errors.RoleId)} pl-8 ${!form.CompanyId ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}>
+                    <option value="">{form.CompanyId ? '— Select Role —' : '— Select Company first —'}</option>
                     {roles.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
