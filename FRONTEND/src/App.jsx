@@ -11,7 +11,7 @@ import PipelineView from './pages/CRM/PipelineView';
 import POSView from './pages/POS/POSView';
 import TicketsView from './pages/Support/TicketsView';
 import ShowcaseView from './pages/UIInterface/ShowcaseView';
-import PagesView from './pages/Pages/PagesView';
+import PagesView from './pages/Pages/Login';
 import HelpView from './pages/Help/HelpView';
 import LetterBuilderView from './pages/Documents/LetterBuilderView';
 import UserCreationView from './pages/Master/UserCreationView';

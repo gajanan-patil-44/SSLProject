@@ -628,7 +628,7 @@ export default function PagesView() {
         {/* ========================================== */}
         {/* RIGHT COLUMN: Modern Indigo/Violet Showcase */}
         {/* ========================================== */}
-        <div className="w-full md:w-1/2 lg:w-5/12 xl:w-1/2 relative text-white p-8 sm:p-12 lg:p-14 xl:p-16 flex flex-col justify-between overflow-hidden min-h-screen" style={{background: 'linear-gradient(135deg, #312e81 0%, #4c1d95 40%, #1e1b4b 100%)'}}>
+        <div className="w-full md:w-1/2 lg:w-5/12 xl:w-1/2 relative text-white p-8 sm:p-12 lg:p-14 xl:p-16 flex flex-col justify-between overflow-hidden min-h-screen" style={{ background: 'linear-gradient(135deg, #312e81 0%, #4c1d95 40%, #1e1b4b 100%)' }}>
 
           {/* Animated mesh gradient orbs */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -639,14 +639,14 @@ export default function PagesView() {
 
           {/* Floating dots grid - top right */}
           <div className="absolute top-8 right-8 grid grid-cols-5 gap-2 opacity-20 pointer-events-none">
-            {Array.from({length: 15}).map((_, i) => (
+            {Array.from({ length: 15 }).map((_, i) => (
               <div key={i} className="w-1.5 h-1.5 rounded-full bg-white"></div>
             ))}
           </div>
 
           {/* Floating dots grid - bottom left */}
           <div className="absolute bottom-8 left-8 grid grid-cols-5 gap-2 opacity-15 pointer-events-none">
-            {Array.from({length: 10}).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="w-1.5 h-1.5 rounded-full bg-white"></div>
             ))}
           </div>
@@ -767,8 +767,8 @@ export default function PagesView() {
                   />
                   <defs>
                     <linearGradient id="donutGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#4f46e5"/>
-                      <stop offset="100%" stopColor="#7c3aed"/>
+                      <stop offset="0%" stopColor="#4f46e5" />
+                      <stop offset="100%" stopColor="#7c3aed" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -786,7 +786,7 @@ export default function PagesView() {
           {/* Bottom Heading and Subtitle */}
           <div className="relative z-10 text-center max-w-md mx-auto pt-10 space-y-3">
             <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white leading-tight">
-              Your entire business,<br/><span className="text-violet-300">one intelligent platform</span>
+              Your entire business,<br /><span className="text-violet-300">one intelligent platform</span>
             </h3>
             <p className="text-xs sm:text-sm text-indigo-200/80 leading-relaxed font-normal">
               Vishvin ERP unifies HR, CRM, POS, payroll, and operations into one seamless cloud workspace.
