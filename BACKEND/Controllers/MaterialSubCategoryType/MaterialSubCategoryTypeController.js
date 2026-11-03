@@ -44,10 +44,12 @@ export const getMaterialSubCategoryType = async (req, res) => {
 // =====================================================
 export const addMaterialSubCategory = async (req, res) => {
     const { FlagId } = req.body;
-    try {
 
+    try {
         if (parseInt(FlagId) === 2) {
+
             const data = req.body;
+
             // ---------------------------------------------
             // VALIDATE CATEGORY
             // ---------------------------------------------
@@ -58,10 +60,9 @@ export const addMaterialSubCategory = async (req, res) => {
                 });
             }
 
-            const categoryExists =
-                await checkMaterialCategoryExists(
-                    data.MaterialCategoryTypeId
-                );
+            const categoryExists = await checkMaterialCategoryExists(
+                data.MaterialCategoryTypeId
+            );
 
             if (categoryExists.length === 0) {
                 return res.status(400).json({
@@ -70,6 +71,9 @@ export const addMaterialSubCategory = async (req, res) => {
                 });
             }
 
+            // ---------------------------------------------
+            // VALIDATE SUB CATEGORY NAME
+            // ---------------------------------------------
             if (!data.MaterialSubCategoryTypeName) {
                 return res.status(400).json({
                     status: "error",
@@ -77,6 +81,23 @@ export const addMaterialSubCategory = async (req, res) => {
                 });
             }
 
+            if (data.MaterialSubCategoryTypeName.length > 30) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category name must not exceed 30 characters"
+                });
+            }
+
+            if (!/^[a-zA-Z0-9]+$/.test(data.MaterialSubCategoryTypeName)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category name must contain only alphanumeric characters"
+                });
+            }
+
+            // ---------------------------------------------
+            // VALIDATE SUB CATEGORY CODE
+            // ---------------------------------------------
             if (!data.MaterialSubCategoryTypeCode) {
                 return res.status(400).json({
                     status: "error",
@@ -84,6 +105,23 @@ export const addMaterialSubCategory = async (req, res) => {
                 });
             }
 
+            if (data.MaterialSubCategoryTypeCode.length > 15) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category code must not exceed 15 characters"
+                });
+            }
+
+            if (!/^[a-zA-Z0-9]+$/.test(data.MaterialSubCategoryTypeCode)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category code must contain only alphanumeric characters"
+                });
+            }
+
+            // ---------------------------------------------
+            // VALIDATE CREATED USER
+            // ---------------------------------------------
             if (!data.CreatedByUserName) {
                 return res.status(400).json({
                     status: "error",
@@ -95,24 +133,28 @@ export const addMaterialSubCategory = async (req, res) => {
             // CHECK DUPLICATE
             // ---------------------------------------------
             const existing = await checkMaterialSubCategoryExists(
-                    data.MaterialSubCategoryTypeName,
-                    data.MaterialSubCategoryTypeCode
-                );
+                data.MaterialSubCategoryTypeName,
+                data.MaterialSubCategoryTypeCode
+            );
 
             if (existing.length > 0) {
 
                 const duplicate = existing[0];
 
-                if (duplicate.MaterialSubCategoryTypeName ===data.MaterialSubCategoryTypeName) 
-                    {
+                if (
+                    duplicate.MaterialSubCategoryTypeName ===
+                    data.MaterialSubCategoryTypeName
+                ) {
                     return res.status(409).json({
                         status: "error",
                         message: "Material sub category name already exists"
                     });
                 }
 
-                if (duplicate.MaterialSubCategoryTypeCode === data.MaterialSubCategoryTypeCode)
-                     {
+                if (
+                    duplicate.MaterialSubCategoryTypeCode ===
+                    data.MaterialSubCategoryTypeCode
+                ) {
                     return res.status(409).json({
                         status: "error",
                         message: "Material sub category code already exists"
@@ -124,13 +166,13 @@ export const addMaterialSubCategory = async (req, res) => {
             // INSERT
             // ---------------------------------------------
             const result = await addMaterialSubCategoryType(data);
+
             return res.status(201).json({
                 status: "success",
                 message: "Material sub category added successfully",
                 data: result
             });
         }
-
 
         return res.status(400).json({
             status: "error",
@@ -177,9 +219,15 @@ export const getMaterialCategory = async (req, res) => {
 // =====================================================
 export const editMaterialSubCategory = async (req, res) => {
     const { FlagId } = req.body;
+
     try {
         if (parseInt(FlagId) === 4) {
+
             const data = req.body;
+
+            // ---------------------------------------------
+            // VALIDATE SUB CATEGORY ID
+            // ---------------------------------------------
             if (!data.MaterialSubCategoryTypeId) {
                 return res.status(400).json({
                     status: "error",
@@ -187,7 +235,9 @@ export const editMaterialSubCategory = async (req, res) => {
                 });
             }
 
-           
+            // ---------------------------------------------
+            // VALIDATE CATEGORY ID
+            // ---------------------------------------------
             if (!data.MaterialCategoryTypeId) {
                 return res.status(400).json({
                     status: "error",
@@ -195,7 +245,9 @@ export const editMaterialSubCategory = async (req, res) => {
                 });
             }
 
-            const categoryExists = await checkMaterialCategoryExists(data.MaterialCategoryTypeId);
+            const categoryExists = await checkMaterialCategoryExists(
+                data.MaterialCategoryTypeId
+            );
 
             if (categoryExists.length === 0) {
                 return res.status(400).json({
@@ -203,8 +255,9 @@ export const editMaterialSubCategory = async (req, res) => {
                     message: "Invalid MaterialCategoryTypeId"
                 });
             }
+
             // ---------------------------------------------
-            // VALIDATE NAME
+            // VALIDATE SUB CATEGORY NAME
             // ---------------------------------------------
             if (!data.MaterialSubCategoryTypeName) {
                 return res.status(400).json({
@@ -213,8 +266,22 @@ export const editMaterialSubCategory = async (req, res) => {
                 });
             }
 
+            if (data.MaterialSubCategoryTypeName.length > 30) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category name must not exceed 30 characters"
+                });
+            }
+
+            if (!/^[a-zA-Z0-9]+$/.test(data.MaterialSubCategoryTypeName)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category name must contain only alphanumeric characters"
+                });
+            }
+
             // ---------------------------------------------
-            // VALIDATE CODE
+            // VALIDATE SUB CATEGORY CODE
             // ---------------------------------------------
             if (!data.MaterialSubCategoryTypeCode) {
                 return res.status(400).json({
@@ -222,6 +289,21 @@ export const editMaterialSubCategory = async (req, res) => {
                     message: "MaterialSubCategoryTypeCode is required"
                 });
             }
+
+            if (data.MaterialSubCategoryTypeCode.length > 15) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category code must not exceed 15 characters"
+                });
+            }
+
+            if (!/^[a-zA-Z0-9]+$/.test(data.MaterialSubCategoryTypeCode)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Material sub category code must contain only alphanumeric characters"
+                });
+            }
+
             // ---------------------------------------------
             // VALIDATE UPDATED USER
             // ---------------------------------------------
@@ -236,18 +318,19 @@ export const editMaterialSubCategory = async (req, res) => {
             // CHECK DUPLICATE
             // ---------------------------------------------
             const existing = await checkMaterialSubCategoryExistsForUpdate(
-                    data.MaterialSubCategoryTypeName,
-                    data.MaterialSubCategoryTypeCode,
-                    data.MaterialSubCategoryTypeId
-                );
+                data.MaterialSubCategoryTypeName,
+                data.MaterialSubCategoryTypeCode,
+                data.MaterialSubCategoryTypeId
+            );
 
             if (existing.length > 0) {
+
                 const duplicate = existing[0];
 
                 if (
-                    duplicate.MaterialSubCategoryTypeName === data.MaterialSubCategoryTypeName) 
-                    {
-
+                    duplicate.MaterialSubCategoryTypeName ===
+                    data.MaterialSubCategoryTypeName
+                ) {
                     return res.status(409).json({
                         status: "error",
                         message: "Material sub category name already exists"
@@ -258,7 +341,6 @@ export const editMaterialSubCategory = async (req, res) => {
                     duplicate.MaterialSubCategoryTypeCode ===
                     data.MaterialSubCategoryTypeCode
                 ) {
-
                     return res.status(409).json({
                         status: "error",
                         message: "Material sub category code already exists"
@@ -266,16 +348,12 @@ export const editMaterialSubCategory = async (req, res) => {
                 }
             }
 
-
             // ---------------------------------------------
             // UPDATE
             // ---------------------------------------------
-
-            const result =
-                await updateMaterialSubCategoryType(data);
+            const result = await updateMaterialSubCategoryType(data);
 
             if (!result) {
-
                 return res.status(404).json({
                     status: "error",
                     message: "Material sub category not found"
@@ -288,7 +366,6 @@ export const editMaterialSubCategory = async (req, res) => {
                 data: result
             });
         }
-
 
         return res.status(400).json({
             status: "error",

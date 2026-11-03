@@ -181,19 +181,20 @@ export const createUserController = async (req, res) => {
         }
 
         // EMPLOYEE ID AND LOGIN NAME VALIDATION
+        // ==========================================================
+        // EMPLOYEE ID VALIDATION
+        // ==========================================================
 
         const employeeId = String(userData.EmployeeId ?? "").trim();
 
-        if (!/^[A-Za-z0-9]+$/.test(employeeId)) {
+        if (!/^[A-Za-z0-9]{1,6}$/.test(employeeId)) {
             return res.status(400).json({
                 status: "error",
-                message: "EmployeeId must contain only alphanumeric characters"
+                message: "EmployeeId must contain only alphanumeric characters and must not exceed 6 characters"
             });
         }
 
         userData.EmployeeId = employeeId;
-
-
         const loginName = String(userData.LoginName ?? "").trim();
 
         if (!/^[A-Za-z0-9]+$/.test(loginName)) {
@@ -628,81 +629,81 @@ export const createUserController = async (req, res) => {
         // GET UPLOADED FILES
         // Supports multer array() and fields()
         // ==========================================================
-// ==========================================================
-// GET UPLOADED FILES
-// ==========================================================
+        // ==========================================================
+        // GET UPLOADED FILES
+        // ==========================================================
 
-const uploadedFiles = Array.isArray(req.files)
-    ? req.files
-    : Object.values(req.files || {}).flat();
+        const uploadedFiles = Array.isArray(req.files)
+            ? req.files
+            : Object.values(req.files || {}).flat();
 
-const fileTypeIds = Array.isArray(userData.FileTypeId)
-    ? userData.FileTypeId
-    : userData.FileTypeId
-        ? [userData.FileTypeId]
-        : [];
+        const fileTypeIds = Array.isArray(userData.FileTypeId)
+            ? userData.FileTypeId
+            : userData.FileTypeId
+                ? [userData.FileTypeId]
+                : [];
 
-let processedFiles;
+        let processedFiles;
 
-try {
-    processedFiles = await convertUploadedImagesToPdf(
-        uploadedFiles,
-        fileTypeIds
-    );
-} catch (error) {
-    return res.status(400).json({
-        status: "error",
-        message: error.message
-    });
-}
+        try {
+            processedFiles = await convertUploadedImagesToPdf(
+                uploadedFiles,
+                fileTypeIds
+            );
+        } catch (error) {
+            return res.status(400).json({
+                status: "error",
+                message: error.message
+            });
+        }
 
-// ==========================================================
-// PHOTO - STORE CONVERTED PDF AS BYTEA
-// ==========================================================
+        // ==========================================================
+        // PHOTO - STORE CONVERTED PDF AS BYTEA
+        // ==========================================================
 
-const uploadedPhoto = processedFiles.find(
-    file => file.fieldname === "Photo"
-);
+        const uploadedPhoto = processedFiles.find(
+            file => file.fieldname === "Photo"
+        );
 
-userData.Photo = null;
+        userData.Photo = null;
 
-if (uploadedPhoto) {
-    userData.Photo = await readFile(uploadedPhoto.path);
-}
+        if (uploadedPhoto) {
+            userData.Photo = await readFile(uploadedPhoto.path);
+        }
 
-// ==========================================================
-// USER FILES - STORE MERGED PDF PATHS
-// ==========================================================
+        // ==========================================================
+        // USER FILES - STORE MERGED PDF PATHS
+        // ==========================================================
 
-const uploadedUserFiles = processedFiles.filter(
-    file => file.fieldname === "UserFile"
-);
+        const uploadedUserFiles = processedFiles.filter(
+            file => file.fieldname === "UserFile"
+        );
 
-userData.UserFiles = uploadedUserFiles.map(file => ({
-    FileTypeId: Number(file.FileTypeId),
-    FilePath: file.path
-}));
+        userData.UserFiles = uploadedUserFiles.map(file => ({
+            FileTypeId: Number(file.FileTypeId),
+            FilePath: file.path
+        }));
 
-await createUser(userData, processedFiles);
+        await createUser(userData, processedFiles);
 
-// ==========================================================
-// SUCCESS RESPONSE
-// ==========================================================
+        // ==========================================================
+        // SUCCESS RESPONSE
+        // ==========================================================
 
-return res.status(201).json({
-    status: "success",
-    message: "User created successfully"
-});
+        return res.status(201).json({
+            status: "success",
+            message: "User created successfully"
+        });
 
-} catch (error) {
-    console.error("Create User Error:", error);
+    } catch (error) {
+        console.error("Create User Error:", error);
 
-    return res.status(500).json({
-        status: "error",
-        message: "Internal server error",
-        error: error.message
-    });
-}
+        return res.status(500).json({
+            status: "error",
+            message: "Internal server error",
+            error: error.message
+        });
+    }
 };
 // ==========================================================
 // COMPANY / PRODUCT / PROJECT DROPDOWN
@@ -785,7 +786,22 @@ export const companyProductProjectDropdownController = async (req, res) => {
         // FLAG ID 4 - ROLE
         // ==================================================
         if (parseInt(FlagId) === 4) {
-            const result = await getRoleDropdown();
+
+            if (
+                CompanyId === undefined ||
+                CompanyId === null ||
+                String(CompanyId).trim() === ""
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+            }
+
+            const result = await getRoleDropdown(
+                parseInt(CompanyId)
+            );
+
             return res.status(200).json({
                 status: "success",
                 message: "Role data fetched successfully",

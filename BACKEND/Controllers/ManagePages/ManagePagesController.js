@@ -4,8 +4,8 @@ import {
     getParentPages,
     getChildPages,
     checkMainPage,
-     checkParentPage,
-      getTargetPage,
+    checkParentPage,
+    getTargetPage,
     getPageById,
     getNextMainPageOrder,
     getNextChildOrder,
@@ -42,7 +42,7 @@ export const getManagePageDropdown = async (req, res) => {
                 message: "Roles fetched successfully",
                 data: result
             });
-        } 
+        }
         // =====================================================
         // FLAG 2 - MAIN PAGES
         // =====================================================
@@ -732,35 +732,35 @@ export const editPage = async (req, res) => {
 
     try {
 
-       const {
-    FlagId,
-    PageId,
-    PageName,
-    PageUrl,
-    PageIcon,
-    PageType,
-    ParentPageId,
-    RoleIds,
-    IsChangeOrder,
-    OrderType,
-    TargetPageId,
-    UpdatedByUserName
-} = req.body;
+        const {
+            FlagId,
+            PageId,
+            PageName,
+            PageUrl,
+            PageIcon,
+            PageType,
+            ParentPageId,
+            RoleIds,
+            IsChangeOrder,
+            OrderType,
+            TargetPageId,
+            UpdatedByUserName
+        } = req.body;
 
 
 
-const validPageTypes = [
-    "MainPage",
-    "ParentPage",
-    "ChildPage"
-];
+        const validPageTypes = [
+            "MainPage",
+            "ParentPage",
+            "ChildPage"
+        ];
 
-if (!validPageTypes.includes(PageType)) {
-    return res.status(400).json({
-        status: "error",
-        message: "Invalid PageType"
-    });
-}
+        if (!validPageTypes.includes(PageType)) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid PageType"
+            });
+        }
         // =====================================================
         // BASIC VALIDATION
         // =====================================================
@@ -822,45 +822,49 @@ if (!validPageTypes.includes(PageType)) {
 
 
         // =====================================================
-        // ROLE VALIDATION
+        // ROLE IDS VALIDATION
         // =====================================================
 
-        if (
-            !Array.isArray(RoleIds) ||
-            RoleIds.length === 0
-        ) {
+        let roleIds;
 
-            return res.status(400).json({
-                status: "error",
-                message: "RoleIds are required"
-            });
-        }
+        if (RoleIds === undefined) {
 
+            // Not provided: preserve existing roles
+            roleIds = undefined;
 
-        const roleIds = [
-            ...new Set(
-                RoleIds.map(
-                    id => Number(id)
-                )
-            )
-        ];
+        } else {
 
+            let parsedRoleIds = RoleIds;
 
-        for (const roleId of roleIds) {
+            if (typeof parsedRoleIds === "string") {
+                try {
+                    parsedRoleIds = JSON.parse(parsedRoleIds);
+                } catch {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Invalid RoleIds format"
+                    });
+                }
+            }
 
-            if (
-                !Number.isInteger(roleId) ||
-                roleId <= 0
-            ) {
-
+            if (!Array.isArray(parsedRoleIds)) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Invalid RoleId"
+                    message: "RoleIds must be an array"
                 });
             }
+
+            roleIds = [...new Set(parsedRoleIds.map(Number))];
+
+            for (const roleId of roleIds) {
+                if (!Number.isInteger(roleId) || roleId <= 0) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "Invalid RoleId"
+                    });
+                }
+            }
         }
-
-
         // =====================================================
         // CHANGE ORDER VALIDATION
         // =====================================================
@@ -935,15 +939,12 @@ if (!validPageTypes.includes(PageType)) {
         // GET CURRENT PAGE
         // =====================================================
 
-        const currentPage =
-            await getPageById(
-                client,
-                pageId
-            );
-
+        const currentPage = await getPageById(
+            client,
+            pageId
+        );
 
         if (!currentPage) {
-
             await client.query("ROLLBACK");
 
             return res.status(404).json({
@@ -952,17 +953,82 @@ if (!validPageTypes.includes(PageType)) {
             });
         }
 
+        // =====================================================
+        // GET UPDATED VALUES OR KEEP EXISTING VALUES
+        // =====================================================
+
+        const updatedPageName =
+            PageName !== undefined
+                ? String(PageName).trim()
+                : currentPage.PageName;
+
+        const updatedPageUrl =
+            PageUrl !== undefined
+                ? String(PageUrl).trim()
+                : currentPage.PageUrl;
+
+        const updatedPageIcon =
+            PageIcon !== undefined
+                ? String(PageIcon).trim()
+                : currentPage.PageIcon;
 
         const pageType =
-           PageType;
+            PageType !== undefined
+                ? PageType
+                : currentPage.PageType;
 
+        const effectiveParentPageId =
+            ParentPageId !== undefined
+                ? ParentPageId
+                : currentPage.ParentPageId;
 
-        let newParentPageId =
-            currentPage.ParentPageId;
+        // =====================================================
+        // VALIDATE UPDATED VALUES
+        // =====================================================
 
-        let newOrderNo =
-            Number(currentPage.OrderNo);
+        if (!validPageTypes.includes(pageType)) {
+            await client.query("ROLLBACK");
 
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid PageType"
+            });
+        }
+
+        if (!updatedPageName) {
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                status: "error",
+                message: "PageName is required"
+            });
+        }
+
+        if (!updatedPageUrl) {
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                status: "error",
+                message: "PageUrl is required"
+            });
+        }
+
+        if (!updatedPageIcon) {
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                status: "error",
+                message: "PageIcon is required"
+            });
+        }
+
+        // =====================================================
+        // INITIALIZE PARENT AND ORDER
+        // =====================================================
+
+        let newParentPageId = currentPage.ParentPageId;
+
+        let newOrderNo = Number(currentPage.OrderNo);
 
         // =====================================================
         // MAIN PAGE
@@ -1394,18 +1460,17 @@ if (!validPageTypes.includes(PageType)) {
         // UPDATE PAGE
         // =====================================================
 
-        const updatedPage =
-            await updatePage(
-                client,
-                pageId,
-                PageName,
-                PageUrl,
-                PageIcon,
-                newParentPageId,
-                newOrderNo,
-                roleIds,
-                UpdatedByUserName
-            );
+        const updatedPage = await updatePage(
+            client,
+            pageId,
+            updatedPageName,
+            updatedPageUrl,
+            updatedPageIcon,
+            newParentPageId,
+            newOrderNo,
+            roleIds,
+            UpdatedByUserName
+        );
 
 
         if (!updatedPage) {

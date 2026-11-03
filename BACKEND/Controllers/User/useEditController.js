@@ -452,6 +452,8 @@ export const getAllUserDetailsController = async (req, res) => {
 // ======================================================
 
 
+
+
 export const editUserdetailsController = async (req, res) => {
 
     try {
@@ -460,9 +462,9 @@ export const editUserdetailsController = async (req, res) => {
             flagId,
             UserId,
 
-            // ================================
+            // =====================================
             // DATA.User
-            // ================================
+            // =====================================
             employeeId,
             firstName,
             middleName,
@@ -478,37 +480,32 @@ export const editUserdetailsController = async (req, res) => {
             dateOfJoining,
             updatedByUserName,
 
-            // ================================
-            // DATA.UserCompany
-            // ================================
-            companies,
+            // =====================================
+            // NORMAL FIELDS - NOT ARRAYS
+            // =====================================
+            CompanyId,
+            RoleId,
+            companyId,
+            roleId,
 
-            // ================================
-            // DATA.UserProduct
-            // ================================
-            products,
+            // =====================================
+            // ARRAY FIELDS
+            // =====================================
+            CompanyProductId,
+            ProjectId,
+            ReportingManagerUserId,
 
-            // ================================
-            // DATA.UserProject
-            // ================================
+            // Backward-compatible field names
+            companyProducts,
             projects,
-
-            // ================================
-            // DATA.UserRole
-            // ================================
-            roles,
-
-            // ================================
-            // DATA.UserReportingManager
-            // ================================
             reportingManagers
 
         } = req.body;
 
 
-        // ============================================================
+        // =============================================
         // 1. VALIDATE FLAG
-        // ============================================================
+        // =============================================
 
         if (Number(flagId) !== 2) {
 
@@ -516,12 +513,13 @@ export const editUserdetailsController = async (req, res) => {
                 success: false,
                 message: "Please enter Valid FlagId"
             });
+
         }
 
 
-        // ============================================================
+        // =============================================
         // 2. VALIDATE USER ID
-        // ============================================================
+        // =============================================
 
         if (
             UserId === undefined ||
@@ -535,12 +533,13 @@ export const editUserdetailsController = async (req, res) => {
                 success: false,
                 message: "Valid UserId is required."
             });
+
         }
 
 
-        // ============================================================
-        // 3. HELPER
-        // ============================================================
+        // =============================================
+        // 3. HELPER FUNCTIONS
+        // =============================================
 
         const isProvided = (value) => {
 
@@ -549,76 +548,127 @@ export const editUserdetailsController = async (req, res) => {
                 value !== null &&
                 value !== ""
             );
+
         };
 
 
-        // ============================================================
-        // 4. VALIDATE ARRAYS
-        // ============================================================
+        // =============================================
+        // 4. PARSE ARRAY
+        // Supports JSON and FORM-DATA
+        // =============================================
 
-        if (
-            companies !== undefined &&
-            !Array.isArray(companies)
-        ) {
+        const parseArray = (value, fieldName) => {
 
-            return res.status(400).json({
-                success: false,
-                message: "companies must be an array."
-            });
-        }
+            if (value === undefined || value === null) {
+                return undefined;
+            }
 
+            let parsedValue = value;
 
-        if (
-            products !== undefined &&
-            !Array.isArray(products)
-        ) {
+            // JSON request: already an array
+            if (Array.isArray(value)) {
 
-            return res.status(400).json({
-                success: false,
-                message: "products must be an array."
-            });
-        }
+                parsedValue = value;
 
+            }
 
-        if (
-            projects !== undefined &&
-            !Array.isArray(projects)
-        ) {
+            // Form-data request: JSON string
+            else if (typeof value === "string") {
 
-            return res.status(400).json({
-                success: false,
-                message: "projects must be an array."
-            });
-        }
+                if (value.trim() === "") {
+                    return undefined;
+                }
 
+                try {
 
-        if (
-            roles !== undefined &&
-            !Array.isArray(roles)
-        ) {
+                    parsedValue = JSON.parse(value);
 
-            return res.status(400).json({
-                success: false,
-                message: "roles must be an array."
-            });
-        }
+                } catch (error) {
+
+                    throw new Error(
+                        `${fieldName} must be a valid JSON array.`
+                    );
+
+                }
+
+            }
+
+            else {
+
+                throw new Error(
+                    `${fieldName} must be an array.`
+                );
+
+            }
 
 
-        if (
-            reportingManagers !== undefined &&
-            !Array.isArray(reportingManagers)
-        ) {
+            if (!Array.isArray(parsedValue)) {
 
-            return res.status(400).json({
-                success: false,
-                message: "reportingManagers must be an array."
-            });
-        }
+                throw new Error(
+                    `${fieldName} must be an array.`
+                );
+
+            }
 
 
-        // ============================================================
-        // 5. CHECK AT LEAST ONE USER FIELD
-        // ============================================================
+            // Validate individual IDs
+            for (const id of parsedValue) {
+
+                if (
+                    id === null ||
+                    id === undefined ||
+                    id === "" ||
+                    !Number.isInteger(Number(id)) ||
+                    Number(id) <= 0
+                ) {
+
+                    throw new Error(
+                        `${fieldName} must contain valid positive IDs.`
+                    );
+
+                }
+
+            }
+
+            return parsedValue.map(Number);
+
+        };
+
+
+        // =============================================
+        // 5. PARSE ONLY THREE ARRAYS
+        // =============================================
+
+        const reportingManagerArray = parseArray(
+            ReportingManagerUserId ?? reportingManagers,
+            "ReportingManagerUserId"
+        );
+
+
+        const companyProductArray = parseArray(
+            CompanyProductId ?? companyProducts,
+            "CompanyProductId"
+        );
+
+
+        const projectArray = parseArray(
+            ProjectId ?? projects,
+            "ProjectId"
+        );
+
+
+        // =============================================
+        // 6. NORMAL FIELD VALUES
+        // =============================================
+
+        const finalCompanyId = CompanyId ?? companyId;
+
+        const finalRoleId = RoleId ?? roleId;
+
+
+        // =============================================
+        // 7. CHECK AT LEAST ONE USER FIELD
+        // =============================================
 
         const hasUserField = [
 
@@ -634,51 +684,37 @@ export const editUserdetailsController = async (req, res) => {
             email,
             loginName,
             altPhoneNumber,
-            dateOfJoining
+            dateOfJoining,
+            updatedByUserName,
+            finalCompanyId,
+            finalRoleId
 
         ].some(isProvided);
 
 
-        // ============================================================
-        // 6. CHECK RELATIONSHIP EDITS
-        // ============================================================
-
-        const hasCompanyEdit =
-            Array.isArray(companies) &&
-            companies.length > 0;
-
-
-        const hasProductEdit =
-            Array.isArray(products) &&
-            products.length > 0;
-
-
-        const hasProjectEdit =
-            Array.isArray(projects) &&
-            projects.length > 0;
-
-
-        const hasRoleEdit =
-            Array.isArray(roles) &&
-            roles.length > 0;
-
+        // =============================================
+        // 8. CHECK ARRAY EDITS
+        // =============================================
 
         const hasReportingManagerEdit =
-            Array.isArray(reportingManagers) &&
-            reportingManagers.length > 0;
+            reportingManagerArray !== undefined;
+
+        const hasCompanyProductEdit =
+            companyProductArray !== undefined;
+
+        const hasProjectEdit =
+            projectArray !== undefined;
 
 
-        // ============================================================
-        // 7. AT LEAST ONE FIELD MUST BE SENT
-        // ============================================================
+        // =============================================
+        // 9. AT LEAST ONE FIELD REQUIRED
+        // =============================================
 
         if (
             !hasUserField &&
-            !hasCompanyEdit &&
-            !hasProductEdit &&
-            !hasProjectEdit &&
-            !hasRoleEdit &&
-            !hasReportingManagerEdit
+            !hasReportingManagerEdit &&
+            !hasCompanyProductEdit &&
+            !hasProjectEdit
         ) {
 
             return res.status(400).json({
@@ -686,184 +722,19 @@ export const editUserdetailsController = async (req, res) => {
                 message:
                     "At least one field is required to update the user."
             });
+
         }
 
 
-        // ============================================================
-        // 8. VALIDATE COMPANIES
-        // ============================================================
-
-        if (Array.isArray(companies)) {
-
-            for (const company of companies) {
-
-                if (!isProvided(company.UserCompanyId)) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "UserCompanyId is required for every company."
-                    });
-                }
-
-                if (
-                    !isProvided(company.companyId) &&
-                    !isProvided(company.isPrimaryCompany)
-                ) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "At least one company field is required."
-                    });
-                }
-            }
-        }
-
-
-        // ============================================================
-        // 9. VALIDATE PRODUCTS
-        // ============================================================
-
-        if (Array.isArray(products)) {
-
-            for (const product of products) {
-
-                if (!isProvided(product.UserProductId)) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "UserProductId is required for every product."
-                    });
-                }
-
-                if (!isProvided(product.companyProductId)) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "companyProductId is required for every product."
-                    });
-                }
-            }
-        }
-
-
-        // ============================================================
-        // 10. VALIDATE PROJECTS
-        // ============================================================
-
-        if (Array.isArray(projects)) {
-
-            for (const project of projects) {
-
-                if (!isProvided(project.UserProjectId)) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "UserProjectId is required for every project."
-                    });
-                }
-
-                if (
-                    !isProvided(project.projectId) &&
-                    !isProvided(project.isPrimary)
-                ) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "At least one project field is required."
-                    });
-                }
-            }
-        }
-
-
-        // ============================================================
-        // 11. VALIDATE ROLES
-        // ============================================================
-
-        if (Array.isArray(roles)) {
-
-            for (const role of roles) {
-
-                if (!isProvided(role.UserRoleId)) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "UserRoleId is required for every role."
-                    });
-                }
-
-                if (
-                    !isProvided(role.roleId) &&
-                    !isProvided(role.roleCompanyId) &&
-                    !isProvided(role.roleCompanyProductId) &&
-                    !isProvided(role.roleProjectId)
-                ) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "At least one role field is required."
-                    });
-                }
-            }
-        }
-
-
-        // ============================================================
-        // 12. VALIDATE REPORTING MANAGERS
-        // ============================================================
-
-        if (Array.isArray(reportingManagers)) {
-
-            for (const manager of reportingManagers) {
-
-                if (
-                    !isProvided(
-                        manager.UserReportingManagerId
-                    )
-                ) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "UserReportingManagerId is required for every reporting manager."
-                    });
-                }
-
-                if (
-                    !isProvided(
-                        manager.reportingManagerUserId
-                    ) &&
-                    !isProvided(
-                        manager.reportingManagerCompanyId
-                    )
-                ) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "At least one reporting manager field is required."
-                    });
-                }
-            }
-        }
-
-
-        // ============================================================
-        // 13. CALL MODEL
-        // ============================================================
+        // =============================================
+        // 10. CALL MODEL
+        // =============================================
 
         const result = await editUserdetails({
 
-            UserId,
+            UserId: Number(UserId),
 
+            // DATA.User
             employeeId,
             firstName,
             middleName,
@@ -879,17 +750,21 @@ export const editUserdetailsController = async (req, res) => {
             dateOfJoining,
             updatedByUserName,
 
-            companies,
-            products,
-            projects,
-            roles,
-            reportingManagers
+            // Normal fields
+            companyId: finalCompanyId,
+            roleId: finalRoleId,
+
+            // Only three ID arrays
+            reportingManagers: reportingManagerArray,
+            products: companyProductArray,
+            projects: projectArray
+
         });
 
 
-        // ============================================================
-        // 14. NO ACTUAL CHANGE
-        // ============================================================
+        // =============================================
+        // 11. NO CHANGES
+        // =============================================
 
         if (result.message === "No changes detected") {
 
@@ -898,12 +773,13 @@ export const editUserdetailsController = async (req, res) => {
                 message: "No changes detected.",
                 data: result
             });
+
         }
 
 
-        // ============================================================
-        // 15. SUCCESS
-        // ============================================================
+        // =============================================
+        // 12. SUCCESS
+        // =============================================
 
         return res.status(200).json({
             success: true,
@@ -919,14 +795,22 @@ export const editUserdetailsController = async (req, res) => {
             error
         );
 
-        return res.status(500).json({
+        const isValidationError =
+            error.message.includes("must be") ||
+            error.message.includes("valid positive IDs");
+
+        return res.status(isValidationError ? 400 : 500).json({
             success: false,
-            message: "Failed to update user details.",
-            error: error.message,
-            stack: error.stack
+            message: isValidationError
+                ? error.message
+                : "Failed to update user details.",
+            error: error.message
         });
+
     }
+
 };
+
 
 export const getGender = async (req, res) => {
 
