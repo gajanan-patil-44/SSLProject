@@ -289,7 +289,8 @@ export const createUser = async (userData) => {
                 "Photo",
                 "CreatedAt",
                 "CreatedByUserName",
-                "DateOfJoining"
+                "DateOfJoining",
+                "DepartmentId"
             )
             VALUES
             (
@@ -309,25 +310,14 @@ export const createUser = async (userData) => {
                 $14,
                 CURRENT_TIMESTAMP,
                 $15,
-                $16
+                $16,
+                $17
             )
             RETURNING
                 "UserId",
                 "EmployeeId",
-                "FirstName",
-                "MiddleName",
-                "LastName",
-                "PhoneNumber",
-                "AltPhoneNumber",
-                "DateOfBirth",
-                "GenderId",
-                "MaritalStatusId",
-                "DesignationId",
-                "Email",
-                "LoginName",
-                "CreatedAt",
-                "CreatedByUserName",
-                "DateOfJoining";
+                "FirstName"
+                
         `;
 
 
@@ -347,7 +337,8 @@ export const createUser = async (userData) => {
             userData.LoginName,
             userData.Photo || null,
             userData.CreatedByUserName,
-            userData.DateOfJoining
+            userData.DateOfJoining,
+            userData.DepartmentId || null
         ];
 
 
@@ -960,6 +951,37 @@ const secretPasswordId =
     }
 
 };
+
+
+// export const getDepartmentDropdownCompanyId = async (CompanyId = null) => {
+//     const query = `
+//         SELECT
+//             D."DepartmentId",
+//             D."DepartmentName"
+//              FROM "LKP"."Department" D
+//         INNER JOIN "LKP"."Company" C
+//             ON C."CompanyId" = D."CompanyId"
+//         WHERE
+//             D."IsDisabled" = false
+//             AND C."IsDisabled" = false
+//             AND (
+//                 $1::smallint IS NULL
+//                 OR D."CompanyId" = $1
+//             )
+//         ORDER BY D."DepartmentName" ASC
+//     `;
+
+//     const result = await pool.query(query, [CompanyId]);
+
+//     return result.rows;
+// };
+
+
+
+
+
+
+
 // ==========================================================
 // FLAG ID 1 - COMPANY
 // ==========================================================
