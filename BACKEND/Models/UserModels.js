@@ -47,17 +47,20 @@ export const getMaritalStatusDropdown = async () => {
 // ==========================================================
 
 
-export const getDesignationDropdown = async () => {
+export const getDesignationDropdown = async (CompanyId) => {
     const query = `
         SELECT
             "CompanyDesignationId" AS "DesignationId",
-            "DesignationName"
+            "DesignationName",
+            "DesignationLevel"
         FROM "LKP"."CompanyDesignation"
-        WHERE "IsDisabled" = false
+        WHERE "CompanyId" = $1
+          AND "IsDisabled" = false
         ORDER BY "DesignationName";
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [CompanyId]);
+
     return result.rows;
 };
 
@@ -177,64 +180,79 @@ export const checkDesignationExists = async (DesignationId) => {
 // CHECK LOGIN NAME
 // ==========================================================
 
+
 export const checkLoginNameExists = async (LoginName) => {
     const query = `
-        SELECT
-            "UserId",
-            "LoginName"
-        FROM "DATA"."User"
-        WHERE "LoginName" = $1;
+        SELECT EXISTS (
+            SELECT 1
+            FROM "DATA"."User"
+            WHERE "LoginName" = $1
+        ) AS "exists";
     `;
+
     const result = await pool.query(query, [LoginName]);
-    return result.rows;
+
+    return result.rows[0].exists;
 };
+
 
 // ==========================================================
 // CHECK EMAIL
 // ==========================================================
 
+
 export const checkEmailExists = async (Email) => {
     const query = `
-        SELECT
-            "UserId",
-            "Email"
-        FROM "DATA"."User"
-        WHERE "Email" = $1;
+        SELECT EXISTS (
+            SELECT 1
+            FROM "DATA"."User"
+            WHERE "Email" = $1
+        ) AS "exists";
     `;
+
     const result = await pool.query(query, [Email]);
-    return result.rows;
+
+    return result.rows[0].exists;
 };
 
 // ==========================================================
 // CHECK PHONE NUMBER
 // ==========================================================
 
+
 export const checkPhoneNumberExists = async (PhoneNumber) => {
     const query = `
-        SELECT
-            "UserId",
-            "PhoneNumber"
-        FROM "DATA"."User"
-        WHERE "PhoneNumber" = $1;
+        SELECT EXISTS (
+            SELECT 1
+            FROM "DATA"."User"
+            WHERE "PhoneNumber" = $1
+        ) AS "exists";
     `;
+
     const result = await pool.query(query, [PhoneNumber]);
-    return result.rows;
+
+    return result.rows[0].exists;
 };
+
 // ==========================================================
 // CHECK EMPLOYEE ID
 // ==========================================================
 
+
 export const checkEmployeeIdExists = async (EmployeeId) => {
     const query = `
-        SELECT
-            "UserId",
-            "EmployeeId"
-        FROM "DATA"."User"
-        WHERE "EmployeeId" = $1;
+        SELECT EXISTS (
+            SELECT 1
+            FROM "DATA"."User"
+            WHERE "EmployeeId" = $1
+        ) AS "exists";
     `;
+
     const result = await pool.query(query, [EmployeeId]);
-    return result.rows;
+
+    return result.rows[0].exists;
 };
+
 // ==========================================================
 // CREATE USER + USER COMPANY + USER PRODUCT
 // + USER PROJECT + USER ROLE + USER FILE

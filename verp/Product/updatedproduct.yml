@@ -4,7 +4,7 @@ info:
   seq: 3
 
 http:
-  method: POST
+  method: PATCH
   url: http://192.168.23.115:9004/verp-service/productCreation/updateProduct
   body:
     type: json
@@ -12,7 +12,7 @@ http:
       {
           "flagId": 3,
           "ProductId": 1,
-          "ProductCode": "P001",
+          "ProductCode": "P002",
           "ProductName": "WFMS",
           "ProductDescription": "Updated product description",
           "UpdatedByUserName": "Praveen"

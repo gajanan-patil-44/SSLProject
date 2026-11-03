@@ -81,6 +81,8 @@ const STEPS = [
   { id: 5, title: 'User Documents', short: 'Documents', desc: 'Certificates & files', icon: FileText },
 ];
 
+const MAX_PHOTO_SIZE = 1 * 1024 * 1024; // 1 MB limit for profile photo
+
 // ─── Initial Form Factory ──────────────────────────────────────────────────
 const getInitialForm = () => ({
   EmployeeId: '',
@@ -279,6 +281,7 @@ export default function UserCreationView() {
   const [showPwd, setShowPwd]                 = useState(false);
   const [photo, setPhoto]                     = useState(null);   // { file, preview }
   const [userFiles, setUserFiles]             = useState({});     // { [fileTypeId]: File }
+  const [fileErrors, setFileErrors]           = useState({});     // { [fileTypeId]: string }
   const [designations, setDesignations]       = useState([]);
   const [genders, setGenders]                 = useState([]);
   const [maritalStatuses, setMaritalStatuses] = useState([]);
@@ -304,11 +307,10 @@ export default function UserCreationView() {
   useEffect(() => { loadDropdowns(); }, []);
 
   const loadDropdowns = async () => {
-    const [genderRes, maritalRes, compRes, rolesRes, fileTypesRes] = await Promise.allSettled([
+    const [genderRes, maritalRes, compRes, fileTypesRes] = await Promise.allSettled([
       userService.getGenderDropdown(),
       userService.getMaritalStatusDropdown(),
       userService.getCompanyDropdown(),
-      userService.getRoleDropdown(),         // FlagId: 4 → /companyproductprojectdropdown
       userService.getFileTypes(),            // FlagId: 1 → /fileType/getfiletypes
     ]);
     if (genderRes.status === 'fulfilled')
@@ -317,8 +319,6 @@ export default function UserCreationView() {
       setMaritalStatuses(toOpts(maritalRes.value?.data ?? maritalRes.value, 'MaritalStatusId', 'MaritalStatusName'));
     if (compRes.status === 'fulfilled')
       setCompanies(toOpts(compRes.value?.data ?? compRes.value, 'CompanyId', 'CompanyName'));
-    if (rolesRes.status === 'fulfilled')
-      setRoles(toOpts(rolesRes.value?.data ?? rolesRes.value, 'RoleId', 'RoleName'));
     if (fileTypesRes.status === 'fulfilled') {
       const raw = fileTypesRes.value?.data ?? fileTypesRes.value;
       setFileTypes(toOpts(raw, 'FileTypeId', 'FileTypeName'));
@@ -385,12 +385,13 @@ export default function UserCreationView() {
     }
 
     if (name === 'CompanyId') {
-      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
+      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
       setProducts([]);
       setProjects([]);
       setDesignations([]);
+      setRoles([]);
       setReportingManagers([]);
-      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
       if (!value) return;
 
       // 1. Fetch Company Products
@@ -428,12 +429,72 @@ export default function UserCreationView() {
       } catch (err) {
         setDesignations([]);
       }
+
+      // 3. Fetch Roles for selected Company via /verp-service/userCreation/companyproductprojectdropdown { FlagId: 4, CompanyId: value }
+      try {
+        const rolesRes = await userService.getRoleDropdown(value);
+        const rawRoles = rolesRes?.data?.data ?? rolesRes?.data ?? rolesRes;
+        const list = Array.isArray(rawRoles)
+          ? rawRoles
+          : (Array.isArray(rawRoles?.roles) ? rawRoles.roles : []);
+        setRoles(toOpts(list, 'RoleId', 'RoleName'));
+      } catch (err) {
+        setRoles([]);
+      }
       return;
     }
 
     // Default single-value fields (RoleId, GenderId, etc.)
     setForm(f => ({ ...f, [name]: value }));
     setErrors(er => ({ ...er, [name]: '' }));
+  };
+
+  // ── Field Blur Validation (validates individual field on blur) ────────────
+  const handleBlur = e => {
+    const { name, value } = e.target;
+    let fieldError = '';
+
+    if (name === 'EmployeeId') {
+      fieldError = validateCode(value, 'Employee ID', true);
+    } else if (name === 'FirstName') {
+      fieldError = validateName(value, 'First name', true);
+    } else if (name === 'MiddleName' && value) {
+      fieldError = validateName(value, 'Middle name', false);
+    } else if (name === 'LastName' && value) {
+      fieldError = validateName(value, 'Last name', false);
+    } else if (name === 'PhoneNumber') {
+      fieldError = validatePhone(value, 'Phone number', true);
+    } else if (name === 'AltPhoneNumber' && value) {
+      fieldError = validatePhone(value, 'Alternate phone number', false);
+    } else if (name === 'DateOfBirth') {
+      fieldError = validateDateOfBirth(value, 18, true);
+    } else if (name === 'DateOfJoining') {
+      fieldError = validateDateOfJoining(value, form.DateOfBirth, true);
+    } else if (name === 'GenderId') {
+      if (!value) fieldError = 'Select a gender';
+    } else if (name === 'MaritalStatusId') {
+      if (!value) fieldError = 'Select marital status';
+    } else if (name === 'Email') {
+      fieldError = validateEmail(value, 'Email address', true);
+    } else if (name === 'LoginName') {
+      if (!value || !value.trim()) {
+        fieldError = 'Login username is required';
+      } else if (value.trim().length < 3) {
+        fieldError = 'Login username must be at least 3 characters';
+      }
+    } else if (name === 'Password') {
+      fieldError = validatePassword(value, 'Password', 6, true);
+    } else if (name === 'CompanyId') {
+      if (!value) fieldError = 'Select a company';
+    } else if (name === 'RoleId') {
+      if (!value) fieldError = 'Select a role';
+    }
+
+    if (fieldError) {
+      setErrors(prev => ({ ...prev, [name]: fieldError }));
+    } else {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   // ── Fetch projects for multiple product IDs, merging deduplicated results ─
@@ -488,21 +549,122 @@ export default function UserCreationView() {
   };
 
   const onPhotoChange = e => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrors(er => ({ ...er, Photo: 'Please select a valid image file (JPG, PNG, WEBP).' }));
+      useERPStore.getState().showToast('Please select a valid image file.', 'error');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+
+    // Restrict size to max 1 MB
+    if (file.size > MAX_PHOTO_SIZE) {
+      setErrors(er => ({ ...er, Photo: 'Image size exceeds the 1 MB limit. Please select an image of 1 MB or less.' }));
+      useERPStore.getState().showToast('Image size exceeds 1 MB limit.', 'error');
+      if (photoRef.current) photoRef.current.value = '';
+      return;
+    }
+
     setPhoto({ file, preview: URL.createObjectURL(file) });
     setErrors(er => ({ ...er, Photo: '' }));
   };
-  const removePhoto = () => { setPhoto(null); if (photoRef.current) photoRef.current.value = ''; };
-
-  // ── Per-FileType upload handlers ──────────────────────────────────────────
-  const onAddFiles = () => {}; // kept for ref compat
-  const onFileForType = (fileTypeId, file) => {
-    if (!file) return;
-    setUserFiles(prev => ({ ...prev, [fileTypeId]: file }));
+  const removePhoto = () => {
+    setPhoto(null);
+    if (photoRef.current) photoRef.current.value = '';
+    setErrors(er => ({ ...er, Photo: '' }));
   };
+
+  // ── Per-FileType upload handlers (Multiple Images Only) ────────────────────
+  const onAddFiles = () => {}; // kept for ref compat
+
+  // Helper to ensure file is strictly an image
+  const isImageFile = (file) => {
+    if (!file) return false;
+    if (file.type && file.type.startsWith('image/')) return true;
+    const name = file.name || '';
+    return /\.(jpe?g|png|webp|gif|bmp|svg|avif)$/i.test(name);
+  };
+
+  const onFilesForType = (fileTypeId, incomingFiles, fileTypeLabel = '') => {
+    if (!incomingFiles || incomingFiles.length === 0) return;
+    const filesArray = Array.from(incomingFiles);
+
+    // 1. Strict Image-Only Validation (reject PDFs, Word, Excel, etc.)
+    const nonImageFiles = filesArray.filter(f => !isImageFile(f));
+    if (nonImageFiles.length > 0) {
+      const invalidNames = nonImageFiles.map(f => f.name).join(', ');
+      const errorMsg = `Only image files (JPG, PNG, WebP) are allowed. Rejected non-image file(s): ${invalidNames}`;
+      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
+      useERPStore.getState().showToast(`Only image files are allowed for ${fileTypeLabel || 'documents'}.`, 'error');
+      return;
+    }
+
+    // 2. Size limit per image
+    const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(fileTypeLabel);
+    const maxSize = is1MbRestricted ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
+    const limitText = is1MbRestricted ? '1 MB' : '5 MB';
+
+    const oversizedFiles = filesArray.filter(f => f.size > maxSize);
+    if (oversizedFiles.length > 0) {
+      const oversizedNames = oversizedFiles.map(f => f.name).join(', ');
+      const errorMsg = `Image size exceeds ${limitText} limit (${oversizedNames})`;
+      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
+      useERPStore.getState().showToast(`Image exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
+      return;
+    }
+
+    // Clear previous error
+    setFileErrors(prev => {
+      const next = { ...prev };
+      delete next[fileTypeId];
+      return next;
+    });
+
+    // Append new images without duplicate name+size
+    setUserFiles(prev => {
+      const currentList = Array.isArray(prev[fileTypeId])
+        ? prev[fileTypeId]
+        : (prev[fileTypeId] ? [prev[fileTypeId]] : []);
+      const combined = [...currentList];
+
+      filesArray.forEach(newFile => {
+        const alreadyExists = combined.some(
+          existing => existing.name === newFile.name && existing.size === newFile.size
+        );
+        if (!alreadyExists) {
+          combined.push(newFile);
+        }
+      });
+      return { ...prev, [fileTypeId]: combined };
+    });
+  };
+
+  const removeSingleImageForType = (fileTypeId, indexToRemove) => {
+    setUserFiles(prev => {
+      const currentList = Array.isArray(prev[fileTypeId])
+        ? prev[fileTypeId]
+        : (prev[fileTypeId] ? [prev[fileTypeId]] : []);
+      const updated = currentList.filter((_, idx) => idx !== indexToRemove);
+      const next = { ...prev };
+      if (updated.length > 0) {
+        next[fileTypeId] = updated;
+      } else {
+        delete next[fileTypeId];
+      }
+      return next;
+    });
+  };
+
   const removeFileForType = (fileTypeId) => {
     setUserFiles(prev => {
+      const next = { ...prev };
+      delete next[fileTypeId];
+      return next;
+    });
+    setFileErrors(prev => {
       const next = { ...prev };
       delete next[fileTypeId];
       return next;
@@ -568,11 +730,33 @@ export default function UserCreationView() {
     }
 
     if (step === 4) {
-      if (!photo)                                                    e.Photo            = 'Profile photo is required';
+      if (!photo) {
+        e.Photo = 'Profile photo is required';
+      } else if (photo.file && photo.file.size > MAX_PHOTO_SIZE) {
+        e.Photo = 'Profile photo size must not exceed 1 MB';
+      }
     }
 
     if (step === 5) {
-      // No mandatory documents — all optional per file type
+      // Validate that all attached files are images and within allowed size limits
+      for (const [ftId, files] of Object.entries(userFiles)) {
+        if (!files) continue;
+        const fileList = Array.isArray(files) ? files : [files];
+        const ft = fileTypes.find(t => String(t.value) === String(ftId));
+        const is1Mb = /aadhaar|aadhar|pan\b/i.test(ft?.label || '');
+        const max = is1Mb ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
+
+        for (const file of fileList) {
+          if (!file) continue;
+          if (!isImageFile(file)) {
+            e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain image files only`;
+            break;
+          } else if (file.size > max) {
+            e[`file_${ftId}`] = `${ft?.label || 'File'} (${file.name}) exceeds ${is1Mb ? '1 MB' : '5 MB'} limit`;
+            break;
+          }
+        }
+      }
     }
 
     return e;
@@ -609,15 +793,33 @@ export default function UserCreationView() {
   };
 
   const handleStepClick = (stepId) => {
-    // Can jump if already completed or current step
-    if (completedSteps.includes(stepId) || stepId <= currentStep) {
-      setErrors({});
-      setCurrentStep(stepId);
+    if (stepId === currentStep) return;
+
+    // If moving forward, validate current step and all previous steps leading up to target step
+    if (stepId > currentStep) {
+      for (let s = 1; s < stepId; s++) {
+        const stepErrs = validateStep(s);
+        if (Object.keys(stepErrs).length > 0) {
+          setErrors(stepErrs);
+          setCurrentStep(s);
+          return;
+        }
+      }
+    } else {
+      // If moving backward, verify current step validity to update completion tracker
+      const currentErrs = validateStep(currentStep);
+      if (Object.keys(currentErrs).length === 0) {
+        setCompletedSteps(prev => Array.from(new Set([...prev, currentStep])));
+      } else {
+        setCompletedSteps(prev => prev.filter(id => id !== currentStep));
+      }
     }
+
+    setErrors({});
+    setCurrentStep(stepId);
   };
 
   // ── Progress Percentage Calculation ───────────────────────────────────────
-  // 0% at initial, 20% on completing Step 1, 40% on Step 2, 60% on Step 3, 80% on Step 4, 100% on Step 5
   const progressPercent = Math.min(100, Math.round(
     ((completedSteps.length) / STEPS.length) * 100
   ));
@@ -627,18 +829,21 @@ export default function UserCreationView() {
     if (e) e.preventDefault();
     setResult(null);
 
-    const allErr = validateAll();
-    if (Object.keys(allErr).length) {
-      setErrors(allErr);
-      // Jump to the earliest step with an error
-      for (let s = 1; s <= 5; s++) {
-        const stepErrs = validateStep(s);
-        if (Object.keys(stepErrs).length > 0) {
-          setCurrentStep(s);
-          break;
-        }
-      }
+    // Validate Step 5
+    const step5Errs = validateStep(5);
+    if (Object.keys(step5Errs).length > 0) {
+      setErrors(step5Errs);
       return;
+    }
+
+    // Safety guard: if any previous step became invalid, jump to that specific step and show its errors
+    for (let s = 1; s <= 4; s++) {
+      const stepErrs = validateStep(s);
+      if (Object.keys(stepErrs).length > 0) {
+        setErrors(stepErrs);
+        setCurrentStep(s);
+        return;
+      }
     }
 
     const sessionAuth = getSessionAuth();
@@ -681,10 +886,15 @@ export default function UserCreationView() {
     const projectIds = Array.isArray(form.ProjectId) ? form.ProjectId : (form.ProjectId ? [form.ProjectId] : []);
     fd.append('ProjectId', JSON.stringify(projectIds.map(Number)));
     fd.append('RoleId',             form.RoleId);
-    // User documents — keyed by fileTypeId
-    Object.entries(userFiles).forEach(([ftId, file]) => {
-      fd.append('FileTypeId', ftId);
-      fd.append('UserFile',   file);
+    // User documents — multiple images per fileTypeId
+    Object.entries(userFiles).forEach(([ftId, files]) => {
+      const fileList = Array.isArray(files) ? files : (files ? [files] : []);
+      fileList.forEach(file => {
+        if (file) {
+          fd.append('FileTypeId', ftId);
+          fd.append('UserFile',   file);
+        }
+      });
     });
 
 
@@ -727,9 +937,11 @@ export default function UserCreationView() {
     setShowPwd(false);
     setPhoto(null);
     setUserFiles({});
+    setFileErrors({});
     setProducts([]);
     setProjects([]);
     setDesignations([]);
+    setRoles([]);
     setReportingManagers([]);
     setCompletedSteps([]);
     setCurrentStep(1);
@@ -929,7 +1141,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="EmployeeId" value={form.EmployeeId} onChange={change}
+                    name="EmployeeId" value={form.EmployeeId} onChange={change} onBlur={handleBlur}
                     placeholder="Employee ID"
                     className={`${inputCls(errors.EmployeeId)} pl-8`}
                   />
@@ -941,7 +1153,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="FirstName" value={form.FirstName} onChange={change}
+                    name="FirstName" value={form.FirstName} onChange={change} onBlur={handleBlur}
                     placeholder="First name"
                     className={`${inputCls(errors.FirstName)} pl-8`}
                   />
@@ -953,9 +1165,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="MiddleName" value={form.MiddleName} onChange={change}
+                    name="MiddleName" value={form.MiddleName} onChange={change} onBlur={handleBlur}
                     placeholder="Middle name"
-                    className={`${inputCls(false)} pl-8`}
+                    className={`${inputCls(errors.MiddleName)} pl-8`}
                   />
                 </div>
               </Field>
@@ -965,9 +1177,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="LastName" value={form.LastName} onChange={change}
+                    name="LastName" value={form.LastName} onChange={change} onBlur={handleBlur}
                     placeholder="Last name"
-                    className={`${inputCls(false)} pl-8`}
+                    className={`${inputCls(errors.LastName)} pl-8`}
                   />
                 </div>
               </Field>
@@ -977,7 +1189,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="PhoneNumber" value={form.PhoneNumber} onChange={change}
+                    name="PhoneNumber" value={form.PhoneNumber} onChange={change} onBlur={handleBlur}
                     placeholder="10-digit mobile number" maxLength={10}
                     className={`${inputCls(errors.PhoneNumber)} pl-8`}
                   />
@@ -989,9 +1201,9 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="AltPhoneNumber" value={form.AltPhoneNumber} onChange={change}
+                    name="AltPhoneNumber" value={form.AltPhoneNumber} onChange={change} onBlur={handleBlur}
                     placeholder="Optional" maxLength={10}
-                    className={`${inputCls(false)} pl-8`}
+                    className={`${inputCls(errors.AltPhoneNumber)} pl-8`}
                   />
                 </div>
               </Field>
@@ -1001,7 +1213,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    type="date" name="DateOfBirth" value={form.DateOfBirth} onChange={change}
+                    type="date" name="DateOfBirth" value={form.DateOfBirth} onChange={change} onBlur={handleBlur}
                     className={`${inputCls(errors.DateOfBirth)} pl-8`}
                   />
                 </div>
@@ -1012,7 +1224,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    type="date" name="DateOfJoining" value={form.DateOfJoining} onChange={change}
+                    type="date" name="DateOfJoining" value={form.DateOfJoining} onChange={change} onBlur={handleBlur}
                     className={`${inputCls(errors.DateOfJoining)} pl-8`}
                   />
                 </div>
@@ -1020,7 +1232,7 @@ export default function UserCreationView() {
 
               {/* Gender */}
               <Field label="Gender" required error={errors.GenderId}>
-                <select name="GenderId" value={form.GenderId} onChange={change}
+                <select name="GenderId" value={form.GenderId} onChange={change} onBlur={handleBlur}
                   className={selectCls(errors.GenderId)}>
                   <option value="">— Select Gender —</option>
                   {genders.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
@@ -1029,7 +1241,7 @@ export default function UserCreationView() {
 
               {/* Marital Status */}
               <Field label="Marital Status" required error={errors.MaritalStatusId}>
-                <select name="MaritalStatusId" value={form.MaritalStatusId} onChange={change}
+                <select name="MaritalStatusId" value={form.MaritalStatusId} onChange={change} onBlur={handleBlur}
                   className={selectCls(errors.MaritalStatusId)}>
                   <option value="">— Select Marital Status —</option>
                   {maritalStatuses.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
@@ -1056,7 +1268,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    type="email" name="Email" value={form.Email} onChange={change}
+                    type="email" name="Email" value={form.Email} onChange={change} onBlur={handleBlur}
                     placeholder="Email address"
                     className={`${inputCls(errors.Email)} pl-8`}
                   />
@@ -1068,7 +1280,7 @@ export default function UserCreationView() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
-                    name="LoginName" value={form.LoginName} onChange={change}
+                    name="LoginName" value={form.LoginName} onChange={change} onBlur={handleBlur}
                     placeholder="Login username"
                     className={`${inputCls(errors.LoginName)} pl-8`}
                   />
@@ -1081,7 +1293,7 @@ export default function UserCreationView() {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     type={showPwd ? 'text' : 'password'} name="Password"
-                    value={form.Password} onChange={change} placeholder="••••••••"
+                    value={form.Password} onChange={change} onBlur={handleBlur} placeholder="••••••••"
                     className={`${inputCls(errors.Password)} pl-8 pr-10`}
                   />
                   <button
@@ -1113,7 +1325,7 @@ export default function UserCreationView() {
               <Field label="Company" required error={errors.CompanyId}>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="CompanyId" value={form.CompanyId} onChange={change}
+                  <select name="CompanyId" value={form.CompanyId} onChange={change} onBlur={handleBlur}
                     className={`${selectCls(errors.CompanyId)} pl-8`}>
                     <option value="">— Select Company —</option>
                     {companies.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
@@ -1154,9 +1366,10 @@ export default function UserCreationView() {
               <Field label="Role" required error={errors.RoleId}>
                 <div className="relative">
                   <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-                  <select name="RoleId" value={form.RoleId} onChange={change}
-                    className={`${selectCls(errors.RoleId)} pl-8`}>
-                    <option value="">— Select Role —</option>
+                  <select name="RoleId" value={form.RoleId} onChange={change} onBlur={handleBlur}
+                    disabled={!form.CompanyId}
+                    className={`${selectCls(errors.RoleId)} pl-8 ${!form.CompanyId ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}>
+                    <option value="">{form.CompanyId ? '— Select Role —' : '— Select Company first —'}</option>
                     {roles.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
@@ -1227,7 +1440,7 @@ export default function UserCreationView() {
 
               {/* Upload controls */}
               <div className="flex flex-col gap-3 flex-1 text-center sm:text-left">
-                <input ref={photoRef} type="file" accept="image/*" onChange={onPhotoChange} className="hidden" id="photo-inp" />
+                <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp,image/*" onChange={onPhotoChange} className="hidden" id="photo-inp" />
                 <label
                   htmlFor="photo-inp"
                   className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-750 cursor-pointer transition-all shadow-xs w-fit mx-auto sm:mx-0"
@@ -1236,7 +1449,7 @@ export default function UserCreationView() {
                   {photo ? 'Change Profile Photo' : 'Upload Profile Photo'}
                 </label>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Supported formats: JPG, PNG, WEBP · Max size: 5 MB<br />
+                  Supported formats: JPG, PNG, WEBP · Max size: 1 MB<br />
                   {photo && (
                     <span className="text-primary font-semibold block mt-1">
                       {photo.file.name} ({(photo.file.size / 1024).toFixed(1)} KB)
@@ -1257,88 +1470,159 @@ export default function UserCreationView() {
         {currentStep === 5 && (
           <div className="animate-in fade-in duration-300">
             <SectionHeader
-              icon={FileText}
+              icon={Image}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Supporting Documents"
-              subtitle="Upload documents for each required file type. All fields are optional."
+              subtitle="Upload multiple images for each required document type (Images only: JPG, PNG, WEBP). Other document formats are not permitted."
             />
 
             {/* File-type compact grid — 3 per row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
               {fileTypes.length === 0 ? (
                 <div className="col-span-3 flex flex-col items-center justify-center py-8 text-slate-400">
-                  <FileText className="w-8 h-8 mb-2 opacity-40" />
+                  <Image className="w-8 h-8 mb-2 opacity-40" />
                   <p className="text-xs font-medium">No document types configured</p>
                 </div>
               ) : (
                 fileTypes.map(ft => {
                   const uploaded = userFiles[ft.value];
+                  const uploadedList = Array.isArray(uploaded) ? uploaded : (uploaded ? [uploaded] : []);
+                  const hasErr = fileErrors[ft.value];
+                  const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(ft.label || '');
+                  const hasFiles = uploadedList.length > 0;
+
                   return (
                     <div
                       key={ft.key}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
-                        uploaded
-                          ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/60 dark:bg-emerald-950/20'
+                      className={`flex flex-col gap-2 p-3 rounded-xl border transition-all duration-200 ${
+                        hasErr
+                          ? 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20'
+                          : hasFiles
+                          ? 'border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/40 dark:bg-emerald-950/20'
                           : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-indigo-200 dark:hover:border-indigo-800'
                       }`}
                     >
-                      {/* Icon */}
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                        uploaded
-                          ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
-                      }`}>
-                        <FileText className="w-3.5 h-3.5" />
-                      </div>
+                      {/* Top Row: Icon, Label, Badges & Upload Button */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                            hasErr
+                              ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400'
+                              : hasFiles
+                              ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
+                          }`}>
+                            {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <Image className="w-3.5 h-3.5" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">
+                              {ft.label}
+                            </p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {is1MbRestricted ? (
+                                <span className="text-[9px] font-medium px-1 py-0.2 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shrink-0">
+                                  Max 1 MB each
+                                </span>
+                              ) : (
+                                <span className="text-[9px] text-slate-400 shrink-0">
+                                  Images only
+                                </span>
+                              )}
+                              {hasFiles && (
+                                <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                                  {uploadedList.length} {uploadedList.length === 1 ? 'image' : 'images'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
 
-                      {/* Name + status */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">{ft.label}</p>
-                        {uploaded ? (
-                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate leading-tight mt-0.5">
-                            ✓ {uploaded.name}
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-slate-400 leading-tight mt-0.5">No file</p>
-                        )}
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <label
-                          htmlFor={`ft-upload-${ft.value}`}
-                          className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md cursor-pointer transition-colors ${
-                            uploaded
-                              ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
-                              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                          }`}
-                          title={uploaded ? 'Replace file' : 'Upload file'}
-                        >
-                          <Upload className="w-3 h-3" />
-                          {uploaded ? 'Replace' : 'Upload'}
-                        </label>
-                        {uploaded && (
-                          <button
-                            type="button"
-                            onClick={() => removeFileForType(ft.value)}
-                            className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
-                            title="Remove"
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <label
+                            htmlFor={`ft-upload-${ft.value}`}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-md cursor-pointer transition-colors ${
+                              hasFiles
+                                ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            }`}
+                            title={hasFiles ? 'Add more images' : 'Upload images'}
                           >
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                        <input
-                          id={`ft-upload-${ft.value}`}
-                          type="file"
-                          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-                          className="hidden"
-                          onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (file) onFileForType(ft.value, file);
-                            e.target.value = '';
-                          }}
-                        />
+                            <Upload className="w-3 h-3" />
+                            {hasFiles ? '+ Add' : 'Upload'}
+                          </label>
+                          {hasFiles && (
+                            <button
+                              type="button"
+                              onClick={() => removeFileForType(ft.value)}
+                              className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
+                              title="Clear all images"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <input
+                            id={`ft-upload-${ft.value}`}
+                            type="file"
+                            multiple
+                            accept="image/*,image/jpeg,image/png,image/webp,image/gif"
+                            className="hidden"
+                            onChange={e => {
+                              const files = e.target.files;
+                              if (files && files.length > 0) {
+                                onFilesForType(ft.value, files, ft.label);
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                        </div>
                       </div>
+
+                      {/* Error Message */}
+                      {hasErr && (
+                        <p className="text-[10px] text-rose-500 font-medium leading-tight flex items-center gap-1 mt-0.5" title={hasErr}>
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {hasErr}
+                        </p>
+                      )}
+
+                      {/* Uploaded Images Strip */}
+                      {hasFiles && (
+                        <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                          {uploadedList.map((file, imgIdx) => (
+                            <span
+                              key={`${file.name}-${imgIdx}`}
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-2xs group"
+                            >
+                              <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                              <span className="truncate max-w-[100px]" title={file.name}>
+                                {file.name}
+                              </span>
+                              <span className="text-[9px] text-slate-400">
+                                ({(file.size / 1024).toFixed(0)} KB)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  removeSingleImageForType(ft.value, imgIdx);
+                                }}
+                                className="text-slate-400 hover:text-rose-500 rounded p-0.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                                title={`Remove ${file.name}`}
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {!hasFiles && !hasErr && (
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          No images uploaded · Images only (JPG, PNG, WebP)
+                        </p>
+                      )}
                     </div>
                   );
                 })

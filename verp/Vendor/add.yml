@@ -14,22 +14,22 @@ http:
         value: "4"
       - name: VendorName
         type: text
-        value: ROCK Suppliers
+        value: ROCK Supplierss
       - name: VendorCode
         type: text
-        value: ROCK001
+        value: ROCK002
       - name: ContactPerson
         type: text
-        value: Rahul Kumar
+        value: Rahul Kumars
       - name: MobileNumber
         type: text
-        value: "9876533210"
+        value: "9876533219"
       - name: Email
         type: text
-        value: ROCK@gmial.com
+        value: ROCK1@gmial.com
       - name: GSTINUINNumber
         type: text
-        value: 29ADCDE1234F1Z5
+        value: 29ADCDE1934F1Z5
       - name: City
         type: text
         value: Bengaluru
@@ -41,7 +41,7 @@ http:
         value: ROCK Suppliers
       - name: IFSCCode
         type: text
-        value: HDFC0002234
+        value: HDFC0002233
       - name: VendorAddress1
         type: text
         value: No. 10, Main Road
@@ -63,7 +63,7 @@ http:
       - name: VendorFiles
         type: file
         value:
-          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\1_5_Pedestrian.jpg
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\360_F_224999924_dczXcV018jdMQvFDjUkOoFgwQbuFYS12.jpg
         contentType: image/jpeg
   auth: inherit
 

@@ -1,4 +1,5 @@
 import { pool } from "../../Config/db.js";
+import bcrypt from "bcrypt";
 
 export const getAllUserDetails = async () => {
     try {
@@ -3198,5 +3199,132 @@ export const toggleUserStatuses = async (userData) => {
         // console.error("Error toggling user status:", error);
 
         throw error;
+    }
+};
+
+
+
+
+
+export const changeUserPassword = async ({
+    UserId,
+    NewPassword,
+    HashedPassword,
+    UpdatedByUserId
+}) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query("BEGIN");
+
+        // 1. Get the current user password
+        const userResult = await client.query(
+            `SELECT "UserId", "Password"
+             FROM "DATA"."User"
+             WHERE "UserId" = $1
+             FOR UPDATE`,
+            [UserId]
+        );
+
+        if (userResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+
+            return {
+                success: false,
+                status: 404,
+                message: "User not found"
+            };
+        }
+
+        const user = userResult.rows[0];
+
+        // 2. Check whether the new password is the current password
+        if (user.Password) {
+            const isCurrentPassword = await bcrypt.compare(
+                NewPassword,
+                user.Password
+            );
+
+            if (isCurrentPassword) {
+                await client.query("ROLLBACK");
+
+                return {
+                    success: false,
+                    status: 409,
+                    message: "New password must be different from the current password"
+                };
+            }
+        }
+
+        // 3. Get previous password history
+        const historyResult = await client.query(
+            `SELECT "HashedPassword"
+             FROM "TRACK"."SecretPassword"
+             WHERE "UserId" = $1`,
+            [UserId]
+        );
+
+        // 4. Prevent reuse of previously used passwords
+        for (const history of historyResult.rows) {
+            if (!history.HashedPassword) {
+                continue;
+            }
+
+            const isUsedPassword = await bcrypt.compare(
+                NewPassword,
+                history.HashedPassword
+            );
+
+            if (isUsedPassword) {
+                await client.query("ROLLBACK");
+
+                return {
+                    success: false,
+                    status: 409,
+                    message: "This password has already been used"
+                };
+            }
+        }
+
+        // 5. Update the current password
+       await client.query(
+    `UPDATE "DATA"."User"
+     SET "Password" = $1,
+         "PasswordChangedOn" = CURRENT_TIMESTAMP,
+         "UpdatedAt" = CURRENT_TIMESTAMP
+     WHERE "UserId" = $2`,
+    [HashedPassword, UserId]
+);
+
+        // 6. Save the new password hash in password history
+       await client.query(
+    `INSERT INTO "TRACK"."SecretPassword"
+    (
+        "UserId",
+        "PlainPassword",
+        "HashedPassword",
+        "CreatedByUserId",
+        "UpdatedByUserId",
+        "UpdatedAt"
+    )
+    VALUES ($1, $2, $3, $4, $4, CURRENT_TIMESTAMP)`,
+    [UserId, NewPassword, HashedPassword, UpdatedByUserId ?? UserId]
+);
+
+        await client.query("COMMIT");
+
+        return {
+            success: true,
+            status: 200,
+            message: "Password changed successfully"
+        };
+
+    } catch (error) {
+        await client.query("ROLLBACK");
+        console.error("Change User Password Model Error:", error);
+        throw error;
+
+    } finally {
+        client.release();
     }
 };

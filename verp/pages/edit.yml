@@ -4,23 +4,24 @@ info:
   seq: 5
 
 http:
-  method: POST
+  method: PATCH
   url: http://localhost:9004/verp-service/managePages/edit
   body:
     type: json
     data: |-
       {
-          "FlagId": 2,
-          "PageId": 4,
-          "PageName": "products",
-          "PageUrl": "/master/products",
-          "PageIcon": "products Page",
-          "ParentPageId": null,
-          "RoleIds": [1, 2],
-          "IsChangeOrder": true,
-          "OrderType": "BEFORE",
-          "TargetPageId": 1,
-          "UpdatedByUserName": "admin"
+        "FlagId": 2,
+        "IsChangeOrder": false,
+        "OrderType": "",
+        "PageIcon": "material-creation",
+        "PageId": 12,
+        "PageName": "material-creation",
+        "PageType": "ParentPage",
+        "PageUrl": "/master/material-creation",
+        "ParentPageId": 10,
+        "RoleIds": [1],
+        "TargetPageId": null,
+        "UpdatedByUserName": "admin1"
       }
   auth: inherit
 

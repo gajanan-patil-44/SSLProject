@@ -1,0 +1,24 @@
+info:
+  name: parentLocationMaster
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://192.168.23.76:9004/verp-service/locationMaster/getParentLocations
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":3,
+        "LocationTypeMasterId":3,
+        "CompanyMasterId":2
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -732,21 +732,35 @@ export const editPage = async (req, res) => {
 
     try {
 
-        const {
-            FlagId,
-            PageId,
-            PageName,
-            PageUrl,
-            PageIcon,
-            ParentPageId,
-            RoleIds,
-            IsChangeOrder,
-            OrderType,
-            TargetPageId,
-            UpdatedByUserName
-        } = req.body;
+       const {
+    FlagId,
+    PageId,
+    PageName,
+    PageUrl,
+    PageIcon,
+    PageType,
+    ParentPageId,
+    RoleIds,
+    IsChangeOrder,
+    OrderType,
+    TargetPageId,
+    UpdatedByUserName
+} = req.body;
 
 
+
+const validPageTypes = [
+    "MainPage",
+    "ParentPage",
+    "ChildPage"
+];
+
+if (!validPageTypes.includes(PageType)) {
+    return res.status(400).json({
+        status: "error",
+        message: "Invalid PageType"
+    });
+}
         // =====================================================
         // BASIC VALIDATION
         // =====================================================
@@ -940,7 +954,7 @@ export const editPage = async (req, res) => {
 
 
         const pageType =
-            currentPage.PageType;
+           PageType;
 
 
         let newParentPageId =

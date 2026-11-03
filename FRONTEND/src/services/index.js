@@ -17,3 +17,5 @@ export * from './api';
 export { default as materialCategoryTypeService } from './materialCategoryTypeService';
 export { default as itemCreationService } from './itemCreationService';
 export { default as vendorService } from './vendorService';
+export { default as locationTypeService } from './locationTypeService';
+export { default as locationService } from './locationService';

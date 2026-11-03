@@ -4,7 +4,7 @@ info:
   seq: 4
 
 http:
-  method: POST
+  method: PATCH
   url: http://localhost:9004/verp-service/companyCreation/toggleCompanyStatus
   body:
     type: json

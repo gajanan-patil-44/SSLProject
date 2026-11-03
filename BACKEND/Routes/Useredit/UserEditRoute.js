@@ -2,14 +2,14 @@ import express from "express";
 const router=express.Router();
 import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
-import { getAllUserDetailsController,editUserdetailsController } from "../../Controllers/User/useEditController.js";
+import { getAllUserDetailsController,editUserdetailsController,changePasswordController} from "../../Controllers/User/useEditController.js";
 
 import {getGender, getMaritalStatus, getDesignation, getCompany, getReportingManager, getCompanyProduct, getProject, getRole, toggleUserStatus} from "../../Controllers/User/useEditController.js";
 
 
 router.post("/getAllUserDetails",authenticateToken,getAllUserDetailsController)
 router.patch("/editUserdetails",authenticateToken,editUserdetailsController);
-
+router.patch("/change-password", changePasswordController);
 
 // ==========================================
 router.post("/getGender", authenticateToken, getGender);
