@@ -711,6 +711,7 @@ export const createUserController = async (req, res) => {
 // FlagId = 1 -> Company
 // FlagId = 2 -> Product
 // FlagId = 3 -> Project
+//flagId = 4 -> Role
 // ==========================================================
 export const companyProductProjectDropdownController = async (req, res) => {
     const { FlagId, CompanyId, CompanyProductId } = req.body;

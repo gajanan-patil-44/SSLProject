@@ -1,0 +1,22 @@
+info:
+  name: view
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://192.168.23.79:9004/verp-service/gstRate/view
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 3
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
