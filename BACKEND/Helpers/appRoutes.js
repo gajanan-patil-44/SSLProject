@@ -41,7 +41,6 @@ app.use(backendHelpers.MATERIAL, materialRoutes);
 app.use(backendHelpers.VENDOR, VendorRoutes);
 
 app.use(backendHelpers.LOCATION_TYPE_MASTER, locationTypeMasterRoutes);
-
 app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
 app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
 app.use(backendHelpers.DEPARTMENT, DepartmentRoutes);
