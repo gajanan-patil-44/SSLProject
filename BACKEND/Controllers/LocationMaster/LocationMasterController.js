@@ -1,594 +1,412 @@
 
+
 import {
-    getLocationTypesForDropdown,
-    getParentLocationTypeForDropdown,
-    getParentLocationsForDropdown,
+    getLocationTypes,
+    getParentLocationTypes,
+    getParentLocationMasters,
     checkCompanyMasterExists,
     checkLocationTypeExists,
-    checkValidParentLocation,
-    checkLocationContactExists,
+    checkParentLocationExists,
     checkLocationEmailExists,
-    addLocationMasters
-
+    checkLocationContactExists,
+    addLocation
 } from "../../Models/LocationMaster/LocationMasterModel.js";
 
 
-// COMMON ID VALIDATION
-
-const isValidId = (value) => {
-
-    return (
-
-        value !== undefined &&
-        value !== null &&
-        value !== "" &&
-        Number.isInteger(Number(value)) &&
-        Number(value) > 0
-
-    );
-
-};
-
-
-// 1. GET LOCATION TYPE DROPDOWN
-
-export const getLocationTypes = async (req, res) => {
-
+// 1. Location Type dropdown
+export const getLocationTypeController = async (req, res) => {
     const { flagId } = req.body;
 
     try {
-
         if (Number(flagId) !== 1) {
-
             return res.status(400).json({
-
                 status: "error",
-                message: "Use FlagId 1 to fetch Location Types"
-
+                message: "Use flagId 1 to get Location Type."
             });
-
         }
 
-        const locationTypes = await getLocationTypesForDropdown();
+        const result = await getLocationTypes();
 
         return res.status(200).json({
             status: "success",
-            message: "Location types fetched successfully",
-            data: locationTypes
+            message: "Location Types fetched successfully.",
+            data: result
         });
 
-
     } catch (error) {
+        console.error("Get Location Type Error:", error);
 
         return res.status(500).json({
             status: "error",
-            message: "Internal server error",
+            message: "Failed to fetch Location Types.",
             error: error.message
         });
-
     }
-
 };
 
 
-// 2. GET PARENT LOCATION TYPE DROPDOWN
-
-export const getParentLocationTypes = async (req, res) => {
-
+// 2. Parent Location Type dropdown
+export const getParentLocationTypeController = async (req, res) => {
     const { flagId, LocationTypeMasterId } = req.body;
 
     try {
-
         if (Number(flagId) !== 2) {
-
             return res.status(400).json({
                 status: "error",
-                message: "Use FlagId 2 to fetch Parent Location Type"
+                message: "Use flagId 2 to get Parent Location Type."
             });
-
         }
 
-
-        if (!isValidId(LocationTypeMasterId)) {
-
+        if (!LocationTypeMasterId || !Number.isInteger(Number(LocationTypeMasterId)) || Number(LocationTypeMasterId) <= 0) {
             return res.status(400).json({
                 status: "error",
-                message: "Valid LocationTypeMasterId is required"
-
+                message: "Valid LocationTypeMasterId is required."
             });
-
         }
 
-
-        const parentType = await getParentLocationTypeForDropdown(
-            Number(LocationTypeMasterId)
-        );
-
-
-        if (!parentType) {
-
-            return res.status(404).json({
-                status: "error",
-                message: "Location type not found or inactive"
-            });
-
-        }
-
-
-        // ROOT TYPE DOES NOT HAVE A PARENT
-
-        if (parentType.ParentTypeId === null) {
-
-            return res.status(200).json({
-                status: "success",
-                message: "Parent Location Information is not required",
-                data: {
-                    ParentTypeId: null,
-                    ParentLocationTypeId: null,
-                    ParentLocationTypeName: null
-                }
-
-            });
-
-        }
-
-
-        // CHECK PARENT TYPE IS ACTIVE
-
-        if (!parentType.ParentLocationTypeId) {
-
-            return res.status(400).json({
-                status: "error",
-                message: "Parent Location Type is inactive or unavailable"
-            });
-
-        }
-
+        const result = await getParentLocationTypes(Number(LocationTypeMasterId));
 
         return res.status(200).json({
             status: "success",
-            message: "Parent Location Type fetched successfully",
-            data: parentType
+            message: "Parent Location Type fetched successfully.",
+            data: result
         });
 
-
     } catch (error) {
+        console.error("Get Parent Location Type Error:", error);
 
         return res.status(500).json({
             status: "error",
-            message: "Internal server error",
+            message: "Failed to fetch Parent Location Type.",
             error: error.message
-
         });
-
     }
-
 };
 
 
-// 3. GET PARENT LOCATION NAME DROPDOWN
+// 3. Parent Location Master dropdown
 
-export const getParentLocations = async (req, res) => {
-
-    const {
-        flagId,
-        LocationTypeMasterId,
-        CompanyMasterId
-    } = req.body;
+export const getParentLocationMasterController = async (req, res) => {
+    const { flagId, ParentLocationTypeMasterId } = req.body;
 
     try {
-
         if (Number(flagId) !== 3) {
-
             return res.status(400).json({
                 status: "error",
-                message: "Use FlagId 3 to fetch Parent Locations"
+                message: "Use flagId 3 to get Parent Location Master."
             });
-
         }
 
-
-        if (!isValidId(LocationTypeMasterId)) {
-
+        if (
+            !ParentLocationTypeMasterId ||
+            !Number.isInteger(Number(ParentLocationTypeMasterId)) ||
+            Number(ParentLocationTypeMasterId) <= 0
+        ) {
             return res.status(400).json({
                 status: "error",
-                message: "Valid LocationTypeMasterId is required"
+                message: "Valid ParentLocationTypeMasterId is required."
             });
-
         }
 
-
-        if (!isValidId(CompanyMasterId)) {
-
-            return res.status(400).json({
-                status: "error",
-                message: "Valid CompanyMasterId is required"
-            });
-
-        }
-
-
-        // GET SELECTED LOCATION TYPE AND ITS PARENT TYPE
-
-        const parentType = await getParentLocationTypeForDropdown(
-            Number(LocationTypeMasterId)
+        const result = await getParentLocationMasters(
+            Number(ParentLocationTypeMasterId)
         );
-
-
-        if (!parentType) {
-
-            return res.status(404).json({
-                status: "error",
-                message: "Location type not found or inactive"
-
-            });
-
-        }
-
-
-        // ROOT TYPE DOES NOT REQUIRE PARENT LOCATIONS
-
-        if (parentType.ParentTypeId === null) {
-
-            return res.status(200).json({
-                status: "success",
-                message: "Parent location is not required",
-                data: []
-
-            });
-
-        }
-
-
-        if (!parentType.ParentLocationTypeId) {
-
-            return res.status(400).json({
-                status: "error",
-                message: "Parent Location Type is inactive or unavailable"
-            });
-
-        }
-
-
-        // FETCH LOCATIONS OF THE PARENT TYPE
-
-        const parentLocations = await getParentLocationsForDropdown(
-            parentType.ParentTypeId,
-            Number(CompanyMasterId)
-        );
-
 
         return res.status(200).json({
             status: "success",
-            message: "Parent Locations fetched successfully",
-            data: parentLocations
+            message: "Parent Location Master fetched successfully.",
+            data: result
         });
 
-
     } catch (error) {
+        console.error("Get Parent Location Master Error:", error);
 
         return res.status(500).json({
             status: "error",
-            message: "Internal server error",
+            message: "Failed to fetch Parent Location Master.",
             error: error.message
-
         });
-
     }
-
 };
 
 
-// 4. ADD LOCATION MASTER
+
+// 4. Add Location Details and Contact Channels
 
 
 export const addLocationMaster = async (req, res) => {
 
-    const { flagId } = req.body;
+    const {
+        flagId,
+        CompanyMasterId,
+        LocationTypeMasterId,
+        ParentLocationTypeMasterId,
+        ParentLocationMasterId,
+        LocationName,
+        ContactPerson,
+        ContactNumber,
+        EmailId,
+        Address,
+        CreatedByUserName
+    } = req.body;
 
     try {
 
+        // Flag validation
         if (Number(flagId) !== 4) {
             return res.status(400).json({
                 status: "error",
-                message: "Use FlagId 4 to insert LocationMaster"
+                message: "Use flagId 4 to add Location Details."
             });
         }
 
-        const {
-            CompanyMasterId,
-            LocationTypeMasterId,
-            ParentLocationMasterId,
-            LocationName,
-            ContactPerson,
-            ContactNumber,
-            EmailId,
-            Address,
-            CreatedByUserName
-        } = req.body;
-
-        // ==========================================================
-        // VALIDATE LOCATION TYPE ID
-        // ==========================================================
-
-        if (!isValidId(LocationTypeMasterId)) {
+        // Required field validation
+        if (
+            !CompanyMasterId ||
+            !LocationTypeMasterId ||
+            !LocationName ||
+            !ContactPerson ||
+            !ContactNumber ||
+            !EmailId ||
+            !Address ||
+            !CreatedByUserName
+        ) {
             return res.status(400).json({
                 status: "error",
-                message: "Valid LocationTypeMasterId is required"
+                message: "All Location Details and Contact Channels fields are mandatory."
             });
         }
 
+        // ID validation
+        if (
+            !Number.isInteger(Number(CompanyMasterId)) ||
+            Number(CompanyMasterId) <= 0 ||
+            !Number.isInteger(Number(LocationTypeMasterId)) ||
+            Number(LocationTypeMasterId) <= 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "CompanyMasterId and LocationTypeMasterId must be valid positive integers."
+            });
+        }
+
+        // Location Name validation
+        if (
+            typeof LocationName !== "string" ||
+            !LocationName.trim() ||
+            LocationName.trim().length > 100
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "LocationName is required and cannot exceed 100 characters."
+            });
+        }
+
+        // Contact Person validation
+        if (
+            typeof ContactPerson !== "string" ||
+            !ContactPerson.trim() ||
+            ContactPerson.trim().length > 100
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "ContactPerson is required and cannot exceed 100 characters."
+            });
+        }
+
+        // Contact Number validation - exactly 10 digits
+        if (!/^[0-9]{10}$/.test(String(ContactNumber).trim())) {
+            return res.status(400).json({
+                status: "error",
+                message: "ContactNumber must contain exactly 10 digits."
+            });
+        }
+
+        // Email validation
+        const email = String(EmailId).trim();
+
+        if (email.length > 100 || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "Please enter a valid EmailId."
+            });
+        }
+
+        // Address validation
+        if (typeof Address !== "string" ||!Address.trim()) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "Address is required."
+            });
+        }
+
+        // CreatedByUserName validation
+        if (typeof CreatedByUserName !== "string" || !CreatedByUserName.trim()) {
+
+            return res.status(400).json({
+                status: "error",
+                message: "CreatedByUserName is required."
+            });
+        }
+
+        // Check Company Master
+        const companyExists = await checkCompanyMasterExists(
+            Number(CompanyMasterId)
+        );
+
+        if (!companyExists) {
+            return res.status(400).json({
+                status: "error",
+                message: "Invalid or inactive CompanyMasterId."
+            });
+        }
+
+        // Check Location Type
         const locationType = await checkLocationTypeExists(
             Number(LocationTypeMasterId)
         );
 
         if (!locationType) {
-            return res.status(404).json({
+            return res.status(400).json({
                 status: "error",
-                message: "LocationTypeMaster not found or inactive"
+                message: "Invalid or inactive LocationTypeMasterId."
             });
         }
 
-        // ==========================================================
-        // CHECK ROOT OR CHILD LOCATION
-        // ==========================================================
-
-        const isRootLocation = locationType.ParentTypeId === null;
-
-        let validCompanyMasterId = null;
-        let validParentLocationId = null;
-
-        // ==========================================================
-        // ROOT LOCATION - COMPANY AND PARENT NOT REQUIRED
-        // ==========================================================
-
-        if (isRootLocation) {
+        // Root Location Type validation
+        if (locationType.ParentTypeId === null) {
 
             if (
-                ParentLocationMasterId !== undefined &&
-                ParentLocationMasterId !== null &&
-                ParentLocationMasterId !== ""
+                (ParentLocationTypeMasterId !== undefined &&
+                    ParentLocationTypeMasterId !== null &&
+                    ParentLocationTypeMasterId !== "") ||
+                (ParentLocationMasterId !== undefined &&
+                    ParentLocationMasterId !== null &&
+                    ParentLocationMasterId !== "")
             ) {
                 return res.status(400).json({
                     status: "error",
-                    message: "ParentLocationMasterId must be empty for root location"
+                    message: "Parent Location Type and Parent Location Master are not required for a root Location Type."
                 });
             }
 
+        } else {
+
+            // Parent Location Type is mandatory for non-root locations
             if (
-                CompanyMasterId !== undefined &&
-                CompanyMasterId !== null &&
-                CompanyMasterId !== ""
+                !ParentLocationTypeMasterId ||
+                !Number.isInteger(Number(ParentLocationTypeMasterId)) ||
+                Number(ParentLocationTypeMasterId) <= 0
             ) {
                 return res.status(400).json({
                     status: "error",
-                    message: "CompanyMasterId must be empty for root location"
+                    message: "ParentLocationTypeMasterId is required."
                 });
             }
 
-        }
-
-        // ==========================================================
-        // CHILD LOCATION - COMPANY AND PARENT REQUIRED
-        // ==========================================================
-
-        else {
-
-            // Validate CompanyMasterId
-
-            if (!isValidId(CompanyMasterId)) {
+            // Check whether selected Parent Location Type matches the configured parent type
+            if (
+                Number(ParentLocationTypeMasterId) !==
+                Number(locationType.ParentTypeId)
+            ) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Valid CompanyMasterId is required for child location"
+                    message: "Invalid ParentLocationTypeMasterId for the selected Location Type."
                 });
             }
 
-            const existingCompany = await checkCompanyMasterExists(
+            // Parent Location Master is mandatory for non-root locations
+            if (
+                !ParentLocationMasterId ||
+                !Number.isInteger(Number(ParentLocationMasterId)) ||
+                Number(ParentLocationMasterId) <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "ParentLocationMasterId is required."
+                });
+            }
+
+            // Check Parent Location Master
+            const parentExists = await checkParentLocationExists(
+                Number(LocationTypeMasterId),
+                Number(ParentLocationTypeMasterId),
+                Number(ParentLocationMasterId),
                 Number(CompanyMasterId)
             );
 
-            if (!existingCompany) {
-                return res.status(404).json({
-                    status: "error",
-                    message: "CompanyMaster not found"
-                });
-            }
-
-            validCompanyMasterId = Number(CompanyMasterId);
-
-            // Validate ParentLocationMasterId
-
-            if (!isValidId(ParentLocationMasterId)) {
+            if (!parentExists) {
                 return res.status(400).json({
                     status: "error",
-                    message: "ParentLocationMasterId is required"
+                    message: "Invalid Parent Location Master. Select a valid parent location belonging to the same company."
                 });
             }
-
-            const validParent = await checkValidParentLocation(
-                Number(ParentLocationMasterId),
-                locationType.ParentTypeId,
-                validCompanyMasterId
-            );
-
-            if (!validParent) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "Invalid ParentLocationMasterId. Select an active parent location belonging to the correct location type and company"
-                });
-            }
-
-            validParentLocationId = Number(ParentLocationMasterId);
         }
 
-        // ==========================================================
-        // VALIDATE LOCATION NAME
-        // ==========================================================
-
-        if (
-            typeof LocationName !== "string" ||
-            !LocationName.trim()
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "LocationName is required"
-            });
-        }
-
-        if (LocationName.trim().length > 100) {
-            return res.status(400).json({
-                status: "error",
-                message: "LocationName cannot exceed 100 characters"
-            });
-        }
-
-        // ==========================================================
-        // VALIDATE CONTACT PERSON
-        // ==========================================================
-
-        if (
-            typeof ContactPerson !== "string" ||
-            !ContactPerson.trim()
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "ContactPerson is required"
-            });
-        }
-
-        if (
-            ContactPerson.trim().length > 100 ||
-            !/^[A-Za-z\s.'-]+$/.test(ContactPerson.trim())
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid ContactPerson. Maximum 100 characters allowed"
-            });
-        }
-
-        // ==========================================================
-        // VALIDATE CONTACT NUMBER
-        // ==========================================================
-
-        if (
-            typeof ContactNumber !== "string" ||
-            !/^[0-9]{10}$/.test(ContactNumber.trim())
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "ContactNumber must contain exactly 10 digits"
-            });
-        }
-
-        // ==========================================================
-        // VALIDATE EMAIL
-        // ==========================================================
-
-        if (
-            typeof EmailId !== "string" ||
-            !EmailId.trim()
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "EmailId is required"
-            });
-        }
-
-        if (
-            EmailId.trim().length > 100 ||
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(EmailId.trim())
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid EmailId"
-            });
-        }
-
-        // ==========================================================
-        // VALIDATE ADDRESS
-        // ==========================================================
-
-        if (
-            typeof Address !== "string" ||
-            !Address.trim()
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message: "Address is required"
-            });
-        }
-
-        // ==========================================================
-        // CHECK DUPLICATE CONTACT NUMBER
-        // ==========================================================
-
-        const existingContact = await checkLocationContactExists(
-            ContactNumber.trim()
+        // Check duplicate Email
+        const emailExists = await checkLocationEmailExists(
+            email,
+            Number(CompanyMasterId)
         );
 
-        if (existingContact.length > 0) {
-            return res.status(409).json({
+        if (emailExists) {
+            return res.status(400).json({
                 status: "error",
-                message: "ContactNumber already exists"
+                message: "This EmailId already exists for this company."
             });
         }
 
-        // ==========================================================
-        // CHECK DUPLICATE EMAIL
-        // ==========================================================
-
-        const existingEmail = await checkLocationEmailExists(
-            EmailId.trim()
+        // Check duplicate Contact Number
+        const contactExists = await checkLocationContactExists(
+            String(ContactNumber).trim(),
+            Number(CompanyMasterId)
         );
 
-        if (existingEmail.length > 0) {
-            return res.status(409).json({
+        if (contactExists) {
+            return res.status(400).json({
                 status: "error",
-                message: "EmailId already exists"
+                message: "This ContactNumber already exists for this company."
             });
         }
 
-        // ==========================================================
-        // INSERT LOCATION MASTER
-        // ==========================================================
-
+        // Prepare data for insertion
         const locationData = {
-
-            CompanyMasterId: validCompanyMasterId,
-
+            CompanyMasterId: Number(CompanyMasterId),
             LocationTypeMasterId: Number(LocationTypeMasterId),
 
-            ParentLocationMasterId: validParentLocationId,
+            ParentLocationMasterId:
+                locationType.ParentTypeId === null
+                    ? null
+                    : Number(ParentLocationMasterId),
 
             LocationName: LocationName.trim(),
-
             ContactPerson: ContactPerson.trim(),
-
-            ContactNumber: ContactNumber.trim(),
-
-            EmailId: EmailId.trim(),
-
+            ContactNumber: String(ContactNumber).trim(),
+            EmailId: email,
             Address: Address.trim(),
-
-            CreatedByUserName
-
+            CreatedByUserName: CreatedByUserName.trim()
         };
 
-        const newLocation = await addLocationMasters(locationData);
+        // Add Location
+        const result = await addLocation(locationData);
 
         return res.status(201).json({
             status: "success",
-            message: "LocationMaster added successfully",
-            data: newLocation
+            message: "Location added successfully.",
+            data: result
         });
 
     } catch (error) {
 
+        // console.error("Add Location Error:", error);
 
         return res.status(500).json({
             status: "error",
-            message: "Internal server error",
+            message: "Failed to add Location.",
             error: error.message
         });
     }
 };
+
