@@ -137,6 +137,7 @@ export const addMaterialSubCategoryType = async (data) => {
     const query = `
         INSERT INTO "LKP"."MaterialSubCategoryType"
         (
+            "CompanyId",
             "MaterialCategoryTypeId",
             "MaterialSubCategoryTypeName",
             "MaterialSubCategoryTypeCode",
@@ -149,9 +150,10 @@ export const addMaterialSubCategoryType = async (data) => {
             $1,
             $2,
             $3,
+            $4,
             false,
             NOW(),
-            $4
+            $5
         )
         RETURNING
             "MaterialSubCategoryTypeId",
@@ -164,6 +166,7 @@ export const addMaterialSubCategoryType = async (data) => {
     `;
 
     const result = await pool.query(query, [
+        data.CompanyId,
         data.MaterialCategoryTypeId,
         data.MaterialSubCategoryTypeName,
         data.MaterialSubCategoryTypeCode,

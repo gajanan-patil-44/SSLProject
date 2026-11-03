@@ -18,6 +18,7 @@ import VendorRoutes from "../Routes/Vendor/VendorRoutes.js";
 import locationTypeMasterRoutes from "../Routes/LocationTypeMaster/LocationTypeMasterRoutes.js";
 import CompanyMasterRoutes from "../Routes/CompanyMaster/CompanyMasterRoutes.js"
 import LocationMasterRoutes from "../Routes/LocationMaster/LocationMasterRoutes.js"
+import DepartmentRoutes from "../Routes/Department/DepartmentRoutes.js"
 
 
 const applyRoutes = (app) => {
@@ -42,6 +43,7 @@ app.use(backendHelpers.VENDOR, VendorRoutes);
 app.use(backendHelpers.LOCATION_TYPE_MASTER, locationTypeMasterRoutes);
 app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
 app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
+app.use(backendHelpers.DEPARTMENT, DepartmentRoutes);
 };
 
 export default applyRoutes;

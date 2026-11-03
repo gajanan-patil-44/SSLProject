@@ -21,4 +21,5 @@ export const VENDOR="/verp-service/vendor"
 export const COMPANY_MASTER="/verp-service/companyMaster"
 export const LOCATION_MASTER="/verp-service/locationMaster"
 export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
+export const DEPARTMENT="/verp-service/department"
 
