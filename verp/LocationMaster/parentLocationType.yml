@@ -5,13 +5,13 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.115:9004/verp-service/locationMaster/getParentLocationTypes
+  url: http://192.168.23.76:9004/verp-service/locationMaster/parentLocationType
   body:
     type: json
     data: |-
       {
         "flagId":2,
-        "LocationTypeMasterId":3
+        "LocationTypeMasterId":4
       }
   auth: inherit
 
