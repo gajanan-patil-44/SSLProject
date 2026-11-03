@@ -1,0 +1,16 @@
+info:
+  name: companyProductProjectDropdownController
+  type: http
+  seq: 17
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/companyproductprojectdropdown
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
