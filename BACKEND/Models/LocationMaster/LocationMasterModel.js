@@ -11,7 +11,7 @@ export const getLocationTypes = async () => {
                 "ParentTypeId"
             FROM "LKP"."LocationTypeMaster"
             WHERE "IsDisabled" = false
-            ORDER BY "LocationTypeMasterName";
+            ORDER BY "LocationTypeMasterId";
         `);
 
         return result.rows;
