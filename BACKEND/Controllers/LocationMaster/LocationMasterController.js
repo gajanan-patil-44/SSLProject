@@ -224,10 +224,8 @@ export const addLocationMaster = async (req, res) => {
         // Email validation
         const email = String(EmailId).trim();
 
-        if (
-            email.length > 100 ||
-            !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
-        ) {
+        if (email.length > 100 || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+
             return res.status(400).json({
                 status: "error",
                 message: "Please enter a valid EmailId."
@@ -235,10 +233,8 @@ export const addLocationMaster = async (req, res) => {
         }
 
         // Address validation
-        if (
-            typeof Address !== "string" ||
-            !Address.trim()
-        ) {
+        if (typeof Address !== "string" ||!Address.trim()) {
+
             return res.status(400).json({
                 status: "error",
                 message: "Address is required."
@@ -246,10 +242,8 @@ export const addLocationMaster = async (req, res) => {
         }
 
         // CreatedByUserName validation
-        if (
-            typeof CreatedByUserName !== "string" ||
-            !CreatedByUserName.trim()
-        ) {
+        if (typeof CreatedByUserName !== "string" || !CreatedByUserName.trim()) {
+
             return res.status(400).json({
                 status: "error",
                 message: "CreatedByUserName is required."
@@ -405,7 +399,7 @@ export const addLocationMaster = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Add Location Error:", error);
+        // console.error("Add Location Error:", error);
 
         return res.status(500).json({
             status: "error",
