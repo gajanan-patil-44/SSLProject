@@ -202,6 +202,7 @@ export const addMaterial = async (data, files) => {
         const materialQuery = `
             INSERT INTO "DATA"."Material"
             (
+                "CompanyId",
                 "MaterialName",
                 "MaterialCode",
                 "MaterialCategoryTypeId",
@@ -220,12 +221,13 @@ export const addMaterial = async (data, files) => {
             )
             VALUES (
                 $1, $2, $3, $4, $5, $6, $7,
-                $8, $9, $10, $11, false, $12, NOW(), $13
+                $8, $9, $10, $11, $12, $13, false, $14, NOW(), $14
             )
             RETURNING *
         `;
 
         const materialResult = await client.query(materialQuery, [
+            data.CompanyId,
             data.MaterialName,
             data.MaterialCode,
             data.MaterialCategoryTypeId ?? null,

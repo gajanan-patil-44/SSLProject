@@ -107,6 +107,7 @@ export const addVendor = async (data, files) => {
         const query = `
             INSERT INTO "DATA"."Vendor"
             (
+                "CompanyId",
                 "VendorName",
                 "VendorCode",
                 "ContactPerson",
@@ -127,13 +128,14 @@ export const addVendor = async (data, files) => {
             )
             VALUES (
                 $1, $2, $3, $4, $5, $6, $7,
-                $8, $9, $10, false, $11, $12,
-                $13, $14, NOW(), $15
+                $8, $9, $10, $11, false, $12, $13,
+                $14, $15, NOW(), $16
             )
             RETURNING *
         `;
 
         const values = [
+            data.CompanyId,
             data.VendorName.trim(),
             data.VendorCode.trim(),
             data.ContactPerson || null,

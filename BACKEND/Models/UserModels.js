@@ -289,7 +289,8 @@ export const createUser = async (userData) => {
                 "Photo",
                 "CreatedAt",
                 "CreatedByUserName",
-                "DateOfJoining"
+                "DateOfJoining",
+                "DepartmentId"
             )
             VALUES
             (
@@ -309,25 +310,15 @@ export const createUser = async (userData) => {
                 $14,
                 CURRENT_TIMESTAMP,
                 $15,
-                $16
+                $16,
+                $17
+
             )
             RETURNING
                 "UserId",
                 "EmployeeId",
-                "FirstName",
-                "MiddleName",
-                "LastName",
-                "PhoneNumber",
-                "AltPhoneNumber",
-                "DateOfBirth",
-                "GenderId",
-                "MaritalStatusId",
-                "DesignationId",
-                "Email",
-                "LoginName",
-                "CreatedAt",
-                "CreatedByUserName",
-                "DateOfJoining";
+                "FirstName"
+             
         `;
 
 
@@ -347,7 +338,8 @@ export const createUser = async (userData) => {
             userData.LoginName,
             userData.Photo || null,
             userData.CreatedByUserName,
-            userData.DateOfJoining
+            userData.DateOfJoining,
+            userData.DepartmentId
         ];
 
 
@@ -686,7 +678,8 @@ export const createUser = async (userData) => {
                 "IsDisabled",
                 "CreatedAt",
                 "UpdatedAt",
-                "CreatedByUserId"
+                "CreatedByUserId",
+                "DepartmentId"
             )
             VALUES
             (
@@ -712,34 +705,15 @@ export const createUser = async (userData) => {
                 false,
                 CURRENT_TIMESTAMP,
                 NULL,
-                $20
+                $20,
+                $21
             )
             RETURNING
                 "UserDetailsId",
                 "UserId",
                 "EmployeeId",
-                "FirstName",
-                "MiddleName",
-                "LastName",
-                "PhoneNumber",
-                "DateOfBirth",
-                "GenderId",
-                "MaritalStatusId",
-                "DesignationId",
-                "Email",
-                "LoginName",
-                "AltPhoneNumber",
-                "DateOfJoining",
+                "FirstName"
                 
-                "UserCompanyId",
-                "UserProductId",
-                "UserProjectId",
-                "UserReportingManagerId",
-                "UserRoleId",
-                "IsDisabled",
-                "CreatedAt",
-                "UpdatedAt",
-                "CreatedByUserId";
         `;
 
 
@@ -763,7 +737,8 @@ export const createUser = async (userData) => {
             userProjectId,
             userReportingManagerId,
             userRoleId,
-            UserId
+            UserId,
+            userData.DepartmentId
         ];
 
 
@@ -846,11 +821,11 @@ export const createUser = async (userData) => {
 
         }
 
-// ==================================================
-// 2. CREATE SECRET PASSWORD
-// ==================================================
+        // ==================================================
+        // 2. CREATE SECRET PASSWORD
+        // ==================================================
 
-const secretPasswordQuery = `
+        const secretPasswordQuery = `
     INSERT INTO "TRACK"."SecretPassword"
     (
         "UserId",
@@ -871,18 +846,18 @@ const secretPasswordQuery = `
         "SecretPasswordId";
 `;
 
-const secretPasswordResult = await client.query(
-    secretPasswordQuery,
-    [
-       UserId,
-        userData.PlainPassword,
-        userData.HashedPassword,
-        UserId
-    ]
-);
+        const secretPasswordResult = await client.query(
+            secretPasswordQuery,
+            [
+                UserId,
+                userData.PlainPassword,
+                userData.HashedPassword,
+                UserId
+            ]
+        );
 
-const secretPasswordId =
-    secretPasswordResult.rows[0].SecretPasswordId;
+        const secretPasswordId =
+            secretPasswordResult.rows[0].SecretPasswordId;
         // ==================================================
         // 9. COMMIT
         // ==================================================
@@ -1008,7 +983,31 @@ export const getRoleDropdown = async () => {
 };
 
 
+export const getDepartmentDropdown = async (CompanyId = null) => {
 
+    let query = `
+        SELECT
+            "DepartmentId",
+            "CompanyId",
+            "DepartmentName",
+            "DepartmentCode"
+        FROM "LKP"."Department"
+        WHERE "IsDisabled" = false
+    `;
+
+    const values = [];
+
+    if (CompanyId !== null) {
+        query += ` AND "CompanyId" = $1`;
+        values.push(CompanyId);
+    }
+
+    query += ` ORDER BY "DepartmentName";`;
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
+};
 
 
 // ======================================================
