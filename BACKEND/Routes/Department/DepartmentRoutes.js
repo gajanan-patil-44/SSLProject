@@ -1,10 +1,22 @@
 import express from "express";
 
-import{getDepartment, addDepartment, updateDepartment, toggleStatus} from "../../Controller/Department/DepartmentController.js"
+import {
+    getDepartments,
+    addDepartment,
+    updateDepartment,
+    toggleDepartmentStatus
+} from "../../Controllers/Department/DepartmentController.js";
 
-const router=express.Router();
+// import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
-router.post("/getDepartment", getDepartment)
-router.post("/addDepartment", addDepartment),
-router.post("/updateDepartment", updateDepartment)
-router.post("/toggleStatus", toggleStatus)
+const router = express.Router();
+
+router.post("/getDepartment", getDepartments);  // GET ALL DEPARTMENTS
+
+router.post("/addDepartment", addDepartment);  // ADD DEPARTMENT
+
+router.patch("/updateDepartment", updateDepartment);  // UPDATE DEPARTMENT
+
+router.patch("/toggleDepartmentStatus", toggleDepartmentStatus);  // TOGGLE DEPARTMENT STATUS
+
+export default router;
