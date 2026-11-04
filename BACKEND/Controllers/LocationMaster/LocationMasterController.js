@@ -146,6 +146,7 @@ export const getParentLocationMasterController = async (req, res) => {
 
 // 4. Add Location Details and Contact Channels
 
+
 export const addLocationMaster = async (req, res) => {
 
     const {

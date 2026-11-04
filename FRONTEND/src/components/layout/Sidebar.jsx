@@ -57,6 +57,14 @@ const ICON_MAP = {
   vendor: Icons.Store,
   store: Icons.Store,
   truck: Icons.Truck,
+  'material-category': Icons.Tags,
+  'materialcategory': Icons.Tags,
+  'material-sub-category': Icons.Tag,
+  'materialsubcategory': Icons.Tag,
+  'gst-creation': Icons.Receipt,
+  'gstcreation': Icons.Receipt,
+  gst: Icons.Receipt,
+  receipt: Icons.Receipt,
 };
 
 const resolveIcon = (iconName) => {
@@ -95,13 +103,23 @@ const formatPageNode = (page) => {
   const rawIcon = page.PageIcon || page.icon || page.IconName || '';
   const order = Number(page.OrderNo ?? page.order ?? 0);
 
+  let formattedLabel = formatTitle(rawName);
+  const lowerLabel = formattedLabel.toLowerCase();
+  if (lowerLabel === 'manage category' || lowerLabel === 'manage categories' || lowerLabel === 'material category' || lowerLabel === 'material categories') {
+    formattedLabel = 'Material Categories Creation';
+  } else if (lowerLabel === 'manage sub category' || lowerLabel === 'manage sub categories' || lowerLabel === 'material sub category' || lowerLabel === 'material sub categories') {
+    formattedLabel = 'Material Sub Category';
+  } else if (lowerLabel === 'gst' || lowerLabel === 'gst creation' || lowerLabel === 'gst master' || lowerLabel === 'gst-creation') {
+    formattedLabel = 'GST Creation';
+  }
+
   const children = Array.isArray(page.children)
     ? page.children.map(formatPageNode).sort((a, b) => a.order - b.order)
     : [];
 
   return {
     id: page.PageId || page.id || rawUrl,
-    label: formatTitle(rawName),
+    label: formattedLabel,
     path: rawUrl,
     icon: rawIcon,
     order: order,

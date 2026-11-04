@@ -21,7 +21,7 @@ const materialCategoryTypeService = {
         code: item.MaterialCategoryTypeCode ?? item.IconName ?? item.code,
         name: item.MaterialCategoryTypeName ?? item.PageName ?? item.name,
         status: (item.IsDisabled === true || item.isDisabled === true) ? 'Inactive' : 'Active',
-        createdBy: item.CreatedByUserName ?? 'System',
+        createdBy: item.CreatedByUserName || '—',
         createdAt: item.CreatedAt ? new Date(item.CreatedAt).toLocaleDateString('en-GB') : undefined
       }));
     }

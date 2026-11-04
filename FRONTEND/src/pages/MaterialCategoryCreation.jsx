@@ -50,16 +50,16 @@ export default function MaterialCategoryCreation() {
   // Validate form
   const validateForm = () => {
     const errs = {};
-    const codeErr = validateCode(formData.code, 'Category Code', true);
+    const codeErr = validateCode(formData.code, 'Material Category Code', true);
     if (codeErr) errs.code = codeErr;
 
     const trimmedName = (formData.name || '').trim();
     if (!trimmedName) {
-      errs.name = 'Category Name is required';
+      errs.name = 'Material Category Name is required';
     } else if (trimmedName.length < 2) {
-      errs.name = 'Category Name must be at least 2 characters';
+      errs.name = 'Material Category Name must be at least 2 characters';
     } else if (trimmedName.length > 100) {
-      errs.name = 'Category Name cannot exceed 100 characters';
+      errs.name = 'Material Category Name cannot exceed 100 characters';
     }
 
     setFormErrors(errs);
@@ -169,7 +169,7 @@ export default function MaterialCategoryCreation() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this category?");
+    const confirmDelete = window.confirm("Are you sure you want to delete this material category?");
     if (!confirmDelete) return;
 
     try {
@@ -269,12 +269,12 @@ export default function MaterialCategoryCreation() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Manage Categories"
-        description="Manage system material categories, configurations and access permissions."
+        title="Material Categories Creation"
+        description="Manage system material categories creation, configurations and access permissions."
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Manage Category', path: '/master/material-category' }
+          { label: 'Material Categories Creation', path: '/master/material-category' }
         ]}
       />
 
@@ -283,7 +283,7 @@ export default function MaterialCategoryCreation() {
         columns={columns}
         data={filteredData}
         loading={loading}
-        searchPlaceholder="Search by category name, code..."
+        searchPlaceholder="Search by material category name, code..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         onAddClick={() => handleOpenModal(null, 'create')}
@@ -298,7 +298,7 @@ export default function MaterialCategoryCreation() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={isViewing ? 'View Category' : (isEditing ? 'Edit Category' : 'Create Category')}
+        title={isViewing ? 'View Material Category' : (isEditing ? 'Edit Material Category' : 'Create Material Category')}
         icon={ClipboardList}
         maxWidth="lg"
         actions={
@@ -315,7 +315,7 @@ export default function MaterialCategoryCreation() {
                 onClick={handleSubmit}
                 isLoading={submitting}
               >
-                {isEditing ? 'Update Category' : 'Create Category'}
+                {isEditing ? 'Update Material Category' : 'Create Material Category'}
               </Button>
             )}
           </>
@@ -332,7 +332,7 @@ export default function MaterialCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Category Code {!isViewing && <span className="text-rose-500">*</span>}
+              Material Category Code {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.code}
@@ -351,7 +351,7 @@ export default function MaterialCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Category Name {!isViewing && <span className="text-rose-500">*</span>}
+              Material Category Name {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.name}

@@ -10,6 +10,21 @@ import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
+
+// Helper to get session company
+const getSessionCompany = () => {
+  try {
+    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(comps) && comps.length > 0) return comps[0];
+    }
+    const ctx = useERPStore.getState()?.userContext;
+    if (ctx?.companies?.length > 0) return ctx.companies[0];
+  } catch {}
+  return null;
+};
 import {
   validateName,
   validatePhone,
@@ -156,6 +171,10 @@ function MultiSelectDropdown({
 }
 
 export default function ManageUserView() {
+  const sessionCompany = getSessionCompany();
+  const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+  const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
+
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
   const userName = currentUser?.loginName || currentUser?.EmployeeId || (typeof currentUser?.name === 'string' ? currentUser.name : '') || '';
@@ -459,7 +478,7 @@ export default function ManageUserView() {
     const primaryRole = (user.Roles || [])[0];
     const primaryManager = (user.ReportingManagers || [])[0];
 
-    const currentCompanyId = primaryCompany?.CompanyId ? String(primaryCompany.CompanyId) : '';
+    const currentCompanyId = sessionCompanyId ? String(sessionCompanyId) : (primaryCompany?.CompanyId ? String(primaryCompany.CompanyId) : '');
 
     // Multi-select values as arrays of strings
     const currentCompanyProductIds = Array.isArray(user.Products) && user.Products.length > 0
@@ -1059,9 +1078,10 @@ export default function ManageUserView() {
               </label>
               <div className="relative">
                 <select
-                  value={formData.companyId}
+                  disabled={Boolean(sessionCompanyId)}
+                  value={formData.companyId || (sessionCompanyId ? String(sessionCompanyId) : '')}
                   onChange={(e) => handleCompanyChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : 'cursor-pointer'}`}
                 >
                   <option value="">Select Company</option>
                   {companies.map((c) => (
@@ -1069,6 +1089,11 @@ export default function ManageUserView() {
                       {c.name}
                     </option>
                   ))}
+                  {sessionCompanyId && !companies.some(c => String(c.id) === String(sessionCompanyId)) && (
+                    <option value={String(sessionCompanyId)}>
+                      {sessionCompanyName || `Company #${sessionCompanyId}`}
+                    </option>
+                  )}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

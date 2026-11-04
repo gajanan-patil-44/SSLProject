@@ -467,14 +467,59 @@ export const createUser = async (userData) => {
 
         // ==================================================
         // 4. CREATE USER PRODUCTS
+        // CONVERT PRODUCT IDs TO COMPANY PRODUCT IDs
         // ==================================================
 
-        const companyProductIds =
-            userData.CompanyProductId || [];
+        const selectedProductIds =
+            userData.ProductId ??
+            userData.CompanyProductId ??
+            [];
 
+        let companyProductIds = [];
+
+        if (selectedProductIds.length > 0) {
+
+            // Get actual CompanyProductIds
+            const companyProductResult = await client.query(
+                `
+                SELECT
+                    "CompanyProductId",
+                    "ProductId"
+                FROM "LKP"."CompanyProduct"
+                WHERE "CompanyId" = $1
+                AND "ProductId" = ANY($2::smallint[])
+                `,
+                [
+                    userData.CompanyId,
+                    selectedProductIds
+                ]
+            );
+
+            const productMapping = companyProductResult.rows;
+
+            // Check whether all selected ProductIds exist
+            const validProductIds = productMapping.map(
+                row => Number(row.ProductId)
+            );
+
+            const invalidProductIds = selectedProductIds.filter(
+                id => !validProductIds.includes(Number(id))
+            );
+
+            if (invalidProductIds.length > 0) {
+                throw new Error(
+                    `Invalid ProductId(s) for CompanyId ${userData.CompanyId}: ${invalidProductIds.join(", ")}`
+                );
+            }
+
+            // Convert ProductIds into CompanyProductIds
+            companyProductIds = productMapping.map(
+                row => Number(row.CompanyProductId)
+            );
+
+        }
 
         const createdUserProducts = [];
-
 
         const userProductQuery = `
             INSERT INTO "DATA"."UserProduct"
@@ -493,40 +538,30 @@ export const createUser = async (userData) => {
                 CURRENT_TIMESTAMP,
                 $3
             )
-            RETURNING
-                "UserProductId";
+            RETURNING "UserProductId";
         `;
 
+        for (const CompanyProductId of companyProductIds) {
 
-        for (
-            const CompanyProductId
-            of companyProductIds
-        ) {
-
-            const userProductResult =
-                await client.query(
-                    userProductQuery,
-                    [
-                        UserId,
-                        CompanyProductId,
-                        UserId
-                    ]
-                );
-
+            const userProductResult = await client.query(
+                userProductQuery,
+                [
+                    UserId,
+                    CompanyProductId,
+                    UserId
+                ]
+            );
 
             createdUserProducts.push(
-                userProductResult.rows[0]
-                    .UserProductId
+                userProductResult.rows[0].UserProductId
             );
 
         }
-
 
         const userProductId =
             createdUserProducts.length > 0
                 ? createdUserProducts[0]
                 : null;
-
 
         // ==================================================
         // 5. CREATE USER PROJECTS
@@ -967,42 +1002,20 @@ export const getProjectDropdown = async (CompanyProductId) => {
     return result.rows;
 };
 
-export const getRoleDropdown = async () => {
+export const getRoleDropdown = async (CompanyId) => {
+
     const query = `
         SELECT
             "RoleId",
-            "RoleName"
+            "RoleName",
+            "CompanyId"
         FROM "LKP"."Role"
         WHERE "IsDisabled" = false
-        ORDER BY "RoleName" ASC
-    `;
-    const result = await pool.query(query);
-    return result.rows;
-};
-
-
-export const getDepartmentDropdown = async (CompanyId = null) => {
-
-    let query = `
-        SELECT
-            "DepartmentId",
-            "CompanyId",
-            "DepartmentName",
-            "DepartmentCode"
-        FROM "LKP"."Department"
-        WHERE "IsDisabled" = false
+          AND "CompanyId" = $1
+        ORDER BY "RoleName" ASC;
     `;
 
-    const values = [];
-
-    if (CompanyId !== null) {
-        query += ` AND "CompanyId" = $1`;
-        values.push(CompanyId);
-    }
-
-    query += ` ORDER BY "DepartmentName";`;
-
-    const result = await pool.query(query, values);
+    const result = await pool.query(query, [CompanyId]);
 
     return result.rows;
 };
