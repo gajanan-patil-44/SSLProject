@@ -5,7 +5,7 @@ import { pool } from "../Config/db.js";
 // GET ALL ROLES
 // ==========================================
 
-export const getAllRoles = async () => {
+export const getAllRoles = async (CompanyId) => {
 
     const query = `
         SELECT
@@ -20,16 +20,16 @@ export const getAllRoles = async () => {
             R."CreatedAt",
             R."UpdatedAt",
             R."UpdatedByUserName"
-
         FROM "LKP"."Role" R
-
         LEFT JOIN "LKP"."Company" C
             ON R."CompanyId" = C."CompanyId"
-
-        ORDER BY R."RoleId";
+        ${CompanyId !== null ? `WHERE R."CompanyId" = $1` : ""}
+        ORDER BY R."RoleId" DESC;
     `;
 
-    const result = await pool.query(query);
+    const values = CompanyId !== null ? [CompanyId] : [];
+
+    const result = await pool.query(query, values);
 
     return result.rows;
 };
@@ -38,22 +38,38 @@ export const getAllRoles = async () => {
 // ADD ROLE
 // ==========================================
 
-export const checkRoleExists = async (RoleName,RoleCode) => {
+export const checkRoleExists = async (RoleName, RoleCode, CompanyId) => {
 
     const query = `
         SELECT
-            "RoleId",
             "RoleName",
             "RoleCode"
         FROM "LKP"."Role"
         WHERE
-            "RoleName" = $1
-            OR "RoleCode" = $2
+            "RoleName" ILIKE $1
+            AND (
+                ("CompanyId" = $3)
+                OR ("CompanyId" IS NULL AND $3::SMALLINT IS NULL)
+            )
+
+        UNION
+
+        SELECT
+            "RoleName",
+            "RoleCode"
+        FROM "LKP"."Role"
+        WHERE
+            "RoleCode" ILIKE $2
+            AND (
+                ("CompanyId" = $3)
+                OR ("CompanyId" IS NULL AND $3::SMALLINT IS NULL)
+            );
     `;
 
     const values = [
         RoleName,
-        RoleCode
+        RoleCode,
+        CompanyId
     ];
 
     const result = await pool.query(query, values);
@@ -167,21 +183,28 @@ export const checkRoleExistsForUpdate = async (RoleName, RoleCode,RoleId) => {
 // GET ALL COMPANIES
 // ==========================================
 
-export const getCompaniesForRole = async () => {
+export const getCompaniesForRole = async (CompanyId) => {
 
-    const query = `
+const query = `
         SELECT
             "CompanyId",
             "CompanyName"
         FROM "LKP"."Company"
-        ORDER BY "CompanyName";
     `;
 
-    const result = await pool.query(query);
+    const values = [];
+
+    if (CompanyId !== null && CompanyId !== undefined) {
+        query += ` WHERE "CompanyId" = $1::SMALLINT`;
+        values.push(Number(CompanyId));
+    }
+
+    query += ` ORDER BY "CompanyName"`;
+
+    const result = await pool.query(query, values);
 
     return result.rows;
 };
-
 // ==========================================
 // UPDATE ROLE
 // ==========================================
@@ -189,7 +212,7 @@ export const getCompaniesForRole = async () => {
 
 
 
-export const updateRoles = async (userRole) => {
+export const updateRoles = async (userRole, loggedInCompanyId) => {
 
     const query = `
         UPDATE "LKP"."Role"
@@ -206,17 +229,22 @@ export const updateRoles = async (userRole) => {
     const values = [
         userRole.CompanyId,
         userRole.RoleName,
-        userRole.Description,
+        userRole.Description || null,
         userRole.Role_Code,
         userRole.UpdatedByUserName,
         userRole.RoleId
     ];
 
+    // Company users can update only their own company's roles
+    if (loggedInCompanyId !== null) {
+        query += ` AND "CompanyId" = $7`;
+        values.push(loggedInCompanyId);
+    }
+
     const result = await pool.query(query, values);
 
     return result.rowCount;
 };
-
 
 // ==========================================
 // DELETE ROLE

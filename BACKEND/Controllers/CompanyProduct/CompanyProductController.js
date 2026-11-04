@@ -7,14 +7,27 @@ import {getAllCompanyProducts,getCompaniesForDropdown,getProductsForDropdown,add
 
 export const getCompanyProduct = async (req, res) => {
 
-    const { FlagId } = req.body;
+    const { FlagId, CompanyId } = req.body;
 
     try {
 
-        // FlagId 1 - Get All Company Products
         if (parseInt(FlagId) === 1) {
 
-            const rows = await getAllCompanyProducts();
+            const loggedInCompanyId = req.user.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(403).json({
+                    status: "error",
+                    message: "Company access information is missing"
+                });
+            }
+
+            const selectedCompanyId =
+                loggedInCompanyId === null
+                    ? (CompanyId || null)
+                    : loggedInCompanyId;
+
+            const rows = await getAllCompanyProducts(selectedCompanyId);
 
             return res.status(200).json({
                 status: "success",
@@ -23,7 +36,6 @@ export const getCompanyProduct = async (req, res) => {
             });
         }
 
-        // Invalid FlagId
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
@@ -31,10 +43,7 @@ export const getCompanyProduct = async (req, res) => {
 
     } catch (error) {
 
-        console.error(
-            "Error fetching company products:",
-            error
-        );
+        console.error("Error fetching company products:", error);
 
         return res.status(500).json({
             status: "error",
@@ -43,7 +52,6 @@ export const getCompanyProduct = async (req, res) => {
         });
     }
 };
-
 
 // ==========================================
 // COMPANY PRODUCT ADD / DROPDOWN CONTROLLER
@@ -55,13 +63,24 @@ export const companyProductController = async (req, res) => {
 
     try {
 
+        const loggedInCompanyId = req.user.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(403).json({
+                status: "error",
+                message: "Company access information is missing"
+            });
+        }
+
         // ==========================================
         // FLAG ID 1 - GET COMPANIES
         // ==========================================
 
         if (parseInt(FlagId) === 1) {
 
-            const companies = await getCompaniesForDropdown();
+            const companies = await getCompaniesForDropdown(
+                loggedInCompanyId
+            );
 
             return res.status(200).json({
                 status: "success",
@@ -69,7 +88,6 @@ export const companyProductController = async (req, res) => {
                 data: companies
             });
         }
-
 
         // ==========================================
         // FLAG ID 2 - GET PRODUCTS
@@ -86,7 +104,6 @@ export const companyProductController = async (req, res) => {
             });
         }
 
-
         // ==========================================
         // FLAG ID 3 - ADD COMPANY PRODUCT
         // ==========================================
@@ -100,58 +117,65 @@ export const companyProductController = async (req, res) => {
                 CreatedByUserName
             } = req.body;
 
-
             // ==========================================
             // VALIDATE COMPANY ID
             // ==========================================
 
-            if (!CompanyId) {
+            const selectedCompanyId =
+                loggedInCompanyId === null
+                    ? CompanyId
+                    : loggedInCompanyId;
 
+            if (!selectedCompanyId) {
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyId is required"
                 });
             }
 
+            const companyExists = await checkCompanyExists(
+                selectedCompanyId
+            );
+
+            if (companyExists.length === 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid CompanyId"
+                });
+            }
 
             // ==========================================
             // VALIDATE PRODUCT ID
             // ==========================================
 
             if (!ProductId) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProductId is required"
                 });
             }
 
-
             // ==========================================
             // VALIDATE IS DISABLED
             // ==========================================
 
             if (typeof IsDisabled !== "boolean") {
-
                 return res.status(400).json({
                     status: "error",
                     message: "IsDisabled must be true or false"
                 });
             }
 
-
             // ==========================================
             // VALIDATE CREATED BY USER NAME
             // ==========================================
 
-            if (!CreatedByUserName) {
-
+            if (!CreatedByUserName || !CreatedByUserName.trim()) {
                 return res.status(400).json({
                     status: "error",
                     message: "CreatedByUserName is required"
                 });
             }
-
 
             // ==========================================
             // CHECK COMPANY ID AND PRODUCT ID
@@ -159,39 +183,34 @@ export const companyProductController = async (req, res) => {
 
             const companyProductData =
                 await checkCompanyProductData(
-                    CompanyId,
+                    selectedCompanyId,
                     ProductId
                 );
 
-
             if (companyProductData.length === 0) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "Invalid CompanyId or ProductId"
                 });
             }
 
-
             // ==========================================
             // ADD COMPANY PRODUCT
             // ==========================================
 
             const companyProduct = await addCompanyProduct({
-                CompanyId,
+                CompanyId: selectedCompanyId,
                 ProductId,
                 IsDisabled,
                 CreatedByUserName
             });
 
-
             return res.status(201).json({
                 status: "success",
-                message: "Company product added successfully"
-               
+                message: "Company product added successfully",
+                data: companyProduct
             });
         }
-
 
         // ==========================================
         // INVALID FLAG ID
@@ -218,7 +237,6 @@ export const companyProductController = async (req, res) => {
 };
 
 
-
 // ==========================================
 // EDIT COMPANY PRODUCT CONTROLLER
 // ==========================================
@@ -229,13 +247,24 @@ export const editCompanyProductController = async (req, res) => {
 
     try {
 
+        const loggedInCompanyId = req.user.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(403).json({
+                status: "error",
+                message: "Company access information is missing"
+            });
+        }
+
         // ==========================================
         // FLAG ID 1 - GET COMPANIES
         // ==========================================
 
         if (parseInt(FlagId) === 1) {
 
-            const companies = await getCompaniesForDropdown();
+            const companies = await getCompaniesForDropdown(
+                loggedInCompanyId
+            );
 
             return res.status(200).json({
                 status: "success",
@@ -243,7 +272,6 @@ export const editCompanyProductController = async (req, res) => {
                 data: companies
             });
         }
-
 
         // ==========================================
         // FLAG ID 2 - GET PRODUCTS
@@ -260,7 +288,6 @@ export const editCompanyProductController = async (req, res) => {
             });
         }
 
-
         // ==========================================
         // FLAG ID 3 - EDIT COMPANY PRODUCT
         // ==========================================
@@ -274,59 +301,65 @@ export const editCompanyProductController = async (req, res) => {
                 UpdatedByUserName
             } = req.body;
 
-
             // ==========================================
             // VALIDATE COMPANY PRODUCT ID
             // ==========================================
 
             if (!CompanyProductId) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyProductId is required"
                 });
             }
 
-
             // ==========================================
             // VALIDATE COMPANY ID
             // ==========================================
 
-            if (!CompanyId) {
+            const selectedCompanyId =
+                loggedInCompanyId === null
+                    ? CompanyId
+                    : loggedInCompanyId;
 
+            if (!selectedCompanyId) {
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyId is required"
                 });
             }
 
+            const companyExists = await checkCompanyExists(
+                selectedCompanyId
+            );
+
+            if (companyExists.length === 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid CompanyId"
+                });
+            }
 
             // ==========================================
             // VALIDATE PRODUCT ID
             // ==========================================
 
             if (!ProductId) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ProductId is required"
                 });
             }
 
-
-    
             // ==========================================
             // VALIDATE UPDATED USER
             // ==========================================
 
-            if (!UpdatedByUserName) {
-
+            if (!UpdatedByUserName || !UpdatedByUserName.trim()) {
                 return res.status(400).json({
                     status: "error",
                     message: "UpdatedByUserName is required"
                 });
             }
-
 
             // ==========================================
             // CHECK COMPANY AND PRODUCT EXIST
@@ -334,44 +367,41 @@ export const editCompanyProductController = async (req, res) => {
 
             const companyProductData =
                 await checkCompanyProductData(
-                    CompanyId,
+                    selectedCompanyId,
                     ProductId
                 );
 
-
             if (companyProductData.length === 0) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "Invalid CompanyId or ProductId"
                 });
             }
 
-
             // ==========================================
             // UPDATE COMPANY PRODUCT
             // ==========================================
 
-            const result = await editCompanyProduct({
-                CompanyProductId,
-                CompanyId,
-                ProductId,
-                UpdatedByUserName
-            });
-
+            const result = await editCompanyProduct(
+                {
+                    CompanyProductId,
+                    CompanyId: selectedCompanyId,
+                    ProductId,
+                    UpdatedByUserName
+                },
+                loggedInCompanyId
+            );
 
             // ==========================================
             // COMPANY PRODUCT NOT FOUND
             // ==========================================
 
             if (result === 0) {
-
                 return res.status(404).json({
                     status: "error",
                     message: "Company product not found"
                 });
             }
-
 
             // ==========================================
             // SUCCESS
@@ -383,7 +413,6 @@ export const editCompanyProductController = async (req, res) => {
                 data: result
             });
         }
-
 
         // ==========================================
         // INVALID FLAG ID
@@ -408,7 +437,6 @@ export const editCompanyProductController = async (req, res) => {
         });
     }
 };
-
 // ==========================================
 // DELETE COMPANY PRODUCT CONTROLLER
 // ==========================================

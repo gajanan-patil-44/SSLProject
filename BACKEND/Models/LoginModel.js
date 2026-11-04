@@ -85,7 +85,7 @@ export const findUserForLogin = async (username) => {
         LIMIT 1
     `;
 
-    const userResult = await pool.query(userQuery,[username]);
+    const userResult = await pool.query(userQuery, [username]);
 
     if (userResult.rows.length === 0) {
         return null;
@@ -104,7 +104,11 @@ export const findUserForLogin = async (username) => {
         WHERE uc."UserId" = $1
         ORDER BY uc."CompanyId"
     `;
-    const companyResult = await pool.query( companyQuery,[user.UserId]);
+    const companyResult = await pool.query(companyQuery, [user.UserId]);
+
+user.CompanyId = companyResult.rows.length > 0
+    ? companyResult.rows[0].CompanyId
+    : null;
 
     // ==========================================================
     // PRODUCT
@@ -122,7 +126,7 @@ export const findUserForLogin = async (username) => {
         WHERE up."UserId" = $1 AND p."IsDisabled" = FALSE
         ORDER BY cp."CompanyId", up."CompanyProductId"
     `;
-    const productResult = await pool.query(productQuery,[user.UserId]);
+    const productResult = await pool.query(productQuery, [user.UserId]);
 
     // ==========================================================
     // PROJECT
@@ -139,7 +143,7 @@ export const findUserForLogin = async (username) => {
         ORDER BY upj."ProjectId"
     `;
 
-    const projectResult = await pool.query(projectQuery,[user.UserId]);
+    const projectResult = await pool.query(projectQuery, [user.UserId]);
     // ==========================================================
     // ROLE
     // ==========================================================
@@ -155,7 +159,7 @@ export const findUserForLogin = async (username) => {
             AND r."IsDisabled" = FALSE
         ORDER BY ur."RoleId"
     `;
-    const roleResult = await pool.query(roleQuery,[user.UserId]);
+    const roleResult = await pool.query(roleQuery, [user.UserId]);
     // ==========================================================
     // REPORTING MANAGER
     // ==========================================================
@@ -197,11 +201,11 @@ export const findUserForLogin = async (username) => {
         ORDER BY d."DesignationLevel" ASC
     `;
 
-    const reportingManagerResult = await pool.query(reportingManagerQuery,[user.UserId]);
+    const reportingManagerResult = await pool.query(reportingManagerQuery, [user.UserId]);
     // ==========================================================
     // MENU PAGE
     // ==========================================================
-   const menuPageQuery = `
+    const menuPageQuery = `
     SELECT DISTINCT
         p."PageId",
         p."PageName",
@@ -224,18 +228,18 @@ export const findUserForLogin = async (username) => {
         AND COALESCE(r."IsDisabled", FALSE) = FALSE
 `;
 
-    const menuPageResult = await pool.query(menuPageQuery,[user.UserId]);
+    const menuPageResult = await pool.query(menuPageQuery, [user.UserId]);
     // ==========================================================
     // RETURN
     // ==========================================================
     return {
         user,
-        companies:companyResult.rows,
-        products:productResult.rows,
+        companies: companyResult.rows,
+        products: productResult.rows,
         projects: projectResult.rows,
-        roles:roleResult.rows,
-        reportingManager:reportingManagerResult.rows,
-        menuPage:menuPageResult.rows
+        roles: roleResult.rows,
+        reportingManager: reportingManagerResult.rows,
+        menuPage: menuPageResult.rows
     };
 };
 // ==========================================================
@@ -250,7 +254,7 @@ export const updateFailedLogin = async (userId) => {
         RETURNING "AttemptCount"
     `;
 
-    const result = await pool.query(query,[userId]);
+    const result = await pool.query(query, [userId]);
     return result.rows[0]?.AttemptCount || 0;
 };
 // ==========================================================
@@ -269,7 +273,7 @@ export const setTempBlock = async (userId) => {
             "TempBlockedOn"
     `;
 
-    const result = await pool.query(query,[userId]);
+    const result = await pool.query(query, [userId]);
     return result.rows[0] || null;
 };
 // ==========================================================
@@ -288,7 +292,7 @@ export const clearTempBlock = async (userId) => {
             "TempBlockedOn"
     `;
 
-    const result = await pool.query(query,[userId]);
+    const result = await pool.query(query, [userId]);
     return result.rows[0] || null;
 };
 // ==========================================================
@@ -308,7 +312,7 @@ export const resetAttempts = async (userId) => {
             "IsTempBlocked"
     `;
 
-    const result = await pool.query(query,[userId]);
+    const result = await pool.query(query, [userId]);
     return result.rows[0] || null;
 };
 
@@ -331,7 +335,7 @@ export const setPermanentBlock = async (userId) => {
             "BlockCount",
             "AttemptCount"
     `;
-    const result = await pool.query(query,[userId]);
+    const result = await pool.query(query, [userId]);
     return result.rows[0] || null;
 };
 //
@@ -451,7 +455,7 @@ export const createUserLoginDetail = async (loginData) => {
 // LOGOUT USER LOGIN DETAIL
 // ==========================================================
 
-export const logoutUserLoginDetail = async (UserLoginDetailId,LogoutReason) => {
+export const logoutUserLoginDetail = async (UserLoginDetailId, LogoutReason) => {
 
     const query = `
         UPDATE "DATA"."UserLoginDetail"

@@ -231,8 +231,7 @@ export const getVendors = async (req, res) => {
     try {
         if (parseInt(FlagId) === 1) {
 
-            console.log("Logged-in User:", req.user);
-            console.log("Session CompanyId:", req.user?.CompanyId);
+       
 
             const CompanyId = req.user?.CompanyId ?? null;
 

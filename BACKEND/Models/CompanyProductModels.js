@@ -5,41 +5,46 @@ import {pool} from "../Config/db.js";
 // GET ALL COMPANY PRODUCTS
 // ==========================================
 
-export const getAllCompanyProducts = async () => {
+export const getAllCompanyProducts = async (CompanyId) => {
 
     const query = `
         SELECT
-        "CompanyProductId",
+            CP."CompanyProductId",
+            CP."CompanyId",
             C."CompanyName",
             P."ProductName",
             CP."IsDisabled",
-            CP."CreatedAt" 
+            CP."CreatedAt"
         FROM "LKP"."CompanyProduct" CP
         INNER JOIN "LKP"."Company" C
             ON CP."CompanyId" = C."CompanyId"
         INNER JOIN "LKP"."Product" P
             ON CP."ProductId" = P."ProductId"
+        ${CompanyId !== null ? `WHERE CP."CompanyId" = $1` : ""}
         ORDER BY CP."CreatedAt" DESC;
     `;
 
-    const result = await pool.query(query);
+    const values = CompanyId !== null ? [CompanyId] : [];
+
+    const result = await pool.query(query, values);
 
     return result.rows;
 };
 
-export const getCompaniesForDropdown = async () => {
+export const getCompaniesForDropdown = async (CompanyId) => {
 
     const query = `
         SELECT
-            
             "CompanyId",
             "CompanyName"
         FROM "LKP"."Company"
-        WHERE "IsDisabled" = false
+        ${CompanyId !== null ? `WHERE "CompanyId" = $1` : ""}
         ORDER BY "CompanyName";
     `;
 
-    const result = await pool.query(query);
+    const values = CompanyId !== null ? [CompanyId] : [];
+
+    const result = await pool.query(query, values);
 
     return result.rows;
 };
@@ -125,8 +130,10 @@ export const checkCompanyProductData = async (CompanyId, ProductId) => {
     return result.rows;
 };
 
-
-export const editCompanyProduct = async (companyProduct) => {
+export const editCompanyProduct = async (
+    companyProduct,
+    loggedInCompanyId
+) => {
 
     const query = `
         UPDATE "LKP"."CompanyProduct"
@@ -136,13 +143,15 @@ export const editCompanyProduct = async (companyProduct) => {
             "UpdatedAt" = CURRENT_TIMESTAMP,
             "UpdatedByUserName" = $3
         WHERE "CompanyProductId" = $4
+        ${loggedInCompanyId !== null ? `AND "CompanyId" = $5` : ""}
     `;
 
     const values = [
         companyProduct.CompanyId,
         companyProduct.ProductId,
         companyProduct.UpdatedByUserName,
-        companyProduct.CompanyProductId
+        companyProduct.CompanyProductId,
+        ...(loggedInCompanyId !== null ? [loggedInCompanyId] : [])
     ];
 
     const result = await pool.query(query, values);

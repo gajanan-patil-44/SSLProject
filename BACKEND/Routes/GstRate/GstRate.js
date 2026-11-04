@@ -6,12 +6,13 @@ import {
     getAllGSTRatesController,
     updateGSTRateStatusController
 } from "../../Controllers/GstRate/GstRate.js";
+import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/dropdown",getGSTTypeDropdownController);
-router.post("/add",addGSTRateController);
-router.post("/view",getAllGSTRatesController);
-router.patch("/status",updateGSTRateStatusController);
+router.post("/dropdown",authenticateToken,getGSTTypeDropdownController);
+router.post("/add",authenticateToken,addGSTRateController);
+router.post("/view",authenticateToken,getAllGSTRatesController);
+router.patch("/status",authenticateToken,updateGSTRateStatusController);
 
 export default router;

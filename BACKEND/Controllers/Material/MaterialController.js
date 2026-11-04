@@ -72,12 +72,55 @@ const prepareMaterialFiles = (req) => {
 // =====================================================
 // FLAG ID 1 - VIEW ALL MATERIALS
 // ====================================================
+
 export const getMaterial = async (req, res) => {
+
     const { FlagId } = req.body;
 
     try {
-        if (parseInt(FlagId) === 1) {
-            const data = await getAllMaterials();
+
+        // =============================================
+        // FLAG ID VALIDATION
+        // =============================================
+
+        if (
+            FlagId === undefined ||
+            FlagId === null ||
+            FlagId === ""
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId is required"
+            });
+        }
+
+        if (!Number.isInteger(Number(FlagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId must be a valid number"
+            });
+        }
+
+        // =============================================
+        // VALIDATE LOGGED-IN COMPANY
+        // =============================================
+
+        const loggedInCompanyId = req.user?.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(401).json({
+                status: "error",
+                message: "User authentication information is missing"
+            });
+        }
+
+        // =============================================
+        // FLAG ID 1 - GET ALL MATERIALS
+        // =============================================
+
+        if (Number(FlagId) === 1) {
+
+            const data = await getAllMaterials(loggedInCompanyId);
 
             return res.status(200).json({
                 status: "success",
@@ -92,6 +135,7 @@ export const getMaterial = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error("Get materials error:", error);
 
         return res.status(500).json({
@@ -101,15 +145,61 @@ export const getMaterial = async (req, res) => {
         });
     }
 };
+
 // =====================================================
 // FLAG ID 2 TO 7 - SEPARATE DROPDOWNS
 // =====================================================
+
 export const getMaterialDropdown = async (req, res) => {
+
     const { FlagId } = req.body;
 
     try {
-        if (parseInt(FlagId) === 2) {
-            const data = await getMaterialCategoryDropdown();
+
+        // =============================================
+        // FLAG ID VALIDATION
+        // =============================================
+
+        if (
+            FlagId === undefined ||
+            FlagId === null ||
+            FlagId === ""
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId is required"
+            });
+        }
+
+        if (!Number.isInteger(Number(FlagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId must be a valid number"
+            });
+        }
+
+        // =============================================
+        // VALIDATE LOGGED-IN COMPANY
+        // =============================================
+
+        const loggedInCompanyId = req.user?.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(401).json({
+                status: "error",
+                message: "User authentication information is missing"
+            });
+        }
+
+        // =============================================
+        // FLAG ID 2 - MATERIAL CATEGORY
+        // =============================================
+
+        if (Number(FlagId) === 2) {
+
+            const data = await getMaterialCategoryDropdown(
+                loggedInCompanyId
+            );
 
             return res.status(200).json({
                 status: "success",
@@ -118,18 +208,37 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
-        if (parseInt(FlagId) === 3) {
+        // =============================================
+        // FLAG ID 3 - MATERIAL SUB CATEGORY
+        // =============================================
+
+        if (Number(FlagId) === 3) {
+
             const { MaterialCategoryTypeId } = req.body;
 
-            if (!MaterialCategoryTypeId) {
+            if (
+                MaterialCategoryTypeId === undefined ||
+                MaterialCategoryTypeId === null ||
+                MaterialCategoryTypeId === ""
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialCategoryTypeId is required"
                 });
             }
 
+            const categoryId = Number(MaterialCategoryTypeId);
+
+            if (!Number.isInteger(categoryId) || categoryId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Valid MaterialCategoryTypeId is required"
+                });
+            }
+
             const data = await getMaterialSubCategoryDropdown(
-                MaterialCategoryTypeId
+                categoryId,
+                loggedInCompanyId
             );
 
             return res.status(200).json({
@@ -139,7 +248,12 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
-        if (parseInt(FlagId) === 4) {
+        // =============================================
+        // FLAG ID 4 - UOM
+        // =============================================
+
+        if (Number(FlagId) === 4) {
+
             const data = await getUOMDropdown();
 
             return res.status(200).json({
@@ -149,28 +263,51 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
+        // =============================================
+        // FLAG ID 5 - GST TYPE
+        // =============================================
+if (Number(FlagId) === 5) {
 
-        if (parseInt(FlagId) === 5) {
-            const data = await getGSTTypeDropdown();
+    const data = await getGSTTypeDropdown();
 
-            return res.status(200).json({
-                status: "success",
-                message: "GST types fetched successfully",
-                data
-            });
-        }
+    return res.status(200).json({
+        status: "success",
+        message: "GST types fetched successfully",
+        data
+    });
+}
+        // =============================================
+        // FLAG ID 6 - GST RATE
+        // =============================================
 
-        if (parseInt(FlagId) === 6) {
+        if (Number(FlagId) === 6) {
+
             const { GSTTypeId } = req.body;
 
-            if (!GSTTypeId) {
+            if (
+                GSTTypeId === undefined ||
+                GSTTypeId === null ||
+                GSTTypeId === ""
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "GSTTypeId is required"
                 });
             }
 
-            const data = await getGSTRateDropdown(GSTTypeId);
+            const gstTypeId = Number(GSTTypeId);
+
+            if (!Number.isInteger(gstTypeId) || gstTypeId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Valid GSTTypeId is required"
+                });
+            }
+
+            const data = await getGSTRateDropdown(
+                gstTypeId,
+                loggedInCompanyId
+            );
 
             return res.status(200).json({
                 status: "success",
@@ -179,8 +316,12 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
+        // =============================================
+        // FLAG ID 7 - FILE TYPE
+        // =============================================
 
-        if (parseInt(FlagId) === 7) {
+        if (Number(FlagId) === 7) {
+
             const data = await getFileTypeDropdown();
 
             return res.status(200).json({
@@ -196,6 +337,7 @@ export const getMaterialDropdown = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error("Material dropdown error:", error);
 
         return res.status(500).json({
@@ -205,15 +347,63 @@ export const getMaterialDropdown = async (req, res) => {
         });
     }
 };
+
 // =====================================================
 // FLAG ID 8 - ADD MATERIAL WITH MULTER FILES
 // =====================================================
+
 export const createMaterial = async (req, res) => {
+
     const { FlagId } = req.body;
 
     try {
-        if (parseInt(FlagId) === 8) {
-            const data = req.body;
+
+        if (Number(FlagId) === 8) {
+
+            const data = { ...req.body };
+
+            // =========================================
+            // COMPANY ID FROM JWT
+            // =========================================
+
+            const loggedInCompanyId = req.user?.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "Company information is missing"
+                });
+            }
+
+            if (loggedInCompanyId === null) {
+
+                if (!data.CompanyId) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "CompanyId is required"
+                    });
+                }
+
+            } else {
+
+                data.CompanyId = loggedInCompanyId;
+            }
+
+            data.CompanyId = Number(data.CompanyId);
+
+            if (
+                !Number.isInteger(data.CompanyId) ||
+                data.CompanyId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Valid CompanyId is required"
+                });
+            }
+
+            // =========================================
+            // REQUIRED FIELD VALIDATION
+            // =========================================
 
             if (
                 !data.MaterialName?.trim() ||
@@ -225,7 +415,12 @@ export const createMaterial = async (req, res) => {
                 });
             }
 
+            // =========================================
+            // FILE PREPARATION
+            // =========================================
+
             const files = prepareMaterialFiles(req);
+
             const result = await addMaterial(data, files);
 
             return res.status(201).json({
@@ -241,6 +436,7 @@ export const createMaterial = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error("Create material error:", error);
 
         if (
@@ -261,25 +457,79 @@ export const createMaterial = async (req, res) => {
         });
     }
 };
+
 // =====================================================
 // FLAG ID 9 - EDIT MATERIAL
 // =====================================================
+
 export const editMaterial = async (req, res) => {
+
     const { FlagId } = req.body;
 
     try {
-        if (parseInt(FlagId) === 9) {
-            const data = req.body;
+
+        if (Number(FlagId) === 9) {
+
+            const data = { ...req.body };
+
+            // =========================================
+            // COMPANY ID FROM JWT
+            // =========================================
+
+            const loggedInCompanyId = req.user?.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "Company information is missing"
+                });
+            }
+
+            if (loggedInCompanyId === null) {
+
+                if (!data.CompanyId) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "CompanyId is required"
+                    });
+                }
+
+            } else {
+
+                data.CompanyId = loggedInCompanyId;
+            }
+
+            data.CompanyId = Number(data.CompanyId);
 
             if (
-                !Number.isInteger(Number(data.MaterialId)) ||
-                Number(data.MaterialId) <= 0
+                !Number.isInteger(data.CompanyId) ||
+                data.CompanyId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Valid CompanyId is required"
+                });
+            }
+
+            // =========================================
+            // MATERIAL ID VALIDATION
+            // =========================================
+
+            data.MaterialId = Number(data.MaterialId);
+
+            if (
+                !Number.isInteger(data.MaterialId) ||
+                data.MaterialId <= 0
             ) {
                 return res.status(400).json({
                     status: "error",
                     message: "A valid MaterialId is required"
                 });
             }
+
+            // =========================================
+            // REQUIRED FIELD VALIDATION
+            // =========================================
 
             if (
                 !data.MaterialName?.trim() ||
@@ -291,13 +541,18 @@ export const editMaterial = async (req, res) => {
                 });
             }
 
+            // =========================================
+            // PREPARE FILES
+            // =========================================
+
             const files = prepareMaterialFiles(req);
+
             const result = await updateMaterial(data, files);
 
             if (!result) {
                 return res.status(404).json({
                     status: "error",
-                    message: "Material not found"
+                    message: "Material not found for this company"
                 });
             }
 
@@ -314,7 +569,7 @@ export const editMaterial = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Edit material error:", error);
+
 
         if (
             error.message.startsWith("FileTypeIds") ||
@@ -334,6 +589,7 @@ export const editMaterial = async (req, res) => {
         });
     }
 };
+
 // =====================================================
 // FLAG ID 10 - ENABLE / DISABLE MATERIAL
 // =====================================================

@@ -183,20 +183,19 @@ export const createUserController = async (req, res) => {
         }
 
         // EMPLOYEE ID AND LOGIN NAME VALIDATION
-        // ==========================================================
-        // EMPLOYEE ID VALIDATION
-        // ==========================================================
 
         const employeeId = String(userData.EmployeeId ?? "").trim();
 
-        if (!/^[A-Za-z0-9]{1,6}$/.test(employeeId)) {
+        if (!/^[A-Za-z0-9]+$/.test(employeeId)) {
             return res.status(400).json({
                 status: "error",
-                message: "EmployeeId must contain only alphanumeric characters and must not exceed 6 characters"
+                message: "EmployeeId must contain only alphanumeric characters"
             });
         }
 
         userData.EmployeeId = employeeId;
+
+
         const loginName = String(userData.LoginName ?? "").trim();
 
         if (!/^[A-Za-z0-9]+$/.test(loginName)) {
@@ -252,8 +251,8 @@ export const createUserController = async (req, res) => {
 
         const email = String(userData.Email).trim();
 
-        const emailRegex =
-            /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
         if (!emailRegex.test(email)) {
             return res.status(400).json({
                 status: "error",
@@ -631,27 +630,13 @@ export const createUserController = async (req, res) => {
         // GET UPLOADED FILES
         // Supports multer array() and fields()
         // ==========================================================
-        // ==========================================================
-        // GET UPLOADED FILES
-        // ==========================================================
 
         const uploadedFiles = Array.isArray(req.files)
             ? req.files
             : Object.values(req.files || {}).flat();
 
-        const fileTypeIds = Array.isArray(userData.FileTypeId)
-            ? userData.FileTypeId
-            : userData.FileTypeId
-                ? [userData.FileTypeId]
-                : [];
-
-        let processedFiles;
-
         try {
-            processedFiles = await convertUploadedImagesToPdf(
-                uploadedFiles,
-                fileTypeIds
-            );
+            await convertUploadedImagesToPdf(uploadedFiles);
         } catch (error) {
             return res.status(400).json({
                 status: "error",
@@ -660,33 +645,75 @@ export const createUserController = async (req, res) => {
         }
 
         // ==========================================================
-        // PHOTO - STORE CONVERTED PDF AS BYTEA
+        // PHOTO - STORE AS BINARY BUFFER
         // ==========================================================
 
-        const uploadedPhoto = processedFiles.find(
-            file => file.fieldname === "Photo"
+        const uploadedPhoto = uploadedFiles.find(
+            (file) => file.fieldname === "Photo"
         );
 
         userData.Photo = null;
 
         if (uploadedPhoto) {
+            if (!uploadedPhoto.path) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Photo PDF path is missing"
+                });
+            }
+
+            // Read the converted PDF as binary data.
             userData.Photo = await readFile(uploadedPhoto.path);
+
+            if (
+                !Buffer.isBuffer(userData.Photo) ||
+                userData.Photo.length === 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Photo PDF binary data is empty or invalid"
+                });
+            }
         }
 
+
         // ==========================================================
-        // USER FILES - STORE MERGED PDF PATHS
+        // USER FILES
         // ==========================================================
 
-        const uploadedUserFiles = processedFiles.filter(
-            file => file.fieldname === "UserFile"
+        const uploadedUserFiles = uploadedFiles.filter(
+            (file) => file.fieldname === "UserFile"
         );
 
-        userData.UserFiles = uploadedUserFiles.map(file => ({
-            FileTypeId: Number(file.FileTypeId),
-            FilePath: file.path
-        }));
+        const fileTypeIds = Array.isArray(userData.FileTypeId)
+            ? userData.FileTypeId
+            : userData.FileTypeId
+                ? [userData.FileTypeId]
+                : [];
 
-        await createUser(userData, processedFiles);
+        if (uploadedUserFiles.length !== fileTypeIds.length) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "Each UserFile must have a corresponding FileTypeId"
+            });
+        }
+
+        userData.UserFiles = uploadedUserFiles.map(
+            (file, index) => ({
+                FileTypeId: Number(fileTypeIds[index]),
+                FilePath: file.path
+            })
+        );
+
+        // ==========================================================
+        // CREATE USER
+        // ==========================================================
+
+        await createUser(
+            userData,
+            req.files
+        );
 
         // ==========================================================
         // SUCCESS RESPONSE
@@ -707,13 +734,13 @@ export const createUserController = async (req, res) => {
         });
     }
 };
+
 // ==========================================================
 // COMPANY / PRODUCT / PROJECT DROPDOWN
 //
 // FlagId = 1 -> Company
 // FlagId = 2 -> Product
 // FlagId = 3 -> Project
-//flagId = 4 -> Role
 // ==========================================================
 export const companyProductProjectDropdownController = async (req, res) => {
 
@@ -814,20 +841,7 @@ export const companyProductProjectDropdownController = async (req, res) => {
 
         if (parseInt(FlagId) === 4) {
 
-            if (
-                CompanyId === undefined ||
-                CompanyId === null ||
-                String(CompanyId).trim() === ""
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId is required"
-                });
-            }
-
-            const result = await getRoleDropdown(
-                parseInt(CompanyId)
-            );
+            const result = await getRoleDropdown();
 
             return res.status(200).json({
                 status: "success",

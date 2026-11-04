@@ -3,7 +3,7 @@ import { pool } from "../Config/db.js";
 
 // GET ALL DESIGNATIONS
 
-export const getAllDesignations = async () => {
+export const getAllDesignations = async (CompanyId) => {
 
     try {
 
@@ -22,54 +22,41 @@ export const getAllDesignations = async () => {
                 cd."UpdatedAt",
                 cd."DesignationLevel",
                 cd."CanBeReportingManager"
-            
             FROM "LKP"."CompanyDesignation" cd
             INNER JOIN "LKP"."Company" c
                 ON c."CompanyId" = cd."CompanyId"
-            ORDER BY cd."CompanyDesignationId" ASC
+            WHERE
+                ($1::SMALLINT IS NULL OR cd."CompanyId" = $1)
+            ORDER BY cd."CompanyDesignationId" ASC;
         `;
 
-
-        const result = await pool.query(query);
+        const result = await pool.query(query, [CompanyId]);
 
         return result.rows;
 
     } catch (error) {
-
-        // console.error("Error fetching all designations:", error);
 
         throw error;
     }
 };
 
-
-
 // GET COMPANIES FOR DROPDOWN
 
-export const getCompaniesForDropdown = async () => {
+export const getCompaniesForDropdown = async (CompanyId) => {
 
-    try {
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName"
+        FROM "LKP"."Company"
+        WHERE "IsDisabled" = false
+        AND ($1::SMALLINT IS NULL OR "CompanyId" = $1)
+        ORDER BY "CompanyName";
+    `;
 
-        const query = `
-            SELECT
-                "CompanyId",
-                "CompanyName"
-            FROM "LKP"."Company"
-            ORDER BY "CompanyName";
-        `;
+    const result = await pool.query(query, [CompanyId]);
 
-
-        const result = await pool.query(query);
-
-
-        return result.rows;
-
-    } catch (error) {
-
-        // console.error("Error fetching companies for designation dropdown:", error);
-
-        throw error;
-    }
+    return result.rows;
 };
 
 

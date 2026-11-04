@@ -1319,3 +1319,30 @@ export const getUserCount = async () => {
 
     return result.rows[0].UserCount;
 };
+
+
+export const getDepartmentDropdown = async (CompanyId = null) => {
+
+    let query = `
+        SELECT
+            "DepartmentId",
+            "CompanyId",
+            "DepartmentName",
+            "DepartmentCode"
+        FROM "LKP"."Department"
+        WHERE "IsDisabled" = false
+    `;
+
+    const values = [];
+
+    if (CompanyId !== null) {
+        query += ` AND "CompanyId" = $1`;
+        values.push(CompanyId);
+    }
+
+    query += ` ORDER BY "DepartmentName";`;
+
+    const result = await pool.query(query, values);
+
+    return result.rows;
+};
