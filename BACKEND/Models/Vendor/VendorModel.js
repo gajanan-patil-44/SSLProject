@@ -5,7 +5,8 @@ import { pool } from "../../Config/db.js";
 // FLAG ID 1 - VIEW ALL VENDORS
 // =====================================================
 export const getAllVendors = async (CompanyId) => {
-    const query = `
+
+    let query = `
         SELECT
             v."VendorId",
             v."CompanyId",
@@ -50,12 +51,19 @@ export const getAllVendors = async (CompanyId) => {
         FROM "DATA"."Vendor" v
         INNER JOIN "LKP"."VendorType" vt
             ON vt."VendorTypeId" = v."VendorTypeId"
-        WHERE
-            ($1::SMALLINT IS NULL OR v."CompanyId" = $1::SMALLINT)
-        ORDER BY v."VendorId" DESC
     `;
 
-    const result = await pool.query(query, [CompanyId]);
+    let values = [];
+
+    if (CompanyId !== null && CompanyId !== undefined) {
+        query += ` WHERE v."CompanyId" = $1::SMALLINT`;
+        values.push(Number(CompanyId));
+    }
+
+    query += ` ORDER BY v."VendorId" DESC`;
+
+    const result = await pool.query(query, values);
+
     return result.rows;
 };
 // =====================================================

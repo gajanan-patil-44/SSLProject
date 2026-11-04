@@ -198,7 +198,8 @@ if (!result || !result.user) {
                 EmployeeId: user.EmployeeId,
                 LoginName: user.LoginName,
                 Email: user.Email,
-                DesignationId: user.DesignationId
+                DesignationId: user.DesignationId,
+                CompanyId: user.CompanyId
             },
             process.env.JWT_SECRET,
             {
