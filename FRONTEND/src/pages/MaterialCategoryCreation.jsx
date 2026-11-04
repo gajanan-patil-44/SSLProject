@@ -269,12 +269,12 @@ export default function MaterialCategoryCreation() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Material Categories"
-        description="Manage system material categories, configurations and access permissions."
+        title="Material Categories Creation"
+        description="Manage system material categories creation, configurations and access permissions."
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Material Category', path: '/master/material-category' }
+          { label: 'Material Categories Creation', path: '/master/material-category' }
         ]}
       />
 

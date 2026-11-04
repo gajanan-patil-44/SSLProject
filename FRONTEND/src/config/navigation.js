@@ -63,7 +63,7 @@ export const navigationConfig = [
         path: "/master/manage-page"
       },
       {
-        label: "Material Category",
+        label: "Material Categories Creation",
         icon: "Tags",
         path: "/master/material-category"
       },
@@ -81,6 +81,11 @@ export const navigationConfig = [
         label: "Vendor Management",
         icon: "Store",
         path: "/master/vendor-management"
+      },
+      {
+        label: "Department",
+        icon: "Building2",
+        path: "/master/department"
       }
     ]
   },

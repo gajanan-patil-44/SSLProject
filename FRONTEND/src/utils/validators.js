@@ -173,14 +173,20 @@ export const validateHSN = (value, label = 'HSN / SAC Code', isRequired = false)
 
 /**
  * Validates a Password
+ * Requires at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character
  */
-export const validatePassword = (value, label = 'Password', minLength = 6, isRequired = true) => {
+export const validatePassword = (value, label = 'Password', minLength = 8, isRequired = true) => {
   const val = String(value || '');
   if (!val.trim()) {
     return isRequired ? `${label} is required` : '';
   }
-  if (val.length < minLength) {
-    return `${label} must be at least ${minLength} characters`;
+  const hasUpper = /[A-Z]/.test(val);
+  const hasLower = /[a-z]/.test(val);
+  const hasNumber = /[0-9]/.test(val);
+  const hasSpecial = /[^A-Za-z0-9]/.test(val);
+
+  if (val.length < minLength || !hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+    return `${label} must be at least ${minLength} characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character`;
   }
   return '';
 };
