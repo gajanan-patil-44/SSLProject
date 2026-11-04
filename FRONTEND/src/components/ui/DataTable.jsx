@@ -82,6 +82,7 @@ export const DataTable = ({
                   variant="ghost"
                   onClick={() => onViewClick(row.original)}
                   title="View details"
+                  className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:text-cyan-400 dark:hover:bg-cyan-950/40 rounded-lg transition-colors"
                 />
               )}
               {onEditClick && (
@@ -91,6 +92,7 @@ export const DataTable = ({
                   variant="ghost"
                   onClick={() => onEditClick(row.original)}
                   title="Edit record"
+                  className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40 rounded-lg transition-colors"
                 />
               )}
               {onChangePasswordClick && (
@@ -100,7 +102,7 @@ export const DataTable = ({
                   variant="ghost"
                   onClick={() => onChangePasswordClick(row.original)}
                   title="Change Password"
-                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30 rounded-lg transition-colors"
                 />
               )}
               {onDeleteClick && (
@@ -108,7 +110,7 @@ export const DataTable = ({
                   icon={Trash2}
                   size="sm"
                   variant="ghost"
-                  className="text-red-500 hover:text-red-700"
+                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
                   onClick={() => onDeleteClick(row.original)}
                   title="Delete record"
                 />
@@ -182,7 +184,7 @@ export const DataTable = ({
   return (
     <div className="flex flex-col gap-4">
       {/* Table Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white/95 dark:bg-slate-900/95 p-4 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm backdrop-blur-md">
         <div className="flex-1 flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative w-full max-w-xs">
@@ -259,7 +261,7 @@ export const DataTable = ({
           {/* Custom actions or Add New */}
           {actions}
           {onAddClick && (
-            <Button variant="secondary" size="sm" icon={Plus} onClick={onAddClick}>
+            <Button variant="primary" size="sm" icon={Plus} onClick={onAddClick} className="shadow-lg shadow-indigo-500/25">
               Add New
             </Button>
           )}
@@ -279,16 +281,16 @@ export const DataTable = ({
       )}
 
       {/* Table Container */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-xl overflow-x-auto relative">
+      <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-x-auto relative shadow-md shadow-slate-200/40 dark:shadow-black/40">
         <table className="w-full text-left border-collapse">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+              <tr key={headerGroup.id} className="border-b-2 border-indigo-100 dark:border-indigo-950/70 bg-gradient-to-r from-slate-100/95 via-indigo-50/60 to-purple-50/40 dark:from-slate-800/90 dark:via-indigo-950/60 dark:to-slate-800/90">
                 {headerGroup.headers.map(header => {
                   return (
                     <th
                       key={header.id}
-                      className="py-3 px-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none cursor-pointer hover:text-slate-800 dark:hover:text-slate-200"
+                      className="py-3.5 px-4 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 select-none cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       onClick={header.column.getToggleSortingHandler()}
                     >
                       <div className={`flex items-center gap-1 ${header.column.id === 'actions' ? 'justify-end pr-2' : ''}`}>
@@ -333,7 +335,7 @@ export const DataTable = ({
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors ${isSelected ? 'bg-slate-50 dark:bg-slate-800/20' : ''}`}
+                    className={`border-b border-slate-100 dark:border-slate-800/70 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:via-purple-50/30 hover:to-indigo-50/50 dark:hover:bg-gradient-to-r dark:hover:from-indigo-950/30 dark:hover:via-purple-950/20 dark:hover:to-indigo-950/30 transition-all duration-150 group ${isSelected ? 'bg-indigo-50/70 dark:bg-indigo-950/40' : ''}`}
                   >
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id} className={`${densityStyles[density]} font-medium text-slate-700 dark:text-slate-300`}>
@@ -350,7 +352,7 @@ export const DataTable = ({
 
       {/* Pagination Controls */}
       {!loading && table.getRowModel().rows.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-slate-500 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-slate-500 bg-white/95 dark:bg-slate-900/95 p-4 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold whitespace-nowrap">Rows per page:</span>
