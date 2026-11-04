@@ -176,7 +176,6 @@ export const addDepartment = async (req, res) => {
             // Database varchar = 150
 
             const departmentName = String(departmentData.DepartmentName).trim();
-
             const departmentCode = String(departmentData.DepartmentCode).trim();
 
 
@@ -216,10 +215,7 @@ export const addDepartment = async (req, res) => {
 
             // CHECK DUPLICATE DEPARTMENT CODE
 
-            const existingDepartment = await checkDepartmentCodeExists(
-                departmentCode
-            );
-
+            const existingDepartment = await checkDepartmentCodeExists(departmentCode);
 
             if (existingDepartment.length > 0) {
 
@@ -237,9 +233,7 @@ export const addDepartment = async (req, res) => {
                 ...departmentData,
 
                 CompanyId: Number(departmentData.CompanyId),
-
                 DepartmentName: departmentName,
-
                 DepartmentCode: departmentCode
 
             });
@@ -304,7 +298,6 @@ export const updateDepartment = async (req, res) => {
         if (parseInt(flagId) === 3) {
 
             const departmentData = req.body;
-
 
             // DEPARTMENT ID VALIDATION
 
@@ -402,7 +395,6 @@ export const updateDepartment = async (req, res) => {
 
 
             const departmentName = String(departmentData.DepartmentName).trim();
-
             const departmentCode = String(departmentData.DepartmentCode).trim();
 
 
@@ -467,11 +459,8 @@ export const updateDepartment = async (req, res) => {
                 ...departmentData,
 
                 DepartmentId: Number(departmentData.DepartmentId),
-
                 CompanyId: Number(departmentData.CompanyId),
-
                 DepartmentName: departmentName,
-
                 DepartmentCode: departmentCode
 
             });

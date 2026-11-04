@@ -11,12 +11,9 @@ import {
 
 const router = express.Router();
 
-router.post("/getDepartment", getDepartments);  // GET ALL DEPARTMENTS
-
-router.post("/addDepartment", addDepartment);  // ADD DEPARTMENT
-
-router.patch("/updateDepartment", updateDepartment);  // UPDATE DEPARTMENT
-
-router.patch("/toggleDepartmentStatus", toggleDepartmentStatus);  // TOGGLE DEPARTMENT STATUS
+router.post("/getDepartment",  getDepartments);  // GET ALL DEPARTMENTS
+router.post("/addDepartment",  addDepartment);  // ADD DEPARTMENT
+router.patch("/updateDepartment",  updateDepartment);  // UPDATE DEPARTMENT
+router.patch("/toggleDepartmentStatus",  toggleDepartmentStatus);  // TOGGLE DEPARTMENT STATUS
 
 export default router;
