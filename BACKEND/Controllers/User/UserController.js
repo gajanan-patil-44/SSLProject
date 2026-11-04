@@ -708,52 +708,6 @@ export const createUserController = async (req, res) => {
     }
 };
 
-// export const getDepartmentDropdownController = async (req, res) => {
-//     try {
-//         const { flagId,CompanyId } = req.body;
-
-//         if(Number(flagId) !== 1){   
-//             return res.status(400).json({
-//                 status: false,
-//                 message: "Invalid FlagId. Use 1 for Department dropdown"
-//             });
-//         }
-
-//         // Validate CompanyId only when provided
-//         if (
-//             CompanyId !== undefined &&
-//             CompanyId !== null &&
-//             (
-//                 !Number.isInteger(Number(CompanyId)) ||
-//                 Number(CompanyId) <= 0 ||
-//                 Number(CompanyId) > 32767
-//             )
-//         ) {
-//             return res.status(400).json({
-//                 status: false,
-//                 message: "Valid CompanyId is required."
-//             });
-//         }
-
-//         const result = await getDepartmentDropdownCompanyId(CompanyId == null || CompanyId === ""? null: Number(CompanyId));
-
-//         return res.status(200).json({
-//             status: true,
-//             message: "Department dropdown fetched successfully.",
-//             data: result
-//         });
-
-//     } catch (error) {
-        
-//         return res.status(500).json({
-//             status: false,
-//             message: "Internal Server Error"
-//         });
-//     }
-// };
-
-
-
 
 // ==========================================================
 // COMPANY / PRODUCT / PROJECT DROPDOWN
