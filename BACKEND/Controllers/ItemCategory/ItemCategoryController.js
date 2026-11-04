@@ -175,20 +175,20 @@ export const addMaterialCategoryType = async (req, res) => {
             const categoryCode = String(categoryData.MaterialCategoryTypeCode).trim();
 
 
-            if (categoryName.length > 75) {
+            if (categoryName.length > 30) {
 
                 return res.status(400).json({
                     status: "error",
-                    message: "MaterialCategoryTypeName cannot exceed 75 characters"
+                    message: "MaterialCategoryTypeName cannot exceed 30 characters"
                 });
             }
 
 
-            if (categoryCode.length > 75) {
+            if (categoryCode.length > 30) {
 
                 return res.status(400).json({
                     status: "error",
-                    message: "MaterialCategoryTypeCode cannot exceed 75 characters"
+                    message: "MaterialCategoryTypeCode cannot exceed 30 characters"
                 });
             }
 
