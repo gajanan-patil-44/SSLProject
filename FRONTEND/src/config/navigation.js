@@ -86,6 +86,11 @@ export const navigationConfig = [
         label: "Department",
         icon: "Building2",
         path: "/master/department"
+      },
+      {
+        label: "GST Creation",
+        icon: "Receipt",
+        path: "/master/gst-creation"
       }
     ]
   },

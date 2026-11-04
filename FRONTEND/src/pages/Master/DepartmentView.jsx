@@ -295,7 +295,7 @@ export default function DepartmentView() {
       accessorKey: 'CompanyId',
       cell: ({ row }) => {
         const comp = companies.find(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(row.original.CompanyId));
-        const compName = comp?.CompanyName || comp?.companyName || comp?.name || (row.original.CompanyId ? `Company ${row.original.CompanyId}` : '—');
+        const compName = comp?.CompanyName || comp?.companyName || comp?.name || (row.original.CompanyId ? String(row.original.CompanyId) : '—');
         return (
           <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
             <Building className="w-3.5 h-3.5 text-slate-400" />
@@ -327,7 +327,7 @@ export default function DepartmentView() {
       cell: ({ row }) => (
         <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
           <User className="w-3.5 h-3.5 text-slate-400" />
-          <span>{row.original.CreatedByUserName || 'System'}</span>
+          <span>{row.original.CreatedByUserName || '—'}</span>
         </div>
       )
     }
@@ -393,13 +393,8 @@ export default function DepartmentView() {
         <form onSubmit={handleAddSubmit} className="space-y-4 py-2">
           {/* Company Selection (Locked to Session Company) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Company <span className="text-rose-500">*</span></span>
-              {sessionCompanyId && (
-                <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium normal-case flex items-center gap-1">
-                  {/* <Lock className="w-3 h-3" /> Locked from session */}
-                </span>
-              )}
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Company <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -420,13 +415,13 @@ export default function DepartmentView() {
               >
                 {sessionCompanyId && !companies.some(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(sessionCompanyId)) && (
                   <option value={String(sessionCompanyId)}>
-                    {sessionCompanyName || `Company ${sessionCompanyId}`}
+                    {sessionCompanyName || sessionCompanyId}
                   </option>
                 )}
                 <option value="">— Select Company —</option>
                 {companies.map((c, idx) => {
                   const id = c.CompanyId ?? c.id ?? c.CompanyMasterId;
-                  const name = c.CompanyName || c.name || `Company ${id}`;
+                  const name = c.CompanyName || c.companyName || c.name || id;
                   return (
                     <option key={`${id}_${idx}`} value={String(id)}>
                       {name}

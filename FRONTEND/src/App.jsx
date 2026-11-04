@@ -25,6 +25,7 @@ import LocationTypeMasterView from './pages/Master/LocationTypeMasterView';
 import LocationMasterView from './pages/Master/LocationMasterView';
 import CompanyMasterView from './pages/Master/CompanyMasterView';
 import DepartmentView from './pages/Master/DepartmentView';
+import GSTCreationView from './pages/Master/GSTCreationView';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -68,6 +69,8 @@ export default function App() {
           <Route path="master/vendor-management" element={<VendorManagement />} />
           <Route path="master/department" element={<DepartmentView />} />
           <Route path="master/departments" element={<DepartmentView />} />
+          <Route path="master/gst-creation" element={<GSTCreationView />} />
+          <Route path="master/gst" element={<GSTCreationView />} />
 
           {/* Legacy / Alternate Redirects to Standard Canonical URLs */}
           <Route path="master/location" element={<Navigate to="/master/location-type-master" replace />} />
@@ -93,6 +96,8 @@ export default function App() {
           <Route path="manage-page" element={<Navigate to="/master/manage-page" replace />} />
           <Route path="department" element={<Navigate to="/master/department" replace />} />
           <Route path="departments" element={<Navigate to="/master/department" replace />} />
+          <Route path="gst-creation" element={<Navigate to="/master/gst-creation" replace />} />
+          <Route path="gst" element={<Navigate to="/master/gst-creation" replace />} />
 
           {/* HRM Special Pages */}
           <Route path="hrm/employees" element={<EmployeesView />} />

@@ -20,3 +20,4 @@ export { default as vendorService } from './vendorService';
 export { default as locationTypeService } from './locationTypeService';
 export { default as locationService } from './locationService';
 export { default as departmentService } from './departmentService';
+export { default as gstService } from './gstService';

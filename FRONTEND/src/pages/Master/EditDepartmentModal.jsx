@@ -168,13 +168,8 @@ export default function EditDepartmentModal({
       <form onSubmit={handleSubmit} className="space-y-4 py-2">
         {/* Company Dropdown (Locked to Session Company) */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
-            <span>Company <span className="text-rose-500">*</span></span>
-            {sessionCompanyId && (
-              <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium normal-case flex items-center gap-1">
-                {/* <Lock className="w-3 h-3" /> Locked from session */}
-              </span>
-            )}
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+            Company <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -195,13 +190,13 @@ export default function EditDepartmentModal({
             >
               {sessionCompanyId && !companies.some(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(sessionCompanyId)) && (
                 <option value={String(sessionCompanyId)}>
-                  {sessionCompanyName || `Company ${sessionCompanyId}`}
+                  {sessionCompanyName || sessionCompanyId}
                 </option>
               )}
               <option value="">— Select Company —</option>
               {companies.map((c, idx) => {
                 const id = c.CompanyId ?? c.id ?? c.CompanyMasterId;
-                const name = c.CompanyName || c.name || `Company ${id}`;
+                const name = c.CompanyName || c.companyName || c.name || id;
                 return (
                   <option key={`${id}_${idx}`} value={String(id)}>
                     {name}
@@ -209,7 +204,7 @@ export default function EditDepartmentModal({
                 );
               })}
               {companyId && !companies.some(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(companyId)) && (
-                <option value={String(companyId)}>Company {companyId}</option>
+                <option value={String(companyId)}>{companyId}</option>
               )}
             </select>
             {sessionCompanyId && (
