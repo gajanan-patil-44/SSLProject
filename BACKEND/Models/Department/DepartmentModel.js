@@ -20,7 +20,6 @@ export const getAllDepartments = async () => {
                 "UpdatedByUserName"
 
             FROM "LKP"."Department"
-
             ORDER BY "DepartmentId"
         `;
 
@@ -46,7 +45,6 @@ export const checkDepartmentCompanyExists = async (CompanyId) => {
                 "CompanyId"
 
             FROM "LKP"."Company"
-
             WHERE "CompanyId" = $1
         `;
 
@@ -78,12 +76,11 @@ export const checkDepartmentCodeExists = async (DepartmentCode) => {
                 "DepartmentCode"
 
             FROM "LKP"."Department"
-
             WHERE "DepartmentCode" = $1
         `;
 
         const values = [DepartmentCode];
-
+        
         const result = await pool.query(
             query,
             values
