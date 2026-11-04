@@ -6,6 +6,15 @@ info:
 http:
   method: PATCH
   url: http://localhost:9004/verp-service/department/toggleDepartmentStatus
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 4,
+          "DepartmentId": 14,
+          "IsDisabled":true,
+          "UpdatedByUserName": "Admin"
+      }
   auth: inherit
 
 settings:

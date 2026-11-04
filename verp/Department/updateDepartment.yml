@@ -6,6 +6,17 @@ info:
 http:
   method: PATCH
   url: http://localhost:9004/verp-service/department/updateDepartment
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 3,
+          "DepartmentId": 14,
+          "CompanyId": 1,
+          "DepartmentName": "Humannn Resources",
+          "DepartmentCode": "HR0002",
+          "UpdatedByUserName": "Admin"
+      }
   auth: inherit
 
 settings:
