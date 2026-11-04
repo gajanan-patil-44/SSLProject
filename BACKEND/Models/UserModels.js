@@ -936,38 +936,6 @@ export const createUser = async (userData) => {
 };
 
 
-// export const getDepartmentDropdownCompanyId = async (CompanyId = null) => {
-//     const query = `
-//         SELECT
-//             D."DepartmentId",
-//             D."DepartmentName"
-//              FROM "LKP"."Department" D
-//         INNER JOIN "LKP"."Company" C
-//             ON C."CompanyId" = D."CompanyId"
-//         WHERE
-//             D."IsDisabled" = false
-//             AND C."IsDisabled" = false
-//             AND (
-//                 $1::smallint IS NULL
-//                 OR D."CompanyId" = $1
-//             )
-//         ORDER BY D."DepartmentName" ASC
-//     `;
-
-//     const result = await pool.query(query, [CompanyId]);
-
-//     return result.rows;
-// };
-
-
-
-
-
-
-
-// ==========================================================
-// FLAG ID 1 - COMPANY
-// ==========================================================
 
 export const getCompanyDropdown = async () => {
 
