@@ -1,5 +1,5 @@
 // src/pages/UserManagement/ManageUserView.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   PageHeader,
   Button,
@@ -10,6 +10,21 @@ import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
+
+// Helper to get session company
+const getSessionCompany = () => {
+  try {
+    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(comps) && comps.length > 0) return comps[0];
+    }
+    const ctx = useERPStore.getState()?.userContext;
+    if (ctx?.companies?.length > 0) return ctx.companies[0];
+  } catch {}
+  return null;
+};
 import {
   validateName,
   validatePhone,
@@ -28,7 +43,8 @@ import {
   KeyRound,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  Check
 } from 'lucide-react';
 
 const toOpts = (data, idKey, nameKey) => {
@@ -42,10 +58,152 @@ const toOpts = (data, idKey, nameKey) => {
     .filter(Boolean);
 };
 
+
+// ─── Custom click-to-toggle Multi-Select Dropdown ──────────────────────────
+function MultiSelectDropdown({
+  name,
+  options = [],
+  value = [],
+  onMultiChange,
+  placeholder = '— Select —',
+  disabledPlaceholder = '— Select —',
+  disabled = false,
+  error = false,
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const valArray = Array.isArray(value) ? value.map(String) : (value ? [String(value)] : []);
+
+  const toggle = (val) => {
+    const sVal = String(val);
+    const next = valArray.includes(sVal)
+      ? valArray.filter(v => v !== sVal)
+      : [...valArray, sVal];
+    onMultiChange(name, next);
+  };
+
+  const selectedItems = options.filter(o => valArray.includes(String(o.id ?? o.value)));
+
+  const triggerCls = [
+    'w-full min-h-[40px] px-3 py-2 text-sm rounded-lg border text-left flex items-start justify-between gap-2 transition-all duration-200 focus:outline-none',
+    error ? 'border-rose-400' : open
+      ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-white dark:bg-slate-800'
+      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-600',
+    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+  ].join(' ');
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setOpen(p => !p)}
+        className={triggerCls}
+      >
+        <div className="flex-1 flex flex-wrap gap-1 min-w-0">
+          {selectedItems.length === 0 ? (
+            <span className="text-slate-400 dark:text-slate-500 text-xs leading-6">
+              {disabled ? disabledPlaceholder : placeholder}
+            </span>
+          ) : (
+            selectedItems.map(item => {
+              const itemVal = String(item.id ?? item.value);
+              const itemLabel = item.name ?? item.label;
+              return (
+                <span
+                  key={itemVal}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
+                >
+                  {itemLabel}
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    onClick={(e) => { e.stopPropagation(); toggle(itemVal); }}
+                    className="ml-0.5 text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-200 cursor-pointer leading-none text-sm"
+                  >×</span>
+                </span>
+              );
+            })
+          )}
+        </div>
+        <ChevronDown className={`w-4 h-4 shrink-0 mt-1 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && !disabled && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-h-52 overflow-y-auto">
+          {options.length === 0 ? (
+            <div className="px-4 py-3 text-xs text-slate-400 text-center italic">No options available</div>
+          ) : (
+            options.map(o => {
+              const optVal = String(o.id ?? o.value);
+              const optLabel = o.name ?? o.label;
+              const selected = valArray.includes(optVal);
+              return (
+                <button
+                  type="button"
+                  key={optVal}
+                  onClick={() => toggle(optVal)}
+                  className={`w-full px-3.5 py-2 text-left text-xs flex items-center justify-between transition-colors ${
+                    selected
+                      ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 font-semibold'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <span>{optLabel}</span>
+                  {selected && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />}
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ManageUserView() {
+  const sessionCompany = getSessionCompany();
+  const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+  const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
+
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
   const userName = currentUser?.loginName || currentUser?.EmployeeId || (typeof currentUser?.name === 'string' ? currentUser.name : '') || '';
+
+  const getSessionUserName = () => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const u = s?.data?.user || s?.user || s;
+        if (u) {
+          return (
+            u.loginName ||
+            u.LoginName ||
+            (typeof u.name === 'string' ? u.name : null) ||
+            (u.name?.first ? [u.name.first, u.name.middle, u.name.last].filter(Boolean).join(' ') : null) ||
+            u.userName ||
+            u.EmployeeId ||
+            ''
+          );
+        }
+      }
+      const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+      return u?.loginName || u?.LoginName || u?.EmployeeId || (typeof u?.name === 'string' ? u.name : '') || '';
+    } catch {
+      return '';
+    }
+  };
+
 
   // Table Data & Loading
   const [users, setUsers] = useState([]);
@@ -71,10 +229,10 @@ export default function ManageUserView() {
     maritalStatusId: '',
     designationId: '',
     companyId: '',
-    companyProductId: '',
-    projectId: '',
+    companyProductId: [],
+    projectId: [],
     roleId: '',
-    reportingManagerUserId: '',
+    reportingManagerUserId: [],
     isActive: true
   };
   const [formData, setFormData] = useState(initialFormData);
@@ -244,14 +402,36 @@ export default function ManageUserView() {
     }
   };
 
-  const loadProductProjects = async (companyProductId) => {
-    if (!companyProductId) {
+  const loadProductProjects = async (companyProductIds) => {
+    const ids = Array.isArray(companyProductIds)
+      ? companyProductIds.filter(Boolean)
+      : (companyProductIds ? [companyProductIds] : []);
+
+    if (ids.length === 0) {
       setProjects([]);
       return;
     }
     try {
-      const projRes = await userService.getEditProject(companyProductId);
-      setProjects(toOpts(projRes?.data ?? projRes, 'ProjectId', 'ProjectName'));
+      const results = await Promise.allSettled(
+        ids.map((id) => userService.getEditProject(id))
+      );
+      const combined = [];
+      const seen = new Set();
+      results.forEach((res) => {
+        if (res.status === 'fulfilled') {
+          const raw = res.value?.data ?? res.value;
+          const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
+          list.forEach((p) => {
+            const id = p.ProjectId ?? p.id ?? p.Id;
+            const name = p.ProjectName ?? p.name ?? p.Name ?? String(id);
+            if (id != null && !seen.has(String(id))) {
+              seen.add(String(id));
+              combined.push({ id: String(id), name: String(name) });
+            }
+          });
+        }
+      });
+      setProjects(combined);
     } catch (err) {
       setProjects([]);
     }
@@ -266,23 +446,24 @@ export default function ManageUserView() {
     setFormData((prev) => ({
       ...prev,
       companyId: selectedCompanyId,
-      companyProductId: '',
-      projectId: '',
+      companyProductId: [],
+      projectId: [],
       roleId: '',
       designationId: '',
-      reportingManagerUserId: ''
+      reportingManagerUserId: []
     }));
     loadCompanyDependentDropdowns(selectedCompanyId);
     setProjects([]);
   };
 
-  const handleCompanyProductChange = (selectedProductId) => {
+  const handleMultiChange = (field, newValues) => {
     setFormData((prev) => ({
       ...prev,
-      companyProductId: selectedProductId,
-      projectId: ''
+      [field]: newValues
     }));
-    loadProductProjects(selectedProductId);
+    if (field === 'companyProductId') {
+      loadProductProjects(newValues);
+    }
   };
 
   // --------------------------------------------------------------------------
@@ -297,9 +478,20 @@ export default function ManageUserView() {
     const primaryRole = (user.Roles || [])[0];
     const primaryManager = (user.ReportingManagers || [])[0];
 
-    const currentCompanyId = primaryCompany?.CompanyId ? String(primaryCompany.CompanyId) : '';
-    const currentCompanyProductId = (primaryProduct?.CompanyProductId || primaryRole?.CompanyProductId) ? String(primaryProduct?.CompanyProductId || primaryRole?.CompanyProductId) : '';
-    const currentProjectId = (primaryProject?.ProjectId || primaryRole?.ProjectId) ? String(primaryProject?.ProjectId || primaryRole?.ProjectId) : '';
+    const currentCompanyId = sessionCompanyId ? String(sessionCompanyId) : (primaryCompany?.CompanyId ? String(primaryCompany.CompanyId) : '');
+
+    // Multi-select values as arrays of strings
+    const currentCompanyProductIds = Array.isArray(user.Products) && user.Products.length > 0
+      ? user.Products.map((p) => String(p.CompanyProductId ?? p.ProductId ?? p.id)).filter(Boolean)
+      : ((primaryProduct?.CompanyProductId || primaryRole?.CompanyProductId) ? [String(primaryProduct?.CompanyProductId || primaryRole?.CompanyProductId)] : []);
+
+    const currentProjectIds = Array.isArray(user.Projects) && user.Projects.length > 0
+      ? user.Projects.map((pr) => String(pr.ProjectId ?? pr.id)).filter(Boolean)
+      : ((primaryProject?.ProjectId || primaryRole?.ProjectId) ? [String(primaryProject?.ProjectId || primaryRole?.ProjectId)] : []);
+
+    const currentReportingManagerIds = Array.isArray(user.ReportingManagers) && user.ReportingManagers.length > 0
+      ? user.ReportingManagers.map((rm) => String(rm.ReportingManagerUserId ?? rm.UserId ?? rm.id)).filter(Boolean)
+      : (primaryManager?.ReportingManagerUserId ? [String(primaryManager.ReportingManagerUserId)] : []);
 
     const initialValues = {
       employeeId: user.EmployeeId || '',
@@ -316,10 +508,10 @@ export default function ManageUserView() {
       maritalStatusId: user.MaritalStatusId ? String(user.MaritalStatusId) : '',
       designationId: user.DesignationId ? String(user.DesignationId) : '',
       companyId: currentCompanyId,
-      companyProductId: currentCompanyProductId,
-      projectId: currentProjectId,
+      companyProductId: currentCompanyProductIds,
+      projectId: currentProjectIds,
       roleId: primaryRole?.RoleId ? String(primaryRole.RoleId) : '',
-      reportingManagerUserId: primaryManager?.ReportingManagerUserId ? String(primaryManager.ReportingManagerUserId) : '',
+      reportingManagerUserId: currentReportingManagerIds,
       isActive: true
     };
 
@@ -332,8 +524,8 @@ export default function ManageUserView() {
     if (currentCompanyId) {
       loadCompanyDependentDropdowns(currentCompanyId);
     }
-    if (currentCompanyProductId) {
-      loadProductProjects(currentCompanyProductId);
+    if (currentCompanyProductIds.length > 0) {
+      loadProductProjects(currentCompanyProductIds);
     }
   };
 
@@ -424,200 +616,69 @@ export default function ManageUserView() {
 
     if (!selectedUser) return;
 
-    const primaryCompany = (selectedUser.Companies || []).find((c) => c.IsPrimaryCompany) || (selectedUser.Companies || [])[0];
-    const primaryProduct = (selectedUser.Products || [])[0];
-    const primaryProject = (selectedUser.Projects || []).find((p) => p.IsPrimary) || (selectedUser.Projects || [])[0];
-    const primaryRole = (selectedUser.Roles || [])[0];
-    const primaryManager = (selectedUser.ReportingManagers || [])[0];
-
-    // Helper to check if a specific field was edited by the user
-    const isEdited = (field) => {
-      const current = formData[field] !== undefined && formData[field] !== null ? String(formData[field]).trim() : '';
-      const original = originalFormData?.[field] !== undefined && originalFormData?.[field] !== null ? String(originalFormData[field]).trim() : '';
-      return current !== original;
-    };
-
-    const editPayload = {
-      flagId: 2,
-      UserId: Number(selectedUser.UserId)
-    };
-
-    let hasEdits = false;
-
-    // 1. Employee ID
-    if (isEdited('employeeId')) {
-      const val = formData.employeeId.trim();
-      if (!val) {
-        setFormErrors((prev) => ({ ...prev, employeeId: 'Employee ID cannot be empty' }));
-        showToast('Employee ID cannot be empty.', 'error');
-        return;
-      }
-      editPayload.employeeId = val;
-      hasEdits = true;
-    }
-
-    // 2. Login Username
-    if (isEdited('loginName')) {
-      const val = formData.loginName.trim();
-      if (!val) {
-        setFormErrors((prev) => ({ ...prev, loginName: 'Login Username cannot be empty' }));
-        showToast('Login Username cannot be empty.', 'error');
-        return;
-      }
-      editPayload.loginName = val;
-      hasEdits = true;
-    }
-
-    // 3. First Name
-    if (isEdited('firstName')) {
-      const val = formData.firstName.trim();
-      if (!val) {
-        setFormErrors((prev) => ({ ...prev, firstName: 'First Name cannot be empty' }));
-        showToast('First Name cannot be empty.', 'error');
-        return;
-      }
-      editPayload.firstName = val;
-      hasEdits = true;
-    }
-
-    // 4. Middle Name
-    if (isEdited('middleName')) {
-      editPayload.middleName = formData.middleName.trim();
-      hasEdits = true;
-    }
-
-    // 5. Last Name
-    if (isEdited('lastName')) {
-      editPayload.lastName = formData.lastName.trim();
-      hasEdits = true;
-    }
-
-    // 6. Email Address
-    if (isEdited('email')) {
-      const val = formData.email.trim();
-      if (!val || !/\S+@\S+\.\S+/.test(val)) {
-        setFormErrors((prev) => ({ ...prev, email: 'Valid Email Address is required' }));
-        showToast('Valid Email Address is required.', 'error');
-        return;
-      }
-      editPayload.email = val;
-      hasEdits = true;
-    }
-
-    // 7. Phone Number
-    if (isEdited('phoneNumber')) {
-      editPayload.phoneNumber = formData.phoneNumber.trim();
-      hasEdits = true;
-    }
-
-    // 8. Alt Phone Number
-    if (isEdited('altPhoneNumber')) {
-      editPayload.altPhoneNumber = formData.altPhoneNumber.trim();
-      hasEdits = true;
-    }
-
-    // 9. Gender ID
-    if (isEdited('genderId')) {
-      editPayload.genderId = formData.genderId ? Number(formData.genderId) : null;
-      hasEdits = true;
-    }
-
-    // 10. Marital Status ID
-    if (isEdited('maritalStatusId')) {
-      editPayload.maritalStatusId = formData.maritalStatusId ? Number(formData.maritalStatusId) : null;
-      hasEdits = true;
-    }
-
-    // 11. Company ID
-    if (isEdited('companyId')) {
-      editPayload.companyId = formData.companyId ? Number(formData.companyId) : null;
-      if (primaryCompany?.UserCompanyId) {
-        editPayload.UserCompanyId = Number(primaryCompany.UserCompanyId);
-      }
-      editPayload.isPrimaryCompany = true;
-      hasEdits = true;
-    }
-
-    // 12. Company Product ID
-    if (isEdited('companyProductId')) {
-      editPayload.companyProductId = formData.companyProductId ? [Number(formData.companyProductId)] : [];
-      if (primaryProduct?.UserProductId) {
-        editPayload.UserProductId = Number(primaryProduct.UserProductId);
-      }
-      hasEdits = true;
-    }
-
-    // 13. Project ID
-    if (isEdited('projectId')) {
-      editPayload.projectId = formData.projectId ? [Number(formData.projectId)] : [];
-      if (primaryProject?.UserProjectId) {
-        editPayload.UserProjectId = Number(primaryProject.UserProjectId);
-      }
-      editPayload.isPrimary = true;
-      hasEdits = true;
-    }
-
-    // 14. Role ID
-    if (isEdited('roleId')) {
-      editPayload.roleId = formData.roleId ? Number(formData.roleId) : null;
-      if (primaryRole?.UserRoleId) {
-        editPayload.UserRoleId = Number(primaryRole.UserRoleId);
-      }
-      const rCompanyId = formData.companyId ? Number(formData.companyId) : (primaryRole?.CompanyId ? Number(primaryRole.CompanyId) : null);
-      if (rCompanyId) {
-        editPayload.roleCompanyId = rCompanyId;
-      }
-      const rCompanyProductId = formData.companyProductId ? Number(formData.companyProductId) : (primaryRole?.CompanyProductId ? Number(primaryRole.CompanyProductId) : null);
-      if (rCompanyProductId) {
-        editPayload.roleCompanyProductId = rCompanyProductId;
-      }
-      const rProjectId = formData.projectId ? Number(formData.projectId) : (primaryRole?.ProjectId ? Number(primaryRole.ProjectId) : null);
-      if (rProjectId) {
-        editPayload.roleProjectId = rProjectId;
-      }
-      hasEdits = true;
-    }
-
-    // 15. Designation ID
-    if (isEdited('designationId')) {
-      editPayload.designationId = formData.designationId ? Number(formData.designationId) : null;
-      hasEdits = true;
-    }
-
-    // 16. Reporting Manager User ID
-    if (isEdited('reportingManagerUserId')) {
-      editPayload.reportingManagerUserId = formData.reportingManagerUserId ? [Number(formData.reportingManagerUserId)] : [];
-      if (primaryManager?.UserReportingManagerId) {
-        editPayload.UserReportingManagerId = Number(primaryManager.UserReportingManagerId);
-      }
-      const repCompanyId = formData.companyId ? Number(formData.companyId) : (primaryManager?.CompanyId ? Number(primaryManager.CompanyId) : null);
-      if (repCompanyId) {
-        editPayload.reportingManagerCompanyId = repCompanyId;
-      }
-      hasEdits = true;
-    }
-
-    // 17. Date of Birth
-    if (isEdited('dateOfBirth')) {
-      editPayload.dateOfBirth = formData.dateOfBirth || null;
-      hasEdits = true;
-    }
-
-    // 18. Date of Joining
-    if (isEdited('dateOfJoining')) {
-      editPayload.dateOfJoining = formData.dateOfJoining || null;
-      hasEdits = true;
-    }
-
-    if (hasEdits && userName) {
-      editPayload.updatedByUserName = userName;
-    }
-
-    if (!hasEdits) {
-      showToast('No changes detected to update.', 'info');
-      setIsEditOpen(false);
+    if (!validateForm()) {
+      showToast('Please fix the validation errors in the form.', 'error');
       return;
     }
+
+    const companyProductIds = Array.isArray(formData.companyProductId)
+      ? formData.companyProductId.map(Number).filter((n) => !isNaN(n) && n > 0)
+      : (formData.companyProductId ? [Number(formData.companyProductId)] : []);
+
+    const projectIds = Array.isArray(formData.projectId)
+      ? formData.projectId.map(Number).filter((n) => !isNaN(n) && n > 0)
+      : (formData.projectId ? [Number(formData.projectId)] : []);
+
+    const reportingManagerIds = Array.isArray(formData.reportingManagerUserId)
+      ? formData.reportingManagerUserId.map(Number).filter((n) => !isNaN(n) && n > 0)
+      : (formData.reportingManagerUserId ? [Number(formData.reportingManagerUserId)] : []);
+
+    const sessionUserName = getSessionUserName() || userName || 'Admin';
+
+    // Exact payload required by user matching API screenshot:
+    // {
+    //   UserId: 10,
+    //   employeeId: "EMP001",
+    //   firstName: "Hithin",
+    //   middleName: "Kumar",
+    //   lastName: "Chitriki",
+    //   phoneNumber: "9876543210",
+    //   dateOfBirth: "2002-05-15",
+    //   genderId: 1,
+    //   maritalStatusId: 1,
+    //   designationId: 2,
+    //   email: "hithin@gmail.com",
+    //   loginName: "hithin",
+    //   CompanyId: 1,
+    //   RoleId: 1,
+    //   CompanyProductId: [1,2],
+    //   ProjectId: [1,2],
+    //   ReportingManagerUserId: [2,3],
+    //   dateOfJoining: "2024-08-12",
+    //   updatedByUserName: "admin1"
+    // }
+    const editPayload = {
+      flagId: 2,
+      UserId: Number(selectedUser.UserId),
+      employeeId: formData.employeeId ? formData.employeeId.trim() : '',
+      firstName: formData.firstName ? formData.firstName.trim() : '',
+      middleName: formData.middleName ? formData.middleName.trim() : '',
+      lastName: formData.lastName ? formData.lastName.trim() : '',
+      phoneNumber: formData.phoneNumber ? formData.phoneNumber.trim() : '',
+      dateOfBirth: formData.dateOfBirth || null,
+      genderId: formData.genderId ? Number(formData.genderId) : null,
+      maritalStatusId: formData.maritalStatusId ? Number(formData.maritalStatusId) : null,
+      designationId: formData.designationId ? Number(formData.designationId) : null,
+      email: formData.email ? formData.email.trim() : '',
+      loginName: formData.loginName ? formData.loginName.trim() : '',
+      CompanyId: formData.companyId ? Number(formData.companyId) : null,
+      RoleId: formData.roleId ? Number(formData.roleId) : null,
+      CompanyProductId: companyProductIds,
+      ProjectId: projectIds,
+      ReportingManagerUserId: reportingManagerIds,
+      dateOfJoining: formData.dateOfJoining || null,
+      updatedByUserName: sessionUserName
+    };
 
     setSubmitting(true);
     try {
@@ -1017,9 +1078,10 @@ export default function ManageUserView() {
               </label>
               <div className="relative">
                 <select
-                  value={formData.companyId}
+                  disabled={Boolean(sessionCompanyId)}
+                  value={formData.companyId || (sessionCompanyId ? String(sessionCompanyId) : '')}
                   onChange={(e) => handleCompanyChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white cursor-pointer appearance-none pr-8"
+                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : 'cursor-pointer'}`}
                 >
                   <option value="">Select Company</option>
                   {companies.map((c) => (
@@ -1027,55 +1089,46 @@ export default function ManageUserView() {
                       {c.name}
                     </option>
                   ))}
+                  {sessionCompanyId && !companies.some(c => String(c.id) === String(sessionCompanyId)) && (
+                    <option value={String(sessionCompanyId)}>
+                      {sessionCompanyName || `Company #${sessionCompanyId}`}
+                    </option>
+                  )}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            {/* Company Product Selection (Cascades from Company) */}
+            {/* Company Product Selection (Multi-Select) */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                 Company Product
               </label>
-              <div className="relative">
-                <select
-                  disabled={!formData.companyId}
-                  value={formData.companyProductId}
-                  onChange={(e) => handleCompanyProductChange(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  <option value="">{formData.companyId ? 'Select Company Product' : 'Select Company first'}</option>
-                  {companyProducts.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <MultiSelectDropdown
+                name="companyProductId"
+                options={companyProducts}
+                value={Array.isArray(formData.companyProductId) ? formData.companyProductId : (formData.companyProductId ? [String(formData.companyProductId)] : [])}
+                onMultiChange={handleMultiChange}
+                placeholder="Select Company Products"
+                disabledPlaceholder="Select Company first"
+                disabled={!formData.companyId}
+              />
             </div>
 
-            {/* Project Selection (Cascades from Company Product) */}
+            {/* Project Selection (Multi-Select) */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                 Project
               </label>
-              <div className="relative">
-                <select
-                  disabled={!formData.companyProductId}
-                  value={formData.projectId}
-                  onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyProductId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  <option value="">{formData.companyProductId ? 'Select Project' : 'Select Product first'}</option>
-                  {projects.map((pr) => (
-                    <option key={pr.id} value={pr.id}>
-                      {pr.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <MultiSelectDropdown
+                name="projectId"
+                options={projects}
+                value={Array.isArray(formData.projectId) ? formData.projectId : (formData.projectId ? [String(formData.projectId)] : [])}
+                onMultiChange={handleMultiChange}
+                placeholder="Select Projects"
+                disabledPlaceholder={(!formData.companyProductId || (Array.isArray(formData.companyProductId) && formData.companyProductId.length === 0)) ? "Select Product first" : "Select Projects"}
+                disabled={!formData.companyProductId || (Array.isArray(formData.companyProductId) && formData.companyProductId.length === 0)}
+              />
             </div>
 
             {/* Role Selection (Cascades from Company) */}
@@ -1124,27 +1177,20 @@ export default function ManageUserView() {
               </div>
             </div>
 
-            {/* Reporting Manager (Cascades from Company) */}
+            {/* Reporting Manager (Multi-Select) */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                 Reporting Manager
               </label>
-              <div className="relative">
-                <select
-                  disabled={!formData.companyId}
-                  value={formData.reportingManagerUserId}
-                  onChange={(e) => setFormData({ ...formData, reportingManagerUserId: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white appearance-none pr-8 ${!formData.companyId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  <option value="">{formData.companyId ? 'Select Reporting Manager' : 'Select Company first'}</option>
-                  {reportingManagers.map((rm) => (
-                    <option key={rm.id} value={rm.id}>
-                      {rm.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+              <MultiSelectDropdown
+                name="reportingManagerUserId"
+                options={reportingManagers}
+                value={Array.isArray(formData.reportingManagerUserId) ? formData.reportingManagerUserId : (formData.reportingManagerUserId ? [String(formData.reportingManagerUserId)] : [])}
+                onMultiChange={handleMultiChange}
+                placeholder="Select Reporting Managers"
+                disabledPlaceholder="Select Company first"
+                disabled={!formData.companyId}
+              />
             </div>
 
             {/* Date of Birth */}

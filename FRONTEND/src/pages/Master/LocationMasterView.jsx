@@ -92,35 +92,67 @@ const selectCls = (err, disabled) =>
 export default function LocationMasterView() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
-  const userName = currentUser?.loginName || currentUser?.name || currentUser?.EmployeeId || '';
 
-  // Extract session username
+  // Extract session username dynamically (loginName)
   const getSessionUserName = () => {
     try {
       const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
-        const user = s?.data?.user || s?.user || s;
-        return user?.loginName || user?.LoginName || user?.EmployeeId || user?.userName || user?.name || '';
+        return s?.data?.user?.loginName || s?.user?.loginName || '';
       }
-      const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-      return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || '';
     } catch {
       return '';
     }
+    return '';
   };
 
-  // State
+  // Extract session companies list dynamically
+  const getSessionCompanies = () => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const list = s?.data?.context?.companies || s?.context?.companies;
+        if (Array.isArray(list) && list.length > 0) return list;
+      }
+    } catch {
+      return [];
+    }
+    return [];
+  };
+
+  // Extract primary session company object dynamically
+  const getSessionCompany = () => {
+    const list = getSessionCompanies();
+    return list.length > 0 ? list[0] : null;
+  };
+
+  // Extract session CompanyId dynamically
+  const getSessionCompanyId = () => {
+    const comp = getSessionCompany();
+    if (!comp) return null;
+    const id = comp.CompanyId ?? comp.CompanyMasterId;
+    return id !== undefined && id !== null && id !== '' ? Number(id) : null;
+  };
+
+  const defaultCompanyId = useMemo(() => getSessionCompanyId(), []);
+  const activeSessionCompany = useMemo(() => getSessionCompany(), []);
+
+  // Dropdown States
   const [locationTypes, setLocationTypes] = useState([]);
-  const [companies, setCompanies] = useState([]);
+  const [parentLocationTypes, setParentLocationTypes] = useState([]);
   const [parentLocationsList, setParentLocationsList] = useState([]);
+
+  // Loading States
   const [loading, setLoading] = useState(false);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [loadingLocationTypes, setLoadingLocationTypes] = useState(false);
+  const [loadingParentLocationTypes, setLoadingParentLocationTypes] = useState(false);
   const [loadingParentLocations, setLoadingParentLocations] = useState(false);
 
   // Form Inputs
   const [locationTypeMasterId, setLocationTypeMasterId] = useState('');
-  const [companyMasterId, setCompanyMasterId] = useState('');
+  const [parentLocationTypeMasterId, setParentLocationTypeMasterId] = useState('');
   const [parentLocationMasterId, setParentLocationMasterId] = useState('');
   const [locationName, setLocationName] = useState('');
   const [contactPerson, setContactPerson] = useState('');
@@ -129,71 +161,73 @@ export default function LocationMasterView() {
   const [address, setAddress] = useState('');
   const [errors, setErrors] = useState({});
 
-  // Load Location Types on Mount
+  // 1. Fetch Location Types on Mount via POST /verp-service/locationMaster/locationType { flagId: 1 }
   useEffect(() => {
     fetchLocationTypes();
   }, []);
 
-  // 1. Fetch Location Types dropdown via /verp-service/locationMaster/getLocationTypes with { flagId: 1 }
   const fetchLocationTypes = async () => {
+    setLoadingLocationTypes(true);
     try {
       const res = await locationService.getLocationTypes();
       const raw = res?.data?.data !== undefined ? res?.data?.data : (res?.data !== undefined ? res?.data : res);
-      const list = Array.isArray(raw)
-        ? raw
-        : (raw && typeof raw === 'object' && Object.keys(raw).length > 0 ? [raw] : []);
+      const list = Array.isArray(raw) ? raw : [];
       setLocationTypes(list);
     } catch (err) {
-      console.error('Failed to load location types via /verp-service/locationMaster/getLocationTypes:', err);
+      console.error('Failed to load location types:', err);
       setLocationTypes([]);
+    } finally {
+      setLoadingLocationTypes(false);
     }
   };
 
-  // 3. Fetch Company Master dropdown for selected Location Type
-  // Route: /verp-service/locationMaster/getParentLocationTypes with { flagId: 2, LocationTypeMasterId }
-  const fetchCompaniesForLocationType = async (locTypeId) => {
+  // 2. Fetch Parent Location Type dropdown via POST /verp-service/locationMaster/parentLocationType { flagId: 2, LocationTypeMasterId }
+  const fetchParentLocationTypes = async (locTypeId) => {
     if (!locTypeId) {
-      setCompanies([]);
+      setParentLocationTypes([]);
+      setParentLocationTypeMasterId('');
+      setParentLocationsList([]);
+      setParentLocationMasterId('');
       return;
     }
-    setLoadingCompanies(true);
+    setLoadingParentLocationTypes(true);
     try {
-      const res = await locationService.getParentLocationTypes({
-        LocationTypeMasterId: Number(locTypeId)
-      });
+      const res = await locationService.getParentLocationType(Number(locTypeId));
       const raw = res?.data?.data !== undefined ? res?.data?.data : (res?.data !== undefined ? res?.data : res);
-      const list = Array.isArray(raw)
-        ? raw
-        : (raw && typeof raw === 'object' && Object.keys(raw).length > 0 ? [raw] : []);
-      setCompanies(list);
+      const list = Array.isArray(raw) ? raw : [];
+      setParentLocationTypes(list);
+
+      // Auto-select parent type if exactly one returned and immediately load its parent locations
+      if (list.length > 0) {
+        const firstParentTypeId = String(list[0].LocationTypeMasterId ?? '');
+        if (firstParentTypeId) {
+          setParentLocationTypeMasterId(firstParentTypeId);
+          fetchParentLocations(firstParentTypeId);
+        }
+      }
     } catch (err) {
-      console.error('Failed to load companies via /verp-service/locationMaster/getParentLocationTypes:', err);
-      setCompanies([]);
+      console.error('Failed to load parent location type:', err);
+      setParentLocationTypes([]);
     } finally {
-      setLoadingCompanies(false);
+      setLoadingParentLocationTypes(false);
     }
   };
 
-  // 4. Fetch Parent Location Master dropdown for selected Location Type and Company Master
-  // Route: /verp-service/locationMaster/getParentLocations with { flagId: 3, LocationTypeMasterId, CompanyMasterId }
-  const fetchParentLocationsForCompany = async (locTypeId, compId) => {
-    if (!locTypeId || !compId) {
+  // 3. Fetch Parent Location Master dropdown via POST /verp-service/locationMaster/parentLocationMaster { flagId: 3, ParentLocationTypeMasterId }
+  const fetchParentLocations = async (parentTypeId) => {
+    if (!parentTypeId) {
       setParentLocationsList([]);
+      setParentLocationMasterId('');
       return;
     }
     setLoadingParentLocations(true);
     try {
-      const res = await locationService.getParentLocations({
-        LocationTypeMasterId: Number(locTypeId),
-        CompanyMasterId: Number(compId)
-      });
+      const res = await locationService.getParentLocationMaster(Number(parentTypeId));
       const raw = res?.data?.data !== undefined ? res?.data?.data : (res?.data !== undefined ? res?.data : res);
-      const list = Array.isArray(raw)
-        ? raw
-        : (raw && typeof raw === 'object' && Object.keys(raw).length > 0 ? [raw] : []);
+      const list = Array.isArray(raw) ? raw : [];
       setParentLocationsList(list);
     } catch (err) {
-      console.error('Failed to load parent locations via /verp-service/locationMaster/getParentLocations:', err);
+      console.error('Failed to load parent locations:', err);
       setParentLocationsList([]);
     } finally {
       setLoadingParentLocations(false);
@@ -204,40 +238,25 @@ export default function LocationMasterView() {
   const selectedLocationTypeObj = useMemo(() => {
     if (!locationTypeMasterId) return null;
     return locationTypes.find(
-      t => String(t.LocationTypeMasterId ?? t.LocationTypeId ?? t.id ?? t.value) === String(locationTypeMasterId)
+      (t) => String(t.LocationTypeMasterId) === String(locationTypeMasterId)
     );
   }, [locationTypes, locationTypeMasterId]);
 
-  // Is the selected location type the Root/Parent one?
-  // When ParentTypeId is null or 0 or ParentLocationTypeName is '-' or null
+  // Is the selected location type a Root / Parent level?
+  // When ParentTypeId is null or undefined or 0 or empty string
   const isParentType = useMemo(() => {
     if (!selectedLocationTypeObj) return false;
-    const parentId = selectedLocationTypeObj.ParentTypeId ?? selectedLocationTypeObj.ParentLocationTypeId;
-    const parentName = selectedLocationTypeObj.ParentLocationTypeName ?? selectedLocationTypeObj.ParentName;
+    const parentId = selectedLocationTypeObj.ParentTypeId;
     return (
       parentId === null ||
       parentId === undefined ||
       parentId === 0 ||
-      parentId === '' ||
-      parentName === '-' ||
-      parentName === null
+      parentId === ''
     );
   }, [selectedLocationTypeObj]);
 
-  // If a location type is selected, should CompanyMaster and ParentLocationMaster dropdowns be shown?
-  // User Requirement:
-  // "if this is the parent one CompanyMaster,ParentLocationMaster this two dropdown should not come
-  // if that is not a parent then this two dropdowns should visible"
+  // Only show Parent Location Type and Parent Location Master dropdowns when not a root entity
   const showDependentDropdowns = Boolean(locationTypeMasterId) && !isParentType;
-
-  // Available parent locations fetched via /verp-service/locationMaster/getParentLocations
-  const availableParentLocations = useMemo(() => {
-    return parentLocationsList.map(loc => ({
-      id: loc.LocationMasterId ?? loc.LocationId ?? loc.id ?? loc.value,
-      name: loc.LocationName ?? loc.ParentLocationName ?? loc.name ?? loc.label,
-      typeName: loc.LocationTypeName ?? loc.LocationTypeMasterName ?? ''
-    }));
-  }, [parentLocationsList]);
 
   // Validation
   const validate = () => {
@@ -248,11 +267,11 @@ export default function LocationMasterView() {
     }
 
     if (showDependentDropdowns) {
-      if (!companyMasterId) {
-        errs.companyMasterId = 'Please select a Company';
+      if (!parentLocationTypeMasterId) {
+        errs.parentLocationTypeMasterId = 'Please select a Parent Location Type';
       }
       if (!parentLocationMasterId) {
-        errs.parentLocationMasterId = 'Please select a Parent Location';
+        errs.parentLocationMasterId = 'Please select a Parent Location Master';
       }
     }
 
@@ -283,32 +302,31 @@ export default function LocationMasterView() {
     return Object.keys(errs).length === 0;
   };
 
-  // Submit Handler
+  // Submit Handler: POST /verp-service/locationMaster/addLocationMaster
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!validate()) return;
 
+    const sessionUser = getSessionUserName() || currentUser?.loginName;
+    const sessionCompId = defaultCompanyId ?? getSessionCompanyId();
+
+    if (!sessionCompId) {
+      showToast('Active company not found in session context.', 'error');
+      return;
+    }
+
+    if (!sessionUser) {
+      showToast('Active user not found in session. Please log in again.', 'error');
+      return;
+    }
+
     setLoading(true);
     try {
-      const sessionUser = getSessionUserName() || userName || 'Admin';
-
-      // Exact payload required by user:
-      // {
-      //   "flagId": 4,
-      //   "CompanyMasterId": ...,
-      //   "LocationTypeMasterId": ...,
-      //   "ParentLocationMasterId": ...,
-      //   "LocationName": "...",
-      //   "ContactPerson": "...",
-      //   "ContactNumber": "...",
-      //   "EmailId": "...",
-      //   "Address": "...",
-      //   "CreatedByUserName": "..."
-      // }
       const payload = {
         flagId: 4,
-        CompanyMasterId: isParentType || !showDependentDropdowns ? null : (companyMasterId ? Number(companyMasterId) : null),
+        CompanyMasterId: Number(sessionCompId),
         LocationTypeMasterId: Number(locationTypeMasterId),
+        ParentLocationTypeMasterId: isParentType || !showDependentDropdowns ? null : (parentLocationTypeMasterId ? Number(parentLocationTypeMasterId) : null),
         ParentLocationMasterId: isParentType || !showDependentDropdowns ? null : (parentLocationMasterId ? Number(parentLocationMasterId) : null),
         LocationName: locationName.trim(),
         ContactPerson: contactPerson.trim(),
@@ -322,7 +340,7 @@ export default function LocationMasterView() {
       showToast('Location added successfully!', 'success');
       handleReset();
     } catch (err) {
-      console.error('Failed to add Location:', err);
+      console.error('Failed to add Location via /verp-service/locationMaster/addLocationMaster:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to add Location', 'error');
     } finally {
       setLoading(false);
@@ -332,8 +350,10 @@ export default function LocationMasterView() {
   // Reset Handler
   const handleReset = () => {
     setLocationTypeMasterId('');
-    setCompanyMasterId('');
+    setParentLocationTypeMasterId('');
+    setParentLocationTypes([]);
     setParentLocationMasterId('');
+    setParentLocationsList([]);
     setLocationName('');
     setContactPerson('');
     setContactNumber('');
@@ -391,7 +411,7 @@ export default function LocationMasterView() {
                 label="Location Type"
                 required
                 error={errors.locationTypeMasterId}
-                hint="Step 1: Choose level first (e.g. Country, State, District, Branch)"
+                hint="Step 1: Choose level first (e.g. Country, State, District, Taluk)"
               >
                 <div className="relative">
                   <GitFork className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -400,37 +420,36 @@ export default function LocationMasterView() {
                     onChange={(e) => {
                       const val = e.target.value;
                       setLocationTypeMasterId(val);
-                      // Clear errors
                       if (errors.locationTypeMasterId) {
-                        setErrors(prev => ({ ...prev, locationTypeMasterId: null }));
+                        setErrors((prev) => ({ ...prev, locationTypeMasterId: null }));
                       }
-                      // Reset dependent fields when location type changes
-                      setCompanyMasterId('');
+
+                      // Reset child dropdowns
+                      setParentLocationTypeMasterId('');
+                      setParentLocationTypes([]);
                       setParentLocationMasterId('');
                       setParentLocationsList([]);
 
                       // Check if non-parent type selected
                       const chosen = locationTypes.find(
-                        t => String(t.LocationTypeMasterId ?? t.LocationTypeId ?? t.id ?? t.value) === String(val)
+                        (t) => String(t.LocationTypeMasterId) === String(val)
                       );
-                      const parentId = chosen?.ParentTypeId ?? chosen?.ParentLocationTypeId;
-                      const parentName = chosen?.ParentLocationTypeName ?? chosen?.ParentName;
-                      const isParent = !chosen || parentId === null || parentId === undefined || parentId === 0 || parentId === '' || parentName === '-' || parentName === null;
+                      const parentId = chosen?.ParentTypeId;
+                      const isRoot = !chosen || parentId === null || parentId === undefined || parentId === 0 || parentId === '';
 
-                      if (val && !isParent) {
-                        fetchCompaniesForLocationType(val);
-                      } else {
-                        setCompanies([]);
+                      if (val && !isRoot) {
+                        fetchParentLocationTypes(val);
                       }
                     }}
-                    className={`${selectCls(errors.locationTypeMasterId, false)} pl-9.5`}
+                    className={`${selectCls(errors.locationTypeMasterId, loadingLocationTypes)} pl-9.5`}
                   >
-                    <option value="">-- Select Location Type First --</option>
+                    <option value="">
+                      {loadingLocationTypes ? '-- Loading Location Types... --' : '-- Select Location Type First --'}
+                    </option>
                     {locationTypes.map((type) => {
-                      const id = type.LocationTypeMasterId ?? type.LocationTypeId ?? type.id ?? type.value;
-                      const name = type.LocationTypeMasterName ?? type.LocationTypeName ?? type.name ?? type.label;
-                      const parentId = type.ParentTypeId ?? type.ParentLocationTypeId;
-                      const isRoot = !parentId && (!type.ParentLocationTypeName || type.ParentLocationTypeName === '-');
+                      const id = type.LocationTypeMasterId;
+                      const name = type.LocationTypeMasterName;
+                      const isRoot = type.ParentTypeId === null || type.ParentTypeId === undefined || type.ParentTypeId === 0 || type.ParentTypeId === '';
                       return (
                         <option key={id} value={id}>
                           {name} {isRoot ? '(Root Authority)' : ''}
@@ -446,51 +465,50 @@ export default function LocationMasterView() {
                 <div className="sm:col-span-2 flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300">
                   <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
                   <div className="text-xs">
-                    <p className="font-bold">Root Parent Level Detected ({selectedLocationTypeObj?.LocationTypeMasterName || 'Parent'})</p>
+                    <p className="font-bold">Root Parent Level Detected ({selectedLocationTypeObj?.LocationTypeMasterName})</p>
                     <p className="text-emerald-700 dark:text-emerald-400 mt-0.5">
-                      Company Master and Parent Location dropdowns are omitted for top-level root entities.
+                      Parent Location Type and Parent Location Master linkage are omitted for top-level root entities. Operating Company: <span className="font-semibold">{activeSessionCompany?.CompanyName}</span>.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Field 2: Company Master (Visible ONLY when not a parent type) */}
+              {/* Field 2: Parent Location Type (Visible ONLY when not a parent type) */}
               {showDependentDropdowns && (
                 <Field
-                  label="Company Master"
+                  label="Parent Location Type"
                   required
-                  error={errors.companyMasterId}
-                  hint="Select operating company entity"
+                  error={errors.parentLocationTypeMasterId}
+                  hint="Parent hierarchy category (e.g. Country, State, District)"
                 >
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     <select
-                      value={companyMasterId}
+                      value={parentLocationTypeMasterId}
                       onChange={(e) => {
-                        const compVal = e.target.value;
-                        setCompanyMasterId(compVal);
-                        if (errors.companyMasterId) {
-                          setErrors(prev => ({ ...prev, companyMasterId: null }));
+                        const val = e.target.value;
+                        setParentLocationTypeMasterId(val);
+                        if (errors.parentLocationTypeMasterId) {
+                          setErrors((prev) => ({ ...prev, parentLocationTypeMasterId: null }));
                         }
                         setParentLocationMasterId('');
-                        if (locationTypeMasterId && compVal) {
-                          fetchParentLocationsForCompany(locationTypeMasterId, compVal);
+                        if (val) {
+                          fetchParentLocations(val);
                         } else {
                           setParentLocationsList([]);
                         }
                       }}
-                      className={`${selectCls(errors.companyMasterId, loadingCompanies)} pl-9.5`}
+                      className={`${selectCls(errors.parentLocationTypeMasterId, loadingParentLocationTypes)} pl-9.5`}
                     >
                       <option value="">
-                        {loadingCompanies ? '-- Loading Companies... --' : '-- Select Company Master --'}
+                        {loadingParentLocationTypes ? '-- Loading Parent Types... --' : '-- Select Parent Location Type --'}
                       </option>
-                      {companies.map((comp, idx) => {
-                        const id = comp.CompanyMasterId ?? comp.CompanyId ?? comp.ParentLocationTypeId ?? comp.ParentTypeId ?? comp.LocationTypeMasterId ?? comp.id ?? comp.value;
-                        const name = comp.CompanyName ?? comp.companyName ?? comp.ParentLocationTypeName ?? comp.LocationTypeMasterName ?? comp.name ?? comp.label;
-                        const code = comp.CompanyCode ?? comp.companyCode ?? comp.code;
+                      {parentLocationTypes.map((type, idx) => {
+                        const id = type.LocationTypeMasterId;
+                        const name = type.LocationTypeMasterName;
                         return (
                           <option key={id ?? idx} value={id}>
-                            {name} {code ? `(${code})` : ''}
+                            {name}
                           </option>
                         );
                       })}
@@ -505,33 +523,37 @@ export default function LocationMasterView() {
                   label="Parent Location Master"
                   required
                   error={errors.parentLocationMasterId}
-                  hint="Immediate geographical/organizational parent"
+                  hint="Immediate geographical/organizational parent location entity"
                 >
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     <select
                       value={parentLocationMasterId}
-                      disabled={!companyMasterId || loadingParentLocations}
+                      disabled={!parentLocationTypeMasterId || loadingParentLocations}
                       onChange={(e) => {
                         setParentLocationMasterId(e.target.value);
                         if (errors.parentLocationMasterId) {
-                          setErrors(prev => ({ ...prev, parentLocationMasterId: null }));
+                          setErrors((prev) => ({ ...prev, parentLocationMasterId: null }));
                         }
                       }}
-                      className={`${selectCls(errors.parentLocationMasterId, !companyMasterId || loadingParentLocations)} pl-9.5`}
+                      className={`${selectCls(errors.parentLocationMasterId, !parentLocationTypeMasterId || loadingParentLocations)} pl-9.5`}
                     >
                       <option value="">
-                        {!companyMasterId
-                          ? '-- Select Company Master First --'
+                        {!parentLocationTypeMasterId
+                          ? '-- Select Parent Location Type First --'
                           : loadingParentLocations
                           ? '-- Loading Parent Locations... --'
-                          : '-- Select Parent Location --'}
+                          : '-- Select Parent Location Master --'}
                       </option>
-                      {availableParentLocations.map((loc) => (
-                        <option key={loc.id} value={loc.id}>
-                          {loc.name} {loc.typeName ? `(${loc.typeName})` : ''}
-                        </option>
-                      ))}
+                      {parentLocationsList.map((loc, idx) => {
+                        const id = loc.LocationId;
+                        const name = loc.LocationName;
+                        return (
+                          <option key={id ?? idx} value={id}>
+                            {name}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                 </Field>
@@ -554,11 +576,11 @@ export default function LocationMasterView() {
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="e.g. India, Karnataka, Bangalore Branch"
+                      placeholder="e.g. Tamil Nadu, Karnataka, Bengaluru North"
                       value={locationName}
                       onChange={(e) => {
                         setLocationName(e.target.value);
-                        if (errors.locationName) setErrors(prev => ({ ...prev, locationName: null }));
+                        if (errors.locationName) setErrors((prev) => ({ ...prev, locationName: null }));
                       }}
                       className={`${inputCls(errors.locationName)} pl-9.5`}
                     />
@@ -576,7 +598,7 @@ export default function LocationMasterView() {
                     value={contactPerson}
                     onChange={(e) => {
                       setContactPerson(e.target.value);
-                      if (errors.contactPerson) setErrors(prev => ({ ...prev, contactPerson: null }));
+                      if (errors.contactPerson) setErrors((prev) => ({ ...prev, contactPerson: null }));
                     }}
                     className={`${inputCls(errors.contactPerson)} pl-9.5`}
                   />
@@ -593,7 +615,7 @@ export default function LocationMasterView() {
                     value={contactNumber}
                     onChange={(e) => {
                       setContactNumber(e.target.value);
-                      if (errors.contactNumber) setErrors(prev => ({ ...prev, contactNumber: null }));
+                      if (errors.contactNumber) setErrors((prev) => ({ ...prev, contactNumber: null }));
                     }}
                     className={`${inputCls(errors.contactNumber)} pl-9.5`}
                   />
@@ -607,11 +629,11 @@ export default function LocationMasterView() {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     <input
                       type="email"
-                      placeholder="e.g. branch.ops@company.com"
+                      placeholder="e.g. ramesh@example.com"
                       value={emailId}
                       onChange={(e) => {
                         setEmailId(e.target.value);
-                        if (errors.emailId) setErrors(prev => ({ ...prev, emailId: null }));
+                        if (errors.emailId) setErrors((prev) => ({ ...prev, emailId: null }));
                       }}
                       className={`${inputCls(errors.emailId)} pl-9.5`}
                     />
@@ -626,11 +648,11 @@ export default function LocationMasterView() {
                     <Home className="absolute left-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
                     <textarea
                       rows={2}
-                      placeholder="e.g. #102 Tech Park, Outer Ring Road, Bangalore"
+                      placeholder="e.g. Chennai, Tamil Nadu"
                       value={address}
                       onChange={(e) => {
                         setAddress(e.target.value);
-                        if (errors.address) setErrors(prev => ({ ...prev, address: null }));
+                        if (errors.address) setErrors((prev) => ({ ...prev, address: null }));
                       }}
                       className={`${inputCls(errors.address)} pl-9.5 resize-none py-2`}
                     />
@@ -668,4 +690,3 @@ export default function LocationMasterView() {
     </div>
   );
 }
-

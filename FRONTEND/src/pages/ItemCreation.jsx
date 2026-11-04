@@ -321,8 +321,7 @@ export default function ItemCreation() {
     }
 
     if (selectedFile && !formData.fileTypeId) {
-      const fallbackId = dropdowns.fileTypes?.[0]?.id || dropdowns.fileTypes?.[0]?.FileTypeId || 4;
-      formData.fileTypeId = Number(fallbackId);
+      errs.fileTypeId = 'File type is required';
     }
 
     setFormErrors(errs);

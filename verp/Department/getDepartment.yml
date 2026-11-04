@@ -1,17 +1,11 @@
 info:
-  name: /getLocationTypes
+  name: getDepartment
   type: http
   seq: 1
 
 http:
   method: POST
-  url: http://192.168.23.115:9004/verp-service/locationMaster/getLocationTypes
-  body:
-    type: json
-    data: |-
-      {
-        "flagId":1
-      }
+  url: http://localhost:9004/verp-service/department/getDepartment
   auth: inherit
 
 settings:

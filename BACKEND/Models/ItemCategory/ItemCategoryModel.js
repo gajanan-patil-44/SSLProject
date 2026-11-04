@@ -76,6 +76,7 @@ export const addMaterialCategoryTypeModel = async (categoryData) => {
         const query = `
             INSERT INTO "LKP"."MaterialCategoryType"
             (
+                "CompanyId",
                 "MaterialCategoryTypeName",
                 "MaterialCategoryTypeCode",
                 "IsDisabled",
@@ -86,9 +87,10 @@ export const addMaterialCategoryTypeModel = async (categoryData) => {
             (
                 $1,
                 $2,
+                $3,
                 false,
                 CURRENT_TIMESTAMP,
-                $3
+                $4
             )
             RETURNING
                 "MaterialCategoryTypeId",
@@ -100,6 +102,7 @@ export const addMaterialCategoryTypeModel = async (categoryData) => {
         `;
 
         const values = [
+            categoryData.CompanyId,
             categoryData.MaterialCategoryTypeName,
             categoryData.MaterialCategoryTypeCode,
             categoryData.CreatedByUserName || null

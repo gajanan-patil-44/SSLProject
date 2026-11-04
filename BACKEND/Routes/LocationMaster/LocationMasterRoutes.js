@@ -2,21 +2,20 @@
 import express from "express";
 
 import {
-    getLocationTypes,
-    getParentLocationTypes,
-    getParentLocations,
+    getLocationTypeController,
+    getParentLocationTypeController,
+    getParentLocationMasterController,
     addLocationMaster
 } from "../../Controllers/LocationMaster/LocationMasterController.js";
 
-// import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
+import { authenticateToken } from "../../MiddleWare/authMiddleware.js";
 
 const router = express.Router();
 
 
-router.post("/getLocationTypes", getLocationTypes);   // DROPDOWN 1 - LOCATION TYPE
-router.post("/getParentLocationTypes", getParentLocationTypes);    // DROPDOWN 2 - PARENT LOCATION TYPE
-router.post("/getParentLocations", getParentLocations);    // DROPDOWN 3 - PARENT LOCATION NAME
-router.post("/addLocationMaster", addLocationMaster);    // INSERT LOCATION MASTER
-
+router.post("/locationType", authenticateToken, getLocationTypeController);   // LOCATION TYPE DROPDOWN
+router.post("/parentLocationType", authenticateToken, getParentLocationTypeController);  // PARENT LOCATION TYPE DROPDOWN
+router.post("/parentLocationMaster", authenticateToken, getParentLocationMasterController);  // PARENT LOCATION MASTER DROPDOWN
+router.post("/addLocationMaster", authenticateToken, addLocationMaster);  // ADD LOCATION
 
 export default router;

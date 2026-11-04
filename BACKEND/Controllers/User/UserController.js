@@ -12,6 +12,7 @@ import {
     getProductDropdown,
     getProjectDropdown,
     getRoleDropdown,
+    getDepartmentDropdown,
     getUserReportingManagerDropdown,
     getDesignationById,
     getUserCount
@@ -168,7 +169,8 @@ export const createUserController = async (req, res) => {
             "Email",
             "LoginName",
             "Password",
-            "RoleId"
+            "RoleId",
+            "DepartmentId"
         ];
 
         for (const field of requiredFields) {
@@ -714,33 +716,52 @@ export const createUserController = async (req, res) => {
 //flagId = 4 -> Role
 // ==========================================================
 export const companyProductProjectDropdownController = async (req, res) => {
+
     const { FlagId, CompanyId, CompanyProductId } = req.body;
+
     try {
-        // =================================================
+
+        // ==================================================
         // FLAG ID VALIDATION
         // ==================================================
-        if (FlagId === undefined || FlagId === null || String(FlagId).trim() === "") {
+
+        if (
+            FlagId === undefined ||
+            FlagId === null ||
+            String(FlagId).trim() === ""
+        ) {
             return res.status(400).json({
                 status: "error",
                 message: "FlagId is required"
             });
         }
+
         // ==================================================
         // FLAG ID 1 - COMPANY
         // ==================================================
+
         if (parseInt(FlagId) === 1) {
+
             const result = await getCompanyDropdown();
+
             return res.status(200).json({
                 status: "success",
                 message: "Company data fetched successfully",
                 data: result
             });
         }
+
         // ==================================================
         // FLAG ID 2 - PRODUCT
         // ==================================================
+
         if (parseInt(FlagId) === 2) {
-            if (CompanyId === undefined || CompanyId === null || String(CompanyId).trim() === "") {
+
+            if (
+                CompanyId === undefined ||
+                CompanyId === null ||
+                String(CompanyId).trim() === ""
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "CompanyId is required"
@@ -748,15 +769,18 @@ export const companyProductProjectDropdownController = async (req, res) => {
             }
 
             const result = await getProductDropdown(parseInt(CompanyId));
+
             return res.status(200).json({
                 status: "success",
                 message: "Product data fetched successfully",
                 data: result
             });
         }
+
         // ==================================================
         // FLAG ID 3 - PROJECT
         // ==================================================
+
         if (parseInt(FlagId) === 3) {
 
             if (
@@ -783,9 +807,11 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 data: result
             });
         }
+
         // ==================================================
         // FLAG ID 4 - ROLE
         // ==================================================
+
         if (parseInt(FlagId) === 4) {
 
             if (
@@ -809,15 +835,56 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 data: result
             });
         }
+
+        // ==================================================
+        // FLAG ID 5 - DEPARTMENT
+        // ==================================================
+
+        if (parseInt(FlagId) === 5) {
+
+            let companyId = null;
+
+            // CompanyId is optional for Department dropdown
+
+            if (
+                CompanyId !== undefined &&
+                CompanyId !== null &&
+                String(CompanyId).trim() !== ""
+            ) {
+
+                companyId = Number(CompanyId);
+
+                if (
+                    !Number.isInteger(companyId) ||
+                    companyId <= 0
+                ) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "CompanyId must be a valid positive integer"
+                    });
+                }
+            }
+
+            const result = await getDepartmentDropdown(companyId);
+
+            return res.status(200).json({
+                status: "success",
+                message: "Department data fetched successfully",
+                data: result
+            });
+        }
+
         // ==================================================
         // INVALID FLAG
         // ==================================================
+
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId. Use 1, 2, 3 or 4"
+            message: "Invalid FlagId. Use 1, 2, 3, 4 or 5"
         });
 
     } catch (error) {
+
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch dropdown data",

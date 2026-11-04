@@ -1,4 +1,4 @@
- // src/routes/apiRoutes.js
+// src/routes/apiRoutes.js
 
 /**
  * ============================================================================
@@ -37,18 +37,29 @@ export const ROLE_ROUTES = {
  * ============================================================================
  */
 export const PRODUCT_ROUTES = {
-  GET_PRODUCT: '/verp-service/productCreation/getProduct',
   GET_PRODUCTS: '/verp-service/productCreation/getProduct',
   ADD_PRODUCT: '/verp-service/productCreation/addProduct',
   UPDATE_PRODUCT: '/verp-service/productCreation/updateProduct',
-  DELETE_PRODUCT: '/verp-service/productCreation/deleteProduct',
-  TOGGLE_PRODUCT_STATUS: '/verp-service/productCreation/toggleProductStatus',
-  TOGGLE_STATUS: '/verp-service/productCreation/toggleProductStatus'
+  TOGGLE_STATUS: '/verp-service/productCreation/toggleProductStatus',
+  DELETE_PRODUCT: '/verp-service/productCreation/deleteProduct'
 };
 
 /**
  * ============================================================================
- * 5. COMPANY CREATION ROUTES
+ * 4. COMPANY CREATION (Standard Companies) ROUTES
+ * ============================================================================
+ */
+export const COMPANY_ROUTES = {
+  GET_COMPANIES: '/verp-service/companyCreation/getCompany',
+  ADD_COMPANY: '/verp-service/companyCreation/addCompany',
+  UPDATE_COMPANY: '/verp-service/companyCreation/updateCompany',
+  TOGGLE_STATUS: '/verp-service/companyCreation/toggleCompanyStatus',
+  DELETE_COMPANY: '/verp-service/companyCreation/deleteCompany'
+};
+
+/**
+ * ============================================================================
+ * 5. COMPANY MASTER (Enterprise Profile & Tax) ROUTES
  * ============================================================================
  */
 export const COMPANY_MASTER_ROUTES = {
@@ -61,147 +72,87 @@ export const COMPANY_MASTER_ROUTES = {
 
 /**
  * ============================================================================
- * 5.2. LOCATION TYPE MASTER ROUTES
+ * 6. LOCATION TYPE MASTER ROUTES
  * ============================================================================
  */
 export const LOCATION_TYPE_MASTER_ROUTES = {
   VIEW: '/verp-service/locationTypeMaster/view',
-  GET_LOCATION_TYPE_MASTER: '/verp-service/locationTypeMaster/view',
-  GET_LOCATION_TYPES: '/verp-service/locationTypeMaster/view',
   ADD: '/verp-service/locationTypeMaster/add',
-  ADD_LOCATION_TYPE_MASTER: '/verp-service/locationTypeMaster/add',
   DROPDOWN: '/verp-service/locationTypeMaster/dropdown',
-  GET_DROPDOWN: '/verp-service/locationTypeMaster/dropdown',
-  EDIT: '/verp-service/locationTypeMaster/edit',
-  UPDATE: '/verp-service/locationTypeMaster/edit',
-  EDIT_LOCATION_TYPE_MASTER: '/verp-service/locationTypeMaster/edit'
+  EDIT: '/verp-service/locationTypeMaster/edit'
 };
-
-export const LOCATION_TYPE_ROUTES = LOCATION_TYPE_MASTER_ROUTES;
 
 /**
  * ============================================================================
- * 5.3. LOCATION MASTER ROUTES
+ * 7. LOCATION MASTER ROUTES
  * ============================================================================
  */
 export const LOCATION_MASTER_ROUTES = {
   VIEW: '/verp-service/locationMaster/view',
-  GET_LOCATION_MASTER: '/verp-service/locationMaster/view',
-  GET_LOCATIONS: '/verp-service/locationMaster/view',
-  GET_LOCATION_TYPES: '/verp-service/locationMaster/getLocationTypes',
-  LOCATION_TYPES: '/verp-service/locationMaster/getLocationTypes',
-  GET_PARENT_LOCATION_TYPES: '/verp-service/locationMaster/getParentLocationTypes',
-  PARENT_LOCATION_TYPES: '/verp-service/locationMaster/getParentLocationTypes',
-  GET_PARENT_LOCATIONS: '/verp-service/locationMaster/getParentLocations',
-  PARENT_LOCATIONS: '/verp-service/locationMaster/getParentLocations',
-  ADD: '/verp-service/locationMaster/addLocationMaster',
+  LOCATION_TYPE: '/verp-service/locationMaster/locationType',
+  PARENT_LOCATION_TYPE: '/verp-service/locationMaster/parentLocationType',
+  PARENT_LOCATION_MASTER: '/verp-service/locationMaster/parentLocationMaster',
   ADD_LOCATION_MASTER: '/verp-service/locationMaster/addLocationMaster',
   DROPDOWN: '/verp-service/locationMaster/dropdown',
-  GET_DROPDOWN: '/verp-service/locationMaster/dropdown',
   EDIT: '/verp-service/locationMaster/edit',
-  UPDATE: '/verp-service/locationMaster/edit',
   TOGGLE_STATUS: '/verp-service/locationMaster/toggleStatus',
   DELETE: '/verp-service/locationMaster/delete'
 };
 
-export const LOCATION_ROUTES = LOCATION_MASTER_ROUTES;
-
-export const COMPANY_ROUTES = {
-  GET_COMPANY: '/verp-service/companyCreation/getCompany',
-  GET_COMPANIES: '/verp-service/companyCreation/getCompany',
-  GET_COMPANY_MASTER: '/verp-service/companyMaster/getCompanyMaster',
-  ADD_COMPANY_MASTER: '/verp-service/companyMaster/addCompanyMaster',
-  UPDATE_COMPANY_MASTER: '/verp-service/companyMaster/updateCompanyMaster',
-  TOGGLE_COMPANY_MASTER_STATUS: '/verp-service/companyMaster/toggleCompanyMasterStatus',
-  DELETE_COMPANY_MASTER: '/verp-service/companyMaster/deleteCompanyMaster',
-  ADD_COMPANY: '/verp-service/companyCreation/addCompany',
-  UPDATE_COMPANY: '/verp-service/companyCreation/updateCompany',
-  TOGGLE_COMPANY_STATUS: '/verp-service/companyCreation/toggleCompanyStatus',
-  TOGGLE_STATUS: '/verp-service/companyCreation/toggleCompanyStatus'
-};
-
 /**
  * ============================================================================
- * 5.1. COMPANY PRODUCT CREATION ROUTES
+ * 8. COMPANY PRODUCT ROUTES
  * ============================================================================
  */
 export const COMPANY_PRODUCT_ROUTES = {
   VIEW: '/verp-service/companyProductCreation/view',
-  GET_COMPANY_PRODUCTS: '/verp-service/companyProductCreation/view',
-  GET_COMPANY_PRODUCT: '/verp-service/companyProductCreation/view',
   COMPANY_PRODUCT: '/verp-service/companyProductCreation/companyProduct',
-  DROPDOWN: '/verp-service/companyProductCreation/companyProduct',
-  DROPDOWN_OR_ADD: '/verp-service/companyProductCreation/companyProduct',
   EDIT_COMPANY_PRODUCT: '/verp-service/companyProductCreation/editcompanyproduct',
-  UPDATE_COMPANY_PRODUCT: '/verp-service/companyProductCreation/editcompanyproduct',
   DELETE_COMPANY_PRODUCT: '/verp-service/companyProductCreation/deleteCompanyProduct',
-  DELETE: '/verp-service/companyProductCreation/deleteCompanyProduct',
-  UPDATE_STATUS: '/verp-service/companyProductCreation/updateCompanyProductstatus',
-  TOGGLE_STATUS: '/verp-service/companyProductCreation/updateCompanyProductstatus'
+  UPDATE_STATUS: '/verp-service/companyProductCreation/updateCompanyProductstatus'
 };
 
 /**
  * ============================================================================
- * 6. DESIGNATION CREATION ROUTES
+ * 9. DESIGNATION ROUTES
  * ============================================================================
  */
 export const DESIGNATION_ROUTES = {
-  VIEW: '/verp-service/designationCreation/view',
   GET_DESIGNATIONS: '/verp-service/designationCreation/view',
-  GET_DESIGNATION: '/verp-service/designationCreation/view',
-  ADD_DESIGNATION: '/verp-service/designationCreation/designation',
-  DESIGNATION: '/verp-service/designationCreation/designation',
   DROPDOWN_OR_ADD: '/verp-service/designationCreation/designation',
+  ADD_DESIGNATION: '/verp-service/designationCreation/designation',
   EDIT_DESIGNATION: '/verp-service/designationCreation/editdesignation',
-  UPDATE_DESIGNATION: '/verp-service/designationCreation/editdesignation',
-  TOGGLE_DESIGNATION_STATUS: '/verp-service/designationCreation/toggleDesignationStatus',
   TOGGLE_STATUS: '/verp-service/designationCreation/toggleDesignationStatus',
-  DELETE_DESIGNATION: '/verp-service/designationCreation/deleteDesignation',
-  DELETE: '/verp-service/designationCreation/deleteDesignation'
+  DELETE_DESIGNATION: '/verp-service/designationCreation/deleteDesignation'
 };
 
 /**
  * ============================================================================
- * 7. PROJECT CREATION ROUTES
+ * 10. PROJECT ROUTES
  * ============================================================================
  */
 export const PROJECT_ROUTES = {
-  VIEW: '/verp-service/projectCreation/view',
   GET_PROJECTS: '/verp-service/projectCreation/view',
-  GET_PROJECT: '/verp-service/projectCreation/view',
   ADD_PROJECT: '/verp-service/projectCreation/project',
-  PROJECT: '/verp-service/projectCreation/project',
-  DROPDOWN_OR_ADD: '/verp-service/projectCreation/project',
   EDIT_PROJECT: '/verp-service/projectCreation/editproject',
-  UPDATE_PROJECT: '/verp-service/projectCreation/editproject',
-  TOGGLE_PROJECT_STATUS: '/verp-service/projectCreation/toggleProjectStatus',
   TOGGLE_STATUS: '/verp-service/projectCreation/toggleProjectStatus',
-  DELETE_PROJECT: '/verp-service/projectCreation/deleteProject',
-  DELETE: '/verp-service/projectCreation/deleteProject'
+  DELETE_PROJECT: '/verp-service/projectCreation/deleteProject'
 };
 
 /**
  * ============================================================================
- * 8. USER CREATION ROUTES
+ * 11. USER CREATION ROUTES
  * ============================================================================
  */
 export const USER_ROUTES = {
   CREATE_USER: '/verp-service/userCreation/createuser',
   USERDROPDOWNS: '/verp-service/userCreation/userdropdowns',
-  DROPDOWNS: '/verp-service/userCreation/dropdowns',
-  // Old placeholder kept for reference
-  COMPANY_PRODUCT_PROJECT_DROPDOWN: '/verp-service/userCreation/companyProductProjectDropdown',
-  // New confirmed endpoint for company → product → project → role cascade
-  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown',
-  GET_ALL_USER_DETAILS: '/verp-service/userEdit/getAllUserDetails',
-  EDIT_USER_DETAILS: '/verp-service/userEdit/editUserdetails',
-  TOGGLE_USER_STATUS: '/verp-service/userEdit/toggleUserStatus',
-  CHANGE_PASSWORD: '/verp-service/userEdit/change-password'
+  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown'
 };
 
 /**
  * ============================================================================
- * 9. FILE TYPE ROUTES
+ * 12. FILE TYPE ROUTES
  * ============================================================================
  */
 export const FILE_TYPE_ROUTES = {
@@ -214,7 +165,7 @@ export const FILE_TYPE_ROUTES = {
 
 /**
  * ============================================================================
- * 10. PAGE MANAGEMENT ROUTES
+ * 13. PAGE MANAGEMENT ROUTES
  * ============================================================================
  */
 export const PAGE_ROUTES = {
@@ -227,7 +178,7 @@ export const PAGE_ROUTES = {
 
 /**
  * ============================================================================
- * 11. USER EDIT & MANAGE ROUTES
+ * 14. USER EDIT & MANAGE ROUTES
  * ============================================================================
  */
 export const USER_EDIT_ROUTES = {
@@ -247,7 +198,7 @@ export const USER_EDIT_ROUTES = {
 
 /**
  * ============================================================================
- * 12. BIRTHDAY EMAIL ROUTES
+ * 15. BIRTHDAY EMAIL ROUTES
  * ============================================================================
  */
 export const BIRTHDAY_ROUTES = {
@@ -258,7 +209,7 @@ export const BIRTHDAY_ROUTES = {
 
 /**
  * ============================================================================
- * 13. MATERIAL / ITEM CREATION ROUTES
+ * 16. MATERIAL / ITEM CREATION ROUTES
  * ============================================================================
  */
 export const MATERIAL_ROUTES = {
@@ -270,12 +221,9 @@ export const MATERIAL_ROUTES = {
   VIEW_FILE: '/verp-service/material/view-file'
 };
 
-export const MATERIAL_DROPDOWN = '/verp-service/material/dropdown';
-export const ITEM_ROUTES = MATERIAL_ROUTES;
-
 /**
  * ============================================================================
- * 15. VENDOR MANAGEMENT ROUTES
+ * 17. VENDOR MANAGEMENT ROUTES
  * ============================================================================
  */
 export const VENDOR_ROUTES = {
@@ -299,9 +247,7 @@ export const API_ROUTES = {
   COMPANY: COMPANY_ROUTES,
   COMPANY_MASTER: COMPANY_MASTER_ROUTES,
   LOCATION_TYPE_MASTER: LOCATION_TYPE_MASTER_ROUTES,
-  LOCATION_TYPE: LOCATION_TYPE_ROUTES,
   LOCATION_MASTER: LOCATION_MASTER_ROUTES,
-  LOCATION: LOCATION_ROUTES,
   COMPANY_PRODUCT: COMPANY_PRODUCT_ROUTES,
   DESIGNATION: DESIGNATION_ROUTES,
   PROJECT: PROJECT_ROUTES,
@@ -310,11 +256,9 @@ export const API_ROUTES = {
   FILE_TYPE: FILE_TYPE_ROUTES,
   PAGE: PAGE_ROUTES,
   BIRTHDAY: BIRTHDAY_ROUTES,
-  ITEM: ITEM_ROUTES,
+  ITEM: MATERIAL_ROUTES,
   MATERIAL: MATERIAL_ROUTES,
   VENDOR: VENDOR_ROUTES
 };
 
 export default API_ROUTES;
-
-

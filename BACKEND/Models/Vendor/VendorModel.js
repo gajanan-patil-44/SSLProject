@@ -153,15 +153,15 @@ export const addVendor = async (data, files) => {
                 "CreatedByUserId"
             )
             VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8,
-                $9, $10, $11, false, $12, $13,
+                $1, $2, $3, $4, $5, $6, $7,
+                $8, $9, $10, $11, false, $12, $13,
                 $14, $15, NOW(), $16
             )
             RETURNING *
         `;
 
         const values = [
-            data.CompanyId ?? null,
+            data.CompanyId,
             data.VendorName.trim(),
             data.VendorCode.trim(),
             data.ContactPerson.trim(),
