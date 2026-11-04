@@ -12,14 +12,13 @@ const API_ENDPOINTS = {
 };
 
 const materialSubCategoryTypeService = {
-  // Fetch all sub categories
+  // Fetch all sub categories (FlagId: 1)
   getSubCategories: async (params = {}) => {
     const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
       ? Number(params.CompanyId)
       : getSessionCompanyId();
     const payload = {
       FlagId: 1,
-      flagId: 1,
       ...(compId ? { CompanyId: compId } : {}),
       ...params
     };
@@ -46,7 +45,6 @@ const materialSubCategoryTypeService = {
       : getSessionCompanyId();
     const payload = {
       FlagId: 3,
-      flagId: 3,
       ...(compId ? { CompanyId: compId } : {}),
       ...params
     };
@@ -57,42 +55,39 @@ const materialSubCategoryTypeService = {
     return [];
   },
 
-  // Create Sub Category
+  // Create Sub Category (FlagId: 2)
   createSubCategory: async (payload = {}) => {
     const compId = payload.CompanyId !== undefined && payload.CompanyId !== null && payload.CompanyId !== ''
       ? Number(payload.CompanyId)
       : getSessionCompanyId();
     const body = {
       FlagId: 2,
-      flagId: 2,
       ...(compId ? { CompanyId: compId } : {}),
       ...payload
     };
     return await apiClient.post(API_ENDPOINTS.create, body);
   },
 
-  // Update Sub Category
+  // Update Sub Category (FlagId: 4)
   updateSubCategory: async (payload = {}) => {
     const compId = payload.CompanyId !== undefined && payload.CompanyId !== null && payload.CompanyId !== ''
       ? Number(payload.CompanyId)
       : getSessionCompanyId();
     const body = {
       FlagId: 4,
-      flagId: 4,
       ...(compId ? { CompanyId: compId } : {}),
       ...payload
     };
     return await apiClient.patch(API_ENDPOINTS.update, body);
   },
 
-  // Delete Sub Category
+  // Delete Sub Category (FlagId: 5)
   deleteSubCategory: async (id, params = {}) => {
     const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
       ? Number(params.CompanyId)
       : getSessionCompanyId();
     const payload = {
       FlagId: 5,
-      flagId: 5,
       MaterialSubCategoryTypeId: id,
       ...(compId ? { CompanyId: compId } : {}),
       ...params
@@ -100,7 +95,7 @@ const materialSubCategoryTypeService = {
     return await apiClient.post(API_ENDPOINTS.delete, payload);
   },
 
-  // Toggle Sub Category Status
+  // Toggle Sub Category Status (FlagId: 5)
   toggleStatus: async (idOrPayload, isDisabled, explicitCompanyId) => {
     let body = {};
     if (typeof idOrPayload === 'object' && idOrPayload !== null) {
@@ -109,7 +104,6 @@ const materialSubCategoryTypeService = {
         : getSessionCompanyId();
       body = {
         FlagId: 5,
-        flagId: 5,
         ...(compId ? { CompanyId: compId } : {}),
         ...idOrPayload
       };
@@ -119,7 +113,6 @@ const materialSubCategoryTypeService = {
         : getSessionCompanyId();
       body = {
         FlagId: 5,
-        flagId: 5,
         MaterialSubCategoryTypeId: idOrPayload,
         IsDisabled: isDisabled,
         ...(compId ? { CompanyId: compId } : {})

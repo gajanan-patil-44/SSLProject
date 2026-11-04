@@ -12,14 +12,13 @@ const API_ENDPOINTS = {
 };
 
 const materialCategoryTypeService = {
-  // Fetch all categories
+  // Fetch all categories (flagId: 1)
   getCategories: async (params = {}) => {
     const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
       ? Number(params.CompanyId)
       : getSessionCompanyId();
     const payload = {
       flagId: 1,
-      FlagId: 1,
       ...(compId ? { CompanyId: compId } : {}),
       ...params
     };
@@ -46,7 +45,6 @@ const materialCategoryTypeService = {
       : getSessionCompanyId();
     const payload = {
       FlagId: 3,
-      flagId: 3,
       ...(compId ? { CompanyId: compId } : {}),
       ...params
     };
@@ -57,42 +55,39 @@ const materialCategoryTypeService = {
     return [];
   },
 
-  // Create Category
+  // Create Category (flagId: 2)
   createCategory: async (payload = {}) => {
     const compId = payload.CompanyId !== undefined && payload.CompanyId !== null && payload.CompanyId !== ''
       ? Number(payload.CompanyId)
       : getSessionCompanyId();
     const body = {
       flagId: 2,
-      FlagId: 2,
       ...(compId ? { CompanyId: compId } : {}),
       ...payload
     };
     return await apiClient.post(API_ENDPOINTS.create, body);
   },
 
-  // Update Category
+  // Update Category (flagId: 3)
   updateCategory: async (payload = {}) => {
     const compId = payload.CompanyId !== undefined && payload.CompanyId !== null && payload.CompanyId !== ''
       ? Number(payload.CompanyId)
       : getSessionCompanyId();
     const body = {
       flagId: 3,
-      FlagId: 3,
       ...(compId ? { CompanyId: compId } : {}),
       ...payload
     };
     return await apiClient.patch(API_ENDPOINTS.update, body);
   },
 
-  // Delete Category
+  // Delete Category (FlagId: 5)
   deleteCategory: async (id, params = {}) => {
     const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
       ? Number(params.CompanyId)
       : getSessionCompanyId();
     const payload = {
       FlagId: 5,
-      flagId: 5,
       MaterialCategoryTypeId: id,
       ...(compId ? { CompanyId: compId } : {}),
       ...params
@@ -100,14 +95,13 @@ const materialCategoryTypeService = {
     return await apiClient.post(API_ENDPOINTS.delete, payload);
   },
 
-  // Toggle Category Status
+  // Toggle Category Status (flagId: 4)
   toggleStatus: async (payload = {}) => {
     const compId = payload.CompanyId !== undefined && payload.CompanyId !== null && payload.CompanyId !== ''
       ? Number(payload.CompanyId)
       : getSessionCompanyId();
     const body = {
       flagId: 4,
-      FlagId: 4,
       ...(compId ? { CompanyId: compId } : {}),
       ...payload
     };

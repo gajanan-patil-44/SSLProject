@@ -28,7 +28,6 @@ export const projectService = {
   addProject: async (data) => {
     return apiClient.post(API_ROUTES.PROJECT.ADD_PROJECT, {
       flagId: 2,
-      FlagId: 2,
       CompanyProductId: Number(data.CompanyProductId || data.companyProductId),
       ProjectName: data.ProjectName || data.projectName || '',
       ProjectCode: data.ProjectCode || data.projectCode || '',
@@ -43,9 +42,8 @@ export const projectService = {
    * Get company products dropdown for project edit (flagId: 1)
    */
   getCompanyProductsForEditDropdown: async () => {
-    return apiClient.post(API_ROUTES.PROJECT.EDIT_PROJECT, {
-      flagId: 1,
-      FlagId: 1
+    return apiClient.patch(API_ROUTES.PROJECT.EDIT_PROJECT, {
+      flagId: 1
     });
   },
 
@@ -56,7 +54,6 @@ export const projectService = {
   editProject: async (data) => {
     return apiClient.patch(API_ROUTES.PROJECT.EDIT_PROJECT, {
       flagId: 2,
-      FlagId: 2,
       ProjectId: Number(data.ProjectId ?? data.id),
       CompanyProductId: Number(data.CompanyProductId || data.companyProductId),
       ProjectName: data.ProjectName || data.projectName || '',
@@ -80,7 +77,6 @@ export const projectService = {
 
     return apiClient.patch(API_ROUTES.PROJECT.TOGGLE_STATUS, {
       flagId: 4,
-      FlagId: 4,
       ProjectId: Number(id),
       IsDisabled: Boolean(isDisabled),
       UpdatedByUserId: Number(data.UpdatedByUserId ?? 1),
@@ -96,7 +92,6 @@ export const projectService = {
     const id = typeof idOrData === 'object' ? (idOrData.ProjectId ?? idOrData.id) : idOrData;
     return apiClient.post(API_ROUTES.PROJECT.DELETE_PROJECT, {
       flagId: 1,
-      FlagId: 1,
       ProjectId: Number(id)
     });
   }
