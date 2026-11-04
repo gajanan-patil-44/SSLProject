@@ -88,12 +88,12 @@ export const IconButton = forwardRef(({
 // ==========================================
 // Input / Form Field Components
 // ==========================================
-export const FormField = ({ label, error, helpText, className = '', children }) => {
+export const FormField = ({ label, error, helpText, className = '', children, required }) => {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
         <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          {label}
+          {label}{required && <span className="text-rose-500 ml-0.5">*</span>}
         </label>
       )}
       {children}

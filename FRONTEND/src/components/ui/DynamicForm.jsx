@@ -58,11 +58,7 @@ export const DynamicForm = ({
     switch (field.type) {
       case 'textarea':
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-2"}
           >
             <Controller
@@ -87,11 +83,7 @@ export const DynamicForm = ({
 
       case 'select':
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-1"}
           >
             <Controller
@@ -172,11 +164,7 @@ export const DynamicForm = ({
 
       case 'radio':
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-2"}
           >
             <div className="flex gap-4 mt-1">
@@ -201,11 +189,7 @@ export const DynamicForm = ({
         const isTextOnly = keyLower.includes('firstname') || keyLower.includes('lastname') || keyLower.includes('contactperson') || (!keyLower.includes('code') && !keyLower.includes('email') && (keyLower.endsWith('name') || keyLower.includes('name')));
         if (isTextOnly && (!field.type || field.type === 'text')) {
           return (
-            <FormField
-              key={field.key}
-              label={field.label}
-              error={errorMsg}
-              helpText={field.helpText}
+            <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
               className={field.gridSpan || "col-span-1"}
             >
               <Controller
@@ -230,11 +214,7 @@ export const DynamicForm = ({
           );
         }
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-1"}
           >
             <Input

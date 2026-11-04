@@ -39,11 +39,14 @@ import {
 import { BASE_URL } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
 import { itemCreationService } from '../services';
+import { getSessionCompanyId } from '../services/departmentService';
 import { validateCode, validateHSN, validateTextOnly, validateDescription } from '../utils/validators';
 
 export default function ItemCreation() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
+
+  const sessionCompanyId = getSessionCompanyId();
 
   // Derived current user details dynamically from store
   const currentUserName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
@@ -187,7 +190,8 @@ export default function ItemCreation() {
     setPreviewError(null);
 
     try {
-      const res = await itemCreationService.viewFile(file.id);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const res = await itemCreationService.viewFile(file.id, { ...(compId ? { CompanyId: compId } : {}) });
 
       // Binary blob response (PDF, Image, etc.)
       if (res instanceof Blob) {
@@ -331,7 +335,8 @@ export default function ItemCreation() {
   // Fetch all 6 dropdowns dynamically from /verp-service/material/dropdown (FlagIds 2 to 7)
   const fetchAllDropdowns = async (categoryId = null, gstTypeId = null) => {
     try {
-      const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId, compId);
       setDropdowns(data);
       return data;
     } catch (error) {
@@ -343,7 +348,8 @@ export default function ItemCreation() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const data = await itemCreationService.getItems();
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await itemCreationService.getItems({ ...(compId ? { CompanyId: compId } : {}) });
       setItems(data || []);
     } catch (error) {
       showToast('Failed to load materials', 'error');
@@ -502,7 +508,8 @@ export default function ItemCreation() {
     if (selectedId) {
       setLoadingSubCategories(true);
       try {
-        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId);
+        const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId, { ...(compId ? { CompanyId: compId } : {}) });
         setDropdowns(prev => ({
           ...prev,
           subCategories: subCats || []
@@ -554,7 +561,8 @@ export default function ItemCreation() {
     if (selectedId) {
       setLoadingGSTRates(true);
       try {
-        const rates = await itemCreationService.getGSTRateDropdown(selectedId);
+        const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+        const rates = await itemCreationService.getGSTRateDropdown(selectedId, { ...(compId ? { CompanyId: compId } : {}) });
         setDropdowns(prev => ({
           ...prev,
           gstRates: rates || []
@@ -649,7 +657,8 @@ export default function ItemCreation() {
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
-          file: selectedFile
+          file: selectedFile,
+          CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
         };
 
         const response = await itemCreationService.updateItem(payload);
@@ -678,7 +687,8 @@ export default function ItemCreation() {
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
-          file: selectedFile
+          file: selectedFile,
+          CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
         };
 
         const response = await itemCreationService.createItem(payload);
@@ -722,7 +732,8 @@ export default function ItemCreation() {
         MaterialId: item.id,
         IsDisabled: newIsDisabled,
         UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
-        UpdatedAt: new Date().toISOString()
+        UpdatedAt: new Date().toISOString(),
+        CompanyId: sessionCompanyId ? Number(sessionCompanyId) : (item.CompanyId ? Number(item.CompanyId) : undefined)
       };
 
       const response = await itemCreationService.toggleStatus(payload);
@@ -1141,7 +1152,7 @@ export default function ItemCreation() {
               {/* UOM */}
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
-                  Unit of Measurement (UOM)
+                  Unit of Measurement (UOM) {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <div className="relative">
                   <select
@@ -1202,7 +1213,7 @@ export default function ItemCreation() {
               {/* GST Type */}
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
-                  GST Type
+                  GST Type {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <div className="relative">
                   <select
@@ -1237,7 +1248,7 @@ export default function ItemCreation() {
               {/* GST Rate */}
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
-                  GST Rate
+                  GST Rate {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <div className="relative">
                   <select

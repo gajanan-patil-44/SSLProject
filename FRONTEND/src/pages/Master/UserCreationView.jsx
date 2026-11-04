@@ -588,6 +588,8 @@ export default function UserCreationView() {
       }
     } else if (name === 'Password') {
       fieldError = validatePassword(value, 'Password', 8, true);
+    } else if (name === 'DesignationId') {
+      if (!value && Number(form.RoleId) > 2) fieldError = 'Select a designation';
     } else if (name === 'CompanyId') {
       if (!value) fieldError = 'Select a company';
     } else if (name === 'RoleId') {
@@ -831,6 +833,23 @@ export default function UserCreationView() {
     if (step === 3) {
       if (!form.CompanyId)                                                        e.CompanyId        = 'Select a company';
       if (!form.RoleId)                                                           e.RoleId           = 'Select a role';
+
+      const roleIdNum = Number(form.RoleId);
+      // Backend createUserController strictly requires Designation, Product, Project, and Reporting Manager for normal users (RoleId > 2)
+      if (roleIdNum > 2) {
+        if (!form.DesignationId) {
+          e.DesignationId = 'Select a designation';
+        }
+        if (!Array.isArray(form.CompanyProductId) || form.CompanyProductId.length === 0) {
+          e.CompanyProductId = 'Select at least one product';
+        }
+        if (!Array.isArray(form.ProjectId) || form.ProjectId.length === 0) {
+          e.ProjectId = 'Select at least one project';
+        }
+        if (!Array.isArray(form.ReportingManagerUserId) || form.ReportingManagerUserId.length === 0) {
+          e.ReportingManagerUserId = 'Select at least one reporting manager';
+        }
+      }
     }
 
     if (step === 4) {
@@ -1458,7 +1477,7 @@ export default function UserCreationView() {
               icon={Building}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Company Assignment"
-              subtitle="Assign the user to a company, designation, product, project and role. Reporting Manager is optional."
+              subtitle="Assign the user to a company, role, designation, product, project and reporting manager."
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
@@ -1502,7 +1521,7 @@ export default function UserCreationView() {
 
 
               {/* ── Company Product — Multi-Select ── */}
-              <Field label="Company Product" error={errors.CompanyProductId}>
+              <Field label="Company Product" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.CompanyProductId}>
                 <MultiSelectDropdown
                   name="CompanyProductId"
                   options={products}
@@ -1516,7 +1535,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Project — Multi-Select ── */}
-              <Field label="Project" error={errors.ProjectId}>
+              <Field label="Project" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.ProjectId}>
                 <MultiSelectDropdown
                   name="ProjectId"
                   options={projects}
@@ -1543,7 +1562,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Designation ── */}
-              <Field label="Designation" error={errors.DesignationId}>
+              <Field label="Designation" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.DesignationId}>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
                   <select name="DesignationId" value={form.DesignationId} onChange={change}
@@ -1556,7 +1575,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Reporting Manager — Multi-Select ── */}
-              <Field label="Reporting Manager" error={errors.ReportingManagerUserId}>
+              <Field label="Reporting Manager" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.ReportingManagerUserId}>
                 <MultiSelectDropdown
                   name="ReportingManagerUserId"
                   options={reportingManagers}
@@ -1581,7 +1600,7 @@ export default function UserCreationView() {
               icon={Image}
               iconColor="bg-orange-50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400"
               title="Profile Photo"
-              subtitle="Upload an avatar or professional picture for user identity card and profile."
+              subtitle="Upload an avatar or professional picture for user identity card and profile (Mandatory)."
             />
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 w-full bg-slate-50/50 dark:bg-slate-800/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
               {/* Avatar preview */}

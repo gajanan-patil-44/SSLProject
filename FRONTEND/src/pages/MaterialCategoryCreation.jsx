@@ -16,11 +16,29 @@ import {
 import { useERPStore } from '../store/useERPStore';
 
 import { materialCategoryTypeService } from '../services';
+import { getSessionCompanyId } from '../services/departmentService';
 import { validateCode, validateTextOnly } from '../utils/validators';
 
 export default function MaterialCategoryCreation() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
+
+  const sessionCompanyId = getSessionCompanyId();
+
+  const getSessionUserName = () => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const u = s?.data?.user || s?.user || s;
+        return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || u?.username || '';
+      }
+      const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+      return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || u?.username || '';
+    } catch {
+      return '';
+    }
+  };
 
   // State
   const [categories, setCategories] = useState([]);
@@ -62,7 +80,10 @@ export default function MaterialCategoryCreation() {
     isFetchingRef.current = true;
     setLoading(true);
     try {
-      const data = await materialCategoryTypeService.getCategories();
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await materialCategoryTypeService.getCategories({
+        ...(compId ? { CompanyId: compId } : {})
+      });
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       showToast('Failed to load categories', 'error');
@@ -70,7 +91,7 @@ export default function MaterialCategoryCreation() {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [showToast]);
+  }, [sessionCompanyId, showToast]);
 
   useEffect(() => {
     fetchCategories();
@@ -118,16 +139,19 @@ export default function MaterialCategoryCreation() {
     }
     setSubmitting(true);
     
-    const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+    const userName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+    const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
     
     try {
       if (isEditing) {
         const payload = {
           flagId: 3,
+          FlagId: 3,
           MaterialCategoryTypeId: formData.id,
           MaterialCategoryTypeName: formData.name,
           MaterialCategoryTypeCode: formData.code,
-          UpdatedByUserName: userName
+          UpdatedByUserName: userName,
+          ...(compId ? { CompanyId: compId } : {})
         };
         
         const response = await materialCategoryTypeService.updateCategory(payload);
@@ -138,10 +162,12 @@ export default function MaterialCategoryCreation() {
       } else {
         const payload = {
           flagId: 2,
+          FlagId: 2,
           MaterialCategoryTypeName: formData.name,
           MaterialCategoryTypeCode: formData.code,
           IsDisabled: formData.status === 'Inactive',
-          CreatedByUserName: userName
+          CreatedByUserName: userName,
+          ...(compId ? { CompanyId: compId } : {})
         };
         
         const response = await materialCategoryTypeService.createCategory(payload);
@@ -162,7 +188,10 @@ export default function MaterialCategoryCreation() {
     if (!confirmDelete) return;
 
     try {
-      const response = await materialCategoryTypeService.deleteCategory(id);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const response = await materialCategoryTypeService.deleteCategory(id, {
+        ...(compId ? { CompanyId: compId } : {})
+      });
       if (response && response.status === 'success') {
         await fetchCategories();
       }
@@ -179,12 +208,15 @@ export default function MaterialCategoryCreation() {
     ));
 
     try {
-      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+      const userName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : (item.CompanyId ? Number(item.CompanyId) : undefined);
       const payload = {
         flagId: 4,
+        FlagId: 4,
         IsDisabled: !checked,
         UpdatedByUserName: userName,
-        MaterialCategoryTypeId: item.id
+        MaterialCategoryTypeId: item.id,
+        ...(compId ? { CompanyId: compId } : {})
       };
       
       const response = await materialCategoryTypeService.toggleStatus(payload);
