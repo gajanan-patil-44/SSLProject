@@ -23,7 +23,6 @@ export default function Topbar() {
   const theme = useERPStore((state) => state.theme);
   const setTheme = useERPStore((state) => state.setTheme);
   const toggleSidebar = useERPStore((state) => state.toggleSidebar);
-  const language = useERPStore((state) => state.language);
   const setLanguage = useERPStore((state) => state.setLanguage);
   const user = useERPStore((state) => state.user);
   const logout = useERPStore((state) => state.logout);

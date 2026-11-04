@@ -4,6 +4,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
 import { useERPStore } from '../../store/useERPStore';
 import { locationTypeService } from '../../services/locationTypeService';
+import { validateTextOnly } from '../../utils/validators';
 import {
   GitFork,
   MapPin,
@@ -91,7 +92,6 @@ export default function EditLocationTypeMasterModal({
         setDropdownOptions(raw);
       }
     } catch (err) {
-      console.warn('Failed to fetch parent dropdown for edit:', err);
     }
   };
 
@@ -129,13 +129,9 @@ export default function EditLocationTypeMasterModal({
 
   const validate = () => {
     const errs = {};
-    const trimmed = locationTypeName.trim();
-    if (!trimmed) {
-      errs.childName = 'Location Type Name is required';
-    } else if (trimmed.length < 2) {
-      errs.childName = 'Location Type Name must be at least 2 characters';
-    } else if (trimmed.length > 100) {
-      errs.childName = 'Location Type Name must not exceed 100 characters';
+    const locNameErr = validateTextOnly(locationTypeName, 'Location Type Name', true, 2, 100);
+    if (locNameErr) {
+      errs.childName = locNameErr;
     }
 
     // If not root, parent location is required
@@ -169,7 +165,6 @@ export default function EditLocationTypeMasterModal({
       if (onSaveSuccess) onSaveSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to update location type:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to update location type', 'error');
     } finally {
       setSaving(false);
@@ -214,7 +209,8 @@ export default function EditLocationTypeMasterModal({
                   placeholder="e.g. Country, State, District"
                   value={locationTypeName}
                   onChange={(e) => {
-                    setLocationTypeName(e.target.value);
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setLocationTypeName(sanitized);
                     if (errors.childName) setErrors(prev => ({ ...prev, childName: null }));
                   }}
                   className={`${inputCls(errors.childName)} pl-9.5`}

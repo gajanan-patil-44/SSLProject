@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useERPStore } from '../../store/useERPStore';
@@ -8,7 +8,6 @@ import { isRouteAllowed } from '../../utils/permissionGuard';
 
 export default function AppLayout() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const theme = useERPStore((state) => state.theme);
   const isAuthenticated = useERPStore((state) => state.isAuthenticated);
   const user = useERPStore((state) => state.user);

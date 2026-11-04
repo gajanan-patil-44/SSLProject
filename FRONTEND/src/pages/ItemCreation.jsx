@@ -39,11 +39,14 @@ import {
 import { BASE_URL } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
 import { itemCreationService } from '../services';
-import { validateCode, validateHSN } from '../utils/validators';
+import { getSessionCompanyId } from '../services/departmentService';
+import { validateCode, validateHSN, validateTextOnly, validateDescription } from '../utils/validators';
 
 export default function ItemCreation() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
+
+  const sessionCompanyId = getSessionCompanyId();
 
   // Derived current user details dynamically from store
   const currentUserName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
@@ -187,7 +190,8 @@ export default function ItemCreation() {
     setPreviewError(null);
 
     try {
-      const res = await itemCreationService.viewFile(file.id);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const res = await itemCreationService.viewFile(file.id, { ...(compId ? { CompanyId: compId } : {}) });
 
       // Binary blob response (PDF, Image, etc.)
       if (res instanceof Blob) {
@@ -225,7 +229,6 @@ export default function ItemCreation() {
         }
       }
     } catch (err) {
-      console.error('Error loading document preview:', err);
       if (file.filePath) {
         const finalUrl = getFileUrl(file.filePath);
         setDocumentPreviewUrl(finalUrl);
@@ -298,11 +301,12 @@ export default function ItemCreation() {
     const codeErr = validateCode(formData.code, 'Material Code', true);
     if (codeErr) errs.code = codeErr;
 
-    const trimmedName = (formData.name || '').trim();
-    if (!trimmedName) {
-      errs.name = 'Material Name is required';
-    } else if (trimmedName.length < 2) {
-      errs.name = 'Material Name must be at least 2 characters';
+    const nameErr = validateTextOnly(formData.name, 'Material Name', true, 2, 100);
+    if (nameErr) errs.name = nameErr;
+
+    if (formData.description) {
+      const descErr = validateDescription(formData.description, 'Specification / Description', false, 2, 500);
+      if (descErr) errs.description = descErr;
     }
 
     if (!formData.uomId) {
@@ -331,11 +335,11 @@ export default function ItemCreation() {
   // Fetch all 6 dropdowns dynamically from /verp-service/material/dropdown (FlagIds 2 to 7)
   const fetchAllDropdowns = async (categoryId = null, gstTypeId = null) => {
     try {
-      const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId, compId);
       setDropdowns(data);
       return data;
     } catch (error) {
-      console.error("Failed to load dropdowns:", error);
       return null;
     }
   };
@@ -344,10 +348,10 @@ export default function ItemCreation() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const data = await itemCreationService.getItems();
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await itemCreationService.getItems({ ...(compId ? { CompanyId: compId } : {}) });
       setItems(data || []);
     } catch (error) {
-      console.error("Failed to fetch items:", error);
       showToast('Failed to load materials', 'error');
       setItems([]);
     } finally {
@@ -504,13 +508,13 @@ export default function ItemCreation() {
     if (selectedId) {
       setLoadingSubCategories(true);
       try {
-        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId);
+        const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId, { ...(compId ? { CompanyId: compId } : {}) });
         setDropdowns(prev => ({
           ...prev,
           subCategories: subCats || []
         }));
       } catch (err) {
-        console.error("Failed to load subcategories for category:", selectedId, err);
         setDropdowns(prev => ({ ...prev, subCategories: [] }));
       } finally {
         setLoadingSubCategories(false);
@@ -557,13 +561,13 @@ export default function ItemCreation() {
     if (selectedId) {
       setLoadingGSTRates(true);
       try {
-        const rates = await itemCreationService.getGSTRateDropdown(selectedId);
+        const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+        const rates = await itemCreationService.getGSTRateDropdown(selectedId, { ...(compId ? { CompanyId: compId } : {}) });
         setDropdowns(prev => ({
           ...prev,
           gstRates: rates || []
         }));
       } catch (err) {
-        console.error("Failed to load GST rates for type:", selectedId, err);
         setDropdowns(prev => ({ ...prev, gstRates: [] }));
       } finally {
         setLoadingGSTRates(false);
@@ -653,7 +657,8 @@ export default function ItemCreation() {
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
-          file: selectedFile
+          file: selectedFile,
+          CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
         };
 
         const response = await itemCreationService.updateItem(payload);
@@ -682,7 +687,8 @@ export default function ItemCreation() {
           UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
-          file: selectedFile
+          file: selectedFile,
+          CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
         };
 
         const response = await itemCreationService.createItem(payload);
@@ -696,7 +702,6 @@ export default function ItemCreation() {
       setIsModalOpen(false);
       setSelectedFile(null);
     } catch (error) {
-      console.error("Failed to submit material:", error);
       showToast(error?.message || 'Failed to save material', 'error');
     } finally {
       setSubmitting(false);
@@ -727,7 +732,8 @@ export default function ItemCreation() {
         MaterialId: item.id,
         IsDisabled: newIsDisabled,
         UpdatedByUserId: currentUserId ? Number(currentUserId) : undefined,
-        UpdatedAt: new Date().toISOString()
+        UpdatedAt: new Date().toISOString(),
+        CompanyId: sessionCompanyId ? Number(sessionCompanyId) : (item.CompanyId ? Number(item.CompanyId) : undefined)
       };
 
       const response = await itemCreationService.toggleStatus(payload);
@@ -737,7 +743,6 @@ export default function ItemCreation() {
         throw new Error(response?.message || 'Status update failed');
       }
     } catch (error) {
-      console.error("Failed to toggle status:", error);
       // Revert if API fails
       setItems(prev => prev.map(i =>
         i.id === item.id ? { ...i, status: item.status, isDisabled: item.isDisabled } : i
@@ -1101,7 +1106,8 @@ export default function ItemCreation() {
                 <input 
                   value={formData.name}
                   onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value });
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setFormData({ ...formData, name: sanitized });
                     if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
                   }}
                   placeholder="e.g. Copper Wire"
@@ -1146,7 +1152,7 @@ export default function ItemCreation() {
               {/* UOM */}
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
-                  Unit of Measurement (UOM)
+                  Unit of Measurement (UOM) {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <div className="relative">
                   <select
@@ -1207,7 +1213,7 @@ export default function ItemCreation() {
               {/* GST Type */}
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
-                  GST Type
+                  GST Type {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <div className="relative">
                   <select
@@ -1242,7 +1248,7 @@ export default function ItemCreation() {
               {/* GST Rate */}
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
-                  GST Rate
+                  GST Rate {!isViewing && <span className="text-rose-500">*</span>}
                 </label>
                 <div className="relative">
                   <select
@@ -1424,11 +1430,20 @@ export default function ItemCreation() {
                 <textarea
                   rows={2}
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Enter specifications..."
+                  onChange={(e) => {
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setFormData({ ...formData, description: sanitized });
+                    if (formErrors.description) setFormErrors(prev => ({ ...prev, description: '' }));
+                  }}
+                  placeholder="Enter specifications (text only)..."
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 resize-none"
+                  className={`w-full h-8.5 px-2.5 py-1 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 resize-none ${
+                    formErrors.description ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.description && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.description}</span>
+                )}
               </div>
             </div>
           </div>

@@ -61,6 +61,10 @@ const ICON_MAP = {
   'materialcategory': Icons.Tags,
   'material-sub-category': Icons.Tag,
   'materialsubcategory': Icons.Tag,
+  'gst-creation': Icons.Receipt,
+  'gstcreation': Icons.Receipt,
+  gst: Icons.Receipt,
+  receipt: Icons.Receipt,
 };
 
 const resolveIcon = (iconName) => {
@@ -101,10 +105,12 @@ const formatPageNode = (page) => {
 
   let formattedLabel = formatTitle(rawName);
   const lowerLabel = formattedLabel.toLowerCase();
-  if (lowerLabel === 'manage category' || lowerLabel === 'manage categories') {
-    formattedLabel = 'Material Category';
-  } else if (lowerLabel === 'manage sub category' || lowerLabel === 'manage sub categories') {
+  if (lowerLabel === 'manage category' || lowerLabel === 'manage categories' || lowerLabel === 'material category' || lowerLabel === 'material categories') {
+    formattedLabel = 'Material Categories Creation';
+  } else if (lowerLabel === 'manage sub category' || lowerLabel === 'manage sub categories' || lowerLabel === 'material sub category' || lowerLabel === 'material sub categories') {
     formattedLabel = 'Material Sub Category';
+  } else if (lowerLabel === 'gst' || lowerLabel === 'gst creation' || lowerLabel === 'gst master' || lowerLabel === 'gst-creation') {
+    formattedLabel = 'GST Creation';
   }
 
   const children = Array.isArray(page.children)

@@ -5,7 +5,14 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/companyproductprojectdropdown
+  url: http://localhost:9004/verp-service/userCreation/companyproductprojectdropdown
+  body:
+    type: json
+    data: |-
+      {
+        "FlagId":5,
+        "CompanyId":null
+      }
   auth: inherit
 
 settings:
