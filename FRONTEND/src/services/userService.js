@@ -1,6 +1,7 @@
 // src/services/userService.js
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
+import { getSessionCompanyId } from './departmentService';
 
 export const userService = {
   /**
@@ -23,16 +24,22 @@ export const userService = {
   },
 
   getDesignationDropdown: async (companyId) => {
+    const compId = companyId !== undefined && companyId !== null && String(companyId).trim() !== ''
+      ? Number(companyId)
+      : getSessionCompanyId();
     return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
       FlagId: 3,
-      CompanyId: Number(companyId)
+      CompanyId: compId
     });
   },
 
   getReportingManagerDropdown: async (companyId, designationId) => {
+    const compId = companyId !== undefined && companyId !== null && String(companyId).trim() !== ''
+      ? Number(companyId)
+      : getSessionCompanyId();
     return apiClient.post(API_ROUTES.USER.USERDROPDOWNS, {
       FlagId: 4,
-      CompanyId: Number(companyId),
+      CompanyId: compId,
       DesignationId: Number(designationId)
     });
   },
@@ -63,9 +70,12 @@ export const userService = {
   },
 
   getProductDropdown: async (companyId) => {
+    const compId = companyId !== undefined && companyId !== null && String(companyId).trim() !== ''
+      ? Number(companyId)
+      : getSessionCompanyId();
     return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
       FlagId: 2,
-      CompanyId: Number(companyId)
+      CompanyId: compId
     });
   },
 
@@ -82,10 +92,29 @@ export const userService = {
    * FlagId: 4, CompanyId: number
    */
   getRoleDropdown: async (companyId) => {
+    const compId = companyId !== undefined && companyId !== null && String(companyId).trim() !== ''
+      ? Number(companyId)
+      : getSessionCompanyId();
     return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
       FlagId: 4,
-      CompanyId: Number(companyId)
+      CompanyId: compId
     });
+  },
+
+  /**
+   * Department dropdown via /verp-service/userCreation/companyproductprojectdropdown
+   * flagId: 5, CompanyId: number | null
+   */
+  getDepartmentDropdown: async (companyId = null) => {
+    const sessionCompId = getSessionCompanyId();
+    const targetCompanyId = companyId !== null && companyId !== undefined && String(companyId).trim() !== ''
+      ? Number(companyId)
+      : (sessionCompId ? Number(sessionCompId) : null);
+    const payload = {
+      flagId: 5,
+      CompanyId: targetCompanyId
+    };
+    return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, payload);
   },
 
   /**

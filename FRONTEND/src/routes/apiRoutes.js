@@ -147,7 +147,8 @@ export const PROJECT_ROUTES = {
 export const USER_ROUTES = {
   CREATE_USER: '/verp-service/userCreation/createuser',
   USERDROPDOWNS: '/verp-service/userCreation/userdropdowns',
-  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown'
+  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown',
+  DEPARTMENT_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown'
 };
 
 /**
@@ -237,6 +238,33 @@ export const VENDOR_ROUTES = {
 
 /**
  * ============================================================================
+ * 18. DEPARTMENT ROUTES
+ * ============================================================================
+ */
+export const DEPARTMENT_ROUTES = {
+  GET_DEPARTMENTS: '/verp-service/department/getDepartment',
+  ADD_DEPARTMENT: '/verp-service/department/addDepartment',
+  UPDATE_DEPARTMENT: '/verp-service/department/updateDepartment',
+  TOGGLE_DEPARTMENT_STATUS: '/verp-service/department/toggleDepartmentStatus'
+};
+
+/**
+ * ============================================================================
+ * 19. GST RATE / CREATION ROUTES
+ * ============================================================================
+ */
+export const GST_RATE_ROUTES = {
+  VIEW: '/verp-service/gstRate/view',
+  ADD: '/verp-service/gstRate/add',
+  EDIT: '/verp-service/gstRate/edit',
+  STATUS: '/verp-service/gstRate/status',
+  DROPDOWN: '/verp-service/gstRate/dropdown'
+};
+
+export const GST_ROUTES = GST_RATE_ROUTES;
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -258,7 +286,10 @@ export const API_ROUTES = {
   BIRTHDAY: BIRTHDAY_ROUTES,
   ITEM: MATERIAL_ROUTES,
   MATERIAL: MATERIAL_ROUTES,
-  VENDOR: VENDOR_ROUTES
+  VENDOR: VENDOR_ROUTES,
+  DEPARTMENT: DEPARTMENT_ROUTES,
+  GST: GST_RATE_ROUTES,
+  GST_RATE: GST_RATE_ROUTES
 };
 
 export default API_ROUTES;

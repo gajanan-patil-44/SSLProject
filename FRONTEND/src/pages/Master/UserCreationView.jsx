@@ -5,7 +5,7 @@ import {
   Building, Package, FolderOpen, ShieldCheck, Upload, X,
   FileText, Image, Plus, Trash2, RefreshCw, CheckCircle2,
   AlertCircle, Eye, EyeOff, UserCog, Hash, ArrowLeft,
-  ArrowRight, Check, ChevronRight, ChevronDown, Sparkles
+  ArrowRight, Check, ChevronRight, ChevronDown, Sparkles, Layers
 } from 'lucide-react';
 import { Button, PageHeader } from '../../components/ui/index';
 import { userService } from '../../services/userService';
@@ -114,6 +114,7 @@ const getInitialForm = () => {
     GenderId: '',
     MaritalStatusId: '',
     DesignationId: '',
+    DepartmentId: '',
     Email: '',
     LoginName: '',
     Password: '',
@@ -305,6 +306,7 @@ export default function UserCreationView() {
   const [photo, setPhoto]                     = useState(null);   // { file, preview }
   const [userFiles, setUserFiles]             = useState({});     // { [fileTypeId]: File }
   const [fileErrors, setFileErrors]           = useState({});     // { [fileTypeId]: string }
+  const [departments, setDepartments]         = useState([]);
   const [designations, setDesignations]       = useState([]);
   const [genders, setGenders]                 = useState([]);
   const [maritalStatuses, setMaritalStatuses] = useState([]);
@@ -348,6 +350,15 @@ export default function UserCreationView() {
       );
     } catch (err) {
       setProducts([]);
+    }
+
+    try {
+      const deptRes = await userService.getDepartmentDropdown(companyId);
+      const rawDepts = deptRes?.data?.data ?? deptRes?.data ?? deptRes;
+      const list = Array.isArray(rawDepts) ? rawDepts : [];
+      setDepartments(toOpts(list, 'DepartmentId', 'DepartmentName'));
+    } catch (err) {
+      setDepartments([]);
     }
 
     try {
@@ -460,13 +471,14 @@ export default function UserCreationView() {
     }
 
     if (name === 'CompanyId') {
-      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
+      setForm(f => ({ ...f, CompanyId: value, DepartmentId: '', DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
       setProducts([]);
       setProjects([]);
+      setDepartments([]);
       setDesignations([]);
       setRoles([]);
       setReportingManagers([]);
-      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+      setErrors(er => ({ ...er, CompanyId: '', DepartmentId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
       if (!value) return;
 
       // 1. Fetch Company Products
@@ -489,7 +501,17 @@ export default function UserCreationView() {
         setProducts([]);
       }
 
-      // 2. Fetch Designations for selected Company (FlagId: 3 with CompanyId)
+      // 2. Fetch Departments for selected Company via /verp-service/userCreation/companyproductprojectdropdown { FlagId: 5, CompanyId: value }
+      try {
+        const deptRes = await userService.getDepartmentDropdown(value);
+        const rawDepts = deptRes?.data?.data ?? deptRes?.data ?? deptRes;
+        const list = Array.isArray(rawDepts) ? rawDepts : [];
+        setDepartments(toOpts(list, 'DepartmentId', 'DepartmentName'));
+      } catch (err) {
+        setDepartments([]);
+      }
+
+      // 3. Fetch Designations for selected Company (FlagId: 3 with CompanyId)
       try {
         const dRes = await userService.getDesignationDropdown(value);
         const rawList = dRes?.data?.Designations || dRes?.data?.designations || (Array.isArray(dRes?.data) ? dRes.data : null) || (Array.isArray(dRes) ? dRes : []);
@@ -558,7 +580,7 @@ export default function UserCreationView() {
         fieldError = 'Login username must be at least 3 characters';
       }
     } else if (name === 'Password') {
-      fieldError = validatePassword(value, 'Password', 6, true);
+      fieldError = validatePassword(value, 'Password', 8, true);
     } else if (name === 'CompanyId') {
       if (!value) fieldError = 'Select a company';
     } else if (name === 'RoleId') {
@@ -795,7 +817,7 @@ export default function UserCreationView() {
         e.LoginName = 'Login username must be at least 3 characters';
       }
 
-      const passErr = validatePassword(form.Password, 'Password', 6, true);
+      const passErr = validatePassword(form.Password, 'Password', 8, true);
       if (passErr) e.Password = passErr;
     }
 
@@ -951,6 +973,9 @@ export default function UserCreationView() {
       fd.append('CreatedByUserName', createdBy);
     }
     fd.append('CompanyId',          form.CompanyId);
+    if (form.DepartmentId) {
+      fd.append('DepartmentId',     form.DepartmentId);
+    }
     // ReportingManagerUserId — multi
     const managerIds = Array.isArray(form.ReportingManagerUserId) ? form.ReportingManagerUserId : (form.ReportingManagerUserId ? [form.ReportingManagerUserId] : []);
     fd.append('ReportingManagerUserId', JSON.stringify(managerIds.map(Number)));
@@ -985,6 +1010,7 @@ export default function UserCreationView() {
         email: form.Email,
         loginName: form.LoginName,
         company: companies.find(c => String(c.value) === String(form.CompanyId))?.label || '—',
+        department: departments.find(d => String(d.value) === String(form.DepartmentId))?.label || '—',
         role: roles.find(r => String(r.value) === String(form.RoleId))?.label || '—',
         designation: designations.find(d => String(d.value) === String(form.DesignationId))?.label || '—',
       };
@@ -996,9 +1022,33 @@ export default function UserCreationView() {
       resetAllState(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      const errMsg = err?.message || 'Failed to create user. Please try again.';
+      const errMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Failed to create user. Please try again.';
       setResult({ ok: false, msg: errMsg });
       useERPStore.getState().showToast(errMsg, 'error');
+
+      const lower = errMsg.toLowerCase();
+      if (lower.includes('password')) {
+        setErrors(prev => ({ ...prev, Password: errMsg }));
+        setCurrentStep(2);
+      } else if (lower.includes('login') || lower.includes('username')) {
+        setErrors(prev => ({ ...prev, LoginName: errMsg }));
+        setCurrentStep(2);
+      } else if (lower.includes('email')) {
+        setErrors(prev => ({ ...prev, Email: errMsg }));
+        setCurrentStep(2);
+      } else if (lower.includes('phone')) {
+        setErrors(prev => ({ ...prev, PhoneNumber: errMsg }));
+        setCurrentStep(1);
+      } else if (lower.includes('employee')) {
+        setErrors(prev => ({ ...prev, EmployeeId: errMsg }));
+        setCurrentStep(1);
+      } else if (lower.includes('company') || lower.includes('role') || lower.includes('designation') || lower.includes('department')) {
+        setCurrentStep(3);
+      } else if (lower.includes('photo') || lower.includes('avatar') || lower.includes('picture')) {
+        setCurrentStep(4);
+      } else if (lower.includes('file') || lower.includes('document')) {
+        setCurrentStep(5);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSubmitting(false);
@@ -1015,6 +1065,7 @@ export default function UserCreationView() {
     setFileErrors({});
     setProducts([]);
     setProjects([]);
+    setDepartments([]);
     setDesignations([]);
     setRoles([]);
     setReportingManagers([]);
@@ -1382,6 +1433,11 @@ export default function UserCreationView() {
                     {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
+                {!errors.Password && (
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                    Must be at least 8 chars with uppercase, lowercase, number, and special character.
+                  </span>
+                )}
               </Field>
 
             </div>
@@ -1416,6 +1472,23 @@ export default function UserCreationView() {
                     {sessionCompanyId && !companies.some(o => String(o.value) === String(sessionCompanyId)) && (
                       <option value={String(sessionCompanyId)}>{sessionCompanyName || `Company #${sessionCompanyId}`}</option>
                     )}
+                  </select>
+                </div>
+              </Field>
+
+              {/* ── Department ── */}
+              <Field label="Department" error={errors.DepartmentId}>
+                <div className="relative">
+                  <Layers className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
+                  <select
+                    name="DepartmentId"
+                    value={form.DepartmentId}
+                    onChange={change}
+                    disabled={!form.CompanyId}
+                    className={`${selectCls(errors.DepartmentId)} pl-8 ${!form.CompanyId ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
+                  >
+                    <option value="">{form.CompanyId ? '— Select Department —' : '— Select Company first —'}</option>
+                    {departments.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
               </Field>
