@@ -1,9 +1,8 @@
 import { pool } from "../../Config/db.js";
 import bcrypt from "bcrypt";
 
-export const getAllUserDetails = async () => {
+export const getAllUserDetails = async (CompanyId) => {
     try {
-
 
         const query = `
     SELECT
@@ -132,7 +131,7 @@ export const getAllUserDetails = async () => {
                         rmc."CompanyName"
                 )
             ) FILTER (
-                WHERE urm."UserReportingManagerId" IS NOT NULL
+                WHERE urm."UserReportingManagerId" IS NOT NULL AND urm."CompanyId" =$1
             ),
             '[]'
         ) AS "ReportingManagers"
@@ -221,6 +220,14 @@ export const getAllUserDetails = async () => {
     LEFT JOIN "LKP"."CompanyDesignation" cd 
     ON cd."CompanyDesignationId" = u."DesignationId"
 
+    WHERE EXISTS (
+    SELECT 1
+    FROM "DATA"."UserCompany" uc_filter
+    WHERE uc_filter."UserId" = u."UserId"
+      AND uc_filter."CompanyId" = $1
+      AND uc_filter."IsDisabled" = false
+)
+
 GROUP BY
         u."UserId",
         u."EmployeeId",
@@ -237,7 +244,8 @@ GROUP BY
         cd."DesignationName";
 
 `;
-        const result = await pool.query(query);
+
+        const result = await pool.query(query,[CompanyId]);
         return result.rows
     } catch (error) {
         throw error

@@ -648,10 +648,7 @@ export const createUserController = async (req, res) => {
         let processedFiles;
 
         try {
-            processedFiles = await convertUploadedImagesToPdf(
-                uploadedFiles,
-                fileTypeIds
-            );
+            processedFiles = await convertUploadedImagesToPdf(uploadedFiles,fileTypeIds);
         } catch (error) {
             return res.status(400).json({
                 status: "error",
@@ -703,7 +700,8 @@ export const createUserController = async (req, res) => {
         return res.status(500).json({
             status: "error",
             message: "Internal server error",
-            error: error.message
+            error: error.message,
+            stack:error.stack
         });
     }
 };

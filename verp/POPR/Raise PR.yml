@@ -1,0 +1,63 @@
+info:
+  name: Raise PR
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/PoPr/createPRPO
+  body:
+    type: multipart-form
+    data:
+      - name: flagId
+        type: text
+        value: "1"
+      - name: UserId
+        type: text
+        value: "33"
+      - name: CompanyId
+        type: text
+        value: "1"
+      - name: ProjectId
+        type: text
+        value: "3"
+      - name: DesignationId
+        type: text
+        value: "3"
+      - name: DepartmentId
+        type: text
+        value: "15"
+      - name: ReportingToUserId
+        type: text
+        value: "51"
+      - name: RequestDate
+        type: text
+        value: 04/11/2026
+      - name: RequiredDate
+        type: text
+        value: 05/11/2026
+      - name: PriorityId
+        type: text
+        value: "1"
+      - name: PurPose
+        type: text
+        value: require some equipment
+      - name: materials
+        type: text
+        value: "[1]"
+      - name: fileTypeIds
+        type: text
+        value: "[4]"
+      - name: files
+        type: file
+        value:
+          - C:\Users\manoj\Pictures\Screenshots\pit bull.png
+        contentType: image/png
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
