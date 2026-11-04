@@ -6,6 +6,16 @@ info:
 http:
   method: POST
   url: http://localhost:9004/verp-service/department/addDepartment
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 2,
+          "CompanyId": 2,
+          "DepartmentName": "Human Resourcesss",
+          "DepartmentCode": "HR002",
+          "CreatedByUserName": "Admin"
+      }
   auth: inherit
 
 settings:
