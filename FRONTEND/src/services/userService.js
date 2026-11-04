@@ -111,7 +111,7 @@ export const userService = {
       ? Number(companyId)
       : (sessionCompId ? Number(sessionCompId) : null);
     const payload = {
-      flagId: 5,
+      FlagId: 5,
       CompanyId: targetCompanyId
     };
     return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, payload);

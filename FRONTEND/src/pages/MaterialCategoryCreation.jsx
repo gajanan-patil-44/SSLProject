@@ -146,7 +146,6 @@ export default function MaterialCategoryCreation() {
       if (isEditing) {
         const payload = {
           flagId: 3,
-          FlagId: 3,
           MaterialCategoryTypeId: formData.id,
           MaterialCategoryTypeName: formData.name,
           MaterialCategoryTypeCode: formData.code,
@@ -162,7 +161,6 @@ export default function MaterialCategoryCreation() {
       } else {
         const payload = {
           flagId: 2,
-          FlagId: 2,
           MaterialCategoryTypeName: formData.name,
           MaterialCategoryTypeCode: formData.code,
           IsDisabled: formData.status === 'Inactive',
@@ -212,7 +210,6 @@ export default function MaterialCategoryCreation() {
       const compId = sessionCompanyId ? Number(sessionCompanyId) : (item.CompanyId ? Number(item.CompanyId) : undefined);
       const payload = {
         flagId: 4,
-        FlagId: 4,
         IsDisabled: !checked,
         UpdatedByUserName: userName,
         MaterialCategoryTypeId: item.id,

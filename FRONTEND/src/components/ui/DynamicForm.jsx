@@ -18,8 +18,10 @@ export const DynamicForm = ({
 }) => {
 
   // Precompute defaultValues from field definitions
+  const safeFields = Array.isArray(fields) ? fields : [];
+
   const computedDefaultValues = React.useMemo(() => {
-    const flatFields = fields.some(f => f.section)
+    const flatFields = safeFields.some(f => f && f.section)
       ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
       : fields;
     const initial = {};
@@ -29,10 +31,10 @@ export const DynamicForm = ({
       }
     });
     return { ...initial, ...(defaultValues || {}) };
-  }, [fields, defaultValues]);
+  }, [safeFields, defaultValues]);
 
   // 1. Programmatically build a Zod validation schema if not supplied
-  const defaultSchema = useFormSchema(fields);
+  const defaultSchema = useFormSchema(safeFields);
   const validationSchema = schema || defaultSchema;
 
   // 2. Initialize React Hook Form
@@ -53,6 +55,7 @@ export const DynamicForm = ({
 
   // Render a single form field control
   const renderField = (field) => {
+    if (!field || !field.key) return null;
     const errorMsg = errors[field.key]?.message;
 
     switch (field.type) {
@@ -279,19 +282,25 @@ export const DynamicForm = ({
 };
 
 // Helper hook to dynamically construct a Zod schema from field definitions
-function useFormSchema(fields) {
+function useFormSchema(fields = []) {
   return React.useMemo(() => {
     const shape = {};
+    const safeFields = Array.isArray(fields) ? fields : [];
 
     // Flatten fields if nested in sections
-    const flatFields = fields.some(f => f.section)
+    const flatFields = safeFields.some(f => f && f.section)
       ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
       : fields;
 
     flatFields.forEach(field => {
+      if (!field || !field.key) return;
+
       let validator = z.any();
 
       const keyLower = String(field.key || '').toLowerCase();
+      const isEmail = field.type === 'email' || keyLower.includes('email');
+      const isPhone = field.type === 'tel' || keyLower.includes('phone') || keyLower.includes('mobile');
+      const isCode = keyLower.endsWith('code') || keyLower.includes('code');
       const isDescription = field.type === 'textarea' || keyLower.includes('description') || keyLower.includes('desc') || keyLower.includes('specification') || keyLower.includes('notes');
       const isPersonName = keyLower.includes('firstname') || keyLower.includes('lastname') || keyLower.includes('contactperson');
       const isTextOnly = isPersonName || (!isCode && !isEmail && (keyLower.endsWith('name') || keyLower.includes('name')));

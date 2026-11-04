@@ -521,7 +521,6 @@ export const vendorService = {
 
     const payload = {
       FlagId: 5,
-      flagId: 5,
       VendorId: id,
       id
     };
