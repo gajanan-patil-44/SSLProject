@@ -175,7 +175,6 @@ export default function LocationTypeMasterView() {
       const list = Array.isArray(rawList) ? rawList.map((item, idx) => normalizeLocationType(item, idx)) : [];
       setItems(list);
     } catch (err) {
-      console.error('Failed to load from /verp-service/locationTypeMaster/view:', err);
       showToast('Failed to load location types', 'error');
       setItems([]);
     } finally {
@@ -192,7 +191,6 @@ export default function LocationTypeMasterView() {
         setParentDropdownOptions(raw);
       }
     } catch (err) {
-      console.warn('Failed to load parent dropdown via /verp-service/locationTypeMaster/dropdown:', err);
     }
   };
 
@@ -252,7 +250,6 @@ export default function LocationTypeMasterView() {
       await loadFlowData();
       await fetchParentDropdown();
     } catch (err) {
-      console.error('Failed to add Location Type:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to add Location Type', 'error');
     } finally {
       setLoading(false);

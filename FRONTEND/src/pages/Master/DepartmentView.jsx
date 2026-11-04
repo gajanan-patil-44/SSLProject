@@ -1,5 +1,5 @@
 // src/pages/Master/DepartmentView.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   PageHeader,
   Button,
@@ -107,7 +107,6 @@ export default function DepartmentView() {
 
       await fetchDepartments();
     } catch (err) {
-      console.error('Failed to toggle department status:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to update department status';
       showToast(errMsg, 'error');
     } finally {
@@ -115,13 +114,10 @@ export default function DepartmentView() {
     }
   };
 
-  useEffect(() => {
-    fetchDepartments();
-    fetchCompanies();
-  }, []);
+  // Ref guard to prevent duplicate API calls on mount/remount
+  const isFetchingRef = useRef(false);
 
-  const fetchDepartments = async () => {
-    setLoading(true);
+  const fetchDepartments = useCallback(async () => {
     try {
       // Hit /verp-service/department/getDepartment with { flagId: 1, CompanyId }
       const res = await departmentService.getDepartments({
@@ -132,24 +128,42 @@ export default function DepartmentView() {
       const list = Array.isArray(rawList) ? rawList : [];
       setDepartments(list);
     } catch (err) {
-      console.error('Failed to load departments:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to fetch departments', 'error');
       setDepartments([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [sessionCompanyId, showToast]);
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     try {
       const res = await companyService.getCompanies();
       const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
       setCompanies(Array.isArray(raw) ? raw : []);
     } catch (err) {
-      console.error('Failed to load companies:', err);
       setCompanies([]);
     }
-  };
+  }, []);
+
+  // Coordinated single-pass data load
+  const loadInitialData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setLoading(true);
+    try {
+      const tasks = [fetchDepartments()];
+      // Only call company service when company is not locked from active session
+      if (!sessionCompanyId) {
+        tasks.push(fetchCompanies());
+      }
+      await Promise.all(tasks);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  }, [fetchDepartments, fetchCompanies, sessionCompanyId]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const handleOpenAddModal = () => {
     const defaultComp = sessionCompanyId ? String(sessionCompanyId) : (companies.length > 0 ? String(companies[0].CompanyId ?? companies[0].id ?? '') : '');
@@ -220,7 +234,6 @@ export default function DepartmentView() {
       setIsAddModalOpen(false);
       await fetchDepartments();
     } catch (err) {
-      console.error('Failed to add department:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to add department';
       showToast(errMsg, 'error');
     } finally {
@@ -295,7 +308,7 @@ export default function DepartmentView() {
       accessorKey: 'CompanyId',
       cell: ({ row }) => {
         const comp = companies.find(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(row.original.CompanyId));
-        const compName = comp?.CompanyName || comp?.companyName || comp?.name || (row.original.CompanyId ? String(row.original.CompanyId) : '—');
+        const compName = row.original.CompanyName || comp?.CompanyName || comp?.companyName || comp?.name || (String(row.original.CompanyId) === String(sessionCompanyId) ? sessionCompanyName : (row.original.CompanyId ? String(row.original.CompanyId) : '—'));
         return (
           <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
             <Building className="w-3.5 h-3.5 text-slate-400" />

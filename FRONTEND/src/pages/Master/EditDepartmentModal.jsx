@@ -127,7 +127,6 @@ export default function EditDepartmentModal({
       }
       onClose();
     } catch (err) {
-      console.error('Failed to update department:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to update department';
       showToast(errMsg, 'error');
     } finally {

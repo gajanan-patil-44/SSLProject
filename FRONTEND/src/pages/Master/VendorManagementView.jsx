@@ -238,7 +238,6 @@ export default function VendorManagementView() {
       setVendorTypes(Array.isArray(types) ? types : []);
       setVendorFileTypes(Array.isArray(fileTypes) ? fileTypes : []);
     } catch (err) {
-      console.error('Failed to load vendor dropdowns:', err);
     } finally {
       setLoadingDropdowns(false);
     }

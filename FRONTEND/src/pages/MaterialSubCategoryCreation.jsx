@@ -79,7 +79,6 @@ export default function MaterialSubCategoryCreation() {
       const data = await materialSubCategoryTypeService.getCategoryDropdown();
       setCategoryDropdown(data);
     } catch (error) {
-      console.error("Failed to fetch dropdown:", error);
     }
   };
 
@@ -90,7 +89,6 @@ export default function MaterialSubCategoryCreation() {
       const data = await materialSubCategoryTypeService.getSubCategories();
       setSubCategories(data);
     } catch (error) {
-      console.error("Failed to fetch sub categories:", error);
       showToast('Failed to load sub categories', 'error');
     } finally {
       setLoading(false);
@@ -163,7 +161,6 @@ export default function MaterialSubCategoryCreation() {
           UpdatedByUserName: userName
         };
         
-        console.log('Update Payload:', payload);
         const response = await materialSubCategoryTypeService.updateSubCategory(payload);
         
         if (response && response.status === 'success') {
@@ -178,7 +175,6 @@ export default function MaterialSubCategoryCreation() {
           CreatedByUserName: userName
         };
         
-        console.log('Create Payload:', payload);
         const response = await materialSubCategoryTypeService.createSubCategory(payload);
         
         if (response && response.status === 'success') {
@@ -187,7 +183,6 @@ export default function MaterialSubCategoryCreation() {
       }
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Failed to submit:", error);
     } finally {
       setSubmitting(false);
     }
@@ -203,7 +198,6 @@ export default function MaterialSubCategoryCreation() {
         await fetchSubCategories();
       }
     } catch (error) {
-      console.error("Failed to delete", error);
     }
   };
 
@@ -222,7 +216,6 @@ export default function MaterialSubCategoryCreation() {
         throw new Error('Status update failed');
       }
     } catch (error) {
-      console.error("Failed to toggle status:", error);
       // Revert if API fails
       setSubCategories(prev => prev.map(i => 
         i.id === item.id ? { ...i, status: item.status } : i

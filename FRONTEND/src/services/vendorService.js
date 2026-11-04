@@ -112,7 +112,6 @@ export const getSessionCompanyId = (explicitId) => {
       if (foundDeep !== null) return foundDeep;
     }
   } catch (err) {
-    console.warn('vendorService: getSessionCompanyId session parse error', err);
   }
 
   // 3. Zustand ERP store state
@@ -251,7 +250,6 @@ export const vendorService = {
         };
       });
     } catch (error) {
-      console.error('Failed to fetch vendors from API:', error);
       return [];
     }
   },
@@ -289,7 +287,6 @@ export const vendorService = {
         label: item.VendorTypeName ?? item.name ?? ''
       }));
     } catch (error) {
-      console.error('Failed to fetch vendor types:', error);
       return [];
     }
   },
@@ -327,7 +324,6 @@ export const vendorService = {
         label: item.VendorFileTypeName ?? item.name ?? ''
       }));
     } catch (error) {
-      console.error('Failed to fetch vendor file types:', error);
       return [];
     }
   },

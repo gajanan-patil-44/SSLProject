@@ -174,7 +174,6 @@ export default function LocationMasterView() {
       const list = Array.isArray(raw) ? raw : [];
       setLocationTypes(list);
     } catch (err) {
-      console.error('Failed to load location types:', err);
       setLocationTypes([]);
     } finally {
       setLoadingLocationTypes(false);
@@ -206,7 +205,6 @@ export default function LocationMasterView() {
         }
       }
     } catch (err) {
-      console.error('Failed to load parent location type:', err);
       setParentLocationTypes([]);
     } finally {
       setLoadingParentLocationTypes(false);
@@ -227,7 +225,6 @@ export default function LocationMasterView() {
       const list = Array.isArray(raw) ? raw : [];
       setParentLocationsList(list);
     } catch (err) {
-      console.error('Failed to load parent locations:', err);
       setParentLocationsList([]);
     } finally {
       setLoadingParentLocations(false);
@@ -340,7 +337,6 @@ export default function LocationMasterView() {
       showToast('Location added successfully!', 'success');
       handleReset();
     } catch (err) {
-      console.error('Failed to add Location via /verp-service/locationMaster/addLocationMaster:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to add Location', 'error');
     } finally {
       setLoading(false);

@@ -179,7 +179,6 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
       if (onSaveSuccess) onSaveSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to update company master:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to update company master', 'error');
     } finally {
       setSaving(false);

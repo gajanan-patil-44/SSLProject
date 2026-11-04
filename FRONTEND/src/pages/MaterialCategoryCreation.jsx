@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   PageHeader,
   Button,
@@ -66,23 +66,28 @@ export default function MaterialCategoryCreation() {
     return Object.keys(errs).length === 0;
   };
 
+  // Ref guard to prevent concurrent/duplicate API calls
+  const isFetchingRef = useRef(false);
+
   // Fetch all categories
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
     try {
       const data = await materialCategoryTypeService.getCategories();
-      setCategories(data);
+      setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Failed to fetch categories:", error);
       showToast('Failed to load categories', 'error');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const handleOpenModal = (item = null, mode = 'create') => {
     setIsViewing(mode === 'view');
@@ -138,7 +143,6 @@ export default function MaterialCategoryCreation() {
           UpdatedByUserName: userName
         };
         
-        console.log('Update Payload:', payload);
         const response = await materialCategoryTypeService.updateCategory(payload);
         
         if (response && response.status === 'success') {
@@ -153,7 +157,6 @@ export default function MaterialCategoryCreation() {
           CreatedByUserName: userName
         };
         
-        console.log('Create Payload:', payload);
         const response = await materialCategoryTypeService.createCategory(payload);
         
         if (response && response.status === 'success') {
@@ -162,7 +165,6 @@ export default function MaterialCategoryCreation() {
       }
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Failed to submit:", error);
     } finally {
       setSubmitting(false);
     }
@@ -178,7 +180,6 @@ export default function MaterialCategoryCreation() {
         await fetchCategories();
       }
     } catch (error) {
-      console.error("Failed to delete", error);
     }
   };
 
@@ -205,7 +206,6 @@ export default function MaterialCategoryCreation() {
         throw new Error('Status update failed');
       }
     } catch (error) {
-      console.error("Failed to toggle status:", error);
       // Revert if API fails
       setCategories(prev => prev.map(i => 
         i.id === item.id ? { ...i, status: item.status } : i
@@ -214,14 +214,17 @@ export default function MaterialCategoryCreation() {
     }
   };
 
-  const filteredData = categories.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return categories;
+    const term = searchTerm.toLowerCase();
+    return categories.filter(item => 
+      String(item.name || '').toLowerCase().includes(term) ||
+      String(item.code || '').toLowerCase().includes(term) ||
+      String(item.category || '').toLowerCase().includes(term)
+    );
+  }, [categories, searchTerm]);
 
-  const columns = [
-
+  const columns = useMemo(() => [
     { 
       header: 'CODE', 
       accessorKey: 'code',
@@ -264,7 +267,7 @@ export default function MaterialCategoryCreation() {
         </div>
       )
     }
-  ];
+  ], []);
 
   return (
     <div className="space-y-6">

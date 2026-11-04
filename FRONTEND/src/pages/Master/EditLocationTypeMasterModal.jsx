@@ -91,7 +91,6 @@ export default function EditLocationTypeMasterModal({
         setDropdownOptions(raw);
       }
     } catch (err) {
-      console.warn('Failed to fetch parent dropdown for edit:', err);
     }
   };
 
@@ -169,7 +168,6 @@ export default function EditLocationTypeMasterModal({
       if (onSaveSuccess) onSaveSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to update location type:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to update location type', 'error');
     } finally {
       setSaving(false);

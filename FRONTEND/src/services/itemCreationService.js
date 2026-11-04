@@ -60,7 +60,6 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to fetch materials from /verp-service/material/view:", error);
     }
     return [];
   },
@@ -79,7 +78,6 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to load category dropdown:", error);
     }
     return [];
   },
@@ -105,7 +103,6 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to load subcategory dropdown:", error);
     }
     return [];
   },
@@ -124,7 +121,6 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to load UOM dropdown:", error);
     }
     return [];
   },
@@ -139,7 +135,6 @@ const itemCreationService = {
         return response.data;
       }
     } catch (error) {
-      console.error("Failed to load GST types:", error);
     }
     return [];
   },
@@ -164,7 +159,6 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to load GST rates:", error);
     }
     return [];
   },
@@ -193,7 +187,6 @@ const itemCreationService = {
         Description: f.Description || f.description || ''
       }));
     } catch (error) {
-      console.error("Failed to load file types from /verp-service/material/dropdown:", error);
     }
     return [];
   },
@@ -396,7 +389,6 @@ const itemCreationService = {
       }
       return response;
     } catch (error) {
-      console.error("Failed to view material file:", error);
       throw error;
     }
   }

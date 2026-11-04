@@ -225,7 +225,6 @@ export default function ItemCreation() {
         }
       }
     } catch (err) {
-      console.error('Error loading document preview:', err);
       if (file.filePath) {
         const finalUrl = getFileUrl(file.filePath);
         setDocumentPreviewUrl(finalUrl);
@@ -335,7 +334,6 @@ export default function ItemCreation() {
       setDropdowns(data);
       return data;
     } catch (error) {
-      console.error("Failed to load dropdowns:", error);
       return null;
     }
   };
@@ -347,7 +345,6 @@ export default function ItemCreation() {
       const data = await itemCreationService.getItems();
       setItems(data || []);
     } catch (error) {
-      console.error("Failed to fetch items:", error);
       showToast('Failed to load materials', 'error');
       setItems([]);
     } finally {
@@ -510,7 +507,6 @@ export default function ItemCreation() {
           subCategories: subCats || []
         }));
       } catch (err) {
-        console.error("Failed to load subcategories for category:", selectedId, err);
         setDropdowns(prev => ({ ...prev, subCategories: [] }));
       } finally {
         setLoadingSubCategories(false);
@@ -563,7 +559,6 @@ export default function ItemCreation() {
           gstRates: rates || []
         }));
       } catch (err) {
-        console.error("Failed to load GST rates for type:", selectedId, err);
         setDropdowns(prev => ({ ...prev, gstRates: [] }));
       } finally {
         setLoadingGSTRates(false);
@@ -696,7 +691,6 @@ export default function ItemCreation() {
       setIsModalOpen(false);
       setSelectedFile(null);
     } catch (error) {
-      console.error("Failed to submit material:", error);
       showToast(error?.message || 'Failed to save material', 'error');
     } finally {
       setSubmitting(false);
@@ -737,7 +731,6 @@ export default function ItemCreation() {
         throw new Error(response?.message || 'Status update failed');
       }
     } catch (error) {
-      console.error("Failed to toggle status:", error);
       // Revert if API fails
       setItems(prev => prev.map(i =>
         i.id === item.id ? { ...i, status: item.status, isDisabled: item.isDisabled } : i

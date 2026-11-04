@@ -135,7 +135,6 @@ export default function CompanyMasterView() {
       showToast(`Company ${newIsDisabled ? 'disabled' : 'enabled'} successfully!`, 'success');
       await fetchCompanies();
     } catch (err) {
-      console.error('Failed to toggle company status:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to toggle status', 'error');
     } finally {
       setTogglingId(null);
@@ -169,7 +168,6 @@ export default function CompanyMasterView() {
       setCompanyToDelete(null);
       await fetchCompanies();
     } catch (err) {
-      console.error('Failed to delete company:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to delete company', 'error');
     } finally {
       setIsDeleting(false);
@@ -204,7 +202,6 @@ export default function CompanyMasterView() {
       const list = Array.isArray(rawList) ? rawList : [];
       setCompanies(list);
     } catch (err) {
-      console.error('Failed to load company master via getCompanyMaster:', err);
       showToast('Failed to load companies', 'error');
       setCompanies([]);
     } finally {
@@ -307,7 +304,6 @@ export default function CompanyMasterView() {
       handleReset();
       await fetchCompanies();
     } catch (err) {
-      console.error('Error adding company:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to add company', 'error');
     } finally {
       setLoading(false);
@@ -346,7 +342,6 @@ export default function CompanyMasterView() {
       handleReset();
       await fetchCompanies();
     } catch (err) {
-      console.error('Error updating company:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to update company', 'error');
     } finally {
       setLoading(false);
