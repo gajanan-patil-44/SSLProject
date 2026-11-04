@@ -4,6 +4,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
 import { useERPStore } from '../../store/useERPStore';
 import { departmentService, getSessionCompany, getSessionCompanyId } from '../../services/departmentService';
+import { validateTextOnly } from '../../utils/validators';
 import {
   Building2,
   Building,
@@ -86,14 +87,8 @@ export default function EditDepartmentModal({
       errs.departmentCode = 'Department Code must not exceed 50 characters';
     }
 
-    const nameTrim = departmentName.trim();
-    if (!nameTrim) {
-      errs.departmentName = 'Department Name is required';
-    } else if (nameTrim.length < 2) {
-      errs.departmentName = 'Department Name must be at least 2 characters';
-    } else if (nameTrim.length > 100) {
-      errs.departmentName = 'Department Name must not exceed 100 characters';
-    }
+    const nameErr = validateTextOnly(departmentName, 'Department Name', true, 2, 100);
+    if (nameErr) errs.departmentName = nameErr;
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -127,7 +122,6 @@ export default function EditDepartmentModal({
       }
       onClose();
     } catch (err) {
-      console.error('Failed to update department:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to update department';
       showToast(errMsg, 'error');
     } finally {
@@ -260,7 +254,8 @@ export default function EditDepartmentModal({
               type="text"
               value={departmentName}
               onChange={(e) => {
-                setDepartmentName(e.target.value);
+                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setDepartmentName(sanitized);
                 setErrors((prev) => ({ ...prev, departmentName: '' }));
               }}
               placeholder="e.g. Humannn Resources"

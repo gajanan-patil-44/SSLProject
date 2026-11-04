@@ -1,5 +1,5 @@
 // src/pages/Master/GSTCreationView.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   PageHeader,
   Button,
@@ -9,19 +9,16 @@ import { Modal } from '../../components/ui/Modal';
 import EditGSTModal from './EditGSTModal';
 import { DataTable } from '../../components/ui/DataTable';
 import { gstService } from '../../services/gstService';
-import { companyService } from '../../services/companyService';
 import { getSessionCompany, getSessionCompanyId } from '../../services/departmentService';
 import { useERPStore } from '../../store/useERPStore';
 import {
-  Receipt,
   Calendar,
   User,
   Building,
   Percent,
   Layers,
   AlertCircle,
-  Check,
-  Lock
+  Check
 } from 'lucide-react';
 
 export default function GSTCreationView() {
@@ -50,14 +47,12 @@ export default function GSTCreationView() {
 
   // State
   const [gstList, setGstList] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [gstTypes, setGstTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Add GST Rate Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addCompanyId, setAddCompanyId] = useState('');
   const [addGstTypeId, setAddGstTypeId] = useState('');
   const [addGstPercentage, setAddGstPercentage] = useState('');
   const [formErrors, setFormErrors] = useState({});
@@ -67,6 +62,53 @@ export default function GSTCreationView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingGST, setEditingGST] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+
+  // Ref guard to prevent duplicate API calls on mount/remount
+  const isFetchingRef = useRef(false);
+
+  // Fetch GST table data via /verp-service/gstRate/view (FlagId: 3)
+  const fetchGSTList = useCallback(async () => {
+    try {
+      const res = await gstService.getGSTList({
+        FlagId: 3,
+        CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
+      });
+      const rawList = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+      const list = Array.isArray(rawList) ? rawList : [];
+      setGstList(list);
+    } catch (err) {
+      showToast(err?.response?.data?.message || err?.message || 'Failed to fetch GST list', 'error');
+      setGstList([]);
+    }
+  }, [sessionCompanyId, showToast]);
+
+  // Fetch GST Types dropdown via /verp-service/gstRate/dropdown (FlagId: 1)
+  const fetchGSTTypes = useCallback(async () => {
+    try {
+      const res = await gstService.getGSTTypes();
+      const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+      setGstTypes(Array.isArray(raw) ? raw : []);
+    } catch (err) {
+      setGstTypes([]);
+    }
+  }, []);
+
+  // Coordinated single-pass initial load
+  const loadInitialData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setLoading(true);
+    try {
+      await Promise.all([fetchGSTList(), fetchGSTTypes()]);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  }, [fetchGSTList, fetchGSTTypes]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const handleOpenEditModal = (item) => {
     setEditingGST(item);
@@ -103,7 +145,6 @@ export default function GSTCreationView() {
 
       await fetchGSTList();
     } catch (err) {
-      console.error('Failed to toggle GST status:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to update GST status';
       showToast(errMsg, 'error');
     } finally {
@@ -111,59 +152,8 @@ export default function GSTCreationView() {
     }
   };
 
-  useEffect(() => {
-    fetchGSTList();
-    fetchCompanies();
-    fetchGSTTypes();
-  }, []);
-
-  // Fetch GST table data via /verp-service/gstRate/view (FlagId: 3)
-  const fetchGSTList = async () => {
-    setLoading(true);
-    try {
-      const res = await gstService.getGSTList({
-        FlagId: 3,
-        CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
-      });
-      const rawList = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
-      const list = Array.isArray(rawList) ? rawList : [];
-      setGstList(list);
-    } catch (err) {
-      console.error('Failed to load GST records:', err);
-      showToast(err?.response?.data?.message || err?.message || 'Failed to fetch GST list', 'error');
-      setGstList([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCompanies = async () => {
-    try {
-      const res = await companyService.getCompanies();
-      const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
-      setCompanies(Array.isArray(raw) ? raw : []);
-    } catch (err) {
-      console.error('Failed to load companies:', err);
-      setCompanies([]);
-    }
-  };
-
-  // Fetch GST Types dropdown via /verp-service/gstRate/dropdown (FlagId: 1)
-  const fetchGSTTypes = async () => {
-    try {
-      const res = await gstService.getGSTTypes();
-      const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
-      setGstTypes(Array.isArray(raw) ? raw : []);
-    } catch (err) {
-      console.error('Failed to load GST types:', err);
-      setGstTypes([]);
-    }
-  };
-
   const handleOpenAddModal = () => {
-    const defaultComp = sessionCompanyId ? String(sessionCompanyId) : (companies.length > 0 ? String(companies[0].CompanyId ?? companies[0].id ?? '') : '');
-    setAddCompanyId(defaultComp);
-    setAddGstTypeId(gstTypes.length > 0 ? String(gstTypes[0].GSTTypeId ?? gstTypes[0].id ?? '') : '');
+    setAddGstTypeId('');
     setAddGstPercentage('');
     setFormErrors({});
     setIsAddModalOpen(true);
@@ -176,11 +166,6 @@ export default function GSTCreationView() {
 
   const validateAddForm = () => {
     const errs = {};
-    const compCheck = sessionCompanyId || addCompanyId;
-
-    if (!compCheck) {
-      errs.companyId = 'Please select a company';
-    }
 
     if (!addGstTypeId) {
       errs.gstTypeId = 'Please select a GST Type';
@@ -206,7 +191,7 @@ export default function GSTCreationView() {
     setSubmitting(true);
     try {
       const sessionUserName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.username || '';
-      const resolvedCompanyId = sessionCompanyId ? Number(sessionCompanyId) : Number(addCompanyId);
+      const resolvedCompanyId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
 
       const payload = {
         FlagId: 2,
@@ -223,7 +208,6 @@ export default function GSTCreationView() {
       setIsAddModalOpen(false);
       await fetchGSTList();
     } catch (err) {
-      console.error('Failed to add GST:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to add GST configuration';
       showToast(errMsg, 'error');
     } finally {
@@ -302,8 +286,7 @@ export default function GSTCreationView() {
       header: 'COMPANY',
       accessorKey: 'CompanyId',
       cell: ({ row }) => {
-        const comp = companies.find(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(row.original.CompanyId));
-        const compName = comp?.CompanyName || comp?.companyName || comp?.name || (row.original.CompanyId ? String(row.original.CompanyId) : '—');
+        const compName = row.original.CompanyName || sessionCompanyName || (row.original.CompanyId ? `Company #${row.original.CompanyId}` : '—');
         return (
           <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
             <Building className="w-3.5 h-3.5 text-slate-400" />
@@ -339,7 +322,7 @@ export default function GSTCreationView() {
         </div>
       )
     }
-  ], [companies, gstTypes]);
+  ], [gstTypes, sessionCompanyName]);
 
   return (
     <div className="space-y-6 pb-12 w-full">
@@ -348,31 +331,38 @@ export default function GSTCreationView() {
         title="GST Creation"
         description="Configure and manage goods and service tax types, rates, slabs, and statutory tax rules."
         breadcrumbs={[
-          { label: 'Master', href: '/master/companies' },
-          { label: 'GST Creation' }
+          { label: 'Home', path: '/dashboard' },
+          { label: 'Master', path: '/master' },
+          { label: 'GST Creation', path: '/master/gst-creation' }
         ]}
       />
 
-      {/* 2. GST Data Table */}
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        loading={loading}
-        onAddClick={handleOpenAddModal}
-        onEditClick={(row) => handleOpenEditModal(row)}
-        onToggleStatusClick={handleToggleStatus}
-        searchPlaceholder="Search by GST type, rate, creator..."
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        onRefresh={fetchGSTList}
-        hideExport
-      />
+      {/* 2. Modern ERP DataTable */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <DataTable
+          columns={columns}
+          data={filteredData}
+          loading={loading}
+          totalCount={filteredData.length}
+          searchPlaceholder="Search GST Type, percentage..."
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          onAddClick={handleOpenAddModal}
+          onEditClick={handleOpenEditModal}
+          onToggleStatus={handleToggleStatus}
+          onRefresh={loadInitialData}
+          showActions={true}
+          addButtonText="Add GST Rate"
+          emptyMessage="No GST rates configured yet. Click 'Add GST Rate' to create one."
+        />
+      </div>
 
-      {/* 3. Add GST Modal */}
+      {/* 3. Add GST Rate Modal */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={handleCloseAddModal}
         title="Add GST Rate"
+        description="Create a new GST rate slab linked to a tax classification."
         size="md"
         actions={
           <div className="flex items-center justify-end gap-3 w-full">
@@ -399,61 +389,6 @@ export default function GSTCreationView() {
         }
       >
         <form onSubmit={handleAddSubmit} className="space-y-4 py-2">
-          {/* Company Selection (Locked to Session Company) */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Company <span className="text-rose-500">*</span></span>
-              {sessionCompanyId && (
-                <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium normal-case flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> Locked from session
-                </span>
-              )}
-            </label>
-            <div className="relative">
-              <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <select
-                value={addCompanyId || (sessionCompanyId ? String(sessionCompanyId) : '')}
-                onChange={(e) => {
-                  setAddCompanyId(e.target.value);
-                  setFormErrors((prev) => ({ ...prev, companyId: '' }));
-                }}
-                disabled={Boolean(sessionCompanyId)}
-                className={`w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border ${
-                  formErrors.companyId
-                    ? 'border-rose-400 focus:ring-rose-500'
-                    : 'border-slate-200 dark:border-slate-700/80 focus:ring-indigo-500/20 focus:border-indigo-500'
-                } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 transition-all ${
-                  sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800 font-medium' : 'cursor-pointer'
-                }`}
-              >
-                {sessionCompanyId && !companies.some(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(sessionCompanyId)) && (
-                  <option value={String(sessionCompanyId)}>
-                    {sessionCompanyName || sessionCompanyId}
-                  </option>
-                )}
-                <option value="">— Select Company —</option>
-                {companies.map((c, idx) => {
-                  const id = c.CompanyId ?? c.id ?? c.CompanyMasterId;
-                  const name = c.CompanyName || c.companyName || c.name || id;
-                  return (
-                    <option key={`${id}_${idx}`} value={String(id)}>
-                      {name}
-                    </option>
-                  );
-                })}
-              </select>
-              {sessionCompanyId && (
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              )}
-            </div>
-            {formErrors.companyId && (
-              <span className="text-[11px] text-rose-500 font-medium flex items-center gap-1">
-                <AlertCircle className="w-3 h-3 shrink-0" />
-                {formErrors.companyId}
-              </span>
-            )}
-          </div>
-
           {/* GST Type Dropdown (FlagId: 1 via /verp-service/gstRate/dropdown) */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
@@ -476,7 +411,7 @@ export default function GSTCreationView() {
                 <option value="">— Select GST Type —</option>
                 {gstTypes.map((t, idx) => {
                   const id = t.GSTTypeId ?? t.id ?? t.value;
-                  const name = t.GSTTypeName ?? t.name ?? t.label ?? id;
+                  const name = t.GSTTypeName || t.typeName || t.label || t.name;
                   return (
                     <option key={`${id}_${idx}`} value={String(id)}>
                       {name}
@@ -493,10 +428,10 @@ export default function GSTCreationView() {
             )}
           </div>
 
-          {/* GST Percentage */}
+          {/* GST Rate Percentage */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-              GST Percentage (%) <span className="text-rose-500">*</span>
+              GST Rate Percentage (%) <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -505,17 +440,17 @@ export default function GSTCreationView() {
                 step="0.01"
                 min="0"
                 max="100"
+                placeholder="e.g. 18"
                 value={addGstPercentage}
                 onChange={(e) => {
                   setAddGstPercentage(e.target.value);
                   setFormErrors((prev) => ({ ...prev, gstPercentage: '' }));
                 }}
-                placeholder="e.g. 18 or 18.00"
                 className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border ${
                   formErrors.gstPercentage
                     ? 'border-rose-400 focus:ring-rose-500'
                     : 'border-slate-200 dark:border-slate-700/80 focus:ring-indigo-500/20 focus:border-indigo-500'
-                } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 transition-all font-medium`}
+                } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 transition-all`}
               />
             </div>
             {formErrors.gstPercentage && (
@@ -528,15 +463,13 @@ export default function GSTCreationView() {
         </form>
       </Modal>
 
-      {/* 4. Edit GST Modal (Dedicated Component) */}
+      {/* 4. Edit GST Rate Modal */}
       <EditGSTModal
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         gstItem={editingGST}
-        companies={companies}
         gstTypes={gstTypes}
         sessionCompanyId={sessionCompanyId}
-        sessionCompanyName={sessionCompanyName}
         onSaveSuccess={fetchGSTList}
       />
     </div>

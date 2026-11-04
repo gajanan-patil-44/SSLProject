@@ -1,10 +1,9 @@
 // src/pages/Master/DepartmentView.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   PageHeader,
   Button,
-  StatusBadge,
-  Card
+  StatusBadge
 } from '../../components/ui/index';
 import { Modal } from '../../components/ui/Modal';
 import EditDepartmentModal from './EditDepartmentModal';
@@ -13,21 +12,17 @@ import { departmentService, getSessionCompany, getSessionCompanyId } from '../..
 import { companyService } from '../../services/companyService';
 import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
+import { validateTextOnly } from '../../utils/validators';
 import {
   Building2,
   Calendar,
   User,
   Tag,
-  RefreshCw,
   Building,
-  Plus,
   AlertCircle,
   Check,
-  X,
-  Edit2,
   Lock
 } from 'lucide-react';
-import { validateCode } from '../../utils/validators';
 
 export default function DepartmentView() {
   const showToast = useERPStore((state) => state.showToast);
@@ -107,7 +102,6 @@ export default function DepartmentView() {
 
       await fetchDepartments();
     } catch (err) {
-      console.error('Failed to toggle department status:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to update department status';
       showToast(errMsg, 'error');
     } finally {
@@ -115,13 +109,10 @@ export default function DepartmentView() {
     }
   };
 
-  useEffect(() => {
-    fetchDepartments();
-    fetchCompanies();
-  }, []);
+  // Ref guard to prevent duplicate API calls on mount/remount
+  const isFetchingRef = useRef(false);
 
-  const fetchDepartments = async () => {
-    setLoading(true);
+  const fetchDepartments = useCallback(async () => {
     try {
       // Hit /verp-service/department/getDepartment with { flagId: 1, CompanyId }
       const res = await departmentService.getDepartments({
@@ -132,24 +123,42 @@ export default function DepartmentView() {
       const list = Array.isArray(rawList) ? rawList : [];
       setDepartments(list);
     } catch (err) {
-      console.error('Failed to load departments:', err);
       showToast(err?.response?.data?.message || err?.message || 'Failed to fetch departments', 'error');
       setDepartments([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [sessionCompanyId, showToast]);
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     try {
       const res = await companyService.getCompanies();
       const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
       setCompanies(Array.isArray(raw) ? raw : []);
     } catch (err) {
-      console.error('Failed to load companies:', err);
       setCompanies([]);
     }
-  };
+  }, []);
+
+  // Coordinated single-pass data load
+  const loadInitialData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    setLoading(true);
+    try {
+      const tasks = [fetchDepartments()];
+      // Only call company service when company is not locked from active session
+      if (!sessionCompanyId) {
+        tasks.push(fetchCompanies());
+      }
+      await Promise.all(tasks);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  }, [fetchDepartments, fetchCompanies, sessionCompanyId]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const handleOpenAddModal = () => {
     const defaultComp = sessionCompanyId ? String(sessionCompanyId) : (companies.length > 0 ? String(companies[0].CompanyId ?? companies[0].id ?? '') : '');
@@ -182,14 +191,8 @@ export default function DepartmentView() {
       errs.departmentCode = 'Department code must not exceed 50 characters';
     }
 
-    const nameTrim = addDepartmentName.trim();
-    if (!nameTrim) {
-      errs.departmentName = 'Department name is required';
-    } else if (nameTrim.length < 2) {
-      errs.departmentName = 'Department name must be at least 2 characters';
-    } else if (nameTrim.length > 100) {
-      errs.departmentName = 'Department name must not exceed 100 characters';
-    }
+    const nameErr = validateTextOnly(addDepartmentName, 'Department Name', true, 2, 100);
+    if (nameErr) errs.departmentName = nameErr;
 
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -220,7 +223,6 @@ export default function DepartmentView() {
       setIsAddModalOpen(false);
       await fetchDepartments();
     } catch (err) {
-      console.error('Failed to add department:', err);
       const errMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Failed to add department';
       showToast(errMsg, 'error');
     } finally {
@@ -295,7 +297,7 @@ export default function DepartmentView() {
       accessorKey: 'CompanyId',
       cell: ({ row }) => {
         const comp = companies.find(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(row.original.CompanyId));
-        const compName = comp?.CompanyName || comp?.companyName || comp?.name || (row.original.CompanyId ? String(row.original.CompanyId) : '—');
+        const compName = row.original.CompanyName || comp?.CompanyName || comp?.companyName || comp?.name || (String(row.original.CompanyId) === String(sessionCompanyId) ? sessionCompanyName : (row.original.CompanyId ? String(row.original.CompanyId) : '—'));
         return (
           <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
             <Building className="w-3.5 h-3.5 text-slate-400" />
@@ -331,7 +333,7 @@ export default function DepartmentView() {
         </div>
       )
     }
-  ], [companies]);
+  ], [companies, sessionCompanyId, sessionCompanyName]);
 
   return (
     <div className="space-y-6 pb-12 w-full">
@@ -482,7 +484,8 @@ export default function DepartmentView() {
                 type="text"
                 value={addDepartmentName}
                 onChange={(e) => {
-                  setAddDepartmentName(e.target.value);
+                  const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  setAddDepartmentName(sanitized);
                   setFormErrors((prev) => ({ ...prev, departmentName: '' }));
                 }}
                 placeholder="e.g. Human Resources"
