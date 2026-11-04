@@ -9,14 +9,12 @@ import {
   flexRender
 } from '@tanstack/react-table';
 import {
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   Download,
   Eye,
-  MoreHorizontal,
   Plus,
   RefreshCw,
   Search,
@@ -26,7 +24,7 @@ import {
   Grid3X3,
   KeyRound
 } from 'lucide-react';
-import { Button, IconButton, Input, Select, Badge, Switch } from './index';
+import { Button, IconButton, Input, Switch } from './index';
 import { Dropdown, DropdownItem } from './Dropdown';
 
 export const DataTable = ({

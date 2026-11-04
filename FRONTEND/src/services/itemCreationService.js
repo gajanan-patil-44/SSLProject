@@ -368,29 +368,25 @@ const itemCreationService = {
    * Hits POST /verp-service/material/view-file with payload: { FlagId: 11, MaterialFileId: <id> }
    */
   viewFile: async (materialFileId) => {
-    try {
-      const response = await apiClient.post(API_ENDPOINTS.viewFile, {
-        FlagId: 11,
-        MaterialFileId: Number(materialFileId)
-      }, {
-        responseType: 'blob'
-      });
+    const response = await apiClient.post(API_ENDPOINTS.viewFile, {
+      FlagId: 11,
+      MaterialFileId: Number(materialFileId)
+    }, {
+      responseType: 'blob'
+    });
 
-      if (response instanceof Blob) {
-        if (response.type.includes('json') || response.type.includes('text')) {
-          const text = await response.text();
-          try {
-            return JSON.parse(text);
-          } catch (e) {
-            return { raw: text };
-          }
+    if (response instanceof Blob) {
+      if (response.type.includes('json') || response.type.includes('text')) {
+        const text = await response.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { raw: text };
         }
-        return response;
       }
       return response;
-    } catch (error) {
-      throw error;
     }
+    return response;
   }
 };
 

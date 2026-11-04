@@ -3,8 +3,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import {
   PageHeader,
   Button,
-  StatusBadge,
-  Card
+  StatusBadge
 } from '../../components/ui/index';
 import { Modal } from '../../components/ui/Modal';
 import EditDepartmentModal from './EditDepartmentModal';
@@ -13,21 +12,17 @@ import { departmentService, getSessionCompany, getSessionCompanyId } from '../..
 import { companyService } from '../../services/companyService';
 import { userService } from '../../services/userService';
 import { useERPStore } from '../../store/useERPStore';
+import { validateTextOnly } from '../../utils/validators';
 import {
   Building2,
   Calendar,
   User,
   Tag,
-  RefreshCw,
   Building,
-  Plus,
   AlertCircle,
   Check,
-  X,
-  Edit2,
   Lock
 } from 'lucide-react';
-import { validateCode } from '../../utils/validators';
 
 export default function DepartmentView() {
   const showToast = useERPStore((state) => state.showToast);
@@ -196,14 +191,8 @@ export default function DepartmentView() {
       errs.departmentCode = 'Department code must not exceed 50 characters';
     }
 
-    const nameTrim = addDepartmentName.trim();
-    if (!nameTrim) {
-      errs.departmentName = 'Department name is required';
-    } else if (nameTrim.length < 2) {
-      errs.departmentName = 'Department name must be at least 2 characters';
-    } else if (nameTrim.length > 100) {
-      errs.departmentName = 'Department name must not exceed 100 characters';
-    }
+    const nameErr = validateTextOnly(addDepartmentName, 'Department Name', true, 2, 100);
+    if (nameErr) errs.departmentName = nameErr;
 
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -344,7 +333,7 @@ export default function DepartmentView() {
         </div>
       )
     }
-  ], [companies]);
+  ], [companies, sessionCompanyId, sessionCompanyName]);
 
   return (
     <div className="space-y-6 pb-12 w-full">
@@ -495,7 +484,8 @@ export default function DepartmentView() {
                 type="text"
                 value={addDepartmentName}
                 onChange={(e) => {
-                  setAddDepartmentName(e.target.value);
+                  const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  setAddDepartmentName(sanitized);
                   setFormErrors((prev) => ({ ...prev, departmentName: '' }));
                 }}
                 placeholder="e.g. Human Resources"

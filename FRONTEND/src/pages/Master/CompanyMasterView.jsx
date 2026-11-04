@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import {
   validateCode,
+  validateTextOnly,
   validateEmail,
   validatePhone,
   validateGSTIN,
@@ -209,24 +210,6 @@ export default function CompanyMasterView() {
     }
   };
 
-  // Row selection handler
-  const handleSelectRow = (company) => {
-    const id = company.CompanyId ?? company.id;
-    if (selectedId === id) {
-      handleReset();
-    } else {
-      setSelectedId(id);
-      setCompanyCode(company.CompanyCode || company.companyCode || '');
-      setCompanyName(company.CompanyName || company.companyName || '');
-      setContactNumber(company.ContactNumber || company.contactNumber || company.PhoneNumber || company.phone || '');
-      setEmailId(company.EmailId || company.emailId || company.Email || company.email || '');
-      setGstNo(company.GSTNo || company.gstNo || company.GstNo || '');
-      setPanNo(company.PanNo || company.panNo || '');
-      setAddress(company.Address || company.address || '');
-      setErrors({});
-    }
-  };
-
   // Validate form fields for Add / Edit
   const validate = () => {
     const errs = {};
@@ -235,15 +218,9 @@ export default function CompanyMasterView() {
     const codeErr = validateCode(companyCode, 'Company Code', true);
     if (codeErr) errs.companyCode = codeErr;
 
-    // Company Name: required, 2-100 chars
-    const nameTrim = companyName.trim();
-    if (!nameTrim) {
-      errs.companyName = 'Company Name is required';
-    } else if (nameTrim.length < 2) {
-      errs.companyName = 'Company Name must be at least 2 characters';
-    } else if (nameTrim.length > 100) {
-      errs.companyName = 'Company Name must not exceed 100 characters';
-    }
+    // Company Name: required, text only, 2-100 chars
+    const nameErr = validateTextOnly(companyName, 'Company Name', true, 2, 100);
+    if (nameErr) errs.companyName = nameErr;
 
     // Contact Number: optional, but if entered must be valid 10 digits
     if (contactNumber.trim()) {
@@ -431,7 +408,8 @@ export default function CompanyMasterView() {
                   placeholder="e.g. Global Solutions Ltd"
                   value={companyName}
                   onChange={(e) => {
-                    setCompanyName(e.target.value);
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setCompanyName(sanitized);
                     if (errors.companyName) setErrors(prev => ({ ...prev, companyName: null }));
                   }}
                   className={`${inputCls(errors.companyName)} pl-9.5`}

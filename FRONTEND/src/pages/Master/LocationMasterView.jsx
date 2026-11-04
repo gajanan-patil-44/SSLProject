@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationService } from '../../services/locationService';
+import { validateTextOnly, validateName } from '../../utils/validators';
 import {
   PageHeader,
   Card,
@@ -272,13 +273,14 @@ export default function LocationMasterView() {
       }
     }
 
-    const trimmedName = locationName.trim();
-    if (!trimmedName) {
-      errs.locationName = 'Location Name is required';
-    } else if (trimmedName.length < 2) {
-      errs.locationName = 'Location Name must be at least 2 characters';
-    } else if (trimmedName.length > 100) {
-      errs.locationName = 'Location Name must not exceed 100 characters';
+    const locNameErr = validateTextOnly(locationName, 'Location Name', true, 2, 100);
+    if (locNameErr) {
+      errs.locationName = locNameErr;
+    }
+
+    if (contactPerson.trim()) {
+      const cpErr = validateName(contactPerson, 'Contact Person', false);
+      if (cpErr) errs.contactPerson = cpErr;
     }
 
     if (contactNumber.trim()) {
@@ -575,7 +577,8 @@ export default function LocationMasterView() {
                       placeholder="e.g. Tamil Nadu, Karnataka, Bengaluru North"
                       value={locationName}
                       onChange={(e) => {
-                        setLocationName(e.target.value);
+                        const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                        setLocationName(sanitized);
                         if (errors.locationName) setErrors((prev) => ({ ...prev, locationName: null }));
                       }}
                       className={`${inputCls(errors.locationName)} pl-9.5`}
@@ -593,7 +596,8 @@ export default function LocationMasterView() {
                     placeholder="e.g. Ramesh Kumar"
                     value={contactPerson}
                     onChange={(e) => {
-                      setContactPerson(e.target.value);
+                      const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      setContactPerson(sanitized);
                       if (errors.contactPerson) setErrors((prev) => ({ ...prev, contactPerson: null }));
                     }}
                     className={`${inputCls(errors.contactPerson)} pl-9.5`}

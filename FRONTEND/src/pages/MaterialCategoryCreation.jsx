@@ -3,19 +3,12 @@ import {
   PageHeader,
   Button,
   StatusBadge,
-  Input,
-  Switch
+  Input
 } from '../components/ui/index';
 import { DataTable } from '../components/ui/DataTable';
 import { Modal } from '../components/ui/Modal';
 import {
-  Search,
-  Plus,
-  Edit,
-  Eye,
-  Box,
   Tag,
-  Barcode,
   Calendar,
   User,
   ClipboardList
@@ -23,7 +16,7 @@ import {
 import { useERPStore } from '../store/useERPStore';
 
 import { materialCategoryTypeService } from '../services';
-import { validateCode } from '../utils/validators';
+import { validateCode, validateTextOnly } from '../utils/validators';
 
 export default function MaterialCategoryCreation() {
   const showToast = useERPStore((state) => state.showToast);
@@ -53,14 +46,8 @@ export default function MaterialCategoryCreation() {
     const codeErr = validateCode(formData.code, 'Material Category Code', true);
     if (codeErr) errs.code = codeErr;
 
-    const trimmedName = (formData.name || '').trim();
-    if (!trimmedName) {
-      errs.name = 'Material Category Name is required';
-    } else if (trimmedName.length < 2) {
-      errs.name = 'Material Category Name must be at least 2 characters';
-    } else if (trimmedName.length > 100) {
-      errs.name = 'Material Category Name cannot exceed 100 characters';
-    }
+    const nameErr = validateTextOnly(formData.name, 'Material Category Name', true, 2, 100);
+    if (nameErr) errs.name = nameErr;
 
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -359,7 +346,8 @@ export default function MaterialCategoryCreation() {
             <Input 
               value={formData.name}
               onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
+                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setFormData({ ...formData, name: sanitized });
                 if (formErrors.name) setFormErrors({ ...formErrors, name: '' });
               }}
               placeholder="e.g. Electrical Components"

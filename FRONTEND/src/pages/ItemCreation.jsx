@@ -39,7 +39,7 @@ import {
 import { BASE_URL } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
 import { itemCreationService } from '../services';
-import { validateCode, validateHSN } from '../utils/validators';
+import { validateCode, validateHSN, validateTextOnly, validateDescription } from '../utils/validators';
 
 export default function ItemCreation() {
   const showToast = useERPStore((state) => state.showToast);
@@ -297,11 +297,12 @@ export default function ItemCreation() {
     const codeErr = validateCode(formData.code, 'Material Code', true);
     if (codeErr) errs.code = codeErr;
 
-    const trimmedName = (formData.name || '').trim();
-    if (!trimmedName) {
-      errs.name = 'Material Name is required';
-    } else if (trimmedName.length < 2) {
-      errs.name = 'Material Name must be at least 2 characters';
+    const nameErr = validateTextOnly(formData.name, 'Material Name', true, 2, 100);
+    if (nameErr) errs.name = nameErr;
+
+    if (formData.description) {
+      const descErr = validateDescription(formData.description, 'Specification / Description', false, 2, 500);
+      if (descErr) errs.description = descErr;
     }
 
     if (!formData.uomId) {
@@ -1094,7 +1095,8 @@ export default function ItemCreation() {
                 <input 
                   value={formData.name}
                   onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value });
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setFormData({ ...formData, name: sanitized });
                     if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
                   }}
                   placeholder="e.g. Copper Wire"
@@ -1417,11 +1419,20 @@ export default function ItemCreation() {
                 <textarea
                   rows={2}
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Enter specifications..."
+                  onChange={(e) => {
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setFormData({ ...formData, description: sanitized });
+                    if (formErrors.description) setFormErrors(prev => ({ ...prev, description: '' }));
+                  }}
+                  placeholder="Enter specifications (text only)..."
                   disabled={isViewing}
-                  className="w-full h-8.5 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 resize-none"
+                  className={`w-full h-8.5 px-2.5 py-1 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 resize-none ${
+                    formErrors.description ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}
                 />
+                {formErrors.description && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.description}</span>
+                )}
               </div>
             </div>
           </div>

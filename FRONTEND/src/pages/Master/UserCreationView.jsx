@@ -541,6 +541,13 @@ export default function UserCreationView() {
       return;
     }
 
+    if (name === 'FirstName' || name === 'MiddleName' || name === 'LastName') {
+      const sanitized = value.replace(/[^a-zA-Z\s]/g, '');
+      setForm(f => ({ ...f, [name]: sanitized }));
+      setErrors(er => ({ ...er, [name]: '' }));
+      return;
+    }
+
     // Default single-value fields (RoleId, GenderId, etc.)
     setForm(f => ({ ...f, [name]: value }));
     setErrors(er => ({ ...er, [name]: '' }));

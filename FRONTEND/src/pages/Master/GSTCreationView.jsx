@@ -12,7 +12,6 @@ import { gstService } from '../../services/gstService';
 import { getSessionCompany, getSessionCompanyId } from '../../services/departmentService';
 import { useERPStore } from '../../store/useERPStore';
 import {
-  Receipt,
   Calendar,
   User,
   Building,

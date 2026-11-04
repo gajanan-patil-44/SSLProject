@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationTypeService } from '../../services/locationTypeService';
+import { validateTextOnly } from '../../utils/validators';
 import EditLocationTypeMasterModal from './EditLocationTypeMasterModal';
 import {
   PageHeader,
@@ -197,13 +198,9 @@ export default function LocationTypeMasterView() {
   // Form validation
   const validate = () => {
     const errs = {};
-    const trimmed = locationTypeName.trim();
-    if (!trimmed) {
-      errs.childName = 'Location Type Name is required';
-    } else if (trimmed.length < 2) {
-      errs.childName = 'Location Type Name must be at least 2 characters';
-    } else if (trimmed.length > 100) {
-      errs.childName = 'Location Type Name must not exceed 100 characters';
+    const locNameErr = validateTextOnly(locationTypeName, 'Location Type Name', true, 2, 100);
+    if (locNameErr) {
+      errs.childName = locNameErr;
     }
 
     // Require selection only when Parent Location field is visible (second one onwards)
@@ -309,7 +306,8 @@ export default function LocationTypeMasterView() {
                   placeholder="e.g. Country, State, District"
                   value={locationTypeName}
                   onChange={(e) => {
-                    setLocationTypeName(e.target.value);
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setLocationTypeName(sanitized);
                     if (errors.childName) setErrors(prev => ({ ...prev, childName: null }));
                   }}
                   className={`${inputCls(errors.childName)} pl-9.5`}
