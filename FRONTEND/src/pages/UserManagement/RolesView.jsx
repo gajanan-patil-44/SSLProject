@@ -25,10 +25,29 @@ import {
 } from 'lucide-react';
 import { roleService } from '../../services/roleService';
 import { useERPStore } from '../../store/useERPStore';
+
+// Helper to get session company
+const getSessionCompany = () => {
+  try {
+    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(comps) && comps.length > 0) return comps[0];
+    }
+    const ctx = useERPStore.getState()?.userContext;
+    if (ctx?.companies?.length > 0) return ctx.companies[0];
+  } catch {}
+  return null;
+};
 import { Modal } from '../../components/ui/Modal';
 import { Badge, Button, Input, PageHeader } from '../../components/ui/index';
 
 export default function RolesView() {
+  const sessionCompany = getSessionCompany();
+  const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+  const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
+
   const user = useERPStore((state) => state.user);
   const currentUserName = user?.loginName || user?.EmployeeId || (typeof user?.name === 'string' ? user.name : 'admin11');
 
@@ -115,7 +134,7 @@ export default function RolesView() {
   const openAddModal = () => {
     setFormData({
       RoleId: '',
-      CompanyId: '',
+      CompanyId: sessionCompanyId ? String(sessionCompanyId) : '',
       RoleName: '',
       Role_Code: '',
       Description: '',
@@ -130,7 +149,7 @@ export default function RolesView() {
     setSelectedRole(role);
     setFormData({
       RoleId: role.RoleId || role.id,
-      CompanyId: role.CompanyId || '',
+      CompanyId: role.CompanyId ? String(role.CompanyId) : (sessionCompanyId ? String(sessionCompanyId) : ''),
       RoleName: role.RoleName || role.name || '',
       Role_Code: role.RoleCode || role.Role_Code || role.code || '',
       Description: role.RoleDescription || role.Description || '',
@@ -194,7 +213,7 @@ export default function RolesView() {
     try {
       if (modalMode === 'add') {
         const payload = {
-          CompanyId: Number(formData.CompanyId) || 1,
+          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleName: formData.RoleName.trim(),
           Role_Code: formData.Role_Code.trim(),
           Description: formData.Description?.trim() || '',
@@ -205,7 +224,7 @@ export default function RolesView() {
       } else if (modalMode === 'edit') {
         const payload = {
           FlagId: 4,
-          CompanyId: Number(formData.CompanyId),
+          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleId: Number(formData.RoleId),
           RoleName: formData.RoleName.trim(),
           Description: formData.Description?.trim() || '',
@@ -699,7 +718,8 @@ export default function RolesView() {
                 Associated Company *
               </label>
               <select
-                value={formData.CompanyId}
+                disabled={Boolean(sessionCompanyId)}
+                value={formData.CompanyId || (sessionCompanyId ? String(sessionCompanyId) : '')}
                 onChange={(e) => {
                   setFormData((prev) => ({ ...prev, CompanyId: e.target.value }));
                   if (formErrors.CompanyId) {
@@ -708,7 +728,9 @@ export default function RolesView() {
                 }}
                 className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border ${
                   formErrors.CompanyId ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                } text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
+                } text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                  sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : 'cursor-pointer'
+                }`}
                 required
               >
                 <option value="" disabled>
@@ -719,6 +741,11 @@ export default function RolesView() {
                     {c.CompanyName || c.name}
                   </option>
                 ))}
+                {sessionCompanyId && !companies.some(c => String(c.CompanyId || c.id) === String(sessionCompanyId)) && (
+                  <option value={String(sessionCompanyId)}>
+                    {sessionCompanyName || `Company #${sessionCompanyId}`}
+                  </option>
+                )}
               </select>
               {formErrors.CompanyId && (
                 <p className="text-[11px] text-red-500">{formErrors.CompanyId}</p>

@@ -56,16 +56,16 @@ export default function MaterialSubCategoryCreation() {
       errs.category = 'Material Category selection is required';
     }
 
-    const codeErr = validateCode(formData.code, 'Sub Category Code', true);
+    const codeErr = validateCode(formData.code, 'Material Sub Category Code', true);
     if (codeErr) errs.code = codeErr;
 
     const trimmedName = (formData.name || '').trim();
     if (!trimmedName) {
-      errs.name = 'Sub Category Name is required';
+      errs.name = 'Material Sub Category Name is required';
     } else if (trimmedName.length < 2) {
-      errs.name = 'Sub Category Name must be at least 2 characters';
+      errs.name = 'Material Sub Category Name must be at least 2 characters';
     } else if (trimmedName.length > 100) {
-      errs.name = 'Sub Category Name cannot exceed 100 characters';
+      errs.name = 'Material Sub Category Name cannot exceed 100 characters';
     }
 
     setFormErrors(errs);
@@ -194,7 +194,7 @@ export default function MaterialSubCategoryCreation() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this sub category?");
+    const confirmDelete = window.confirm("Are you sure you want to delete this material sub category?");
     if (!confirmDelete) return;
 
     try {
@@ -295,12 +295,12 @@ export default function MaterialSubCategoryCreation() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Manage Sub Categories"
+        title="Material Sub Categories"
         description="Manage system material sub categories, configurations and access permissions."
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Manage Sub Category', path: '/master/material-sub-category' }
+          { label: 'Material Sub Category', path: '/master/material-sub-category' }
         ]}
       />
 
@@ -309,7 +309,7 @@ export default function MaterialSubCategoryCreation() {
         columns={columns}
         data={filteredData}
         loading={loading}
-        searchPlaceholder="Search by sub category name, code..."
+        searchPlaceholder="Search by material sub category name, code..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         onAddClick={() => handleOpenModal(null, 'create')}
@@ -324,7 +324,7 @@ export default function MaterialSubCategoryCreation() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={isViewing ? 'View Sub Category' : (isEditing ? 'Edit Sub Category' : 'Create Sub Category')}
+        title={isViewing ? 'View Material Sub Category' : (isEditing ? 'Edit Material Sub Category' : 'Create Material Sub Category')}
         icon={ClipboardList}
         maxWidth="lg"
         actions={
@@ -341,7 +341,7 @@ export default function MaterialSubCategoryCreation() {
                 onClick={handleSubmit}
                 isLoading={submitting}
               >
-                {isEditing ? 'Update Category' : 'Create Category'}
+                {isEditing ? 'Update Material Sub Category' : 'Create Material Sub Category'}
               </Button>
             )}
           </>
@@ -390,7 +390,7 @@ export default function MaterialSubCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Sub Category Code {!isViewing && <span className="text-rose-500">*</span>}
+              Material Sub Category Code {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.code}
@@ -409,7 +409,7 @@ export default function MaterialSubCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Sub Category Name {!isViewing && <span className="text-rose-500">*</span>}
+              Material Sub Category Name {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.name}

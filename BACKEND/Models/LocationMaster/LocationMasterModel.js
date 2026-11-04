@@ -1,321 +1,175 @@
 
 import { pool } from "../../Config/db.js";
 
-
-// 1. GET LOCATION TYPE DROPDOWN
-
-export const getLocationTypesForDropdown = async () => {
-
+// 1. Get Location Type dropdown
+export const getLocationTypes = async () => {
     try {
-
-        const query = `
-
+        const result = await pool.query(`
             SELECT
                 "LocationTypeMasterId",
                 "LocationTypeMasterName",
                 "ParentTypeId"
-
             FROM "LKP"."LocationTypeMaster"
             WHERE "IsDisabled" = false
             ORDER BY "LocationTypeMasterId";
-
-        `;
-
-        const result = await pool.query(query);
+        `);
 
         return result.rows;
-
     } catch (error) {
-
         throw error;
-
     }
-
 };
 
 
-// 2. GET PARENT LOCATION TYPE DROPDOWN
-
-export const getParentLocationTypeForDropdown = async (LocationTypeMasterId) => {
-
+// 2. Get Parent Location Type based on selected Location Type
+export const getParentLocationTypes = async (LocationTypeMasterId) => {
     try {
-
-        const query = `
-
+        const result = await pool.query(
+            `
             SELECT
+                Parent."LocationTypeMasterId",
+                Parent."LocationTypeMasterName"
+            FROM "LKP"."LocationTypeMaster" Selected
+            INNER JOIN "LKP"."LocationTypeMaster" Parent
+                ON Parent."LocationTypeMasterId" = Selected."ParentTypeId"
+            WHERE Selected."LocationTypeMasterId" = $1
+              AND Selected."IsDisabled" = false
+              AND Parent."IsDisabled" = false;
+            `,
+            [LocationTypeMasterId]
+        );
 
-                CHILD."LocationTypeMasterId",
-                CHILD."LocationTypeMasterName",
-                CHILD."ParentTypeId",
-
-                PARENT."LocationTypeMasterId" AS "ParentLocationTypeId",
-                PARENT."LocationTypeMasterName" AS "ParentLocationTypeName"
-
-            FROM "LKP"."LocationTypeMaster" CHILD
-
-            LEFT JOIN "LKP"."LocationTypeMaster" PARENT
-
-                ON CHILD."ParentTypeId" = PARENT."LocationTypeMasterId"
-                AND PARENT."IsDisabled" = false
-
-            WHERE
-                CHILD."LocationTypeMasterId" = $1
-                AND CHILD."IsDisabled" = false;
-
-        `;
-
-        const result = await pool.query(query, [LocationTypeMasterId]);
-
-        return result.rows[0] || null;
-
+        return result.rows;
     } catch (error) {
-
         throw error;
-
     }
-
 };
 
 
-// 3. GET PARENT LOCATION NAME DROPDOWN
+// 3. Get Parent Location Master based on selected Location Type and Parent Location Type
 
-export const getParentLocationsForDropdown = async (
-    ParentLocationTypeId,
-    CompanyMasterId
-) => {
-
+export const getParentLocationMasters = async (ParentLocationTypeMasterId) => {
     try {
-
-        const query = `
-
+        const result = await pool.query(
+            `
             SELECT
-
                 "LocationId",
                 "LocationName",
-                "LocationTypeMasterId",
-                "ParentLocationMasterId"
-
+                "LocationTypeMasterId"
             FROM "LKP"."LocationMaster"
-
-            WHERE
-
-                "LocationTypeMasterId" = $1
-                AND "CompanyMasterId" = $2
-                AND "IsDisabled" = false
-
+            WHERE "LocationTypeMasterId" = $1
+              AND "IsDisabled" = false
             ORDER BY "LocationName";
-
-        `;
-
-        const result = await pool.query(query, [
-
-            ParentLocationTypeId,
-            CompanyMasterId
-
-        ]);
+            `,
+            [ParentLocationTypeMasterId]
+        );
 
         return result.rows;
 
     } catch (error) {
-
         throw error;
-
     }
-
 };
 
 
-// CHECK COMPANY MASTER EXISTS
 
+// 4. Check whether Company Master exists
 export const checkCompanyMasterExists = async (CompanyMasterId) => {
-
     try {
-
-        const query = `
-
-            SELECT
-                "CompanyMasterId"
-
+        const result = await pool.query(
+            `
+            SELECT "CompanyMasterId"
             FROM "LKP"."CompanyMaster"
+            WHERE "CompanyMasterId" = $1
+              AND "IsDisabled" = false;
+            `,
+            [CompanyMasterId]
+        );
 
-            WHERE "CompanyMasterId" = $1;
-
-        `;
-
-        const result = await pool.query(query, [CompanyMasterId]);
-
-        return result.rows[0] || null;
-
+        return result.rows.length > 0;
     } catch (error) {
-
         throw error;
-
     }
-
 };
 
 
-// CHECK LOCATION TYPE EXISTS
-
+// 5. Check whether Location Type exists
 export const checkLocationTypeExists = async (LocationTypeMasterId) => {
-
     try {
-
-        const query = `
-
+        const result = await pool.query(
+            `
             SELECT
-
                 "LocationTypeMasterId",
-                "LocationTypeMasterName",
                 "ParentTypeId"
-
             FROM "LKP"."LocationTypeMaster"
-
-            WHERE
-
-                "LocationTypeMasterId" = $1
-                AND "IsDisabled" = false;
-
-        `;
-
-        const result = await pool.query(query, [
-            LocationTypeMasterId
-        ]);
+            WHERE "LocationTypeMasterId" = $1
+              AND "IsDisabled" = false;
+            `,
+            [LocationTypeMasterId]
+        );
 
         return result.rows[0] || null;
-
     } catch (error) {
-
         throw error;
-
     }
-
 };
 
 
-// CHECK VALID PARENT LOCATION
-
-export const checkValidParentLocation = async (
+// 6. Check whether Parent Location exists and belongs to the same company
+export const checkParentLocationExists = async (
+    LocationTypeMasterId,
+    ParentLocationTypeMasterId,
     ParentLocationMasterId,
-    ParentTypeId,
     CompanyMasterId
 ) => {
-
     try {
+        const result = await pool.query(
+            `
+            SELECT LM."LocationId"
+            FROM "LKP"."LocationMaster" LM
+            INNER JOIN "LKP"."LocationTypeMaster" LT
+                ON LT."LocationTypeMasterId" = $1
+            WHERE LM."LocationId" = $2
+              AND LM."LocationTypeMasterId" = $3
+              AND LM."CompanyMasterId" = $4
+              AND LM."IsDisabled" = false
+              AND LT."IsDisabled" = false
+              AND LT."ParentTypeId" = LM."LocationTypeMasterId";
+            `,
+            [
+                LocationTypeMasterId,
+                ParentLocationMasterId,
+                ParentLocationTypeMasterId,
+                CompanyMasterId
+            ]
+        );
 
-        const query = `
+        return result.rows.length > 0;
+    } catch (error) {
+        throw error;
+    }
+};
 
-            SELECT
 
-                "LocationId",
-                "LocationTypeMasterId",
-                "CompanyMasterId"
-
-            FROM "LKP"."LocationMaster"
-
-            WHERE
-
-                "LocationId" = $1
-                AND "LocationTypeMasterId" = $2
-                AND "CompanyMasterId" = $3
-                AND "IsDisabled" = false;
-
-        `;
-
-        const result = await pool.query(query, [
-
+// 7. Add Location Details and Contact Channels
+export const addLocation = async (locationData) => {
+    try {
+        const {
+            CompanyMasterId,
+            LocationTypeMasterId,
             ParentLocationMasterId,
-            ParentTypeId,
-            CompanyMasterId
+            LocationName,
+            ContactPerson,
+            ContactNumber,
+            EmailId,
+            Address,
+            CreatedByUserName
+        } = locationData;
 
-        ]);
-
-        return result.rows[0] || null;
-
-    } catch (error) {
-
-        throw error;
-
-    }
-
-};
-
-
-// CHECK DUPLICATE CONTACT NUMBER
-
-export const checkLocationContactExists = async (ContactNumber) => {
-
-    try {
-
-        const query = `
-
-            SELECT
-                "LocationId"
-
-            FROM "LKP"."LocationMaster"
-            WHERE "ContactNumber" = $1;
-
-        `;
-
-        const result = await pool.query(query, [
-            ContactNumber
-        ]);
-
-        return result.rows;
-
-    } catch (error) {
-
-        throw error;
-
-    }
-
-};
-
-
-// CHECK DUPLICATE EMAIL
-
-export const checkLocationEmailExists = async (EmailId) => {
-
-    try {
-
-        const query = `
-
-            SELECT
-                "LocationId"
-
-            FROM "LKP"."LocationMaster"
-
-            WHERE LOWER("EmailId") = LOWER($1);
-
-        `;
-
-        const result = await pool.query(query, [
-            EmailId
-        ]);
-
-        return result.rows;
-
-    } catch (error) {
-
-        throw error;
-
-    }
-
-};
-
-
-// INSERT LOCATION MASTER
-
-export const addLocationMasters = async (locationData) => {
-
-    try {
-
-        const query = `
-
+        const result = await pool.query(
+            `
             INSERT INTO "LKP"."LocationMaster"
-
             (
-
                 "CompanyMasterId",
                 "LocationTypeMasterId",
                 "ParentLocationMasterId",
@@ -324,56 +178,76 @@ export const addLocationMasters = async (locationData) => {
                 "ContactNumber",
                 "EmailId",
                 "Address",
-                "CreatedAt",
                 "CreatedByUserName",
+                "CreatedAt",
                 "IsDisabled"
-
             )
-
-            VALUES
-
-            (
-
-                $1,
-                $2,
-                $3,
-                $4,
-                $5,
-                $6,
-                $7,
-                $8,
-                CURRENT_TIMESTAMP,
-                $9,
-                false
-
-            )
-
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, false)
             RETURNING *;
-
-        `;
-
-        const values = [
-
-            locationData.CompanyMasterId,
-            locationData.LocationTypeMasterId,
-            locationData.ParentLocationMasterId,
-            locationData.LocationName.trim(),
-            locationData.ContactPerson.trim(),
-            locationData.ContactNumber.trim(),
-            locationData.EmailId.trim(),
-            locationData.Address.trim(),
-            locationData.CreatedByUserName || null
-
-        ];
-
-        const result = await pool.query(query, values);
+            `,
+            [
+                CompanyMasterId,
+                LocationTypeMasterId,
+                ParentLocationMasterId,
+                LocationName,
+                ContactPerson || null,
+                ContactNumber || null,
+                EmailId || null,
+                Address || null,
+                CreatedByUserName
+            ]
+        );
 
         return result.rows[0];
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+// Check whether EmailId already exists for this company
+export const checkLocationEmailExists = async (
+    EmailId,
+    CompanyMasterId
+) => {
+    try {
+        const result = await pool.query(
+            `
+            SELECT "LocationId"
+            FROM "LKP"."LocationMaster"
+            WHERE LOWER(TRIM("EmailId")) = LOWER(TRIM($1))
+              AND "CompanyMasterId" = $2;
+            `,
+            [EmailId, CompanyMasterId]
+        );
+
+        return result.rows.length > 0;
 
     } catch (error) {
-
         throw error;
-
     }
+};
 
+
+// Check whether ContactNumber already exists for this company
+export const checkLocationContactExists = async (
+    ContactNumber,
+    CompanyMasterId
+) => {
+    try {
+        const result = await pool.query(
+            `
+            SELECT "LocationId"
+            FROM "LKP"."LocationMaster"
+            WHERE TRIM("ContactNumber") = TRIM($1)
+              AND "CompanyMasterId" = $2;
+            `,
+            [ContactNumber, CompanyMasterId]
+        );
+
+        return result.rows.length > 0;
+
+    } catch (error) {
+        throw error;
+    }
 };

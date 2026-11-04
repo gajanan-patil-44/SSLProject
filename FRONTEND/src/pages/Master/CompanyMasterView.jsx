@@ -642,8 +642,7 @@ export default function CompanyMasterView() {
                   return (
                     <tr
                       key={id}
-                      onClick={() => handleOpenEditModal(row)}
-                      className={`cursor-pointer transition-colors ${
+                      className={`transition-colors ${
                         isSelected
                           ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold'
                           : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/50'
