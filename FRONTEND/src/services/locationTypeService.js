@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+// src/services/locationTypeService.js
+=======
 ﻿// src/services/locationTypeService.js
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
@@ -52,7 +56,11 @@ export const locationTypeService = {
   addLocationTypeMaster: async (data) => {
     const sessionUserName = (() => {
       try {
+<<<<<<< HEAD
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+=======
         const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         if (raw) {
           const s = JSON.parse(raw);
           const user = s?.data?.user || s?.user || s;
@@ -92,7 +100,11 @@ export const locationTypeService = {
   editLocationTypeMaster: async (data) => {
     const sessionUserName = (() => {
       try {
+<<<<<<< HEAD
+        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+=======
         const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         if (raw) {
           const s = JSON.parse(raw);
           const user = s?.data?.user || s?.user || s;

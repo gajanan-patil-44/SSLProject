@@ -5,7 +5,11 @@ info:
 
 http:
   method: PATCH
+<<<<<<< HEAD
+  url: http://192.168.23.115:9004/verp-service/companyMaster/updateCompanyMaster
+=======
   url: http://192.168.23.107:9004/verp-service/companyMaster/updateCompanyMaster
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   body:
     type: json
     data: |-

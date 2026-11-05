@@ -147,8 +147,12 @@ export const PROJECT_ROUTES = {
 export const USER_ROUTES = {
   CREATE_USER: '/verp-service/userCreation/createuser',
   USERDROPDOWNS: '/verp-service/userCreation/userdropdowns',
+<<<<<<< HEAD
+  CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown'
+=======
   CPP_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown',
   DEPARTMENT_DROPDOWN: '/verp-service/userCreation/companyproductprojectdropdown'
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 };
 
 /**

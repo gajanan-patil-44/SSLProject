@@ -5,7 +5,11 @@ info:
 
 http:
   method: POST
+<<<<<<< HEAD
+  url: http://192.168.23.76:9004/verp-service/companyCreation/addCompany
+=======
   url: http://192.168.23.107:9004/verp-service/companyCreation/addCompany
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   body:
     type: json
     data: |2-
