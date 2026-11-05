@@ -1,4 +1,4 @@
-// src/pages/Master/EditGSTModal.jsx
+﻿// src/pages/Master/EditGSTModal.jsx
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
@@ -50,7 +50,7 @@ export default function EditGSTModal({
   // Extract session username
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;

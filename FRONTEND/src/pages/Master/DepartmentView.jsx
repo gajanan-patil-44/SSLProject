@@ -1,4 +1,4 @@
-// src/pages/Master/DepartmentView.jsx
+﻿// src/pages/Master/DepartmentView.jsx
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   PageHeader,
@@ -35,7 +35,7 @@ export default function DepartmentView() {
   // Helper to extract session username dynamically
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const u = s?.data?.user || s?.user || s;

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // src/pages/UserManagement/ManageUserView.jsx
+=======
+﻿// src/pages/UserManagement/ManageUserView.jsx
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   PageHeader,
@@ -14,7 +18,7 @@ import { useERPStore } from '../../store/useERPStore';
 // Helper to get session company
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
@@ -181,7 +185,11 @@ export default function ManageUserView() {
 
   const getSessionUserName = () => {
     try {
+<<<<<<< HEAD
       const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+=======
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (raw) {
         const s = JSON.parse(raw);
         const u = s?.data?.user || s?.user || s;
@@ -478,7 +486,11 @@ export default function ManageUserView() {
     const primaryRole = (user.Roles || [])[0];
     const primaryManager = (user.ReportingManagers || [])[0];
 
+<<<<<<< HEAD
+    const currentCompanyId = primaryCompany?.CompanyId ? String(primaryCompany.CompanyId) : '';
+=======
     const currentCompanyId = sessionCompanyId ? String(sessionCompanyId) : (primaryCompany?.CompanyId ? String(primaryCompany.CompanyId) : '');
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
     // Multi-select values as arrays of strings
     const currentCompanyProductIds = Array.isArray(user.Products) && user.Products.length > 0

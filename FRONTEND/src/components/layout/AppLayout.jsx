@@ -20,7 +20,7 @@ export default function AppLayout() {
   // Directly retrieve session menu as fallback to eliminate any store sync delay
   const sessionMenu = React.useMemo(() => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       return parsed?.data?.menuPage || parsed?.menuPage || parsed?.data?.userMenu || parsed?.userMenu || null;

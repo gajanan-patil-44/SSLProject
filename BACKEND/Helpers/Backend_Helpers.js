@@ -1,3 +1,4 @@
+
 export const USER_CREATION="/verp-service/userCreation"
 export const LOGIN = "/verp-service/auth"
 export const ROLES_CREATION="/verp-service/roleCreation"
@@ -22,7 +23,8 @@ export const GST_RATE="/verp-service/gstRate"
 export const COMPANY_MASTER="/verp-service/companyMaster"
 export const LOCATION_MASTER="/verp-service/locationMaster"
 export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
-export const DEPARTMENT="/verp-service/department"
 
 export const VENDOR_TYPE="/verp-service/vendorType"
 
+export const DEPARTMENT="/verp-service/department"
+export const VIEW_PRPO="/verp-service/viewPRPO"

@@ -21,7 +21,7 @@ let isHandlingSessionExpiry = false;
 apiClient.interceptors.request.use(
   (config) => {
     let token = null;
-    const sessionStr = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const sessionStr = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (sessionStr) {
       try {
         const sessionObj = JSON.parse(sessionStr);
@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
       }
     }
     if (!token) {
-      token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+      token = sessionStorage.getItem('erp_token') || localStorage.getItem('erp_token');
     }
 
     if (token) {
@@ -41,7 +41,7 @@ apiClient.interceptors.request.use(
     // Attach CompanyId from active session to outgoing payloads across all screens/APIs
     const sessionCompanyId = (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = typeof raw === 'string' ? JSON.parse(raw) : raw;
           const active = s?.data?.context?.activeCompany || s?.context?.activeCompany;
