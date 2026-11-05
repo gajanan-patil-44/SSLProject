@@ -75,6 +75,25 @@ const itemCreationService = {
   },
 
   /**
+   * Fetch Company Dropdown (FlagId: 12)
+   * Hits POST /verp-service/material/dropdown with { FlagId: 12 }
+   */
+  getCompanyDropdown: async () => {
+    try {
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 12 });
+      if (response && (response.status === 'success' || response.success === true) && Array.isArray(response.data)) {
+        return response.data.map(c => ({
+          id: c.CompanyId ?? c.id,
+          name: c.CompanyName ?? c.name ?? `Company #${c.CompanyId}`,
+          code: c.CompanyCode ?? c.code ?? ''
+        }));
+      }
+    } catch (error) {
+    }
+    return [];
+  },
+
+  /**
    * Fetch Category Dropdown (FlagId: 2)
    */
   getCategoryDropdown: async (params = {}) => {
@@ -246,8 +265,9 @@ const itemCreationService = {
       : getSessionCompanyId();
     const dropdownParams = compId ? { CompanyId: compId } : {};
 
-    const [categories, subCategories, uoms, gstTypes, gstRates, fileTypes] = await Promise.all([
-      itemCreationService.getCategoryDropdown(dropdownParams),
+    const [companies, categories, subCategories, uoms, gstTypes, gstRates, fileTypes] = await Promise.all([
+      itemCreationService.getCompanyDropdown(),
+      compId ? itemCreationService.getCategoryDropdown(dropdownParams) : Promise.resolve([]),
       categoryId ? itemCreationService.getSubCategoryDropdown(categoryId, dropdownParams) : Promise.resolve([]),
       itemCreationService.getUOMDropdown(dropdownParams),
       itemCreationService.getGSTTypeDropdown(dropdownParams),
@@ -255,6 +275,7 @@ const itemCreationService = {
       itemCreationService.getFileTypeDropdown(dropdownParams)
     ]);
     return {
+      companies: companies || [],
       categories: categories || [],
       subCategories: subCategories || [],
       uoms: uoms || [],

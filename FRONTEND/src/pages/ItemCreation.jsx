@@ -9,6 +9,7 @@ import {
 import { DataTable } from '../components/ui/DataTable';
 import { Modal } from '../components/ui/Modal';
 import {
+  Building2,
   Search,
   Plus,
   Edit,
@@ -39,14 +40,18 @@ import {
 import { BASE_URL } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
 import { itemCreationService } from '../services';
-import { getSessionCompanyId } from '../services/departmentService';
+import { getSessionCompanyId, getSessionCompany } from '../services/departmentService';
 import { validateCode, validateHSN, validateTextOnly, validateDescription } from '../utils/validators';
 
 export default function ItemCreation() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
+  const activeCompany = useERPStore((state) => state.activeCompany);
 
   const sessionCompanyId = getSessionCompanyId();
+  const sessionCompany = getSessionCompany();
+  const sessionCompanyName = sessionCompany?.CompanyName || sessionCompany?.name || activeCompany || '';
+  const hasSessionCompany = Boolean(sessionCompanyId);
 
   // Derived current user details dynamically from store
   const currentUserName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
@@ -248,8 +253,9 @@ export default function ItemCreation() {
     loadDocumentPreview(file);
   };
 
-  // All 6 Dropdowns (FlagIds 2 to 7) loaded dynamically from API
+  // All Dropdowns (FlagIds 2 to 7, plus FlagId 12 for Company) loaded dynamically from API
   const [dropdowns, setDropdowns] = useState({
+    companies: [],     // FlagId: 12
     categories: [],    // FlagId: 2
     subCategories: [], // FlagId: 3
     uoms: [],          // FlagId: 4
@@ -257,12 +263,15 @@ export default function ItemCreation() {
     gstRates: [],      // FlagId: 6
     fileTypes: []      // FlagId: 7
   });
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingSubCategories, setLoadingSubCategories] = useState(false);
   const [loadingGSTRates, setLoadingGSTRates] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
     id: null,
+    companyId: sessionCompanyId ? String(sessionCompanyId) : '',
+    companyName: sessionCompanyName || '',
     categoryId: '',
     categoryName: '',
     subCategoryId: '',
@@ -289,9 +298,15 @@ export default function ItemCreation() {
   });
   const [formErrors, setFormErrors] = useState({});
 
+  // Helper flag: further selection enabled only after company selection / lock
+  const isCompanySelected = Boolean(formData.companyId || hasSessionCompany);
+
   // Validate form
   const validateForm = () => {
     const errs = {};
+    if (!formData.companyId && !hasSessionCompany) {
+      errs.companyId = 'Company is required';
+    }
     if (!formData.categoryId) {
       errs.categoryId = 'Material Category is required';
     }
@@ -332,10 +347,10 @@ export default function ItemCreation() {
     return Object.keys(errs).length === 0;
   };
 
-  // Fetch all 6 dropdowns dynamically from /verp-service/material/dropdown (FlagIds 2 to 7)
-  const fetchAllDropdowns = async (categoryId = null, gstTypeId = null) => {
+  // Fetch all dropdowns dynamically from /verp-service/material/dropdown (FlagIds 12, 2 to 7)
+  const fetchAllDropdowns = async (categoryId = null, gstTypeId = null, companyId = null) => {
     try {
-      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const compId = companyId || (sessionCompanyId ? Number(sessionCompanyId) : undefined);
       const data = await itemCreationService.getAllDropdowns(categoryId, gstTypeId, compId);
       setDropdowns(data);
       return data;
@@ -365,9 +380,11 @@ export default function ItemCreation() {
   }, []);
 
   const handleOpenModal = async (item = null, mode = 'create') => {
+    const itemCompId = item?.CompanyId || item?.raw?.CompanyId || null;
+    const targetCompId = itemCompId || (sessionCompanyId ? Number(sessionCompanyId) : null);
     const existingCategoryId = item?.categoryId || item?.raw?.MaterialCategoryTypeId || null;
     const existingGSTTypeId = item?.gstTypeId || item?.raw?.GSTTypeId || null;
-    const freshData = await fetchAllDropdowns(existingCategoryId, existingGSTTypeId);
+    const freshData = await fetchAllDropdowns(existingCategoryId, existingGSTTypeId, targetCompId);
     setIsViewing(mode === 'view');
     setActiveModalTab('details');
     setSelectedFile(null);
@@ -376,6 +393,7 @@ export default function ItemCreation() {
     setPreviewError(null);
 
     const availableFileTypes = freshData?.fileTypes || dropdowns.fileTypes || [];
+    const availableCompanies = freshData?.companies || dropdowns.companies || [];
 
     if (item) {
       setIsEditing(mode === 'edit');
@@ -400,9 +418,13 @@ export default function ItemCreation() {
         || item.raw?.Files?.[0]?.FileTypeId 
         || '';
       const matchedFileType = availableFileTypes.find(f => Number(f.id) === Number(existingFileTypeId));
+      const effectiveCompId = item.CompanyId ? String(item.CompanyId) : (sessionCompanyId ? String(sessionCompanyId) : '');
+      const matchedComp = availableCompanies.find(c => String(c.id) === effectiveCompId);
 
       setFormData({
         id: item.id,
+        companyId: effectiveCompId,
+        companyName: matchedComp?.name || item.raw?.CompanyName || sessionCompanyName || '',
         categoryId: item.categoryId || '',
         categoryName: item.category || '',
         subCategoryId: item.subCategoryId || '',
@@ -437,6 +459,8 @@ export default function ItemCreation() {
 
       setFormData({
         id: null,
+        companyId: sessionCompanyId ? String(sessionCompanyId) : '',
+        companyName: sessionCompanyName || '',
         categoryId: '',
         categoryName: '',
         subCategoryId: '',
@@ -494,6 +518,46 @@ export default function ItemCreation() {
   };
 
   // Dropdown Change Handlers
+  const handleCompanyChange = async (e) => {
+    const selectedId = e.target.value;
+    const selected = dropdowns.companies.find(c => String(c.id) === String(selectedId));
+    setFormData(prev => ({
+      ...prev,
+      companyId: selectedId,
+      companyName: selected ? selected.name : '',
+      categoryId: '',
+      categoryName: '',
+      subCategoryId: '',
+      subCategoryName: ''
+    }));
+
+    if (formErrors.companyId) {
+      setFormErrors(prev => ({ ...prev, companyId: '' }));
+    }
+
+    if (selectedId) {
+      setLoadingCategories(true);
+      try {
+        const cats = await itemCreationService.getCategoryDropdown({ CompanyId: Number(selectedId) });
+        setDropdowns(prev => ({
+          ...prev,
+          categories: cats || [],
+          subCategories: []
+        }));
+      } catch (err) {
+        setDropdowns(prev => ({ ...prev, categories: [], subCategories: [] }));
+      } finally {
+        setLoadingCategories(false);
+      }
+    } else {
+      setDropdowns(prev => ({
+        ...prev,
+        categories: [],
+        subCategories: []
+      }));
+    }
+  };
+
   const handleCategoryChange = async (e) => {
     const selectedId = e.target.value;
     const selected = dropdowns.categories.find(c => String(c.id) === String(selectedId));
@@ -505,11 +569,14 @@ export default function ItemCreation() {
       subCategoryName: ''
     }));
 
+    const targetCompId = formData.companyId || (sessionCompanyId ? String(sessionCompanyId) : '');
+
     if (selectedId) {
       setLoadingSubCategories(true);
       try {
-        const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
-        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId, { ...(compId ? { CompanyId: compId } : {}) });
+        const subCats = await itemCreationService.getSubCategoryDropdown(selectedId, {
+          ...(targetCompId ? { CompanyId: Number(targetCompId) } : {})
+        });
         setDropdowns(prev => ({
           ...prev,
           subCategories: subCats || []
@@ -636,6 +703,9 @@ export default function ItemCreation() {
 
     try {
       const now = new Date().toISOString();
+      const effectiveCompanyId = formData.companyId
+        ? Number(formData.companyId)
+        : (sessionCompanyId ? Number(sessionCompanyId) : undefined);
 
       if (isEditing) {
         const payload = {
@@ -658,7 +728,7 @@ export default function ItemCreation() {
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile,
-          CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
+          CompanyId: effectiveCompanyId
         };
 
         const response = await itemCreationService.updateItem(payload);
@@ -688,7 +758,7 @@ export default function ItemCreation() {
           UpdatedAt: now,
           FileTypeId: selectedFile && formData.fileTypeId ? Number(formData.fileTypeId) : undefined,
           file: selectedFile,
-          CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
+          CompanyId: effectiveCompanyId
         };
 
         const response = await itemCreationService.createItem(payload);
@@ -998,6 +1068,46 @@ export default function ItemCreation() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+              {/* Company Dropdown */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
+                  Company {!isViewing && <span className="text-rose-500">*</span>}
+                </label>
+                <div className="relative">
+                  <select
+                    disabled={isViewing || hasSessionCompany}
+                    value={formData.companyId}
+                    onChange={handleCompanyChange}
+                    className={`w-full h-8.5 px-2.5 pr-7 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 appearance-none truncate ${
+                      formErrors.companyId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    {hasSessionCompany ? (
+                      <option value={String(sessionCompanyId)}>
+                        {sessionCompanyName || `Company #${sessionCompanyId}`}
+                      </option>
+                    ) : (
+                      <>
+                        <option value="">Select Company</option>
+                        {dropdowns.companies.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} {c.code ? `(${c.code})` : ''}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                  {!isViewing && !hasSessionCompany && (
+                    <svg className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </div>
+                {formErrors.companyId && (
+                  <span className="text-[10px] text-rose-500 font-medium block truncate">{formErrors.companyId}</span>
+                )}
+              </div>
+
               {/* Category Dropdown */}
               <div className="space-y-1">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block truncate">
@@ -1005,7 +1115,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || loadingCategories || !isCompanySelected}
                     value={formData.categoryId}
                     onChange={(e) => {
                       handleCategoryChange(e);
@@ -1015,7 +1125,11 @@ export default function ItemCreation() {
                       formErrors.categoryId ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    <option value="">Select Category</option>
+                    <option value="">
+                      {!isCompanySelected
+                        ? 'Select Company first'
+                        : (loadingCategories ? 'Loading Categories...' : 'Select Category')}
+                    </option>
                     {dropdowns.categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name} {cat.code ? `(${cat.code})` : ''}
@@ -1040,7 +1154,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing || loadingSubCategories || !formData.categoryId}
+                    disabled={isViewing || loadingSubCategories || !formData.categoryId || !isCompanySelected}
                     value={formData.subCategoryId}
                     onChange={(e) => {
                       handleSubCategoryChange(e);
@@ -1051,13 +1165,15 @@ export default function ItemCreation() {
                     }`}
                   >
                     <option value="">
-                      {loadingSubCategories
-                        ? 'Loading Sub Categories...'
-                        : (!formData.categoryId
-                            ? 'Select Category first'
-                            : (availableSubCategories.length === 0
-                                ? 'No Sub Categories found'
-                                : 'Select Sub Category'))}
+                      {!isCompanySelected
+                        ? 'Select Company first'
+                        : (loadingSubCategories
+                            ? 'Loading Sub Categories...'
+                            : (!formData.categoryId
+                                ? 'Select Category first'
+                                : (availableSubCategories.length === 0
+                                    ? 'No Sub Categories found'
+                                    : 'Select Sub Category')))}
                     </option>
                     {availableSubCategories.map((sc) => (
                       <option key={sc.id} value={sc.id}>
@@ -1088,7 +1204,7 @@ export default function ItemCreation() {
                     if (formErrors.code) setFormErrors(prev => ({ ...prev, code: '' }));
                   }}
                   placeholder="e.g. MAT001"
-                  disabled={isViewing}
+                  disabled={isViewing || !isCompanySelected}
                   className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
                     formErrors.code ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                   }`}
@@ -1130,7 +1246,7 @@ export default function ItemCreation() {
                   value={formData.brand}
                   onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                   placeholder="e.g. Polycab"
-                  disabled={isViewing}
+                  disabled={isViewing || !isCompanySelected}
                   className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
                 />
               </div>
@@ -1144,7 +1260,7 @@ export default function ItemCreation() {
                   value={formData.model}
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   placeholder="e.g. CW-102"
-                  disabled={isViewing}
+                  disabled={isViewing || !isCompanySelected}
                   className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
                 />
               </div>
@@ -1156,7 +1272,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || !isCompanySelected}
                     value={formData.uomId}
                     onChange={(e) => {
                       handleUOMChange(e);
@@ -1195,7 +1311,7 @@ export default function ItemCreation() {
                   value={formData.warrantyYears}
                   onChange={(e) => setFormData({ ...formData, warrantyYears: e.target.value })}
                   placeholder="e.g. 1.0"
-                  disabled={isViewing}
+                  disabled={isViewing || !isCompanySelected}
                   className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
                 />
               </div>
@@ -1217,7 +1333,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing}
+                    disabled={isViewing || !isCompanySelected}
                     value={formData.gstTypeId}
                     onChange={(e) => {
                       handleGSTTypeChange(e);
@@ -1252,7 +1368,7 @@ export default function ItemCreation() {
                 </label>
                 <div className="relative">
                   <select
-                    disabled={isViewing || loadingGSTRates || !formData.gstTypeId}
+                    disabled={isViewing || loadingGSTRates || !formData.gstTypeId || !isCompanySelected}
                     value={formData.gstRateId}
                     onChange={(e) => {
                       handleGSTRateChange(e);
@@ -1300,7 +1416,7 @@ export default function ItemCreation() {
                     if (formErrors.hsnSac) setFormErrors(prev => ({ ...prev, hsnSac: '' }));
                   }}
                   placeholder="e.g. 84713010"
-                  disabled={isViewing}
+                  disabled={isViewing || !isCompanySelected}
                   className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
                     formErrors.hsnSac ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                   }`}
@@ -1321,9 +1437,10 @@ export default function ItemCreation() {
                   </div>
                 ) : (
                   <select
+                    disabled={isViewing || !isCompanySelected}
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+                    className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
@@ -1400,7 +1517,8 @@ export default function ItemCreation() {
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
                       onChange={handleFileChange}
-                      className="w-full h-8.5 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-primary/10 file:text-primary cursor-pointer"
+                      disabled={isViewing || !isCompanySelected}
+                      className="w-full h-8.5 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-primary/10 file:text-primary cursor-pointer disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
                     />
                     {selectedFile && (
                       <div className="flex items-center justify-between text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 px-2 py-0.5 rounded">
@@ -1436,7 +1554,7 @@ export default function ItemCreation() {
                     if (formErrors.description) setFormErrors(prev => ({ ...prev, description: '' }));
                   }}
                   placeholder="Enter specifications (text only)..."
-                  disabled={isViewing}
+                  disabled={isViewing || !isCompanySelected}
                   className={`w-full h-8.5 px-2.5 py-1 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 resize-none ${
                     formErrors.description ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                   }`}
