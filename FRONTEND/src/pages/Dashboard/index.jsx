@@ -152,14 +152,6 @@ export default function Dashboard() {
               Welcome back to <span className="font-bold text-white underline decoration-cyan-400 decoration-2">{activeCompany || 'Vishvin ERP'}</span>. You have 7 pending requests and 2 alerts.
             </p>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0">
-            <Button variant="outline" size="sm" icon={Download} onClick={handleExport} className="!bg-white/10 !border-white/25 !text-white hover:!bg-white/20 shadow-sm">
-              Export
-            </Button>
-            <Button variant="secondary" size="sm" icon={Plus} onClick={() => setIsAddEmployeeOpen(true)} className="shadow-lg shadow-cyan-500/30">
-              Add Employee
-            </Button>
-          </div>
         </div>
       </div>
 

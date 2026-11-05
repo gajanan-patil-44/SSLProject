@@ -683,10 +683,10 @@ export default function UserCreationView() {
     setErrors(er => ({ ...er, Photo: '' }));
   };
 
-  // ── Per-FileType upload handlers (Multiple Images Only) ────────────────────
+  // ── Per-FileType upload handlers (Multiple Images & PDFs) ────────────────────
   const onAddFiles = () => {}; // kept for ref compat
 
-  // Helper to ensure file is strictly an image
+  // Helper to ensure file is an image
   const isImageFile = (file) => {
     if (!file) return false;
     if (file.type && file.type.startsWith('image/')) return true;
@@ -694,21 +694,34 @@ export default function UserCreationView() {
     return /\.(jpe?g|png|webp|gif|bmp|svg|avif)$/i.test(name);
   };
 
+  // Helper to ensure file is a PDF
+  const isPdfFile = (file) => {
+    if (!file) return false;
+    if (file.type === 'application/pdf') return true;
+    const name = file.name || '';
+    return /\.pdf$/i.test(name);
+  };
+
+  // Helper to ensure file is an allowed document (image or PDF)
+  const isAllowedDocFile = (file) => {
+    return isImageFile(file) || isPdfFile(file);
+  };
+
   const onFilesForType = (fileTypeId, incomingFiles, fileTypeLabel = '') => {
     if (!incomingFiles || incomingFiles.length === 0) return;
     const filesArray = Array.from(incomingFiles);
 
-    // 1. Strict Image-Only Validation (reject PDFs, Word, Excel, etc.)
-    const nonImageFiles = filesArray.filter(f => !isImageFile(f));
-    if (nonImageFiles.length > 0) {
-      const invalidNames = nonImageFiles.map(f => f.name).join(', ');
-      const errorMsg = `Only image files (JPG, PNG, WebP) are allowed. Rejected non-image file(s): ${invalidNames}`;
+    // 1. Image and PDF Validation (allows JPG, PNG, WebP, PDF)
+    const disallowedFiles = filesArray.filter(f => !isAllowedDocFile(f));
+    if (disallowedFiles.length > 0) {
+      const invalidNames = disallowedFiles.map(f => f.name).join(', ');
+      const errorMsg = `Only images (JPG, PNG, WebP) and PDF files are allowed. Rejected: ${invalidNames}`;
       setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
-      useERPStore.getState().showToast(`Only image files are allowed for ${fileTypeLabel || 'documents'}.`, 'error');
+      useERPStore.getState().showToast(`Only images and PDF files are allowed for ${fileTypeLabel || 'documents'}.`, 'error');
       return;
     }
 
-    // 2. Size limit per image
+    // 2. Size limit per file
     const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(fileTypeLabel);
     const maxSize = is1MbRestricted ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
     const limitText = is1MbRestricted ? '1 MB' : '5 MB';
@@ -716,9 +729,9 @@ export default function UserCreationView() {
     const oversizedFiles = filesArray.filter(f => f.size > maxSize);
     if (oversizedFiles.length > 0) {
       const oversizedNames = oversizedFiles.map(f => f.name).join(', ');
-      const errorMsg = `Image size exceeds ${limitText} limit (${oversizedNames})`;
+      const errorMsg = `File size exceeds ${limitText} limit (${oversizedNames})`;
       setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
-      useERPStore.getState().showToast(`Image exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
+      useERPStore.getState().showToast(`File exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
       return;
     }
 
@@ -861,7 +874,7 @@ export default function UserCreationView() {
     }
 
     if (step === 5) {
-      // Validate that all attached files are images and within allowed size limits
+      // Validate that all attached files are images or PDFs and within allowed size limits
       for (const [ftId, files] of Object.entries(userFiles)) {
         if (!files) continue;
         const fileList = Array.isArray(files) ? files : [files];
@@ -871,8 +884,8 @@ export default function UserCreationView() {
 
         for (const file of fileList) {
           if (!file) continue;
-          if (!isImageFile(file)) {
-            e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain image files only`;
+          if (!isAllowedDocFile(file)) {
+            e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain images or PDF files only`;
             break;
           } else if (file.size > max) {
             e[`file_${ftId}`] = `${ft?.label || 'File'} (${file.name}) exceeds ${is1Mb ? '1 MB' : '5 MB'} limit`;
@@ -1656,10 +1669,10 @@ export default function UserCreationView() {
         {currentStep === 5 && (
           <div className="animate-in fade-in duration-300">
             <SectionHeader
-              icon={Image}
+              icon={FileText}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Supporting Documents"
-              subtitle="Upload multiple images for each required document type (Images only: JPG, PNG, WEBP). Other document formats are not permitted."
+              subtitle="Upload documents for each required document type (Images: JPG, PNG, WEBP or PDF). Maximum 5 MB per file (1 MB for Aadhaar/PAN)."
             />
 
             {/* File-type compact grid — 3 per row */}
@@ -1698,7 +1711,7 @@ export default function UserCreationView() {
                               ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                               : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
                           }`}>
-                            {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <Image className="w-3.5 h-3.5" />}
+                            {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">
@@ -1711,12 +1724,12 @@ export default function UserCreationView() {
                                 </span>
                               ) : (
                                 <span className="text-[9px] text-slate-400 shrink-0">
-                                  Images only
+                                  Images or PDF
                                 </span>
                               )}
                               {hasFiles && (
                                 <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-                                  {uploadedList.length} {uploadedList.length === 1 ? 'image' : 'images'}
+                                  {uploadedList.length} {uploadedList.length === 1 ? 'file' : 'files'}
                                 </span>
                               )}
                             </div>
@@ -1732,7 +1745,7 @@ export default function UserCreationView() {
                                 ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
                                 : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                             }`}
-                            title={hasFiles ? 'Add more images' : 'Upload images'}
+                            title={hasFiles ? 'Add more files' : 'Upload files'}
                           >
                             <Upload className="w-3 h-3" />
                             {hasFiles ? '+ Add' : 'Upload'}
@@ -1742,7 +1755,7 @@ export default function UserCreationView() {
                               type="button"
                               onClick={() => removeFileForType(ft.value)}
                               className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
-                              title="Clear all images"
+                              title="Clear all files"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -1751,7 +1764,7 @@ export default function UserCreationView() {
                             id={`ft-upload-${ft.value}`}
                             type="file"
                             multiple
-                            accept="image/*,image/jpeg,image/png,image/webp,image/gif"
+                            accept="image/*,image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
                             className="hidden"
                             onChange={e => {
                               const files = e.target.files;
@@ -1772,7 +1785,7 @@ export default function UserCreationView() {
                         </p>
                       )}
 
-                      {/* Uploaded Images Strip */}
+                      {/* Uploaded Files Strip */}
                       {hasFiles && (
                         <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
                           {uploadedList.map((file, imgIdx) => (
@@ -1780,7 +1793,11 @@ export default function UserCreationView() {
                               key={`${file.name}-${imgIdx}`}
                               className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-2xs group"
                             >
-                              <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                              {isPdfFile(file) ? (
+                                <FileText className="w-2.5 h-2.5 text-rose-500 shrink-0" />
+                              ) : (
+                                <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                              )}
                               <span className="truncate max-w-[100px]" title={file.name}>
                                 {file.name}
                               </span>
@@ -1806,7 +1823,7 @@ export default function UserCreationView() {
 
                       {!hasFiles && !hasErr && (
                         <p className="text-[10px] text-slate-400 leading-tight">
-                          No images uploaded · Images only (JPG, PNG, WebP)
+                          No files uploaded · Images (JPG, PNG, WebP) or PDF
                         </p>
                       )}
                     </div>
