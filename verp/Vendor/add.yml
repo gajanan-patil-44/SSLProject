@@ -14,10 +14,10 @@ http:
         value: "4"
       - name: VendorName
         type: text
-        value: ROCK Suppliers
+        value: ROCK
       - name: VendorCode
         type: text
-        value: ROCK003
+        value: ROCK004
       - name: ContactPerson
         type: text
         value: Rahul Kumars
@@ -29,7 +29,7 @@ http:
         value: ROCK1@gmial.com
       - name: GSTINUINNumber
         type: text
-        value: 29ADCDE1934F1Z4
+        value: 29ADCDE1934F1Z3
       - name: City
         type: text
         value: Bengaluru
@@ -67,7 +67,7 @@ http:
         contentType: image/png
       - name: CompanyId
         type: text
-        value: "1"
+        value: "2"
   auth: inherit
 
 settings:

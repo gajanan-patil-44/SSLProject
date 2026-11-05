@@ -20,6 +20,7 @@ import CompanyMasterRoutes from "../Routes/CompanyMaster/CompanyMasterRoutes.js"
 import LocationMasterRoutes from "../Routes/LocationMaster/LocationMasterRoutes.js"
 import GstRateRoutes from "../Routes/GstRate/GstRate.js"
 import DepartmentRoutes from "../Routes/Department/DepartmentRoutes.js"
+import viewPRPORoutes from "../Routes/ViewPRPO/ViewPRPORoutes.js"
 
 
 const applyRoutes = (app) => {
@@ -47,6 +48,7 @@ app.use(backendHelpers.LOCATION_TYPE_MASTER, locationTypeMasterRoutes);
 app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
 app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
 app.use(backendHelpers.DEPARTMENT, DepartmentRoutes);
+app.use(backendHelpers.VIEW_PRPO, viewPRPORoutes);
 };
 
 export default applyRoutes;
