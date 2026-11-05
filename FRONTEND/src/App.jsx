@@ -27,6 +27,19 @@ import CompanyMasterView from './pages/Master/CompanyMasterView';
 import DepartmentView from './pages/Master/DepartmentView';
 import GSTCreationView from './pages/Master/GSTCreationView';
 
+// Work Management Module
+import {
+  DailyWorkUpdateView,
+  WorkHistoryView,
+  AssignedTasksView,
+  TaskAssignmentView,
+  ProjectTaskTrackerView,
+  TeamUpdatesView,
+  WorkUpdateReviewView,
+  OrganizationDashboardView,
+  WorkReportsAnalyticsView
+} from './pages/WorkManagement';
+
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
 
@@ -113,6 +126,18 @@ export default function App() {
 
           {/* Support Special Page */}
           <Route path="support/tickets" element={<TicketsView />} />
+
+          {/* Work Management Module Pages */}
+          <Route path="work-management" element={<Navigate to="/work-management/daily-update" replace />} />
+          <Route path="work-management/daily-update" element={<DailyWorkUpdateView />} />
+          <Route path="work-management/work-history" element={<WorkHistoryView />} />
+          <Route path="work-management/assigned-tasks" element={<AssignedTasksView />} />
+          <Route path="work-management/task-assignment" element={<TaskAssignmentView />} />
+          <Route path="work-management/project-tasks" element={<ProjectTaskTrackerView />} />
+          <Route path="work-management/team-updates" element={<TeamUpdatesView />} />
+          <Route path="work-management/review" element={<WorkUpdateReviewView />} />
+          <Route path="work-management/dashboard" element={<OrganizationDashboardView />} />
+          <Route path="work-management/analytics" element={<WorkReportsAnalyticsView />} />
 
           {/* UI Design System Showcases */}
           <Route path="ui/:subpage" element={<ShowcaseView />} />
