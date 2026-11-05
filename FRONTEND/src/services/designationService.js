@@ -1,4 +1,4 @@
-// src/services/designationService.js
+﻿// src/services/designationService.js
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
@@ -28,7 +28,7 @@ export const designationService = {
   addDesignation: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
           return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
@@ -68,7 +68,7 @@ export const designationService = {
   editDesignation: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
           return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
@@ -100,7 +100,7 @@ export const designationService = {
   toggleDesignationStatus: async (data) => {
     const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
           return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';

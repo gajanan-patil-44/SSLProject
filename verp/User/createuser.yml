@@ -11,7 +11,15 @@ http:
     data:
       - name: EmployeeId
         type: text
+<<<<<<< HEAD
         value: EMP231
+=======
+<<<<<<< HEAD
+        value: EMP7
+=======
+        value: EMP23
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+>>>>>>> 5bee22e425c77a235cb1f36d0a35df565b85133a
       - name: FirstName
         type: text
         value: htihin
@@ -23,10 +31,21 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
+<<<<<<< HEAD
         value: "9994989460"
+=======
+<<<<<<< HEAD
+        value: "9999989866"
+      - name: AltPhoneNumber
+        type: text
+        value: "9999989866"
+=======
+        value: "9994989466"
+>>>>>>> 5bee22e425c77a235cb1f36d0a35df565b85133a
       - name: AltPhoneNumber
         type: text
         value: "9495989866"
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       - name: DateOfBirth
         type: text
         value: 2004-08-12
@@ -41,10 +60,24 @@ http:
         value: "3"
       - name: Email
         type: text
+<<<<<<< HEAD
         value: admin231@gmail.com
       - name: LoginName
         type: text
         value: admin231
+=======
+<<<<<<< HEAD
+        value: admin7@gmail.com
+      - name: LoginName
+        type: text
+        value: ""
+=======
+        value: admin23@gmail.com
+      - name: LoginName
+        type: text
+        value: admin23
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+>>>>>>> 5bee22e425c77a235cb1f36d0a35df565b85133a
       - name: Photo
         type: file
         value:
@@ -95,6 +128,7 @@ http:
       - name: ReportingManagerUserId
         type: text
         value: "[2]"
+        disabled: true
       - name: DateOfJoining
         type: text
         value: 2024-08-12

@@ -65,6 +65,30 @@ const ICON_MAP = {
   'gstcreation': Icons.Receipt,
   gst: Icons.Receipt,
   receipt: Icons.Receipt,
+  'work-management': Icons.Briefcase,
+  workmanagement: Icons.Briefcase,
+  'daily-work-update': Icons.CalendarCheck2,
+  'daily-update': Icons.CalendarCheck2,
+  dailyworkupdate: Icons.CalendarCheck2,
+  'work-history': Icons.History,
+  workhistory: Icons.History,
+  'assigned-tasks': Icons.CheckSquare,
+  assignedtasks: Icons.CheckSquare,
+  'task-assignment': Icons.UserPlus,
+  taskassignment: Icons.UserPlus,
+  'project-task-tracker': Icons.Kanban,
+  'project-tasks': Icons.Kanban,
+  projecttasktracker: Icons.Kanban,
+  'team-updates': Icons.Users,
+  teamupdates: Icons.Users,
+  'work-update-review': Icons.ClipboardCheck,
+  'review': Icons.ClipboardCheck,
+  workupdatereview: Icons.ClipboardCheck,
+  'organization-dashboard': Icons.LayoutDashboard,
+  organizationdashboard: Icons.LayoutDashboard,
+  'work-reports': Icons.BarChart3,
+  'analytics': Icons.BarChart3,
+  workreports: Icons.BarChart3,
 };
 
 const resolveIcon = (iconName) => {
@@ -127,7 +151,7 @@ const formatPageNode = (page) => {
   };
 };
 
-// Normalize menu into sections with title & items based strictly on allocated menuPage
+// Normalize menu into sections with title & items based strictly on dynamic allocated menuPage
 const normalizeNavigation = (menuData) => {
   if (!Array.isArray(menuData) || menuData.length === 0) {
     return [];
@@ -143,7 +167,7 @@ const normalizeNavigation = (menuData) => {
     .map(formatPageNode)
     .sort((a, b) => a.order - b.order);
 
-  // Group top-level items by module extracted from URL (e.g. /master/companies -> MASTER)
+  // Group top-level items by module extracted from URL (e.g. /master/companies -> MASTER, /work-management/... -> WORK MANAGEMENT)
   const sectionsMap = new Map();
 
   formattedItems.forEach(item => {
@@ -151,7 +175,7 @@ const normalizeNavigation = (menuData) => {
     if (item.path && item.path.startsWith('/')) {
       const segment = item.path.split('/')[1];
       if (segment) {
-        sectionTitle = segment.toLowerCase() === 'dashboard' ? 'MAIN' : segment.toUpperCase();
+        sectionTitle = segment.toLowerCase() === 'dashboard' ? 'MAIN' : segment.replace(/[-_]+/g, ' ').toUpperCase();
       }
     } else if (item.label && Array.isArray(item.children) && item.children.length > 0) {
       sectionTitle = item.label.toUpperCase();
@@ -194,7 +218,7 @@ export default function Sidebar() {
   // Directly read session from storage to guarantee menu is refreshed on browser reload
   const sessionMenu = React.useMemo(() => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       return parsed?.data?.menuPage || parsed?.menuPage || parsed?.data?.userMenu || parsed?.userMenu || null;

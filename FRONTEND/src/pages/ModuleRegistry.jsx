@@ -1,4 +1,4 @@
-// src/pages/ModuleRegistry.jsx
+﻿// src/pages/ModuleRegistry.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { DynamicListPage, DynamicFormPage } from '../components/ui/DynamicPageEngine';
@@ -11,7 +11,7 @@ import { CalendarRange, Coins, TrendingUp, Wallet } from 'lucide-react';
 // Dynamic extraction of session company details
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;

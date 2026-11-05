@@ -11,7 +11,7 @@ import PipelineView from './pages/CRM/PipelineView';
 import POSView from './pages/POS/POSView';
 import TicketsView from './pages/Support/TicketsView';
 import ShowcaseView from './pages/UIInterface/ShowcaseView';
-import PagesView from './pages/Pages/PagesView';
+import PagesView from './pages/Pages/Login';
 import HelpView from './pages/Help/HelpView';
 import LetterBuilderView from './pages/Documents/LetterBuilderView';
 import UserCreationView from './pages/Master/UserCreationView';
@@ -24,8 +24,25 @@ import VendorManagement from './pages/Master/VendorManagementView';
 import LocationTypeMasterView from './pages/Master/LocationTypeMasterView';
 import LocationMasterView from './pages/Master/LocationMasterView';
 import CompanyMasterView from './pages/Master/CompanyMasterView';
+<<<<<<< HEAD
+import RaisePRRequestView from './pages/Procurement/RaisePRRequestView';
+=======
 import DepartmentView from './pages/Master/DepartmentView';
 import GSTCreationView from './pages/Master/GSTCreationView';
+
+// Work Management Module
+import {
+  DailyWorkUpdateView,
+  WorkHistoryView,
+  AssignedTasksView,
+  TaskAssignmentView,
+  ProjectTaskTrackerView,
+  TeamUpdatesView,
+  WorkUpdateReviewView,
+  OrganizationDashboardView,
+  WorkReportsAnalyticsView
+} from './pages/WorkManagement';
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -45,8 +62,17 @@ export default function App() {
           {/* Index Redirect */}
           <Route index element={<Navigate to="/dashboard" replace />} />
 
+          {/* Direct Auth / Login shortcuts */}
+          <Route path="login" element={<Navigate to="/pages/auth/login" replace />} />
+          <Route path="auth/login" element={<Navigate to="/pages/auth/login" replace />} />
+
           {/* Main Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
+
+          {/* ── Procurement ── */}
+          <Route path="procurement/raise-pr-request" element={<RaisePRRequestView />} />
+          <Route path="procurement/raise-pr" element={<Navigate to="/procurement/raise-pr-request" replace />} />
+          <Route path="procurement/pr-request" element={<Navigate to="/procurement/raise-pr-request" replace />} />
 
           {/* Canonical Master Special Pages */}
           <Route path="master/companies" element={<KeyedModuleRenderer />} />
@@ -113,6 +139,18 @@ export default function App() {
 
           {/* Support Special Page */}
           <Route path="support/tickets" element={<TicketsView />} />
+
+          {/* Work Management Module Pages */}
+          <Route path="work-management" element={<Navigate to="/work-management/daily-update" replace />} />
+          <Route path="work-management/daily-update" element={<DailyWorkUpdateView />} />
+          <Route path="work-management/work-history" element={<WorkHistoryView />} />
+          <Route path="work-management/assigned-tasks" element={<AssignedTasksView />} />
+          <Route path="work-management/task-assignment" element={<TaskAssignmentView />} />
+          <Route path="work-management/project-tasks" element={<ProjectTaskTrackerView />} />
+          <Route path="work-management/team-updates" element={<TeamUpdatesView />} />
+          <Route path="work-management/review" element={<WorkUpdateReviewView />} />
+          <Route path="work-management/dashboard" element={<OrganizationDashboardView />} />
+          <Route path="work-management/analytics" element={<WorkReportsAnalyticsView />} />
 
           {/* UI Design System Showcases */}
           <Route path="ui/:subpage" element={<ShowcaseView />} />

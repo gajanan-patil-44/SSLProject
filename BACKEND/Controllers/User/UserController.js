@@ -381,48 +381,64 @@ export const createUserController = async (req, res) => {
             // COMPANY ID
             // ------------------------------------------------------
 
-            if (isEmpty(userData.CompanyId)) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId is required"
-                });
-            }
+    if (isEmpty(userData.CompanyId)) {
+        return res.status(400).json({
+            status: "error",
+            message: "CompanyId is required"
+        });
+    }
 
-            userData.CompanyId = Number(userData.CompanyId);
+    userData.CompanyId = Number(userData.CompanyId);
 
-            if (
-                !Number.isInteger(userData.CompanyId) ||
-                userData.CompanyId <= 0
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId must be a valid number"
-                });
-            }
+    if (
+        !Number.isInteger(userData.CompanyId) ||
+        userData.CompanyId <= 0
+    ) {
+        return res.status(400).json({
+            status: "error",
+            message: "CompanyId must be a valid number"
+        });
+    }
 
             // ------------------------------------------------------
             // DESIGNATION
             // ------------------------------------------------------
 
-            if (isEmpty(userData.DesignationId)) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationId is required"
-                });
-            }
+    const designation = await getDesignationById(
+        userData.DesignationId
+    );
 
-            userData.DesignationId = Number(userData.DesignationId);
+    if (!designation) {
+        return res.status(400).json({
+            status: "error",
+            message: "Invalid DesignationId"
+        });
+    }
 
-            if (
-                !Number.isInteger(userData.DesignationId) ||
-                userData.DesignationId <= 0
-            ) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "DesignationId must be a valid number"
-                });
-            }
+    // ------------------------------------------------------
+    // DESIGNATION LEVEL 100
+    // CompanyProductId, ProjectId and ReportingManagerUserId
+    // are not required
+    // ------------------------------------------------------
 
+    if (Number(designation.DesignationLevel) === 100) {
+        userData.CompanyProductId = null;
+        userData.ProjectId = null;
+        userData.ReportingManagerUserId = null;
+    } else {
+        // --------------------------------------------------
+        // COMPANY PRODUCT
+        // --------------------------------------------------
+
+        if (
+            !Array.isArray(userData.CompanyProductId) ||
+            userData.CompanyProductId.length === 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "CompanyProductId must be a non-empty array"
+            });
             // ------------------------------------------------------
             // GET DESIGNATION DETAILS
             // ------------------------------------------------------
@@ -494,6 +510,37 @@ export const createUserController = async (req, res) => {
                 }
             }
         }
+
+        // --------------------------------------------------
+        // PROJECT
+        // --------------------------------------------------
+
+        if (
+            !Array.isArray(userData.ProjectId) ||
+            userData.ProjectId.length === 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "ProjectId must be a non-empty array"
+            });
+        }
+
+        // --------------------------------------------------
+        // REPORTING MANAGER
+        // --------------------------------------------------
+
+        if (
+            !Array.isArray(userData.ReportingManagerUserId) ||
+            userData.ReportingManagerUserId.length === 0
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "ReportingManagerUserId must be a non-empty array"
+            });
+        }
+    }
+}
 
         // ==========================================================
         // CONVERT COMPANY PRODUCT IDS
@@ -635,9 +682,9 @@ export const createUserController = async (req, res) => {
         // GET UPLOADED FILES
         // ==========================================================
 
-        const uploadedFiles = Array.isArray(req.files)
-            ? req.files
-            : Object.values(req.files || {}).flat();
+       const uploadedFiles = Array.isArray(req.files)
+    ? req.files
+    : Object.values(req.files || {}).flat();
 
         const fileTypeIds = Array.isArray(userData.FileTypeId)
             ? userData.FileTypeId
@@ -705,7 +752,6 @@ export const createUserController = async (req, res) => {
         });
     }
 };
-
 
 // ==========================================================
 // COMPANY / PRODUCT / PROJECT DROPDOWN
