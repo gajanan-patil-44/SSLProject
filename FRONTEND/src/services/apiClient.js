@@ -21,7 +21,7 @@ let isHandlingSessionExpiry = false;
 apiClient.interceptors.request.use(
   (config) => {
     let token = null;
-    const sessionStr = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const sessionStr = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (sessionStr) {
       try {
         const sessionObj = JSON.parse(sessionStr);
@@ -31,11 +31,48 @@ apiClient.interceptors.request.use(
       }
     }
     if (!token) {
-      token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+      token = sessionStorage.getItem('erp_token') || localStorage.getItem('erp_token');
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Attach CompanyId from active session to outgoing payloads across all screens/APIs
+    const sessionCompanyId = (() => {
+      try {
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+        if (raw) {
+          const s = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          const active = s?.data?.context?.activeCompany || s?.context?.activeCompany;
+          const activeId = active?.CompanyId ?? active?.companyId ?? active?.id;
+          if (activeId !== undefined && activeId !== null && activeId !== '') return Number(activeId);
+
+          const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+          if (Array.isArray(comps) && comps.length > 0) {
+            const cId = comps[0]?.CompanyId ?? comps[0]?.CompanyMasterId ?? comps[0]?.companyId ?? comps[0]?.id;
+            if (cId !== undefined && cId !== null && cId !== '') return Number(cId);
+          }
+
+          const u = s?.data?.user || s?.user;
+          const uCid = u?.CompanyId ?? u?.companyId ?? u?.CompanyMasterId;
+          if (uCid !== undefined && uCid !== null && uCid !== '') return Number(uCid);
+        }
+      } catch {}
+      return null;
+    })();
+
+    const isAuthUrl = config.url && (config.url.includes('/login') || config.url.includes('/auth/'));
+    if (!isAuthUrl && sessionCompanyId && config.data) {
+      if (config.data instanceof FormData) {
+        if (!config.data.has('CompanyId') && !config.data.has('companyId')) {
+          config.data.append('CompanyId', String(sessionCompanyId));
+        }
+      } else if (typeof config.data === 'object' && config.data !== null) {
+        if (config.data.CompanyId === undefined && config.data.companyId === undefined) {
+          config.data.CompanyId = sessionCompanyId;
+        }
+      }
     }
 
     if (config.data instanceof FormData) {

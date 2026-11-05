@@ -13,12 +13,21 @@ http:
         "FlagId": 2,
         "IsChangeOrder": false,
         "OrderType": "",
+<<<<<<< HEAD
         "PageIcon": "material-creation",
         "PageId": 12,
         "PageName": "material-creation",
         "PageType": "ParentPage",
         "PageUrl": "/master/material-creation",
         "ParentPageId": 10,
+=======
+        "PageIcon": "pages",
+        "PageId": 1,
+        "PageName": "Manage-Page",
+        "PageType": "MainPage",
+        "PageUrl": "/master/manage-page",
+        "ParentPageId": null,
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         "RoleIds": [1],
         "TargetPageId": null,
         "UpdatedByUserName": "admin1"

@@ -8,17 +8,17 @@ import {
 import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import {
-  Edit,
-  Eye,
   Upload,
   FileText,
   X
 } from 'lucide-react';
 import { useERPStore } from '../../store/useERPStore';
-import { vendorService } from '../../services/vendorService';
+import { vendorService, getSessionCompanyId } from '../../services/vendorService';
 import { validatePhone, validateEmail, validateName, validateCode, validateGSTIN } from '../../utils/validators';
 
 export default function VendorManagementView() {
+  const sessionCompanyId = getSessionCompanyId();
+
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
   const currentUserName = currentUser?.loginName || currentUser?.name || '';
@@ -120,8 +120,10 @@ export default function VendorManagementView() {
       }
       case 'remarks': {
         const val = (value || '').trim();
-        if (val && val.length > 250) {
-          return 'Max 250 characters';
+        if (val) {
+          if (val.length > 250) return 'Max 250 characters';
+          if (/\d/.test(val)) return 'Remarks must contain text only (no numbers)';
+          if (!/^[a-zA-Z\s]+$/.test(val)) return 'Remarks must contain text only (no special characters)';
         }
         return '';
       }
@@ -130,7 +132,8 @@ export default function VendorManagementView() {
         if (val) {
           if (val.length < 2) return 'Min 2 characters';
           if (val.length > 80) return 'Max 80 characters';
-          if (!/^[a-zA-Z\s.&-]+$/.test(val)) return 'Letters only';
+          if (/\d/.test(val)) return 'Letters only (numbers are not allowed)';
+          if (!/^[a-zA-Z\s]+$/.test(val)) return 'Letters and spaces only';
         }
         return '';
       }
@@ -139,7 +142,8 @@ export default function VendorManagementView() {
         if (val) {
           if (val.length < 2) return 'Min 2 characters';
           if (val.length > 80) return 'Max 80 characters';
-          if (!/^[a-zA-Z\s.&-]+$/.test(val)) return 'Letters only';
+          if (/\d/.test(val)) return 'Letters only (numbers are not allowed)';
+          if (!/^[a-zA-Z\s]+$/.test(val)) return 'Letters and spaces only';
         }
         return '';
       }
@@ -187,9 +191,13 @@ export default function VendorManagementView() {
 
   // Immediate validation handler on change
   const handleFieldChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    let sanitizedValue = value;
+    if (field === 'contactPerson' || field === 'bankName' || field === 'accountHolderName' || field === 'remarks') {
+      sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [field]: sanitizedValue }));
     if (errors[field]) {
-      const err = validateField(field, value, { ...formData, [field]: value });
+      const err = validateField(field, sanitizedValue, { ...formData, [field]: sanitizedValue });
       setErrors((prev) => {
         const next = { ...prev };
         if (err) next[field] = err;
@@ -214,7 +222,8 @@ export default function VendorManagementView() {
   const loadVendors = async () => {
     setLoading(true);
     try {
-      const data = await vendorService.getVendors();
+      const activeCompId = getSessionCompanyId();
+      const data = await vendorService.getVendors({ CompanyId: activeCompId });
       setVendors(Array.isArray(data) ? data : []);
     } catch {
       showToast('Failed to load vendors', 'error');
@@ -227,14 +236,14 @@ export default function VendorManagementView() {
   const loadDropdowns = async () => {
     setLoadingDropdowns(true);
     try {
+      const activeCompId = getSessionCompanyId();
       const [types, fileTypes] = await Promise.all([
-        vendorService.getVendorTypes(),
-        vendorService.getVendorFileTypes()
+        vendorService.getVendorTypes({ CompanyId: activeCompId }),
+        vendorService.getVendorFileTypes({ CompanyId: activeCompId })
       ]);
       setVendorTypes(Array.isArray(types) ? types : []);
       setVendorFileTypes(Array.isArray(fileTypes) ? fileTypes : []);
     } catch (err) {
-      console.error('Failed to load vendor dropdowns:', err);
     } finally {
       setLoadingDropdowns(false);
     }
@@ -292,7 +301,8 @@ export default function VendorManagementView() {
   // Toggle Status
   const handleToggleStatus = async (vendor) => {
     try {
-      const res = await vendorService.toggleStatus(vendor, vendor.status);
+      const activeCompId = getSessionCompanyId(vendor?.CompanyId);
+      const res = await vendorService.toggleStatus({ ...vendor, CompanyId: activeCompId }, vendor.status);
       showToast(`Vendor marked as ${res.nextStatus}`, 'success');
       loadVendors();
     } catch {
@@ -332,7 +342,9 @@ export default function VendorManagementView() {
 
     setSubmitting(true);
     try {
+      const activeCompId = getSessionCompanyId();
       const payload = {
+        CompanyId: activeCompId ? Number(activeCompId) : undefined,
         VendorId: formData.id || formData.VendorId,
         VendorName: formData.vendorName,
         VendorCode: formData.vendorCode || '',

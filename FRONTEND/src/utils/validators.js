@@ -39,7 +39,61 @@ export const VALIDATION_REGEX = {
 };
 
 /**
+ * Strips any integers and special characters, allowing only letters and spaces.
+ */
+export const sanitizeTextOnly = (value) => {
+  return String(value || '').replace(/[^a-zA-Z\s]/g, '');
+};
+
+/**
+ * Validates a text-only field (letters and spaces only: no integers, no special characters).
+ */
+export const validateTextOnly = (value, label = 'Field', isRequired = true, minLength = 2, maxLength = 100) => {
+  const val = String(value || '').trim();
+  if (!val) {
+    return isRequired ? `${label} is required` : '';
+  }
+  if (val.length < minLength) {
+    return `${label} must be at least ${minLength} characters`;
+  }
+  if (val.length > maxLength) {
+    return `${label} must not exceed ${maxLength} characters`;
+  }
+  if (/\d/.test(val)) {
+    return `${label} must contain text only (numbers are not allowed)`;
+  }
+  if (!/^[a-zA-Z\s]+$/.test(val)) {
+    return `${label} must contain letters and spaces only (special characters are not allowed)`;
+  }
+  return '';
+};
+
+/**
+ * Validates Description fields: letters and spaces only (no integers, no special characters).
+ */
+export const validateDescription = (value, label = 'Description', isRequired = false, minLength = 2, maxLength = 500) => {
+  const val = String(value || '').trim();
+  if (!val) {
+    return isRequired ? `${label} is required` : '';
+  }
+  if (val.length < minLength) {
+    return `${label} must be at least ${minLength} characters`;
+  }
+  if (val.length > maxLength) {
+    return `${label} must not exceed ${maxLength} characters`;
+  }
+  if (/\d/.test(val)) {
+    return `${label} must contain text only (numbers are not allowed)`;
+  }
+  if (!/^[a-zA-Z\s]+$/.test(val)) {
+    return `${label} must contain letters and spaces only (special characters are not allowed)`;
+  }
+  return '';
+};
+
+/**
  * Validates a Person's Name (First Name, Last Name, Middle Name, Contact Person)
+ * Strict text-only: letters and spaces only, no integers and no special characters.
  */
 export const validateName = (value, label = 'Name', isRequired = true) => {
   const val = String(value || '').trim();
@@ -52,8 +106,11 @@ export const validateName = (value, label = 'Name', isRequired = true) => {
   if (val.length > 100) {
     return `${label} must not exceed 100 characters`;
   }
-  if (!VALIDATION_REGEX.NAME.test(val)) {
-    return `${label} must contain only letters, dots, hyphens or spaces`;
+  if (/\d/.test(val)) {
+    return `${label} must contain text only (numbers are not allowed)`;
+  }
+  if (!/^[a-zA-Z\s]+$/.test(val)) {
+    return `${label} must contain letters and spaces only (special characters are not allowed)`;
   }
   return '';
 };
@@ -173,14 +230,20 @@ export const validateHSN = (value, label = 'HSN / SAC Code', isRequired = false)
 
 /**
  * Validates a Password
+ * Requires at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character
  */
-export const validatePassword = (value, label = 'Password', minLength = 6, isRequired = true) => {
+export const validatePassword = (value, label = 'Password', minLength = 8, isRequired = true) => {
   const val = String(value || '');
   if (!val.trim()) {
     return isRequired ? `${label} is required` : '';
   }
-  if (val.length < minLength) {
-    return `${label} must be at least ${minLength} characters`;
+  const hasUpper = /[A-Z]/.test(val);
+  const hasLower = /[a-z]/.test(val);
+  const hasNumber = /[0-9]/.test(val);
+  const hasSpecial = /[^A-Za-z0-9]/.test(val);
+
+  if (val.length < minLength || !hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+    return `${label} must be at least ${minLength} characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character`;
   }
   return '';
 };

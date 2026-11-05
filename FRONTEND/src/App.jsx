@@ -24,7 +24,25 @@ import VendorManagement from './pages/Master/VendorManagementView';
 import LocationTypeMasterView from './pages/Master/LocationTypeMasterView';
 import LocationMasterView from './pages/Master/LocationMasterView';
 import CompanyMasterView from './pages/Master/CompanyMasterView';
+<<<<<<< HEAD
 import RaisePRRequestView from './pages/Procurement/RaisePRRequestView';
+=======
+import DepartmentView from './pages/Master/DepartmentView';
+import GSTCreationView from './pages/Master/GSTCreationView';
+
+// Work Management Module
+import {
+  DailyWorkUpdateView,
+  WorkHistoryView,
+  AssignedTasksView,
+  TaskAssignmentView,
+  ProjectTaskTrackerView,
+  TeamUpdatesView,
+  WorkUpdateReviewView,
+  OrganizationDashboardView,
+  WorkReportsAnalyticsView
+} from './pages/WorkManagement';
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -75,6 +93,10 @@ export default function App() {
           <Route path="master/material-sub-category" element={<MaterialSubCategoryCreation />} />
           <Route path="master/material-creation" element={<ItemCreation />} />
           <Route path="master/vendor-management" element={<VendorManagement />} />
+          <Route path="master/department" element={<DepartmentView />} />
+          <Route path="master/departments" element={<DepartmentView />} />
+          <Route path="master/gst-creation" element={<GSTCreationView />} />
+          <Route path="master/gst" element={<GSTCreationView />} />
 
           {/* Legacy / Alternate Redirects to Standard Canonical URLs */}
           <Route path="master/location" element={<Navigate to="/master/location-type-master" replace />} />
@@ -98,9 +120,14 @@ export default function App() {
           <Route path="designations" element={<Navigate to="/master/designations" replace />} />
           <Route path="projects" element={<Navigate to="/master/projects" replace />} />
           <Route path="manage-page" element={<Navigate to="/master/manage-page" replace />} />
+          <Route path="department" element={<Navigate to="/master/department" replace />} />
+          <Route path="departments" element={<Navigate to="/master/department" replace />} />
+          <Route path="gst-creation" element={<Navigate to="/master/gst-creation" replace />} />
+          <Route path="gst" element={<Navigate to="/master/gst-creation" replace />} />
 
           {/* HRM Special Pages */}
           <Route path="hrm/employees" element={<EmployeesView />} />
+          <Route path="hrm/departments" element={<DepartmentView />} />
           <Route path="hrm/attendance" element={<AttendanceView />} />
           <Route path="hrm/leave" element={<LeaveView />} />
 
@@ -112,6 +139,18 @@ export default function App() {
 
           {/* Support Special Page */}
           <Route path="support/tickets" element={<TicketsView />} />
+
+          {/* Work Management Module Pages */}
+          <Route path="work-management" element={<Navigate to="/work-management/daily-update" replace />} />
+          <Route path="work-management/daily-update" element={<DailyWorkUpdateView />} />
+          <Route path="work-management/work-history" element={<WorkHistoryView />} />
+          <Route path="work-management/assigned-tasks" element={<AssignedTasksView />} />
+          <Route path="work-management/task-assignment" element={<TaskAssignmentView />} />
+          <Route path="work-management/project-tasks" element={<ProjectTaskTrackerView />} />
+          <Route path="work-management/team-updates" element={<TeamUpdatesView />} />
+          <Route path="work-management/review" element={<WorkUpdateReviewView />} />
+          <Route path="work-management/dashboard" element={<OrganizationDashboardView />} />
+          <Route path="work-management/analytics" element={<WorkReportsAnalyticsView />} />
 
           {/* UI Design System Showcases */}
           <Route path="ui/:subpage" element={<ShowcaseView />} />

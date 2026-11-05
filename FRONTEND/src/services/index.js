@@ -19,5 +19,10 @@ export { default as itemCreationService } from './itemCreationService';
 export { default as vendorService } from './vendorService';
 export { default as locationTypeService } from './locationTypeService';
 export { default as locationService } from './locationService';
+<<<<<<< HEAD
 export { default as prRequestService } from './prRequestService';
 
+=======
+export { default as departmentService } from './departmentService';
+export { default as gstService } from './gstService';
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91

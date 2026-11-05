@@ -63,6 +63,9 @@ const payrollHistory = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const activeCompany = useERPStore(state => state.activeCompany);
+  const user = useERPStore(state => state.user);
+  const session = useERPStore(state => state.session);
+  const displayName = (user?.name && user.name !== 'Andrew') ? user.name : (user?.LoginName || session?.LoginName || 'Andrew');
   const showToast = useERPStore(state => state.showToast);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
@@ -139,6 +142,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+<<<<<<< HEAD
       {/* Greeting Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
@@ -156,6 +160,26 @@ export default function Dashboard() {
           <Button variant="secondary" size="sm" icon={Plus} onClick={() => setIsAddEmployeeOpen(true)}>
             Add Employee
           </Button>
+=======
+      {/* Greeting Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-950 text-white p-6 md:p-8 shadow-xl shadow-indigo-950/20 border border-indigo-800/40">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 right-32 -mb-12 w-48 h-48 bg-cyan-400/20 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/15 text-indigo-200 border border-white/20">
+                Executive Portal
+              </span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white flex items-center gap-2 leading-tight m-0">
+              Good morning, {displayName} 👋
+            </h2>
+            <p className="text-xs md:text-sm text-indigo-200 mt-1.5 leading-relaxed font-medium">
+              Welcome back to <span className="font-bold text-white underline decoration-cyan-400 decoration-2">{activeCompany || 'Vishvin ERP'}</span>. You have 7 pending requests and 2 alerts.
+            </p>
+          </div>
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         </div>
       </div>
 
@@ -167,6 +191,7 @@ export default function Dashboard() {
           badgeText="12 new"
           badgeVariant="success"
           icon={Users}
+          iconColorClass="bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/30"
           description="Across 7 departments"
         />
         <StatCard
@@ -175,7 +200,7 @@ export default function Dashboard() {
           badgeText="3.64%"
           badgeVariant="success"
           icon={Calendar}
-          iconColorClass="bg-violet-50 dark:bg-violet-950/20 text-violet-600"
+          iconColorClass="bg-gradient-to-tr from-violet-600 to-purple-600 text-white shadow-md shadow-violet-500/30"
           description="Planned leave requests"
         />
         <StatCard
@@ -184,7 +209,7 @@ export default function Dashboard() {
           badgeText="3.64%"
           badgeVariant="success"
           icon={Percent}
-          iconColorClass="bg-amber-50 dark:bg-amber-950/20 text-amber-500"
+          iconColorClass="bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30"
           description="Average daily punch-in"
         />
         <StatCard
@@ -193,7 +218,7 @@ export default function Dashboard() {
           badgeText="3.64%"
           badgeVariant="success"
           icon={Briefcase}
-          iconColorClass="bg-purple-50 dark:bg-purple-950/20 text-purple-600"
+          iconColorClass="bg-gradient-to-tr from-cyan-600 to-teal-600 text-white shadow-md shadow-cyan-500/30"
           description="Active recruitments"
         />
         <StatCard
@@ -202,7 +227,7 @@ export default function Dashboard() {
           badgeText="3.64%"
           badgeVariant="success"
           icon={DollarSign}
-          iconColorClass="bg-red-50 dark:bg-red-950/20 text-red-500"
+          iconColorClass="bg-gradient-to-tr from-rose-600 to-red-600 text-white shadow-md shadow-rose-500/30"
           description="March 2026 payout"
         />
       </div>

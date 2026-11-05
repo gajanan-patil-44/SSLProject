@@ -73,6 +73,7 @@ export const login = async (req, res) => {
         // ==========================================================
         // REQUEST
         // ==========================================================
+
         const { username, password } = req.body;
 
         if (!username || !password) {
@@ -81,17 +82,45 @@ export const login = async (req, res) => {
                 message: "Username and password are required"
             });
         }
-        // ==========================================================
-        // FIND USER
-        // ==========================================================
-        const result = await findUserForLogin(username);
 
-        if (!result || !result.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid username or password"
-            });
-        }
+        const enteredUsername = String(username).trim();
+
+   // ==========================================================
+// IDENTIFY USERNAME TYPE
+// ==========================================================
+
+let usernameType;
+
+if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(enteredUsername)) {
+    usernameType = "Email";
+}
+else if (/^[0-9]{10}$/.test(enteredUsername)) {
+    usernameType = "PhoneNumber";
+}
+else {
+    usernameType = "EmployeeIdOrLoginName";
+}
+
+// ==========================================================
+// FIND USER
+// ==========================================================
+
+const result = await findUserForLogin(enteredUsername);
+
+if (!result || !result.user) {
+
+    const errorMessages = {
+        Email: "Invalid email address",
+        PhoneNumber: "Invalid phone number",
+        EmployeeIdOrLoginName: "Invalid Employee ID or Login Name"
+    };
+
+    return res.status(401).json({
+        success: false,
+        message: errorMessages[usernameType]
+    });
+}
+
         const user = result.user;
         // ==========================================================
         // CHECK PERMANENT BLOCK
@@ -152,7 +181,7 @@ export const login = async (req, res) => {
             }
             return res.status(401).json({
                 success: false,
-                message: "Invalid username or password",
+                message: "Invalid  password",
                 attemptsRemaining: Math.max(0, 3 - attemptCount)
             });
         }
@@ -185,21 +214,21 @@ export const login = async (req, res) => {
         // ==========================================================
         let photo = null;
 
-if (user.Photo) {
-    try {
-        if (Buffer.isBuffer(user.Photo)) {
-            photo = user.Photo.toString("base64");
-        } else if (user.Photo instanceof Uint8Array) {
-            photo = Buffer.from(user.Photo).toString("base64");
-        } else if (typeof user.Photo === "string") {
-            const photoBuffer = await readFile(user.Photo);
-            photo = photoBuffer.toString("base64");
+        if (user.Photo) {
+            try {
+                if (Buffer.isBuffer(user.Photo)) {
+                    photo = user.Photo.toString("base64");
+                } else if (user.Photo instanceof Uint8Array) {
+                    photo = Buffer.from(user.Photo).toString("base64");
+                } else if (typeof user.Photo === "string") {
+                    const photoBuffer = await readFile(user.Photo);
+                    photo = photoBuffer.toString("base64");
+                }
+            } catch (error) {
+                console.error("Photo conversion error:", error.message);
+                photo = null;
+            }
         }
-    } catch (error) {
-        console.error("Photo conversion error:", error.message);
-        photo = null;
-    }
-}
         // ==========================================================
         // FINAL RESPONSE
         // ==========================================================

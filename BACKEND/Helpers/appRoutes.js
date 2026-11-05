@@ -18,6 +18,12 @@ import VendorRoutes from "../Routes/Vendor/VendorRoutes.js";
 import locationTypeMasterRoutes from "../Routes/LocationTypeMaster/LocationTypeMasterRoutes.js";
 import CompanyMasterRoutes from "../Routes/CompanyMaster/CompanyMasterRoutes.js"
 import LocationMasterRoutes from "../Routes/LocationMaster/LocationMasterRoutes.js"
+<<<<<<< HEAD
+=======
+import GstRateRoutes from "../Routes/GstRate/GstRate.js"
+import DepartmentRoutes from "../Routes/Department/DepartmentRoutes.js"
+import viewPRPORoutes from "../Routes/ViewPRPO/ViewPRPORoutes.js"
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
 
 const applyRoutes = (app) => {
@@ -38,11 +44,22 @@ app.use(backendHelpers.ITEM_CATEGORY_CREATION, ItemCategoryRoutes);
 app.use(backendHelpers.MATERIAL_SUB_CATEGORY_TYPE, MaterialSubCategoryTypeRoutes);  
 app.use(backendHelpers.MATERIAL, materialRoutes);
 app.use(backendHelpers.VENDOR, VendorRoutes);
+<<<<<<< HEAD
 
 app.use(backendHelpers.LOCATION_TYPE_MASTER, locationTypeMasterRoutes);
 
 app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
 app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
+=======
+app.use(backendHelpers.GST_RATE, GstRateRoutes);
+
+
+app.use(backendHelpers.LOCATION_TYPE_MASTER, locationTypeMasterRoutes);
+app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
+app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
+app.use(backendHelpers.DEPARTMENT, DepartmentRoutes);
+app.use(backendHelpers.VIEW_PRPO, viewPRPORoutes);
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 };
 
 export default applyRoutes;

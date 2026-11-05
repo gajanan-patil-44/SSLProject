@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 
+=======
+﻿
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 // src/pages/Master/LocationTypeMasterView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationTypeService } from '../../services/locationTypeService';
+<<<<<<< HEAD
+=======
+import { validateTextOnly } from '../../utils/validators';
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import EditLocationTypeMasterModal from './EditLocationTypeMasterModal';
 import {
   PageHeader,
@@ -92,7 +100,11 @@ export default function LocationTypeMasterView() {
   // Extract session username
   const getSessionUserName = () => {
     try {
+<<<<<<< HEAD
       const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+=======
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -175,7 +187,10 @@ export default function LocationTypeMasterView() {
       const list = Array.isArray(rawList) ? rawList.map((item, idx) => normalizeLocationType(item, idx)) : [];
       setItems(list);
     } catch (err) {
+<<<<<<< HEAD
       console.error('Failed to load from /verp-service/locationTypeMaster/view:', err);
+=======
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast('Failed to load location types', 'error');
       setItems([]);
     } finally {
@@ -192,13 +207,17 @@ export default function LocationTypeMasterView() {
         setParentDropdownOptions(raw);
       }
     } catch (err) {
+<<<<<<< HEAD
       console.warn('Failed to load parent dropdown via /verp-service/locationTypeMaster/dropdown:', err);
+=======
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     }
   };
 
   // Form validation
   const validate = () => {
     const errs = {};
+<<<<<<< HEAD
     const trimmed = locationTypeName.trim();
     if (!trimmed) {
       errs.childName = 'Location Type Name is required';
@@ -206,6 +225,11 @@ export default function LocationTypeMasterView() {
       errs.childName = 'Location Type Name must be at least 2 characters';
     } else if (trimmed.length > 100) {
       errs.childName = 'Location Type Name must not exceed 100 characters';
+=======
+    const locNameErr = validateTextOnly(locationTypeName, 'Location Type Name', true, 2, 100);
+    if (locNameErr) {
+      errs.childName = locNameErr;
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     }
 
     // Require selection only when Parent Location field is visible (second one onwards)
@@ -252,7 +276,10 @@ export default function LocationTypeMasterView() {
       await loadFlowData();
       await fetchParentDropdown();
     } catch (err) {
+<<<<<<< HEAD
       console.error('Failed to add Location Type:', err);
+=======
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to add Location Type', 'error');
     } finally {
       setLoading(false);
@@ -312,7 +339,12 @@ export default function LocationTypeMasterView() {
                   placeholder="e.g. Country, State, District"
                   value={locationTypeName}
                   onChange={(e) => {
+<<<<<<< HEAD
                     setLocationTypeName(e.target.value);
+=======
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    setLocationTypeName(sanitized);
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                     if (errors.childName) setErrors(prev => ({ ...prev, childName: null }));
                   }}
                   className={`${inputCls(errors.childName)} pl-9.5`}

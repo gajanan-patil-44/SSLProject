@@ -22,6 +22,22 @@ import {
 } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { Button, PageHeader, Switch, IconButton } from '../../components/ui/index';
+import { useERPStore } from '../../store/useERPStore';
+
+// Helper to get session company
+const getSessionCompany = () => {
+  try {
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(comps) && comps.length > 0) return comps[0];
+    }
+    const ctx = useERPStore.getState()?.userContext;
+    if (ctx?.companies?.length > 0) return ctx.companies[0];
+  } catch {}
+  return null;
+};
 
 // Initial Mock UI Data (Ready to be wired to API when provided)
 const INITIAL_COMPANY_PRODUCTS = [
@@ -194,6 +210,10 @@ const AVAILABLE_MODULES = [
 ];
 
 export default function CompanyProductView() {
+  const sessionCompany = getSessionCompany();
+  const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+  const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
+
   // State
   const [items, setItems] = useState(INITIAL_COMPANY_PRODUCTS);
   const [loading, setLoading] = useState(false);
@@ -213,7 +233,7 @@ export default function CompanyProductView() {
 
   // Form State
   const initialForm = {
-    CompanyId: '',
+    CompanyId: sessionCompanyId ? String(sessionCompanyId) : '',
     ProductId: '',
     CompanyProductCode: '',
     LicenseType: 'Enterprise',
@@ -1048,7 +1068,8 @@ export default function CompanyProductView() {
                   Company <span className="text-rose-500">*</span>
                 </label>
                 <select
-                  value={formData.CompanyId}
+                  disabled={Boolean(sessionCompanyId)}
+                  value={formData.CompanyId || (sessionCompanyId ? String(sessionCompanyId) : '')}
                   onChange={(e) => {
                     const compId = e.target.value;
                     const comp = AVAILABLE_COMPANIES.find((c) => String(c.id) === String(compId));
@@ -1058,7 +1079,7 @@ export default function CompanyProductView() {
                       CompanyProductCode: comp ? `${comp.code}-PRD-${Math.floor(100 + Math.random() * 900)}` : f.CompanyProductCode
                     }));
                   }}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary ${sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
                 >
                   <option value="">— Select Company —</option>
                   {AVAILABLE_COMPANIES.map((c) => (
@@ -1066,6 +1087,11 @@ export default function CompanyProductView() {
                       {c.name} ({c.code})
                     </option>
                   ))}
+                  {sessionCompanyId && !AVAILABLE_COMPANIES.some(c => String(c.id) === String(sessionCompanyId)) && (
+                    <option value={String(sessionCompanyId)}>
+                      {sessionCompanyName || `Company #${sessionCompanyId}`}
+                    </option>
+                  )}
                 </select>
                 {formErrors.CompanyId && (
                   <p className="text-[11px] text-rose-500 mt-1 font-semibold">{formErrors.CompanyId}</p>
@@ -1282,15 +1308,21 @@ export default function CompanyProductView() {
                   Company
                 </label>
                 <select
-                  value={formData.CompanyId}
+                  disabled={Boolean(sessionCompanyId)}
+                  value={formData.CompanyId || (sessionCompanyId ? String(sessionCompanyId) : '')}
                   onChange={(e) => setFormData((f) => ({ ...f, CompanyId: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white ${sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
                 >
                   {AVAILABLE_COMPANIES.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.code})
                     </option>
                   ))}
+                  {sessionCompanyId && !AVAILABLE_COMPANIES.some(c => String(c.id) === String(sessionCompanyId)) && (
+                    <option value={String(sessionCompanyId)}>
+                      {sessionCompanyName || `Company #${sessionCompanyId}`}
+                    </option>
+                  )}
                 </select>
               </div>
 

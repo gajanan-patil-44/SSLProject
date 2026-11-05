@@ -1,11 +1,11 @@
-// src/pages/Master/UserCreationView.jsx
+﻿// src/pages/Master/UserCreationView.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   UserPlus, Phone, Mail, Lock, User, Calendar, Briefcase,
   Building, Package, FolderOpen, ShieldCheck, Upload, X,
   FileText, Image, Plus, Trash2, RefreshCw, CheckCircle2,
   AlertCircle, Eye, EyeOff, UserCog, Hash, ArrowLeft,
-  ArrowRight, Check, ChevronRight, ChevronDown, Sparkles
+  ArrowRight, Check, ChevronRight, ChevronDown, Sparkles, Layers
 } from 'lucide-react';
 import { Button, PageHeader } from '../../components/ui/index';
 import { userService } from '../../services/userService';
@@ -20,6 +20,21 @@ import {
   validateDateOfJoining
 } from '../../utils/validators';
 
+// ─── Helper to retrieve session company ──────────────────────────────────────
+const getSessionCompany = () => {
+  try {
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+    if (raw) {
+      const s = JSON.parse(raw);
+      const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(comps) && comps.length > 0) return comps[0];
+    }
+    const ctx = useERPStore.getState()?.userContext;
+    if (ctx?.companies?.length > 0) return ctx.companies[0];
+  } catch {}
+  return null;
+};
+
 // ─── Helper to retrieve logged-in session details ───────────────────────────
 const getSessionAuth = () => {
   let employeeId = '';
@@ -27,7 +42,7 @@ const getSessionAuth = () => {
 
   // 1. Read from the unified session object in localStorage or sessionStorage
   try {
-    const rawSession = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const rawSession = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (rawSession) {
       const sessionObj = JSON.parse(rawSession);
       const user = sessionObj?.data?.user;
@@ -84,27 +99,32 @@ const STEPS = [
 const MAX_PHOTO_SIZE = 1 * 1024 * 1024; // 1 MB limit for profile photo
 
 // ─── Initial Form Factory ──────────────────────────────────────────────────
-const getInitialForm = () => ({
-  EmployeeId: '',
-  FirstName: '',
-  MiddleName: '',
-  LastName: '',
-  PhoneNumber: '',
-  AltPhoneNumber: '',
-  DateOfBirth: '',
-  DateOfJoining: '',
-  GenderId: '',
-  MaritalStatusId: '',
-  DesignationId: '',
-  Email: '',
-  LoginName: '',
-  Password: '',
-  CompanyId: '',
-  ReportingManagerUserId: [],  // multi
-  CompanyProductId: [],        // multi
-  ProjectId: [],               // multi
-  RoleId: '',
-});
+const getInitialForm = () => {
+  const sessionComp = getSessionCompany();
+  const sessionCompId = sessionComp?.CompanyId ?? sessionComp?.CompanyMasterId ?? sessionComp?.companyId;
+  return {
+    EmployeeId: '',
+    FirstName: '',
+    MiddleName: '',
+    LastName: '',
+    PhoneNumber: '',
+    AltPhoneNumber: '',
+    DateOfBirth: '',
+    DateOfJoining: '',
+    GenderId: '',
+    MaritalStatusId: '',
+    DesignationId: '',
+    DepartmentId: '',
+    Email: '',
+    LoginName: '',
+    Password: '',
+    CompanyId: sessionCompId ? String(sessionCompId) : '',
+    ReportingManagerUserId: [],  // multi
+    CompanyProductId: [],        // multi
+    ProjectId: [],               // multi
+    RoleId: '',
+  };
+};
 
 // ─── Shared field wrapper (same label/error style as app) ─────────────────
 function Field({ label, error, children, required }) {
@@ -276,12 +296,20 @@ function FileIcon({ mime = '' }) {
 
 // ─── Main Component ────────────────────────────────────────────────────────
 export default function UserCreationView() {
+  const sessionCompany = getSessionCompany();
+  const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
+  const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
+
   const [form, setForm]                       = useState(getInitialForm);
   const [errors, setErrors]                   = useState({});
   const [showPwd, setShowPwd]                 = useState(false);
   const [photo, setPhoto]                     = useState(null);   // { file, preview }
   const [userFiles, setUserFiles]             = useState({});     // { [fileTypeId]: File }
   const [fileErrors, setFileErrors]           = useState({});     // { [fileTypeId]: string }
+<<<<<<< HEAD
+=======
+  const [departments, setDepartments]         = useState([]);
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   const [designations, setDesignations]       = useState([]);
   const [genders, setGenders]                 = useState([]);
   const [maritalStatuses, setMaritalStatuses] = useState([]);
@@ -306,6 +334,63 @@ export default function UserCreationView() {
   // ── Load initial dropdowns ───────────────────────────────────────────────
   useEffect(() => { loadDropdowns(); }, []);
 
+  const loadCompanyDependencies = async (companyId) => {
+    if (!companyId) return;
+    try {
+      const r = await userService.getProductDropdown(companyId);
+      const raw = r?.data ?? r;
+      setProducts(
+        Array.isArray(raw)
+          ? raw
+              .filter(item => item.ProductId !== null && item.ProductId !== undefined && item.ProductId !== '')
+              .map((item, idx) => ({
+                value: String(item.ProductId),
+                label: item.ProductName ?? String(item.ProductId),
+                key: `${String(item.ProductId)}_${idx}`,
+                companyProductId: item.CompanyProductId,
+              }))
+          : []
+      );
+    } catch (err) {
+      setProducts([]);
+    }
+
+    try {
+      const deptRes = await userService.getDepartmentDropdown(companyId);
+      const rawDepts = deptRes?.data?.data ?? deptRes?.data ?? deptRes;
+      const list = Array.isArray(rawDepts) ? rawDepts : [];
+      setDepartments(toOpts(list, 'DepartmentId', 'DepartmentName'));
+    } catch (err) {
+      setDepartments([]);
+    }
+
+    try {
+      const dRes = await userService.getDesignationDropdown(companyId);
+      const rawList = dRes?.data?.Designations || dRes?.data?.designations || (Array.isArray(dRes?.data) ? dRes.data : null) || (Array.isArray(dRes) ? dRes : []);
+      const normalized = Array.isArray(rawList)
+        ? rawList.map(d => ({
+            ...d,
+            DesignationId: d.DesignationId ?? d.CompanyDesignationId ?? d.id,
+            DesignationName: d.DesignationName ?? d.name
+          }))
+        : [];
+      setDesignations(toOpts(normalized, 'DesignationId', 'DesignationName'));
+    } catch (err) {
+      setDesignations([]);
+    }
+
+    try {
+      const rolesRes = await userService.getRoleDropdown(companyId);
+      const rawRoles = rolesRes?.data?.data ?? rolesRes?.data ?? rolesRes;
+      const list = Array.isArray(rawRoles)
+        ? rawRoles
+        : (Array.isArray(rawRoles?.roles) ? rawRoles.roles : []);
+      setRoles(toOpts(list, 'RoleId', 'RoleName'));
+    } catch (err) {
+      setRoles([]);
+    }
+  };
+
   const loadDropdowns = async () => {
     const [genderRes, maritalRes, compRes, fileTypesRes] = await Promise.allSettled([
       userService.getGenderDropdown(),
@@ -322,6 +407,10 @@ export default function UserCreationView() {
     if (fileTypesRes.status === 'fulfilled') {
       const raw = fileTypesRes.value?.data ?? fileTypesRes.value;
       setFileTypes(toOpts(raw, 'FileTypeId', 'FileTypeName'));
+    }
+
+    if (sessionCompanyId) {
+      loadCompanyDependencies(String(sessionCompanyId));
     }
   };
 
@@ -385,13 +474,22 @@ export default function UserCreationView() {
     }
 
     if (name === 'CompanyId') {
+<<<<<<< HEAD
       setForm(f => ({ ...f, CompanyId: value, DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
+=======
+      setForm(f => ({ ...f, CompanyId: value, DepartmentId: '', DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       setProducts([]);
       setProjects([]);
+      setDepartments([]);
       setDesignations([]);
       setRoles([]);
       setReportingManagers([]);
+<<<<<<< HEAD
       setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+=======
+      setErrors(er => ({ ...er, CompanyId: '', DepartmentId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (!value) return;
 
       // 1. Fetch Company Products
@@ -414,7 +512,17 @@ export default function UserCreationView() {
         setProducts([]);
       }
 
-      // 2. Fetch Designations for selected Company (FlagId: 3 with CompanyId)
+      // 2. Fetch Departments for selected Company via /verp-service/userCreation/companyproductprojectdropdown { FlagId: 5, CompanyId: value }
+      try {
+        const deptRes = await userService.getDepartmentDropdown(value);
+        const rawDepts = deptRes?.data?.data ?? deptRes?.data ?? deptRes;
+        const list = Array.isArray(rawDepts) ? rawDepts : [];
+        setDepartments(toOpts(list, 'DepartmentId', 'DepartmentName'));
+      } catch (err) {
+        setDepartments([]);
+      }
+
+      // 3. Fetch Designations for selected Company (FlagId: 3 with CompanyId)
       try {
         const dRes = await userService.getDesignationDropdown(value);
         const rawList = dRes?.data?.Designations || dRes?.data?.designations || (Array.isArray(dRes?.data) ? dRes.data : null) || (Array.isArray(dRes) ? dRes : []);
@@ -441,6 +549,16 @@ export default function UserCreationView() {
       } catch (err) {
         setRoles([]);
       }
+<<<<<<< HEAD
+=======
+      return;
+    }
+
+    if (name === 'FirstName' || name === 'MiddleName' || name === 'LastName') {
+      const sanitized = value.replace(/[^a-zA-Z\s]/g, '');
+      setForm(f => ({ ...f, [name]: sanitized }));
+      setErrors(er => ({ ...er, [name]: '' }));
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       return;
     }
 
@@ -483,7 +601,13 @@ export default function UserCreationView() {
         fieldError = 'Login username must be at least 3 characters';
       }
     } else if (name === 'Password') {
+<<<<<<< HEAD
       fieldError = validatePassword(value, 'Password', 6, true);
+=======
+      fieldError = validatePassword(value, 'Password', 8, true);
+    } else if (name === 'DesignationId') {
+      if (!value && Number(form.RoleId) > 2) fieldError = 'Select a designation';
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     } else if (name === 'CompanyId') {
       if (!value) fieldError = 'Select a company';
     } else if (name === 'RoleId') {
@@ -577,10 +701,17 @@ export default function UserCreationView() {
     setErrors(er => ({ ...er, Photo: '' }));
   };
 
+<<<<<<< HEAD
   // ── Per-FileType upload handlers (Multiple Images Only) ────────────────────
   const onAddFiles = () => {}; // kept for ref compat
 
   // Helper to ensure file is strictly an image
+=======
+  // ── Per-FileType upload handlers (Multiple Images & PDFs) ────────────────────
+  const onAddFiles = () => {}; // kept for ref compat
+
+  // Helper to ensure file is an image
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   const isImageFile = (file) => {
     if (!file) return false;
     if (file.type && file.type.startsWith('image/')) return true;
@@ -588,10 +719,27 @@ export default function UserCreationView() {
     return /\.(jpe?g|png|webp|gif|bmp|svg|avif)$/i.test(name);
   };
 
+<<<<<<< HEAD
+=======
+  // Helper to ensure file is a PDF
+  const isPdfFile = (file) => {
+    if (!file) return false;
+    if (file.type === 'application/pdf') return true;
+    const name = file.name || '';
+    return /\.pdf$/i.test(name);
+  };
+
+  // Helper to ensure file is an allowed document (image or PDF)
+  const isAllowedDocFile = (file) => {
+    return isImageFile(file) || isPdfFile(file);
+  };
+
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   const onFilesForType = (fileTypeId, incomingFiles, fileTypeLabel = '') => {
     if (!incomingFiles || incomingFiles.length === 0) return;
     const filesArray = Array.from(incomingFiles);
 
+<<<<<<< HEAD
     // 1. Strict Image-Only Validation (reject PDFs, Word, Excel, etc.)
     const nonImageFiles = filesArray.filter(f => !isImageFile(f));
     if (nonImageFiles.length > 0) {
@@ -603,6 +751,19 @@ export default function UserCreationView() {
     }
 
     // 2. Size limit per image
+=======
+    // 1. Image and PDF Validation (allows JPG, PNG, WebP, PDF)
+    const disallowedFiles = filesArray.filter(f => !isAllowedDocFile(f));
+    if (disallowedFiles.length > 0) {
+      const invalidNames = disallowedFiles.map(f => f.name).join(', ');
+      const errorMsg = `Only images (JPG, PNG, WebP) and PDF files are allowed. Rejected: ${invalidNames}`;
+      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
+      useERPStore.getState().showToast(`Only images and PDF files are allowed for ${fileTypeLabel || 'documents'}.`, 'error');
+      return;
+    }
+
+    // 2. Size limit per file
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(fileTypeLabel);
     const maxSize = is1MbRestricted ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
     const limitText = is1MbRestricted ? '1 MB' : '5 MB';
@@ -610,9 +771,15 @@ export default function UserCreationView() {
     const oversizedFiles = filesArray.filter(f => f.size > maxSize);
     if (oversizedFiles.length > 0) {
       const oversizedNames = oversizedFiles.map(f => f.name).join(', ');
+<<<<<<< HEAD
       const errorMsg = `Image size exceeds ${limitText} limit (${oversizedNames})`;
       setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
       useERPStore.getState().showToast(`Image exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
+=======
+      const errorMsg = `File size exceeds ${limitText} limit (${oversizedNames})`;
+      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
+      useERPStore.getState().showToast(`File exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       return;
     }
 
@@ -720,13 +887,30 @@ export default function UserCreationView() {
         e.LoginName = 'Login username must be at least 3 characters';
       }
 
-      const passErr = validatePassword(form.Password, 'Password', 6, true);
+      const passErr = validatePassword(form.Password, 'Password', 8, true);
       if (passErr) e.Password = passErr;
     }
 
     if (step === 3) {
       if (!form.CompanyId)                                                        e.CompanyId        = 'Select a company';
       if (!form.RoleId)                                                           e.RoleId           = 'Select a role';
+
+      const roleIdNum = Number(form.RoleId);
+      // Backend createUserController strictly requires Designation, Product, Project, and Reporting Manager for normal users (RoleId > 2)
+      if (roleIdNum > 2) {
+        if (!form.DesignationId) {
+          e.DesignationId = 'Select a designation';
+        }
+        if (!Array.isArray(form.CompanyProductId) || form.CompanyProductId.length === 0) {
+          e.CompanyProductId = 'Select at least one product';
+        }
+        if (!Array.isArray(form.ProjectId) || form.ProjectId.length === 0) {
+          e.ProjectId = 'Select at least one project';
+        }
+        if (!Array.isArray(form.ReportingManagerUserId) || form.ReportingManagerUserId.length === 0) {
+          e.ReportingManagerUserId = 'Select at least one reporting manager';
+        }
+      }
     }
 
     if (step === 4) {
@@ -738,7 +922,11 @@ export default function UserCreationView() {
     }
 
     if (step === 5) {
+<<<<<<< HEAD
       // Validate that all attached files are images and within allowed size limits
+=======
+      // Validate that all attached files are images or PDFs and within allowed size limits
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       for (const [ftId, files] of Object.entries(userFiles)) {
         if (!files) continue;
         const fileList = Array.isArray(files) ? files : [files];
@@ -748,8 +936,13 @@ export default function UserCreationView() {
 
         for (const file of fileList) {
           if (!file) continue;
+<<<<<<< HEAD
           if (!isImageFile(file)) {
             e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain image files only`;
+=======
+          if (!isAllowedDocFile(file)) {
+            e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain images or PDF files only`;
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             break;
           } else if (file.size > max) {
             e[`file_${ftId}`] = `${ft?.label || 'File'} (${file.name}) exceeds ${is1Mb ? '1 MB' : '5 MB'} limit`;
@@ -876,6 +1069,9 @@ export default function UserCreationView() {
       fd.append('CreatedByUserName', createdBy);
     }
     fd.append('CompanyId',          form.CompanyId);
+    if (form.DepartmentId) {
+      fd.append('DepartmentId',     form.DepartmentId);
+    }
     // ReportingManagerUserId — multi
     const managerIds = Array.isArray(form.ReportingManagerUserId) ? form.ReportingManagerUserId : (form.ReportingManagerUserId ? [form.ReportingManagerUserId] : []);
     fd.append('ReportingManagerUserId', JSON.stringify(managerIds.map(Number)));
@@ -910,6 +1106,7 @@ export default function UserCreationView() {
         email: form.Email,
         loginName: form.LoginName,
         company: companies.find(c => String(c.value) === String(form.CompanyId))?.label || '—',
+        department: departments.find(d => String(d.value) === String(form.DepartmentId))?.label || '—',
         role: roles.find(r => String(r.value) === String(form.RoleId))?.label || '—',
         designation: designations.find(d => String(d.value) === String(form.DesignationId))?.label || '—',
       };
@@ -921,9 +1118,33 @@ export default function UserCreationView() {
       resetAllState(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      const errMsg = err?.message || 'Failed to create user. Please try again.';
+      const errMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Failed to create user. Please try again.';
       setResult({ ok: false, msg: errMsg });
       useERPStore.getState().showToast(errMsg, 'error');
+
+      const lower = errMsg.toLowerCase();
+      if (lower.includes('password')) {
+        setErrors(prev => ({ ...prev, Password: errMsg }));
+        setCurrentStep(2);
+      } else if (lower.includes('login') || lower.includes('username')) {
+        setErrors(prev => ({ ...prev, LoginName: errMsg }));
+        setCurrentStep(2);
+      } else if (lower.includes('email')) {
+        setErrors(prev => ({ ...prev, Email: errMsg }));
+        setCurrentStep(2);
+      } else if (lower.includes('phone')) {
+        setErrors(prev => ({ ...prev, PhoneNumber: errMsg }));
+        setCurrentStep(1);
+      } else if (lower.includes('employee')) {
+        setErrors(prev => ({ ...prev, EmployeeId: errMsg }));
+        setCurrentStep(1);
+      } else if (lower.includes('company') || lower.includes('role') || lower.includes('designation') || lower.includes('department')) {
+        setCurrentStep(3);
+      } else if (lower.includes('photo') || lower.includes('avatar') || lower.includes('picture')) {
+        setCurrentStep(4);
+      } else if (lower.includes('file') || lower.includes('document')) {
+        setCurrentStep(5);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSubmitting(false);
@@ -940,9 +1161,13 @@ export default function UserCreationView() {
     setFileErrors({});
     setProducts([]);
     setProjects([]);
+    setDepartments([]);
     setDesignations([]);
     setRoles([]);
     setReportingManagers([]);
+    if (sessionCompanyId) {
+      loadCompanyDependencies(String(sessionCompanyId));
+    }
     setCompletedSteps([]);
     setCurrentStep(1);
     if (photoRef.current) photoRef.current.value = '';
@@ -1304,6 +1529,11 @@ export default function UserCreationView() {
                     {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
+                {!errors.Password && (
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                    Must be at least 8 chars with uppercase, lowercase, number, and special character.
+                  </span>
+                )}
               </Field>
 
             </div>
@@ -1317,7 +1547,7 @@ export default function UserCreationView() {
               icon={Building}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Company Assignment"
-              subtitle="Assign the user to a company, designation, product, project and role. Reporting Manager is optional."
+              subtitle="Assign the user to a company, role, designation, product, project and reporting manager."
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
@@ -1325,17 +1555,48 @@ export default function UserCreationView() {
               <Field label="Company" required error={errors.CompanyId}>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
+<<<<<<< HEAD
                   <select name="CompanyId" value={form.CompanyId} onChange={change} onBlur={handleBlur}
                     className={`${selectCls(errors.CompanyId)} pl-8`}>
+=======
+                  <select
+                    name="CompanyId"
+                    value={form.CompanyId}
+                    disabled={Boolean(sessionCompanyId)}
+                    onChange={change}
+                    onBlur={handleBlur}
+                    className={`${selectCls(errors.CompanyId)} pl-8 ${sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
+                  >
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                     <option value="">— Select Company —</option>
                     {companies.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
+                    {sessionCompanyId && !companies.some(o => String(o.value) === String(sessionCompanyId)) && (
+                      <option value={String(sessionCompanyId)}>{sessionCompanyName || `Company #${sessionCompanyId}`}</option>
+                    )}
+                  </select>
+                </div>
+              </Field>
+
+              {/* ── Department ── */}
+              <Field label="Department" error={errors.DepartmentId}>
+                <div className="relative">
+                  <Layers className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
+                  <select
+                    name="DepartmentId"
+                    value={form.DepartmentId}
+                    onChange={change}
+                    disabled={!form.CompanyId}
+                    className={`${selectCls(errors.DepartmentId)} pl-8 ${!form.CompanyId ? 'opacity-60 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
+                  >
+                    <option value="">{form.CompanyId ? '— Select Department —' : '— Select Company first —'}</option>
+                    {departments.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
               </Field>
 
 
               {/* ── Company Product — Multi-Select ── */}
-              <Field label="Company Product" error={errors.CompanyProductId}>
+              <Field label="Company Product" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.CompanyProductId}>
                 <MultiSelectDropdown
                   name="CompanyProductId"
                   options={products}
@@ -1349,7 +1610,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Project — Multi-Select ── */}
-              <Field label="Project" error={errors.ProjectId}>
+              <Field label="Project" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.ProjectId}>
                 <MultiSelectDropdown
                   name="ProjectId"
                   options={projects}
@@ -1376,7 +1637,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Designation ── */}
-              <Field label="Designation" error={errors.DesignationId}>
+              <Field label="Designation" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.DesignationId}>
                 <div className="relative">
                   <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
                   <select name="DesignationId" value={form.DesignationId} onChange={change}
@@ -1389,7 +1650,7 @@ export default function UserCreationView() {
               </Field>
 
               {/* ── Reporting Manager — Multi-Select ── */}
-              <Field label="Reporting Manager" error={errors.ReportingManagerUserId}>
+              <Field label="Reporting Manager" required={!form.RoleId || Number(form.RoleId) > 2} error={errors.ReportingManagerUserId}>
                 <MultiSelectDropdown
                   name="ReportingManagerUserId"
                   options={reportingManagers}
@@ -1414,7 +1675,7 @@ export default function UserCreationView() {
               icon={Image}
               iconColor="bg-orange-50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400"
               title="Profile Photo"
-              subtitle="Upload an avatar or professional picture for user identity card and profile."
+              subtitle="Upload an avatar or professional picture for user identity card and profile (Mandatory)."
             />
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 w-full bg-slate-50/50 dark:bg-slate-800/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
               {/* Avatar preview */}
@@ -1473,7 +1734,11 @@ export default function UserCreationView() {
               icon={Image}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Supporting Documents"
+<<<<<<< HEAD
               subtitle="Upload multiple images for each required document type (Images only: JPG, PNG, WEBP). Other document formats are not permitted."
+=======
+              subtitle="Upload documents for each required document type (Images: JPG, PNG, WEBP or PDF). Maximum 5 MB per file (1 MB for Aadhaar/PAN)."
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             />
 
             {/* File-type compact grid — 3 per row */}
@@ -1512,7 +1777,11 @@ export default function UserCreationView() {
                               ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                               : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
                           }`}>
+<<<<<<< HEAD
                             {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <Image className="w-3.5 h-3.5" />}
+=======
+                            {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">
@@ -1525,12 +1794,20 @@ export default function UserCreationView() {
                                 </span>
                               ) : (
                                 <span className="text-[9px] text-slate-400 shrink-0">
+<<<<<<< HEAD
                                   Images only
+=======
+                                  Images or PDF
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                                 </span>
                               )}
                               {hasFiles && (
                                 <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+<<<<<<< HEAD
                                   {uploadedList.length} {uploadedList.length === 1 ? 'image' : 'images'}
+=======
+                                  {uploadedList.length} {uploadedList.length === 1 ? 'file' : 'files'}
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                                 </span>
                               )}
                             </div>
@@ -1546,7 +1823,11 @@ export default function UserCreationView() {
                                 ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
                                 : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                             }`}
+<<<<<<< HEAD
                             title={hasFiles ? 'Add more images' : 'Upload images'}
+=======
+                            title={hasFiles ? 'Add more files' : 'Upload files'}
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                           >
                             <Upload className="w-3 h-3" />
                             {hasFiles ? '+ Add' : 'Upload'}
@@ -1556,7 +1837,11 @@ export default function UserCreationView() {
                               type="button"
                               onClick={() => removeFileForType(ft.value)}
                               className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
+<<<<<<< HEAD
                               title="Clear all images"
+=======
+                              title="Clear all files"
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -1565,7 +1850,11 @@ export default function UserCreationView() {
                             id={`ft-upload-${ft.value}`}
                             type="file"
                             multiple
+<<<<<<< HEAD
                             accept="image/*,image/jpeg,image/png,image/webp,image/gif"
+=======
+                            accept="image/*,image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                             className="hidden"
                             onChange={e => {
                               const files = e.target.files;
@@ -1586,7 +1875,11 @@ export default function UserCreationView() {
                         </p>
                       )}
 
+<<<<<<< HEAD
                       {/* Uploaded Images Strip */}
+=======
+                      {/* Uploaded Files Strip */}
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                       {hasFiles && (
                         <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
                           {uploadedList.map((file, imgIdx) => (
@@ -1594,7 +1887,15 @@ export default function UserCreationView() {
                               key={`${file.name}-${imgIdx}`}
                               className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-2xs group"
                             >
+<<<<<<< HEAD
                               <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+=======
+                              {isPdfFile(file) ? (
+                                <FileText className="w-2.5 h-2.5 text-rose-500 shrink-0" />
+                              ) : (
+                                <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                              )}
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                               <span className="truncate max-w-[100px]" title={file.name}>
                                 {file.name}
                               </span>
@@ -1620,7 +1921,11 @@ export default function UserCreationView() {
 
                       {!hasFiles && !hasErr && (
                         <p className="text-[10px] text-slate-400 leading-tight">
+<<<<<<< HEAD
                           No images uploaded · Images only (JPG, PNG, WebP)
+=======
+                          No files uploaded · Images (JPG, PNG, WebP) or PDF
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                         </p>
                       )}
                     </div>
