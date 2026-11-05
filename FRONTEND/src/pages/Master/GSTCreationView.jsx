@@ -1,4 +1,4 @@
-// src/pages/Master/GSTCreationView.jsx
+﻿// src/pages/Master/GSTCreationView.jsx
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   PageHeader,
@@ -32,7 +32,7 @@ export default function GSTCreationView() {
   // Dynamic session username resolution
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const u = s?.data?.user || s?.user || s;

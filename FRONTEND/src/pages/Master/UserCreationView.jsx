@@ -1,4 +1,4 @@
-// src/pages/Master/UserCreationView.jsx
+﻿// src/pages/Master/UserCreationView.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   UserPlus, Phone, Mail, Lock, User, Calendar, Briefcase,
@@ -23,7 +23,7 @@ import {
 // ─── Helper to retrieve session company ──────────────────────────────────────
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
@@ -42,7 +42,7 @@ const getSessionAuth = () => {
 
   // 1. Read from the unified session object in localStorage or sessionStorage
   try {
-    const rawSession = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const rawSession = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (rawSession) {
       const sessionObj = JSON.parse(rawSession);
       const user = sessionObj?.data?.user;

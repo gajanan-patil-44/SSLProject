@@ -1,4 +1,4 @@
-// src/services/vendorService.js
+﻿// src/services/vendorService.js
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
@@ -26,7 +26,7 @@ export const getSessionCompanyId = (explicitId) => {
 
   // 2. Parse session from localStorage or sessionStorage
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = typeof raw === 'string' ? JSON.parse(raw) : raw;
 

@@ -1,4 +1,4 @@
-// src/pages/Master/EditLocationTypeMasterModal.jsx
+﻿// src/pages/Master/EditLocationTypeMasterModal.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
@@ -97,7 +97,7 @@ export default function EditLocationTypeMasterModal({
 
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
