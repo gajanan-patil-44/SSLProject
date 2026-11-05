@@ -199,10 +199,11 @@ export const isRouteAllowed = (pathname, menuData, user, userContext) => {
     return true;
   }
 
-  // 2. Authentication & Error pages are always public/accessible
+  // 2. Authentication, Error & Work Management pages are always accessible
   if (
     normalizedCurrent.startsWith('/pages/auth/') ||
-    normalizedCurrent.startsWith('/pages/error/')
+    normalizedCurrent.startsWith('/pages/error/') ||
+    normalizedCurrent.startsWith('/work-management')
   ) {
     return true;
   }

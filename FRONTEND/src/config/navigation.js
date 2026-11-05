@@ -705,5 +705,56 @@ export const navigationConfig = [
         ]
       }
     ]
+  },
+  {
+    title: "WORK MANAGEMENT",
+    items: [
+      {
+        label: "My Daily Work Update",
+        icon: "CalendarCheck",
+        path: "/work-management/daily-update",
+        badge: "Daily"
+      },
+      {
+        label: "My Work History",
+        icon: "History",
+        path: "/work-management/work-history"
+      },
+      {
+        label: "My Assigned Tasks",
+        icon: "CheckSquare",
+        path: "/work-management/assigned-tasks"
+      },
+      {
+        label: "Task Assignment",
+        icon: "UserPlus",
+        path: "/work-management/task-assignment"
+      },
+      {
+        label: "Project Task Tracker",
+        icon: "Kanban",
+        path: "/work-management/project-tasks"
+      },
+      {
+        label: "Team / Dept Updates",
+        icon: "Users",
+        path: "/work-management/team-updates"
+      },
+      {
+        label: "Work Update Review",
+        icon: "ClipboardCheck",
+        path: "/work-management/review"
+      },
+      {
+        label: "Organization Dashboard",
+        icon: "LayoutDashboard",
+        path: "/work-management/dashboard"
+      },
+      {
+        label: "Work Reports & Analytics",
+        icon: "BarChart3",
+        path: "/work-management/analytics"
+      }
+    ]
   }
 ];
