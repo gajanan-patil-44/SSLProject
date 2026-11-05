@@ -5,7 +5,7 @@ info:
 
 http:
   method: PATCH
-  url: http://192.168.23.115:9004/verp-service/companyMaster/updateCompanyMaster
+  url: http://192.168.23.107:9004/verp-service/companyMaster/updateCompanyMaster
   body:
     type: json
     data: |-

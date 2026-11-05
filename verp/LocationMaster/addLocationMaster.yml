@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.76:9004/verp-service/locationMaster/addLocationMaster
+  url: http://192.168.23.107:9004/verp-service/locationMaster/addLocationMaster
   body:
     type: json
     data: |-

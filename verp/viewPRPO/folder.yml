@@ -1,0 +1,7 @@
+info:
+  name: viewPRPO
+  type: folder
+  seq: 20
+
+request:
+  auth: inherit
