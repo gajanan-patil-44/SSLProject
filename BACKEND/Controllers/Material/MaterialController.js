@@ -12,8 +12,8 @@ import {
     addMaterial,
     updateMaterial,
     updateMaterialStatus,
-    fetchMaterialFilePath
-    
+    fetchMaterialFilePath,
+    getCompanyDropdown
 } from "../../Models/Material/MaterialModel.js";
 
 // =====================================================
@@ -149,17 +149,13 @@ export const getMaterial = async (req, res) => {
 // =====================================================
 // FLAG ID 2 TO 7 - SEPARATE DROPDOWNS
 // =====================================================
-
 export const getMaterialDropdown = async (req, res) => {
 
     const { FlagId } = req.body;
 
     try {
 
-        // =============================================
         // FLAG ID VALIDATION
-        // =============================================
-
         if (
             FlagId === undefined ||
             FlagId === null ||
@@ -178,10 +174,7 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
-        // =============================================
-        // VALIDATE LOGGED-IN COMPANY
-        // =============================================
-
+        // LOGGED-IN COMPANY VALIDATION
         const loggedInCompanyId = req.user?.CompanyId;
 
         if (loggedInCompanyId === undefined) {
@@ -191,10 +184,7 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
-        // =============================================
         // FLAG ID 2 - MATERIAL CATEGORY
-        // =============================================
-
         if (Number(FlagId) === 2) {
 
             const data = await getMaterialCategoryDropdown(
@@ -208,10 +198,7 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
-        // =============================================
         // FLAG ID 3 - MATERIAL SUB CATEGORY
-        // =============================================
-
         if (Number(FlagId) === 3) {
 
             const { MaterialCategoryTypeId } = req.body;
@@ -248,10 +235,7 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
-        // =============================================
         // FLAG ID 4 - UOM
-        // =============================================
-
         if (Number(FlagId) === 4) {
 
             const data = await getUOMDropdown();
@@ -263,23 +247,19 @@ export const getMaterialDropdown = async (req, res) => {
             });
         }
 
-        // =============================================
         // FLAG ID 5 - GST TYPE
-        // =============================================
-if (Number(FlagId) === 5) {
+        if (Number(FlagId) === 5) {
 
-    const data = await getGSTTypeDropdown();
+            const data = await getGSTTypeDropdown();
 
-    return res.status(200).json({
-        status: "success",
-        message: "GST types fetched successfully",
-        data
-    });
-}
-        // =============================================
+            return res.status(200).json({
+                status: "success",
+                message: "GST types fetched successfully",
+                data
+            });
+        }
+
         // FLAG ID 6 - GST RATE
-        // =============================================
-
         if (Number(FlagId) === 6) {
 
             const { GSTTypeId } = req.body;
@@ -316,10 +296,7 @@ if (Number(FlagId) === 5) {
             });
         }
 
-        // =============================================
         // FLAG ID 7 - FILE TYPE
-        // =============================================
-
         if (Number(FlagId) === 7) {
 
             const data = await getFileTypeDropdown();
@@ -331,9 +308,36 @@ if (Number(FlagId) === 5) {
             });
         }
 
+        // FLAG ID 12 - COMPANY DROPDOWN
+        if (Number(FlagId) === 12) {
+
+            const companyId =
+                loggedInCompanyId === null
+                    ? null
+                    : Number(loggedInCompanyId);
+
+            if (
+                companyId !== null &&
+                (!Number.isInteger(companyId) || companyId <= 0)
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid logged-in CompanyId"
+                });
+            }
+
+            const data = await getCompanyDropdown(companyId);
+
+            return res.status(200).json({
+                status: "success",
+                message: "Companies fetched successfully",
+                data
+            });
+        }
+
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId. Use FlagId 2 to 7."
+            message: "Invalid FlagId. Use FlagId 2, 3, 4, 5, 6, 7 or 12."
         });
 
     } catch (error) {
@@ -347,6 +351,10 @@ if (Number(FlagId) === 5) {
         });
     }
 };
+
+// =============================================
+// FLAG ID 8 - COMPANY DROPDOWN
+// =============================================
 
 // =====================================================
 // FLAG ID 8 - ADD MATERIAL WITH MULTER FILES

@@ -1,4 +1,5 @@
-import {getAllCompanyProducts,getCompaniesForDropdown,getProductsForDropdown,addCompanyProduct,checkCompanyProductData,editCompanyProduct,deleteCompanyProduct,updateCompanyProductstatus} from "../../Models/CompanyProductModels.js";
+import {getAllCompanyProducts,getCompaniesForDropdown,getProductsForDropdown,addCompanyProduct,checkCompanyProductData,    checkCompanyExists,
+editCompanyProduct,deleteCompanyProduct,updateCompanyProductstatus} from "../../Models/CompanyProductModels.js";
 
 
 // ==========================================

@@ -207,3 +207,17 @@ export const updateCompanyProductstatus = async (
 
     return result.rowCount;
 };
+
+export const checkCompanyExists = async (CompanyId) => {
+
+    const query = `
+        SELECT
+            "CompanyId"
+        FROM "LKP"."Company"
+        WHERE "CompanyId" = $1;
+    `;
+
+    const result = await pool.query(query, [CompanyId]);
+
+    return result.rows;
+};

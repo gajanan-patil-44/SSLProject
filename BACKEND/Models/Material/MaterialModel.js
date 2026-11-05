@@ -622,5 +622,27 @@ export const fetchMaterialFilePath = async (MaterialFileId) => {
 };
 
 
+export const getCompanyDropdown = async (companyId) => {
+
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyCode",
+            "CompanyName"
+        FROM "LKP"."Company"
+        WHERE
+            "IsDisabled" = FALSE
+            AND (
+                $1::INTEGER IS NULL
+                OR "CompanyId" = $1
+            )
+        ORDER BY "CompanyName" ASC;
+    `;
+
+    const result = await pool.query(query, [companyId]);
+
+    return result.rows;
+};
+
 
 
