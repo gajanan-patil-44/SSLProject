@@ -44,7 +44,7 @@ http:
         value: require some equipment
       - name: materials
         type: text
-        value: "[1]"
+        value: '{"MaterialId":1,"Quantity":1}'
       - name: fileTypeIds
         type: text
         value: "[4]"
@@ -53,6 +53,9 @@ http:
         value:
           - C:\Users\manoj\Pictures\Screenshots\pit bull.png
         contentType: image/png
+      - name: Quantity
+        type: text
+        value: "1"
   auth: inherit
 
 settings:
