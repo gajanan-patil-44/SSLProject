@@ -11,16 +11,30 @@ export const getPriorityLevelDrpDwnModel = async () => {
 }
 
 
-export const getMaterialDrpDwnModel = async () => {
+export const getMaterialDrpDwnModel = async (selectedMaterialIds = []) => {
     try {
-        let query = `SELECT "MaterialId","MaterialName" FROM "DATA"."Material" WHERE "IsDisabled" = false`;
-        const result = await pool.query(query);
+
+        const query = `
+            SELECT
+                "MaterialId",
+                "MaterialName"
+            FROM "DATA"."Material"
+            WHERE
+                "IsDisabled" = false
+                AND NOT ("MaterialId" = ANY($1::integer[]))
+            ORDER BY "MaterialName" ASC
+        `;
+
+        const result = await pool.query(query, [
+            selectedMaterialIds
+        ]);
+
         return result.rows;
+
     } catch (error) {
         throw error;
     }
-}
-
+};
 
 
 export const createPRPOModel = async ({

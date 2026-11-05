@@ -1338,37 +1338,37 @@ export const getUserCount = async () => {
 };
 
 
-export const getDepartmentDropdown = async (CompanyId = null) => {
+// export const getDepartmentDropdown = async (CompanyId = null) => {
 
-    try {
+//     try {
 
-        let query = `
-            SELECT
-                "DepartmentId" AS "DepartmentId",
-                "CompanyId" AS "CompanyId",
-                "DepartmentName" AS "DepartmentName",
-                "DepartmentCode" AS "DepartmentCode"
+//         let query = `
+//             SELECT
+//                 "DepartmentId" AS "DepartmentId",
+//                 "CompanyId" AS "CompanyId",
+//                 "DepartmentName" AS "DepartmentName",
+//                 "DepartmentCode" AS "DepartmentCode"
 
-            FROM "LKP"."Department"
+//             FROM "LKP"."Department"
 
-            WHERE "IsDisabled" = false
-        `;
+//             WHERE "IsDisabled" = false
+//         `;
 
-        const values = [];
+//         const values = [];
 
-        if (CompanyId !== null) {
-            query += ` AND "CompanyId" = $1`;
-            values.push(CompanyId);
-        }
+//         if (CompanyId !== null) {
+//             query += ` AND "CompanyId" = $1`;
+//             values.push(CompanyId);
+//         }
 
-        query += ` ORDER BY "DepartmentName"`;
+//         query += ` ORDER BY "DepartmentName"`;
 
-        const result = await pool.query(query, values);
+//         const result = await pool.query(query, values);
 
-        return result.rows;
+//         return result.rows;
 
-    } catch (error) {
+//     } catch (error) {
 
-        throw error;
-    }
-};
+//         throw error;
+//     }
+// };

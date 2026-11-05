@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 
-import { createPRPOModel } from "../../Models/PRModel/PrModel.js";
+import { createPRPOModel, getMaterialDrpDwnModel, getPriorityLevelDrpDwnModel } from "../../Models/PRModel/PrModel.js";
 
-
+import { processPRPOFiles } from "../../Helpers/PrcoessPRPOfiles.js";
 
 // ==========================================
 // REMOVE UPLOADED FILES
@@ -20,12 +20,14 @@ const removeUploadedFiles = async (files = []) => {
 };
 
 
+
+
 // ==========================================
 // CREATE PRPO CONTROLLER
 // ==========================================
 
 export const createPRPOController = async (req, res) => {
-
+    let filesToCleanup = [];
     try {
         const {
             UserId,
@@ -164,13 +166,9 @@ export const createPRPOController = async (req, res) => {
         let parsedFileTypeIds = [];
 
         if (fileTypeIds) {
-
             try {
-
                 parsedFileTypeIds = JSON.parse(fileTypeIds);
-
             } catch (error) {
-
                 return await sendErrorResponse(
                     400,
                     "Invalid fileTypeIds JSON format."
@@ -178,31 +176,27 @@ export const createPRPOController = async (req, res) => {
             }
         }
 
-
         const uploadedFiles = req.files || [];
 
+        filesToCleanup = [...uploadedFiles];
 
         // ==========================================
         // 10. VALIDATE FILE TYPE IDS
         // ==========================================
 
         if (!Array.isArray(parsedFileTypeIds)) {
-
             return await sendErrorResponse(
                 400,
                 "fileTypeIds must be an array."
             );
         }
 
-
         if (parsedFileTypeIds.length !== uploadedFiles.length) {
-
             return await sendErrorResponse(
                 400,
                 "Each uploaded file must have one FileTypeId."
             );
         }
-
 
         for (const fileTypeId of parsedFileTypeIds) {
 
@@ -210,7 +204,6 @@ export const createPRPOController = async (req, res) => {
                 !Number.isInteger(Number(fileTypeId)) ||
                 Number(fileTypeId) <= 0
             ) {
-
                 return await sendErrorResponse(
                     400,
                     "Invalid FileTypeId."
@@ -218,6 +211,23 @@ export const createPRPOController = async (req, res) => {
             }
         }
 
+        // ==========================================
+        // 11. PROCESS UPLOADED FILES
+        // ==========================================
+
+        const {
+            processedFiles,
+            processedFileTypeIds
+        } = await processPRPOFiles(
+            uploadedFiles,
+            parsedFileTypeIds
+        );
+
+        // Include generated PDFs in cleanup if database insertion fails
+        filesToCleanup = [
+            ...uploadedFiles,
+            ...processedFiles
+        ];
 
         // ==========================================
         // 11. PREPARE HEADER DATA
@@ -258,9 +268,9 @@ export const createPRPOController = async (req, res) => {
 
             materials: parsedMaterials,
 
-            files: uploadedFiles,
+            files: processedFiles,
 
-            fileTypeIds: parsedFileTypeIds
+            fileTypeIds: processedFileTypeIds
 
         });
 
@@ -286,7 +296,7 @@ export const createPRPOController = async (req, res) => {
         // 14. DELETE FILES IF DATABASE INSERT FAILS
         // ==========================================
 
-        await removeUploadedFiles(req.files);
+        await removeUploadedFiles(filesToCleanup);
 
 
 
@@ -305,3 +315,70 @@ export const createPRPOController = async (req, res) => {
     }
 
 };
+
+
+export const getMaterialDrpDwnController = async (req, res) => {
+
+    try {
+
+        const { selectedMaterialIds = [], flagId } = req.body;
+        if (Number(flagId) !== 2) {
+            return res.status(400).json({
+                status: false,
+                message: "Please enter the valid flagId."
+            });jhg
+        }
+
+        if (!Array.isArray(selectedMaterialIds)) {
+            return res.status(400).json({
+                status: false,
+                message: "selectedMaterialIds must be an array."
+            });
+        }
+
+        const result = await getMaterialDrpDwnModel(selectedMaterialIds);
+
+        return res.status(200).json({
+            status: true,
+            message: "Material dropdown fetched successfully.",
+            data: result
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            status: false,
+            message: "Internal Server Error",
+            error: error.message
+        });
+
+    }
+};
+
+export const getPriorityLevelDrpDwnController = async (req, res) => {
+    const { flagId } = req.body;
+    try {
+        if (Number(flagId) !== 1) {
+            return res.status(400).json({
+                status: false,
+                message: "Please enter the valid flagId."
+            });
+        }
+        const result = await getPriorityLevelDrpDwnModel();
+
+        return res.status(200).json({
+            status: true,
+            message: "Priority Level dropdown fetched successfully.",
+            data: result
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: "Internal Server Error",
+            error: error.message
+        });
+    }
+}
+
+
+

@@ -29,7 +29,7 @@ http:
         value: "15"
       - name: ReportingToUserId
         type: text
-        value: "51"
+        value: "2"
       - name: RequestDate
         type: text
         value: 04/11/2026
@@ -44,19 +44,35 @@ http:
         value: require some equipment
       - name: materials
         type: text
-        value: '{"MaterialId":1,"Quantity":1}'
+        value: |-
+          [
+          {"MaterialId":1,
+          "Quantity":1,
+          "MaterialDescription":"Blower"
+          }
+          ]
       - name: fileTypeIds
         type: text
-        value: "[4]"
+        value: "[4,4]"
+      - name: files
+        type: file
+        value:
+          - C:\Users\manoj\Downloads\Annexure_Hangla (13).pdf
+        contentType: application/pdf
       - name: files
         type: file
         value:
           - C:\Users\manoj\Pictures\Screenshots\pit bull.png
         contentType: image/png
-      - name: Quantity
-        type: text
-        value: "1"
-  auth: inherit
+      - name: files
+        type: file
+        value:
+          - C:\Users\manoj\Pictures\Screenshots\pit bull.png
+        contentType: image/png
+        disabled: true
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiI0ODE0ODQ0IiwiTG9naW5OYW1lIjoiQWRtaW4yIiwiRW1haWwiOiJwcmF2ZWVuLm1AdmlzaHZpbi5jb20iLCJEZXNpZ25hdGlvbklkIjpudWxsLCJpYXQiOjE3OTM4NTY3MTcsImV4cCI6MTc5Mzg4NTUxN30.cHEKp1yCW-rMFQ3e5GPVqVJ2HbJPLw2NaoKt9cKEy8w
 
 settings:
   encodeUrl: true
