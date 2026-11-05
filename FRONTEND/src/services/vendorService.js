@@ -1,16 +1,185 @@
 // src/services/vendorService.js
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
+import { useERPStore } from '../store/useERPStore';
+
+/**
+ * Universal dynamic helper to extract active session company ID
+ * Exhaustively checks:
+ * 1. Explicit argument
+ * 2. Unified session object in localStorage / sessionStorage:
+ *    - context.companies
+ *    - context.products
+ *    - user.CompanyId
+ *    - root session.CompanyId
+ *    - decoded JWT accessToken
+ *    - deep recursive object search
+ * 3. Zustand store (userContext.companies, userContext.products, user.CompanyId, session.CompanyId)
+ * 4. Direct storage keys (CompanyId, companyId, erp_company_id, erp_company, erp_user)
+ */
+export const getSessionCompanyId = (explicitId) => {
+  // 1. Explicit ID if provided and valid
+  if (explicitId !== undefined && explicitId !== null && explicitId !== '') {
+    const num = Number(explicitId);
+    if (!isNaN(num) && num > 0) return num;
+  }
+
+  // 2. Parse session from localStorage or sessionStorage
+  try {
+    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    if (raw) {
+      const s = typeof raw === 'string' ? JSON.parse(raw) : raw;
+
+      // 2a. context.companies list
+      const companies = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
+      if (Array.isArray(companies) && companies.length > 0) {
+        for (const c of companies) {
+          const id = c?.CompanyId ?? c?.CompanyMasterId ?? c?.companyId ?? c?.companyMasterId ?? c?.id ?? c?.Id ?? c?.company_id ?? c?.value;
+          if (id !== undefined && id !== null && id !== '') {
+            const num = Number(id);
+            if (!isNaN(num) && num > 0) return num;
+          }
+        }
+      }
+
+      // 2b. context.products list (contains CompanyId for each allocated product)
+      const products = s?.data?.context?.products || s?.context?.products || s?.data?.products || s?.products;
+      if (Array.isArray(products) && products.length > 0) {
+        for (const p of products) {
+          const id = p?.CompanyId ?? p?.companyId ?? p?.CompanyMasterId ?? p?.company_id;
+          if (id !== undefined && id !== null && id !== '') {
+            const num = Number(id);
+            if (!isNaN(num) && num > 0) return num;
+          }
+        }
+      }
+
+      // 2c. user object in session
+      const user = s?.data?.user || s?.user;
+      const userCid = user?.CompanyId ?? user?.companyId ?? user?.CompanyMasterId ?? user?.company_id;
+      if (userCid !== undefined && userCid !== null && userCid !== '') {
+        const num = Number(userCid);
+        if (!isNaN(num) && num > 0) return num;
+      }
+
+      // 2d. root session object
+      const rootCid = s?.CompanyId ?? s?.companyId ?? s?.CompanyMasterId ?? s?.data?.CompanyId ?? s?.data?.companyId;
+      if (rootCid !== undefined && rootCid !== null && rootCid !== '') {
+        const num = Number(rootCid);
+        if (!isNaN(num) && num > 0) return num;
+      }
+
+      // 2e. Decoded JWT accessToken
+      const token = s?.token?.accessToken || s?.accessToken || s?.token || localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+      if (token && typeof token === 'string') {
+        const parts = token.split('.');
+        if (parts[1]) {
+          const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+          const jsonStr = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+          const jwt = JSON.parse(jsonStr);
+          const jwtCid = jwt?.CompanyId ?? jwt?.companyId ?? jwt?.CompanyMasterId ?? jwt?.company_id;
+          if (jwtCid !== undefined && jwtCid !== null && jwtCid !== '') {
+            const num = Number(jwtCid);
+            if (!isNaN(num) && num > 0) return num;
+          }
+        }
+      }
+
+      // 2f. Deep scan of session object for any key matching companyId / CompanyId
+      const deepScan = (obj, depth = 0) => {
+        if (!obj || typeof obj !== 'object' || depth > 5) return null;
+        for (const k of Object.keys(obj)) {
+          if (/^company_?id$/i.test(k) || /^companymaster_?id$/i.test(k)) {
+            const v = obj[k];
+            if (v !== undefined && v !== null && v !== '') {
+              const num = Number(v);
+              if (!isNaN(num) && num > 0) return num;
+            }
+          }
+          if (typeof obj[k] === 'object') {
+            const res = deepScan(obj[k], depth + 1);
+            if (res !== null) return res;
+          }
+        }
+        return null;
+      };
+      const foundDeep = deepScan(s);
+      if (foundDeep !== null) return foundDeep;
+    }
+  } catch (err) {
+  }
+
+  // 3. Zustand ERP store state
+  try {
+    const state = useERPStore.getState?.();
+    if (state) {
+      const comps = state.userContext?.companies;
+      if (Array.isArray(comps) && comps.length > 0) {
+        const id = comps[0]?.CompanyId ?? comps[0]?.CompanyMasterId ?? comps[0]?.companyId ?? comps[0]?.id;
+        if (id !== undefined && id !== null && id !== '') {
+          const num = Number(id);
+          if (!isNaN(num) && num > 0) return num;
+        }
+      }
+      const prods = state.userContext?.products;
+      if (Array.isArray(prods) && prods.length > 0) {
+        const id = prods[0]?.CompanyId ?? prods[0]?.companyId;
+        if (id !== undefined && id !== null && id !== '') {
+          const num = Number(id);
+          if (!isNaN(num) && num > 0) return num;
+        }
+      }
+      const user = state.user;
+      const id = user?.CompanyId ?? user?.companyId ?? user?.CompanyMasterId ?? state.session?.CompanyId;
+      if (id !== undefined && id !== null && id !== '') {
+        const num = Number(id);
+        if (!isNaN(num) && num > 0) return num;
+      }
+    }
+  } catch {}
+
+  // 4. Standalone storage keys
+  try {
+    for (const key of ['CompanyId', 'companyId', 'erp_company_id', 'erp_company', 'erp_user']) {
+      const val = localStorage.getItem(key) || sessionStorage.getItem(key);
+      if (val) {
+        const num = Number(val);
+        if (!isNaN(num) && num > 0) return num;
+        try {
+          const parsed = JSON.parse(val);
+          const cid = parsed?.CompanyId ?? parsed?.companyId ?? parsed?.CompanyMasterId ?? parsed?.id;
+          if (cid !== undefined && cid !== null && cid !== '') {
+            const n = Number(cid);
+            if (!isNaN(n) && n > 0) return n;
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+
+  return null;
+};
 
 export const vendorService = {
   /**
-   * Fetch all vendors from /verp-service/vendor/view with FlagId: 1
+   * Fetch all vendors from /verp-service/vendor/view with FlagId: 1 and CompanyId
    */
-  getVendors: async () => {
+  getVendors: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ROUTES.VENDOR.VIEW, {
+      const companyId = getSessionCompanyId(params?.CompanyId ?? params?.companyId);
+      const payload = {
         FlagId: 1
-      });
+      };
+      if (companyId !== null && companyId !== undefined) {
+        payload.CompanyId = Number(companyId);
+      }
+
+      const response = await apiClient.post(API_ROUTES.VENDOR.VIEW, payload);
 
       let list = [];
       if (Array.isArray(response?.data)) {
@@ -81,20 +250,25 @@ export const vendorService = {
         };
       });
     } catch (error) {
-      console.error('Failed to fetch vendors from API:', error);
       return [];
     }
   },
 
   /**
    * Fetch Vendor Types Dropdown
-   * POST /verp-service/vendor/dropdown with { FlagId: 2 }
+   * POST /verp-service/vendor/dropdown with { FlagId: 2, CompanyId: <id> }
    */
-  getVendorTypes: async () => {
+  getVendorTypes: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ROUTES.VENDOR.DROPDOWN, {
+      const companyId = getSessionCompanyId(params?.CompanyId ?? params?.companyId);
+      const payload = {
         FlagId: 2
-      });
+      };
+      if (companyId !== null && companyId !== undefined) {
+        payload.CompanyId = Number(companyId);
+      }
+
+      const response = await apiClient.post(API_ROUTES.VENDOR.DROPDOWN, payload);
 
       const rawList = response?.data?.VendorTypes
         || response?.data?.vendorTypes
@@ -113,20 +287,25 @@ export const vendorService = {
         label: item.VendorTypeName ?? item.name ?? ''
       }));
     } catch (error) {
-      console.error('Failed to fetch vendor types:', error);
       return [];
     }
   },
 
   /**
    * Fetch Vendor File Types Dropdown
-   * POST /verp-service/vendor/dropdown with { FlagId: 3 }
+   * POST /verp-service/vendor/dropdown with { FlagId: 3, CompanyId: <id> }
    */
-  getVendorFileTypes: async () => {
+  getVendorFileTypes: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ROUTES.VENDOR.DROPDOWN, {
+      const companyId = getSessionCompanyId(params?.CompanyId ?? params?.companyId);
+      const payload = {
         FlagId: 3
-      });
+      };
+      if (companyId !== null && companyId !== undefined) {
+        payload.CompanyId = Number(companyId);
+      }
+
+      const response = await apiClient.post(API_ROUTES.VENDOR.DROPDOWN, payload);
 
       const rawList = response?.data?.VendorFileTypes
         || response?.data?.vendorFileTypes
@@ -145,23 +324,29 @@ export const vendorService = {
         label: item.VendorFileTypeName ?? item.name ?? ''
       }));
     } catch (error) {
-      console.error('Failed to fetch vendor file types:', error);
       return [];
     }
   },
 
   /**
    * Add new vendor
-   * Hits POST /verp-service/vendor/add with Multipart Form payload (FlagId: 4)
+   * Hits POST /verp-service/vendor/add with Multipart Form payload (FlagId: 4, CompanyId: <id>)
    */
   addVendor: async (data) => {
+    const companyId = getSessionCompanyId(data?.CompanyId ?? data?.companyId);
     let body;
 
     if (data instanceof FormData) {
       body = data;
+      if (companyId !== null && companyId !== undefined && !body.has('CompanyId')) {
+        body.append('CompanyId', Number(companyId));
+      }
     } else {
       const formData = new FormData();
       formData.append('FlagId', 4);
+      if (companyId !== null && companyId !== undefined) {
+        formData.append('CompanyId', Number(companyId));
+      }
       formData.append('VendorName', data.VendorName || data.vendorName || '');
       formData.append('VendorCode', data.VendorCode || data.vendorCode || '');
       formData.append('ContactPerson', data.ContactPerson || data.contactPerson || '');
@@ -213,16 +398,23 @@ export const vendorService = {
 
   /**
    * Update existing vendor
-   * Hits PATCH /verp-service/vendor/edit with same payload as add
+   * Hits PATCH /verp-service/vendor/edit with same payload as add (FlagId: 5, CompanyId: <id>)
    */
   updateVendor: async (data) => {
+    const companyId = getSessionCompanyId(data?.CompanyId ?? data?.companyId);
     let body;
 
     if (data instanceof FormData) {
       body = data;
+      if (companyId !== null && companyId !== undefined && !body.has('CompanyId')) {
+        body.append('CompanyId', Number(companyId));
+      }
     } else {
       const formData = new FormData();
       formData.append('FlagId', 5);
+      if (companyId !== null && companyId !== undefined) {
+        formData.append('CompanyId', Number(companyId));
+      }
       if (data.VendorId || data.id) {
         formData.append('VendorId', Number(data.VendorId || data.id));
       }
@@ -284,6 +476,7 @@ export const vendorService = {
    * Hits PATCH /verp-service/vendor/status with:
    * {
    *   "FlagId": 6,
+   *   "CompanyId": <CompanyId>,
    *   "VendorId": <VendorId>,
    *   "IsDisabled": <boolean>
    * }
@@ -303,25 +496,39 @@ export const vendorService = {
     const nextIsDisabled = !isCurrentlyDisabled;
     const nextStatus = nextIsDisabled ? 'Inactive' : 'Active';
 
-    const response = await apiClient.patch(API_ROUTES.VENDOR.STATUS, {
+    const companyId = getSessionCompanyId(vendor?.CompanyId ?? vendor?.companyId);
+    const payload = {
       FlagId: 6,
       VendorId: vendorId,
       IsDisabled: nextIsDisabled
-    });
+    };
+    if (companyId !== null && companyId !== undefined) {
+      payload.CompanyId = Number(companyId);
+    }
+
+    const response = await apiClient.patch(API_ROUTES.VENDOR.STATUS, payload);
     return { status: 'success', nextStatus, data: response };
   },
 
   /**
    * Delete vendor
+   * Hits POST /verp-service/vendor/delete with FlagId: 5, VendorId, CompanyId
    */
   deleteVendor: async (idOrData) => {
+    const vendor = typeof idOrData === 'object' ? idOrData : {};
     const id = typeof idOrData === 'object' ? (idOrData.VendorId ?? idOrData.id) : idOrData;
-    return await apiClient.post(API_ROUTES.VENDOR.DELETE, {
+    const companyId = getSessionCompanyId(vendor?.CompanyId ?? vendor?.companyId);
+
+    const payload = {
       FlagId: 5,
-      flagId: 5,
       VendorId: id,
       id
-    });
+    };
+    if (companyId !== null && companyId !== undefined) {
+      payload.CompanyId = Number(companyId);
+    }
+
+    return await apiClient.post(API_ROUTES.VENDOR.DELETE, payload);
   }
 };
 

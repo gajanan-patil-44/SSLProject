@@ -1,21 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   PageHeader,
   Button,
   StatusBadge,
-  Input,
-  Switch
+  Input
 } from '../components/ui/index';
 import { DataTable } from '../components/ui/DataTable';
 import { Modal } from '../components/ui/Modal';
 import {
-  Search,
-  Plus,
-  Edit,
-  Eye,
-  Box,
   Tag,
-  Barcode,
   Calendar,
   User,
   ClipboardList
@@ -23,11 +16,29 @@ import {
 import { useERPStore } from '../store/useERPStore';
 
 import { materialCategoryTypeService } from '../services';
-import { validateCode } from '../utils/validators';
+import { getSessionCompanyId } from '../services/departmentService';
+import { validateCode, validateTextOnly } from '../utils/validators';
 
 export default function MaterialCategoryCreation() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
+
+  const sessionCompanyId = getSessionCompanyId();
+
+  const getSessionUserName = () => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const u = s?.data?.user || s?.user || s;
+        return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || u?.username || '';
+      }
+      const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+      return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || u?.username || '';
+    } catch {
+      return '';
+    }
+  };
 
   // State
   const [categories, setCategories] = useState([]);
@@ -50,39 +61,41 @@ export default function MaterialCategoryCreation() {
   // Validate form
   const validateForm = () => {
     const errs = {};
-    const codeErr = validateCode(formData.code, 'Category Code', true);
+    const codeErr = validateCode(formData.code, 'Material Category Code', true);
     if (codeErr) errs.code = codeErr;
 
-    const trimmedName = (formData.name || '').trim();
-    if (!trimmedName) {
-      errs.name = 'Category Name is required';
-    } else if (trimmedName.length < 2) {
-      errs.name = 'Category Name must be at least 2 characters';
-    } else if (trimmedName.length > 100) {
-      errs.name = 'Category Name cannot exceed 100 characters';
-    }
+    const nameErr = validateTextOnly(formData.name, 'Material Category Name', true, 2, 100);
+    if (nameErr) errs.name = nameErr;
 
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
+  // Ref guard to prevent concurrent/duplicate API calls
+  const isFetchingRef = useRef(false);
+
   // Fetch all categories
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
     try {
-      const data = await materialCategoryTypeService.getCategories();
-      setCategories(data);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await materialCategoryTypeService.getCategories({
+        ...(compId ? { CompanyId: compId } : {})
+      });
+      setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Failed to fetch categories:", error);
       showToast('Failed to load categories', 'error');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  };
+  }, [sessionCompanyId, showToast]);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const handleOpenModal = (item = null, mode = 'create') => {
     setIsViewing(mode === 'view');
@@ -126,7 +139,8 @@ export default function MaterialCategoryCreation() {
     }
     setSubmitting(true);
     
-    const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+    const userName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+    const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
     
     try {
       if (isEditing) {
@@ -135,10 +149,10 @@ export default function MaterialCategoryCreation() {
           MaterialCategoryTypeId: formData.id,
           MaterialCategoryTypeName: formData.name,
           MaterialCategoryTypeCode: formData.code,
-          UpdatedByUserName: userName
+          UpdatedByUserName: userName,
+          ...(compId ? { CompanyId: compId } : {})
         };
         
-        console.log('Update Payload:', payload);
         const response = await materialCategoryTypeService.updateCategory(payload);
         
         if (response && response.status === 'success') {
@@ -150,10 +164,10 @@ export default function MaterialCategoryCreation() {
           MaterialCategoryTypeName: formData.name,
           MaterialCategoryTypeCode: formData.code,
           IsDisabled: formData.status === 'Inactive',
-          CreatedByUserName: userName
+          CreatedByUserName: userName,
+          ...(compId ? { CompanyId: compId } : {})
         };
         
-        console.log('Create Payload:', payload);
         const response = await materialCategoryTypeService.createCategory(payload);
         
         if (response && response.status === 'success') {
@@ -162,23 +176,24 @@ export default function MaterialCategoryCreation() {
       }
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Failed to submit:", error);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this category?");
+    const confirmDelete = window.confirm("Are you sure you want to delete this material category?");
     if (!confirmDelete) return;
 
     try {
-      const response = await materialCategoryTypeService.deleteCategory(id);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const response = await materialCategoryTypeService.deleteCategory(id, {
+        ...(compId ? { CompanyId: compId } : {})
+      });
       if (response && response.status === 'success') {
         await fetchCategories();
       }
     } catch (error) {
-      console.error("Failed to delete", error);
     }
   };
 
@@ -191,12 +206,14 @@ export default function MaterialCategoryCreation() {
     ));
 
     try {
-      const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+      const userName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : (item.CompanyId ? Number(item.CompanyId) : undefined);
       const payload = {
         flagId: 4,
         IsDisabled: !checked,
         UpdatedByUserName: userName,
-        MaterialCategoryTypeId: item.id
+        MaterialCategoryTypeId: item.id,
+        ...(compId ? { CompanyId: compId } : {})
       };
       
       const response = await materialCategoryTypeService.toggleStatus(payload);
@@ -205,7 +222,6 @@ export default function MaterialCategoryCreation() {
         throw new Error('Status update failed');
       }
     } catch (error) {
-      console.error("Failed to toggle status:", error);
       // Revert if API fails
       setCategories(prev => prev.map(i => 
         i.id === item.id ? { ...i, status: item.status } : i
@@ -214,14 +230,17 @@ export default function MaterialCategoryCreation() {
     }
   };
 
-  const filteredData = categories.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return categories;
+    const term = searchTerm.toLowerCase();
+    return categories.filter(item => 
+      String(item.name || '').toLowerCase().includes(term) ||
+      String(item.code || '').toLowerCase().includes(term) ||
+      String(item.category || '').toLowerCase().includes(term)
+    );
+  }, [categories, searchTerm]);
 
-  const columns = [
-
+  const columns = useMemo(() => [
     { 
       header: 'CODE', 
       accessorKey: 'code',
@@ -264,17 +283,17 @@ export default function MaterialCategoryCreation() {
         </div>
       )
     }
-  ];
+  ], []);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Manage Categories"
-        description="Manage system material categories, configurations and access permissions."
+        title="Material Categories Creation"
+        description="Manage system material categories creation, configurations and access permissions."
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Manage Category', path: '/master/material-category' }
+          { label: 'Material Categories Creation', path: '/master/material-category' }
         ]}
       />
 
@@ -283,7 +302,7 @@ export default function MaterialCategoryCreation() {
         columns={columns}
         data={filteredData}
         loading={loading}
-        searchPlaceholder="Search by category name, code..."
+        searchPlaceholder="Search by material category name, code..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         onAddClick={() => handleOpenModal(null, 'create')}
@@ -298,7 +317,7 @@ export default function MaterialCategoryCreation() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={isViewing ? 'View Category' : (isEditing ? 'Edit Category' : 'Create Category')}
+        title={isViewing ? 'View Material Category' : (isEditing ? 'Edit Material Category' : 'Create Material Category')}
         icon={ClipboardList}
         maxWidth="lg"
         actions={
@@ -315,7 +334,7 @@ export default function MaterialCategoryCreation() {
                 onClick={handleSubmit}
                 isLoading={submitting}
               >
-                {isEditing ? 'Update Category' : 'Create Category'}
+                {isEditing ? 'Update Material Category' : 'Create Material Category'}
               </Button>
             )}
           </>
@@ -332,7 +351,7 @@ export default function MaterialCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Category Code {!isViewing && <span className="text-rose-500">*</span>}
+              Material Category Code {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.code}
@@ -351,12 +370,13 @@ export default function MaterialCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Category Name {!isViewing && <span className="text-rose-500">*</span>}
+              Material Category Name {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.name}
               onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
+                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setFormData({ ...formData, name: sanitized });
                 if (formErrors.name) setFormErrors({ ...formErrors, name: '' });
               }}
               placeholder="e.g. Electrical Components"

@@ -1,5 +1,6 @@
 import apiClient from './apiClient';
-import { MATERIAL_ROUTES, API_ROUTES } from '../routes/apiRoutes';
+import { MATERIAL_ROUTES } from '../routes/apiRoutes';
+import { getSessionCompanyId } from './departmentService';
 
 // Configured API Routes for Material / Item Operations
 const API_ENDPOINTS = {
@@ -14,11 +15,19 @@ const API_ENDPOINTS = {
 const itemCreationService = {
   /**
    * Fetch all materials / items
-   * Hits POST /verp-service/material/view with payload: { FlagId: 1 }
+   * Hits POST /verp-service/material/view with payload: { FlagId: 1, CompanyId }
    */
-  getItems: async () => {
+  getItems: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.view, { FlagId: 1 });
+      const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+        ? Number(params.CompanyId)
+        : getSessionCompanyId();
+      const payload = {
+        FlagId: 1,
+        ...(compId ? { CompanyId: compId } : {}),
+        ...params
+      };
+      const response = await apiClient.post(API_ENDPOINTS.view, payload);
       if (response && (response.status === 'success' || response.success === true) && Array.isArray(response.data)) {
         return (response.data || []).map((item) => ({
           id: item.MaterialId,
@@ -45,6 +54,7 @@ const itemCreationService = {
           userName: item.CreatedByUserName || item.CreatedByUserId ? String(item.CreatedByUserName || `User #${item.CreatedByUserId}`) : '',
           createdAt: item.CreatedAt ? new Date(item.CreatedAt).toLocaleDateString('en-GB') : '—',
           updatedAt: item.UpdatedAt ? new Date(item.UpdatedAt).toLocaleDateString('en-GB') : '—',
+          CompanyId: item.CompanyId ?? compId,
           files: Array.isArray(item.Files) ? item.Files.map(f => {
             const rawPath = f.FilePatch || f.FilePath || '';
             const path = rawPath ? rawPath.replace(/\\/g, '/') : '';
@@ -60,7 +70,6 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to fetch materials from /verp-service/material/view:", error);
     }
     return [];
   },
@@ -68,9 +77,17 @@ const itemCreationService = {
   /**
    * Fetch Category Dropdown (FlagId: 2)
    */
-  getCategoryDropdown: async () => {
+  getCategoryDropdown: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 2 });
+      const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+        ? Number(params.CompanyId)
+        : getSessionCompanyId();
+      const payload = {
+        FlagId: 2,
+        ...(compId ? { CompanyId: compId } : {}),
+        ...params
+      };
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
       if (response && response.status === 'success' && Array.isArray(response.data)) {
         return response.data.map(c => ({
           id: c.MaterialCategoryTypeId,
@@ -79,18 +96,24 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to load category dropdown:", error);
     }
     return [];
   },
 
   /**
    * Fetch Sub Category Dropdown (FlagId: 3)
-   * Sends FlagId: 3 along with MaterialCategoryTypeId
+   * Sends FlagId: 3 along with MaterialCategoryTypeId and CompanyId
    */
-  getSubCategoryDropdown: async (categoryId = null) => {
+  getSubCategoryDropdown: async (categoryId = null, params = {}) => {
     try {
-      const payload = { FlagId: 3 };
+      const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+        ? Number(params.CompanyId)
+        : getSessionCompanyId();
+      const payload = {
+        FlagId: 3,
+        ...(compId ? { CompanyId: compId } : {}),
+        ...params
+      };
       if (categoryId !== null && categoryId !== undefined && categoryId !== '') {
         payload.MaterialCategoryTypeId = Number(categoryId);
       }
@@ -105,7 +128,6 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to load subcategory dropdown:", error);
     }
     return [];
   },
@@ -113,9 +135,17 @@ const itemCreationService = {
   /**
    * Fetch UOM Dropdown (FlagId: 4)
    */
-  getUOMDropdown: async () => {
+  getUOMDropdown: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 4 });
+      const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+        ? Number(params.CompanyId)
+        : getSessionCompanyId();
+      const payload = {
+        FlagId: 4,
+        ...(compId ? { CompanyId: compId } : {}),
+        ...params
+      };
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
       if (response && response.status === 'success' && Array.isArray(response.data)) {
         return response.data.map(u => ({
           id: u.UOMId,
@@ -124,33 +154,46 @@ const itemCreationService = {
         }));
       }
     } catch (error) {
-      console.error("Failed to load UOM dropdown:", error);
     }
     return [];
   },
 
   /**
-   * Fetch GST Types (FlagId: 5)
+   * Fetch GST Type Dropdown (FlagId: 5)
    */
-  getGSTTypeDropdown: async () => {
+  getGSTTypeDropdown: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 5 });
+      const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+        ? Number(params.CompanyId)
+        : getSessionCompanyId();
+      const payload = {
+        FlagId: 5,
+        ...(compId ? { CompanyId: compId } : {}),
+        ...params
+      };
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
       if (response && response.status === 'success' && Array.isArray(response.data)) {
         return response.data;
       }
     } catch (error) {
-      console.error("Failed to load GST types:", error);
     }
     return [];
   },
 
   /**
-   * Fetch GST Rates (FlagId: 6)
-   * Sends FlagId: 6 along with GSTTypeId
+   * Fetch GST Rates Dropdown (FlagId: 6)
+   * Sends FlagId: 6 along with GSTTypeId and CompanyId
    */
-  getGSTRateDropdown: async (gstTypeId = null) => {
+  getGSTRateDropdown: async (gstTypeId = null, params = {}) => {
     try {
-      const payload = { FlagId: 6 };
+      const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+        ? Number(params.CompanyId)
+        : getSessionCompanyId();
+      const payload = {
+        FlagId: 6,
+        ...(compId ? { CompanyId: compId } : {}),
+        ...params
+      };
       if (gstTypeId !== null && gstTypeId !== undefined && gstTypeId !== '') {
         payload.GSTTypeId = Number(gstTypeId);
       }
@@ -158,64 +201,58 @@ const itemCreationService = {
       if (response && response.status === 'success' && Array.isArray(response.data)) {
         return response.data.map(r => ({
           id: r.GSTRateId,
+          percentage: r.GSTPercentage,
           gstTypeId: r.GSTTypeId,
-          gstTypeName: r.GSTTypeName,
-          percentage: r.GSTPercentage
+          gstTypeName: r.GSTTypeName
         }));
       }
     } catch (error) {
-      console.error("Failed to load GST rates:", error);
     }
     return [];
   },
 
   /**
-   * Fetch File Types (FlagId: 7)
-   * Hits POST /verp-service/material/dropdown with payload { FlagId: 7 }
+   * Fetch File Types Dropdown (FlagId: 7)
    */
-  getFileTypeDropdown: async () => {
+  getFileTypeDropdown: async (params = {}) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.dropdown, { FlagId: 7 });
-      let list = [];
-      if (Array.isArray(response?.data)) {
-        list = response.data;
-      } else if (Array.isArray(response?.data?.data)) {
-        list = response.data.data;
-      } else if (Array.isArray(response)) {
-        list = response;
+      const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+        ? Number(params.CompanyId)
+        : getSessionCompanyId();
+      const payload = {
+        FlagId: 7,
+        ...(compId ? { CompanyId: compId } : {}),
+        ...params
+      };
+      const response = await apiClient.post(API_ENDPOINTS.dropdown, payload);
+      if (response && response.status === 'success' && Array.isArray(response.data)) {
+        return response.data.map(ft => ({
+          id: ft.FileTypeId,
+          name: ft.FileType,
+          description: ft.FileDescription
+        }));
       }
-      return list.map(f => ({
-        id: Number(f.FileTypeId ?? f.fileTypeId ?? f.id),
-        FileTypeId: Number(f.FileTypeId ?? f.fileTypeId ?? f.id),
-        name: f.FileTypeName || f.fileTypeName || f.name || '',
-        FileTypeName: f.FileTypeName || f.fileTypeName || f.name || '',
-        description: f.Description || f.description || '',
-        Description: f.Description || f.description || ''
-      }));
     } catch (error) {
-      console.error("Failed to load file types from /verp-service/material/dropdown:", error);
     }
     return [];
   },
 
-  getFileTypes: async () => {
-    return await itemCreationService.getFileTypeDropdown();
-  },
-
   /**
-   * Fetch dropdowns
-   * Hits /verp-service/material/dropdown
-   * Pass categoryId to fetch subcategories with FlagId: 3 and MaterialCategoryTypeId
-   * Pass gstTypeId to fetch GST rates with FlagId: 6 and GSTTypeId
+   * Pre-fetch all dropdowns in parallel
    */
-  getAllDropdowns: async (categoryId = null, gstTypeId = null) => {
+  getAllDropdowns: async (categoryId = null, gstTypeId = null, companyId = null) => {
+    const compId = companyId !== undefined && companyId !== null && companyId !== ''
+      ? Number(companyId)
+      : getSessionCompanyId();
+    const dropdownParams = compId ? { CompanyId: compId } : {};
+
     const [categories, subCategories, uoms, gstTypes, gstRates, fileTypes] = await Promise.all([
-      itemCreationService.getCategoryDropdown(),   // FlagId: 2
-      categoryId ? itemCreationService.getSubCategoryDropdown(categoryId) : Promise.resolve([]), // FlagId: 3
-      itemCreationService.getUOMDropdown(),        // FlagId: 4
-      itemCreationService.getGSTTypeDropdown(),    // FlagId: 5
-      gstTypeId ? itemCreationService.getGSTRateDropdown(gstTypeId) : Promise.resolve([]),       // FlagId: 6
-      itemCreationService.getFileTypeDropdown()    // FlagId: 7
+      itemCreationService.getCategoryDropdown(dropdownParams),
+      categoryId ? itemCreationService.getSubCategoryDropdown(categoryId, dropdownParams) : Promise.resolve([]),
+      itemCreationService.getUOMDropdown(dropdownParams),
+      itemCreationService.getGSTTypeDropdown(dropdownParams),
+      gstTypeId ? itemCreationService.getGSTRateDropdown(gstTypeId, dropdownParams) : Promise.resolve([]),
+      itemCreationService.getFileTypeDropdown(dropdownParams)
     ]);
     return {
       categories: categories || [],
@@ -232,7 +269,14 @@ const itemCreationService = {
    * Target Route: POST /verp-service/material/add
    */
   createItem: async (data) => {
+    const compId = data?.CompanyId !== undefined && data?.CompanyId !== null && data?.CompanyId !== ''
+      ? Number(data.CompanyId)
+      : getSessionCompanyId();
+
     if (data instanceof FormData) {
+      if (compId && !data.has('CompanyId')) {
+        data.append('CompanyId', compId);
+      }
       return await apiClient.post(API_ENDPOINTS.add, data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -256,6 +300,7 @@ const itemCreationService = {
       if (data.CreatedByUserId) formData.append('CreatedByUserId', Number(data.CreatedByUserId));
       if (data.UpdatedByUserId) formData.append('UpdatedByUserId', Number(data.UpdatedByUserId));
       if (data.UpdatedAt) formData.append('UpdatedAt', data.UpdatedAt);
+      if (compId) formData.append('CompanyId', compId);
 
       const fileTypeId = data.FileTypeId ?? data.fileTypeId;
       if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
@@ -270,24 +315,32 @@ const itemCreationService = {
 
     const payload = {
       FlagId: 8,
-      MaterialName: data.MaterialName || data.name || '',
-      MaterialCode: data.MaterialCode || data.code || '',
-      MaterialCategoryTypeId: Number(data.MaterialCategoryTypeId || data.categoryId),
-      MaterialSubCategoryTypeId: Number(data.MaterialSubCategoryTypeId || data.subCategoryId),
-      MaterialBrandName: data.MaterialBrandName || data.brand || '',
-      ModelNo: data.ModelNo || data.model || '',
-      UOMId: Number(data.UOMId || data.uomId),
-      GSTTypeId: Number(data.GSTTypeId || data.gstTypeId),
-      GSTRateId: Number(data.GSTRateId || data.gstRateId),
-      HSNSAC: data.HSNSAC || data.hsnSac || '',
-      WarrantyYears: Number(data.WarrantyYears || data.warrantyYears) || 0,
-      DescriptionSpecification: data.DescriptionSpecification || data.description || '',
+      MaterialName: data.MaterialName || '',
+      MaterialCode: data.MaterialCode || '',
+      MaterialCategoryTypeId: Number(data.MaterialCategoryTypeId),
+      MaterialSubCategoryTypeId: Number(data.MaterialSubCategoryTypeId),
+      MaterialBrandName: data.MaterialBrandName || '',
+      ModelNo: data.ModelNo || '',
+      UOMId: Number(data.UOMId),
+      GSTTypeId: Number(data.GSTTypeId),
+      GSTRateId: Number(data.GSTRateId),
+      HSNSAC: data.HSNSAC || '',
+      WarrantyYears: Number(data.WarrantyYears) || 0,
+      DescriptionSpecification: data.DescriptionSpecification || '',
       CreatedByUserId: data.CreatedByUserId ? Number(data.CreatedByUserId) : undefined,
       UpdatedByUserId: data.UpdatedByUserId ? Number(data.UpdatedByUserId) : undefined,
-      UpdatedAt: data.UpdatedAt || undefined
+      UpdatedAt: data.UpdatedAt || undefined,
+      ...(compId ? { CompanyId: compId } : {})
     };
 
     return await apiClient.post(API_ENDPOINTS.add, payload);
+  },
+
+  /**
+   * Alias for createItem
+   */
+  addItem: async (data) => {
+    return await itemCreationService.createItem(data);
   },
 
   /**
@@ -295,7 +348,14 @@ const itemCreationService = {
    * Target Route: PATCH /verp-service/material/edit
    */
   updateItem: async (data) => {
+    const compId = data?.CompanyId !== undefined && data?.CompanyId !== null && data?.CompanyId !== ''
+      ? Number(data.CompanyId)
+      : getSessionCompanyId();
+
     if (data instanceof FormData) {
+      if (compId && !data.has('CompanyId')) {
+        data.append('CompanyId', compId);
+      }
       return await apiClient.patch(API_ENDPOINTS.edit, data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -320,6 +380,7 @@ const itemCreationService = {
       if (data.CreatedByUserId) formData.append('CreatedByUserId', Number(data.CreatedByUserId));
       if (data.UpdatedByUserId) formData.append('UpdatedByUserId', Number(data.UpdatedByUserId));
       if (data.UpdatedAt) formData.append('UpdatedAt', data.UpdatedAt);
+      if (compId) formData.append('CompanyId', compId);
 
       const fileTypeId = data.FileTypeId ?? data.fileTypeId;
       if (fileTypeId !== undefined && fileTypeId !== null && fileTypeId !== '') {
@@ -349,7 +410,8 @@ const itemCreationService = {
       DescriptionSpecification: data.DescriptionSpecification || '',
       CreatedByUserId: data.CreatedByUserId ? Number(data.CreatedByUserId) : undefined,
       UpdatedByUserId: data.UpdatedByUserId ? Number(data.UpdatedByUserId) : undefined,
-      UpdatedAt: data.UpdatedAt || undefined
+      UpdatedAt: data.UpdatedAt || undefined,
+      ...(compId ? { CompanyId: compId } : {})
     };
 
     return await apiClient.patch(API_ENDPOINTS.edit, payload);
@@ -360,45 +422,50 @@ const itemCreationService = {
    * Endpoint: PATCH /verp-service/material/status
    */
   toggleStatus: async (payload) => {
+    const compId = payload.CompanyId !== undefined && payload.CompanyId !== null && payload.CompanyId !== ''
+      ? Number(payload.CompanyId)
+      : getSessionCompanyId();
     const body = {
       FlagId: 10,
       MaterialId: Number(payload.MaterialId ?? payload.id),
       IsDisabled: Boolean(payload.IsDisabled),
       UpdatedByUserId: payload.UpdatedByUserId ? Number(payload.UpdatedByUserId) : undefined,
-      UpdatedAt: payload.UpdatedAt || undefined
+      UpdatedAt: payload.UpdatedAt || undefined,
+      ...(compId ? { CompanyId: compId } : {})
     };
     return await apiClient.patch(API_ENDPOINTS.status, body);
   },
 
   /**
    * View Material File
-   * Hits POST /verp-service/material/view-file with payload: { FlagId: 11, MaterialFileId: <id> }
+   * Hits POST /verp-service/material/view-file with payload: { FlagId: 11, MaterialFileId: <id>, CompanyId }
    */
-  viewFile: async (materialFileId) => {
-    try {
-      const response = await apiClient.post(API_ENDPOINTS.viewFile, {
-        FlagId: 11,
-        MaterialFileId: Number(materialFileId)
-      }, {
-        responseType: 'blob'
-      });
+  viewFile: async (materialFileId, params = {}) => {
+    const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
+      ? Number(params.CompanyId)
+      : getSessionCompanyId();
+    const payload = {
+      FlagId: 11,
+      MaterialFileId: Number(materialFileId),
+      ...(compId ? { CompanyId: compId } : {}),
+      ...params
+    };
+    const response = await apiClient.post(API_ENDPOINTS.viewFile, payload, {
+      responseType: 'blob'
+    });
 
-      if (response instanceof Blob) {
-        if (response.type.includes('json') || response.type.includes('text')) {
-          const text = await response.text();
-          try {
-            return JSON.parse(text);
-          } catch (e) {
-            return { raw: text };
-          }
+    if (response instanceof Blob) {
+      if (response.type.includes('json') || response.type.includes('text')) {
+        const text = await response.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { raw: text };
         }
-        return response;
       }
       return response;
-    } catch (error) {
-      console.error("Failed to view material file:", error);
-      throw error;
     }
+    return response;
   }
 };
 

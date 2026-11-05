@@ -15,6 +15,8 @@ import fs from "fs";
 // HELPER - PREPARE OPTIONAL VENDOR FILES
 // =====================================================
 
+
+
 const prepareVendorFiles = (req) => {
     const uploadedFiles = req.files || [];
     const rawIds = req.body.VendorFileTypeIds;
@@ -69,13 +71,20 @@ const prepareVendorFiles = (req) => {
 // =====================================================
 // HELPER - REQUIRED FIELD VALIDATION
 // =====================================================
-
 const validateVendor = (data) => {
+
+    // =========================================
+    // REQUIRED FIELDS
+    // =========================================
     const requiredFields = [
         "VendorName",
         "VendorCode",
+        "ContactPerson",
         "MobileNumber",
+        "Email",
         "GSTINUINNumber",
+        "City",
+        "VendorAddress1",
         "VendorTypeId"
     ];
 
@@ -89,31 +98,123 @@ const validateVendor = (data) => {
         }
     }
 
+    // =========================================
+    // VENDOR NAME
+    // =========================================
+    data.VendorName = data.VendorName.trim();
+
     if (
-        !Number.isSafeInteger(Number(data.VendorTypeId)) ||
-        Number(data.VendorTypeId) <= 0
+        data.VendorName.length > 250 ||
+        !/^[a-zA-Z\s]+$/.test(data.VendorName)
     ) {
-        return "A valid VendorTypeId is required";
+        return "VendorName must contain only alphabets and spaces and cannot exceed 250 characters";
     }
 
-    if (String(data.MobileNumber).trim().length > 12) {
-        return "MobileNumber cannot exceed 12 characters";
-    }
+    // =========================================
+    // VENDOR CODE
+    // =========================================
+    data.VendorCode = data.VendorCode.trim();
 
-    if (String(data.VendorName).trim().length > 250) {
-        return "VendorName cannot exceed 250 characters";
-    }
-
-    if (String(data.VendorCode).trim().length > 150) {
+    if (data.VendorCode.length > 150) {
         return "VendorCode cannot exceed 150 characters";
     }
 
-    if (String(data.GSTINUINNumber).trim().length > 20) {
-        return "GSTINUINNumber cannot exceed 20 characters";
+    // =========================================
+    // CONTACT PERSON
+    // =========================================
+    data.ContactPerson = data.ContactPerson.trim();
+
+    if (!/^[a-zA-Z\s.'-]+$/.test(data.ContactPerson)) {
+        return "ContactPerson must contain only alphabets and spaces";
     }
 
-    if (data.Email && String(data.Email).length > 75) {
-        return "Email cannot exceed 75 characters";
+    // =========================================
+    // MOBILE NUMBER
+    // =========================================
+    data.MobileNumber = data.MobileNumber.trim();
+
+    if (!/^[6-9]\d{9}$/.test(data.MobileNumber)) {
+        return "Please enter a valid 10-digit mobile number";
+    }
+
+    // =========================================
+    // EMAIL
+    // =========================================
+    data.Email = data.Email.trim().toLowerCase();
+
+    const emailRegex =
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(data.Email) || data.Email.length > 75) {
+        return "Please enter a valid Email Address (maximum 75 characters)";
+    }
+
+    // =========================================
+    // GSTIN / UIN
+    // =========================================
+    data.GSTINUINNumber = data.GSTINUINNumber.trim().toUpperCase();
+
+    const gstinRegex =
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
+
+    if (!gstinRegex.test(data.GSTINUINNumber)) {
+        return "Please enter a valid 15-character GSTIN/UIN Number";
+    }
+
+    // =========================================
+    // CITY
+    // =========================================
+    data.City = data.City.trim();
+
+    if (!/^[a-zA-Z\s.'-]+$/.test(data.City)) {
+        return "City must contain only alphabets and spaces";
+    }
+
+    // =========================================
+    // ADDRESS LINE 1
+    // =========================================
+    data.VendorAddress1 = data.VendorAddress1.trim();
+
+    // =========================================
+    // VENDOR TYPE ID
+    // =========================================
+    data.VendorTypeId = Number(data.VendorTypeId);
+
+    if (!Number.isSafeInteger(data.VendorTypeId) || data.VendorTypeId <= 0) {
+        return "A valid VendorTypeId is required";
+    }
+
+    // =========================================
+    // COMPANY ID (OPTIONAL)
+    // =========================================
+    if (data.CompanyId !== undefined && data.CompanyId !== null && data.CompanyId !== "") {
+        data.CompanyId = Number(data.CompanyId);
+
+        if (!Number.isSafeInteger(data.CompanyId) || data.CompanyId <= 0) {
+            return "A valid CompanyId is required";
+        }
+    } else {
+        data.CompanyId = null;
+    }
+
+    // =========================================
+    // OPTIONAL FIELDS
+    // =========================================
+    data.BankName = data.BankName?.trim() || null;
+    data.AccountHolderName = data.AccountHolderName?.trim() || null;
+    data.VendorAddress2 = data.VendorAddress2?.trim() || null;
+    data.Remarks = data.Remarks?.trim() || null;
+
+    // =========================================
+    // OPTIONAL IFSC CODE
+    // =========================================
+    data.IFSCCode = data.IFSCCode?.trim().toUpperCase() || null;
+
+    if (
+        data.IFSCCode &&
+        !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(data.IFSCCode)
+    ) {
+        return "Please enter a valid 11-character IFSC Code";
     }
 
     return null;
@@ -123,12 +224,16 @@ const validateVendor = (data) => {
 // FLAG ID 1 - VIEW ALL VENDORS
 // =====================================================
 
+
 export const getVendors = async (req, res) => {
     const { FlagId } = req.body;
 
     try {
         if (parseInt(FlagId) === 1) {
-            const data = await getAllVendors();
+
+            const CompanyId = req.user?.CompanyId ?? null;
+
+            const data = await getAllVendors(CompanyId);
 
             return res.status(200).json({
                 status: "success",
@@ -152,20 +257,25 @@ export const getVendors = async (req, res) => {
         });
     }
 };
-
 // =====================================================
 // FLAG ID 2 - FETCH VENDOR DROPDOWNS
 // =====================================================
 
 export const getVendorDropdowns = async (req, res) => {
-    const { FlagId } = req.body;
+    const { FlagId, CompanyId } = req.body;
 
     try {
         // =========================================
         // FLAG ID 2: VENDOR TYPE DROPDOWN
         // =========================================
         if (parseInt(FlagId) === 2) {
-            const vendorTypes = await getVendorTypeDropdown();
+            const companyId = CompanyId === undefined || CompanyId === ""
+                ? null
+                : CompanyId === null
+                    ? null
+                    : Number(CompanyId);
+
+            const vendorTypes = await getVendorTypeDropdown(companyId);
 
             return res.status(200).json({
                 status: "success",
@@ -196,7 +306,7 @@ export const getVendorDropdowns = async (req, res) => {
         // =========================================
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId. Use 2 for Vendor Types or 3 for Vendor File Types."
+            message: "Invalid FlagId."
         });
 
     } catch (error) {
@@ -215,14 +325,25 @@ export const getVendorDropdowns = async (req, res) => {
 // =====================================================
 
 
+
+
+
 export const createVendor = async (req, res) => {
     const { FlagId } = req.body;
 
     try {
         if (parseInt(FlagId) === 4) {
+
             const data = req.body;
 
-            // Validate vendor fields
+            // =========================================
+            // GET COMPANY ID FROM AUTHENTICATED USER
+            // =========================================
+            data.CompanyId = req.user?.CompanyId ?? null;
+
+            // =========================================
+            // VALIDATE VENDOR
+            // =========================================
             const validationError = validateVendor(data);
 
             if (validationError) {
@@ -232,11 +353,52 @@ export const createVendor = async (req, res) => {
                 });
             }
 
-            // Prepare uploaded vendor files
+            // =========================================
+            // GET CREATED BY USER ID FROM AUTHENTICATION
+            // =========================================
+            const createdByUserId = Number(req.user?.UserId);
+
+            if (
+                !Number.isSafeInteger(createdByUserId) ||
+                createdByUserId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "A valid CreatedByUserId is required"
+                });
+            }
+
+            data.CreatedByUserId = createdByUserId;
+
+            // =========================================
+            // PREPARE UPLOADED VENDOR FILES
+            // =========================================
             const files = prepareVendorFiles(req);
 
-            // Insert vendor and its files
-            // addVendor must insert into VendorFile using VendorId
+            // =========================================
+            // CHECK COMPULSORY FILE TYPES
+            // =========================================
+            const uploadedFileTypeIds = files.map(file =>
+                Number(file.VendorFileTypeId)
+            );
+
+            if (!uploadedFileTypeIds.includes(1)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Vendor File Type 1 is compulsory"
+                });
+            }
+
+            if (!uploadedFileTypeIds.includes(2)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Vendor File Type 2 is compulsory"
+                });
+            }
+
+            // =========================================
+            // INSERT VENDOR AND FILES
+            // =========================================
             const result = await addVendor(data, files);
 
             return res.status(201).json({
@@ -252,6 +414,7 @@ export const createVendor = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error("Create vendor error:", error);
 
         if (
@@ -274,24 +437,30 @@ export const createVendor = async (req, res) => {
     }
 };
 
+
 // =====================================================
 // FLAG ID 4 - EDIT VENDOR
 // =====================================================
+
+
+
 
 export const editVendor = async (req, res) => {
     const { FlagId } = req.body;
 
     try {
         if (parseInt(FlagId) === 5) {
+
             const data = req.body;
 
-            if (!data.VendorId) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "VendorId is required"
-                });
-            }
+            // =========================================
+            // GET COMPANY ID FROM AUTHENTICATED USER
+            // =========================================
+            data.CompanyId = req.user?.CompanyId ?? null;
 
+            // =========================================
+            // COMMON VENDOR VALIDATION
+            // =========================================
             const validationError = validateVendor(data);
 
             if (validationError) {
@@ -301,7 +470,45 @@ export const editVendor = async (req, res) => {
                 });
             }
 
+            // =========================================
+            // VENDOR ID VALIDATION
+            // =========================================
+            const vendorId = Number(data.VendorId);
+
+            if (!Number.isSafeInteger(vendorId) || vendorId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "A valid VendorId is required"
+                });
+            }
+
+            data.VendorId = vendorId;
+
+            // =========================================
+            // GET UPDATED BY USER ID FROM AUTHENTICATED USER
+            // =========================================
+            const updatedByUserId = Number(req.user?.UserId);
+
+            if (
+                !Number.isSafeInteger(updatedByUserId) ||
+                updatedByUserId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "A valid UpdatedByUserId is required"
+                });
+            }
+
+            data.UpdatedByUserId = updatedByUserId;
+
+            // =========================================
+            // PREPARE VENDOR FILES
+            // =========================================
             const files = prepareVendorFiles(req);
+
+            // =========================================
+            // UPDATE VENDOR
+            // =========================================
             const result = await updateVendor(data, files);
 
             if (!result) {
@@ -320,10 +527,25 @@ export const editVendor = async (req, res) => {
 
         return res.status(400).json({
             status: "error",
-            message: "Invalid FlagId."
+            message: "Invalid FlagId. Use FlagId 5."
         });
 
     } catch (error) {
+
+        console.error("Edit Vendor Error:", error);
+
+        if (
+            error.message.startsWith("VendorFileTypeIds") ||
+            error.message.startsWith("Provide one VendorFileTypeId") ||
+            error.message.startsWith("Uploaded") ||
+            error.message.startsWith("Invalid VendorFileTypeId")
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: error.message
+            });
+        }
+
         return res.status(500).json({
             status: "error",
             message: "Failed to update vendor",
@@ -331,6 +553,7 @@ export const editVendor = async (req, res) => {
         });
     }
 };
+
 // =====================================================
 // FLAG ID 5 - ENABLE / DISABLE VENDOR
 // =====================================================

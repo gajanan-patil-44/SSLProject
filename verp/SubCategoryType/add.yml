@@ -12,8 +12,8 @@ http:
       {
           "FlagId": 2,
           "MaterialCategoryTypeId": 1,
-          "MaterialSubCategoryTypeName": "Cables",
-          "MaterialSubCategoryTypeCode": "CAB",
+          "MaterialSubCategoryTypeName": "Cabless",
+          "MaterialSubCategoryTypeCode": "CABB",
           "CreatedByUserName": "admin"
       }
   auth: inherit

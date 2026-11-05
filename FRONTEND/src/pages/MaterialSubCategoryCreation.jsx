@@ -3,19 +3,13 @@ import {
   PageHeader,
   Button,
   StatusBadge,
-  Input,
-  Switch
+  Input
 } from '../components/ui/index';
 import { DataTable } from '../components/ui/DataTable';
 import { Modal } from '../components/ui/Modal';
 import {
-  Search,
-  Plus,
-  Edit,
-  Eye,
   Box,
   Tag,
-  Barcode,
   Calendar,
   User,
   ClipboardList
@@ -23,11 +17,29 @@ import {
 import { useERPStore } from '../store/useERPStore';
 
 import { materialSubCategoryTypeService } from '../services';
-import { validateCode } from '../utils/validators';
+import { getSessionCompanyId } from '../services/departmentService';
+import { validateCode, validateTextOnly } from '../utils/validators';
 
 export default function MaterialSubCategoryCreation() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
+
+  const sessionCompanyId = getSessionCompanyId();
+
+  const getSessionUserName = () => {
+    try {
+      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const u = s?.data?.user || s?.user || s;
+        return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || u?.username || '';
+      }
+      const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+      return u?.loginName || u?.LoginName || u?.EmployeeId || u?.name || u?.username || '';
+    } catch {
+      return '';
+    }
+  };
 
   // State
   const [subCategories, setSubCategories] = useState([]);
@@ -56,17 +68,11 @@ export default function MaterialSubCategoryCreation() {
       errs.category = 'Material Category selection is required';
     }
 
-    const codeErr = validateCode(formData.code, 'Sub Category Code', true);
+    const codeErr = validateCode(formData.code, 'Material Sub Category Code', true);
     if (codeErr) errs.code = codeErr;
 
-    const trimmedName = (formData.name || '').trim();
-    if (!trimmedName) {
-      errs.name = 'Sub Category Name is required';
-    } else if (trimmedName.length < 2) {
-      errs.name = 'Sub Category Name must be at least 2 characters';
-    } else if (trimmedName.length > 100) {
-      errs.name = 'Sub Category Name cannot exceed 100 characters';
-    }
+    const nameErr = validateTextOnly(formData.name, 'Material Sub Category Name', true, 2, 100);
+    if (nameErr) errs.name = nameErr;
 
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
@@ -76,10 +82,12 @@ export default function MaterialSubCategoryCreation() {
   const fetchCategoryDropdown = async () => {
     if (categoryDropdown.length > 0) return; // Don't fetch if already fetched
     try {
-      const data = await materialSubCategoryTypeService.getCategoryDropdown();
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await materialSubCategoryTypeService.getCategoryDropdown({
+        ...(compId ? { CompanyId: compId } : {})
+      });
       setCategoryDropdown(data);
     } catch (error) {
-      console.error("Failed to fetch dropdown:", error);
     }
   };
 
@@ -87,10 +95,12 @@ export default function MaterialSubCategoryCreation() {
   const fetchSubCategories = async () => {
     setLoading(true);
     try {
-      const data = await materialSubCategoryTypeService.getSubCategories();
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const data = await materialSubCategoryTypeService.getSubCategories({
+        ...(compId ? { CompanyId: compId } : {})
+      });
       setSubCategories(data);
     } catch (error) {
-      console.error("Failed to fetch sub categories:", error);
       showToast('Failed to load sub categories', 'error');
     } finally {
       setLoading(false);
@@ -150,7 +160,8 @@ export default function MaterialSubCategoryCreation() {
     }
     setSubmitting(true);
     
-    const userName = currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+    const userName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.userName || '';
+    const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
     
     try {
       if (isEditing) {
@@ -160,10 +171,10 @@ export default function MaterialSubCategoryCreation() {
           MaterialCategoryTypeId: Number(formData.category),
           MaterialSubCategoryTypeName: formData.name,
           MaterialSubCategoryTypeCode: formData.code,
-          UpdatedByUserName: userName
+          UpdatedByUserName: userName,
+          ...(compId ? { CompanyId: compId } : {})
         };
         
-        console.log('Update Payload:', payload);
         const response = await materialSubCategoryTypeService.updateSubCategory(payload);
         
         if (response && response.status === 'success') {
@@ -175,10 +186,10 @@ export default function MaterialSubCategoryCreation() {
           MaterialCategoryTypeId: Number(formData.category),
           MaterialSubCategoryTypeName: formData.name,
           MaterialSubCategoryTypeCode: formData.code,
-          CreatedByUserName: userName
+          CreatedByUserName: userName,
+          ...(compId ? { CompanyId: compId } : {})
         };
         
-        console.log('Create Payload:', payload);
         const response = await materialSubCategoryTypeService.createSubCategory(payload);
         
         if (response && response.status === 'success') {
@@ -187,23 +198,24 @@ export default function MaterialSubCategoryCreation() {
       }
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Failed to submit:", error);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this sub category?");
+    const confirmDelete = window.confirm("Are you sure you want to delete this material sub category?");
     if (!confirmDelete) return;
 
     try {
-      const response = await materialSubCategoryTypeService.deleteSubCategory(id);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : undefined;
+      const response = await materialSubCategoryTypeService.deleteSubCategory(id, {
+        ...(compId ? { CompanyId: compId } : {})
+      });
       if (response && response.status === 'success') {
         await fetchSubCategories();
       }
     } catch (error) {
-      console.error("Failed to delete", error);
     }
   };
 
@@ -216,13 +228,13 @@ export default function MaterialSubCategoryCreation() {
     ));
 
     try {
-      const response = await materialSubCategoryTypeService.toggleStatus(item.id, !checked);
+      const compId = sessionCompanyId ? Number(sessionCompanyId) : (item.CompanyId ? Number(item.CompanyId) : undefined);
+      const response = await materialSubCategoryTypeService.toggleStatus(item.id, !checked, compId);
       
       if (!response || response.status !== 'success') {
         throw new Error('Status update failed');
       }
     } catch (error) {
-      console.error("Failed to toggle status:", error);
       // Revert if API fails
       setSubCategories(prev => prev.map(i => 
         i.id === item.id ? { ...i, status: item.status } : i
@@ -295,12 +307,12 @@ export default function MaterialSubCategoryCreation() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Manage Sub Categories"
+        title="Material Sub Categories"
         description="Manage system material sub categories, configurations and access permissions."
         breadcrumbs={[
           { label: 'Home', path: '/dashboard' },
           { label: 'Master', path: '/master' },
-          { label: 'Manage Sub Category', path: '/master/material-sub-category' }
+          { label: 'Material Sub Category', path: '/master/material-sub-category' }
         ]}
       />
 
@@ -309,12 +321,13 @@ export default function MaterialSubCategoryCreation() {
         columns={columns}
         data={filteredData}
         loading={loading}
-        searchPlaceholder="Search by sub category name, code..."
+        searchPlaceholder="Search by material sub category name, code..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         onAddClick={() => handleOpenModal(null, 'create')}
         onEditClick={(row) => handleOpenModal(row, 'edit')}
         onViewClick={(row) => handleOpenModal(row, 'view')}
+        onDeleteClick={(row) => handleDelete(row.id)}
         onToggleStatusClick={(row) => handleToggleStatus(row, row.status !== 'Active')}
         onRefresh={fetchSubCategories}
         hideExport
@@ -324,7 +337,7 @@ export default function MaterialSubCategoryCreation() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={isViewing ? 'View Sub Category' : (isEditing ? 'Edit Sub Category' : 'Create Sub Category')}
+        title={isViewing ? 'View Material Sub Category' : (isEditing ? 'Edit Material Sub Category' : 'Create Material Sub Category')}
         icon={ClipboardList}
         maxWidth="lg"
         actions={
@@ -341,7 +354,7 @@ export default function MaterialSubCategoryCreation() {
                 onClick={handleSubmit}
                 isLoading={submitting}
               >
-                {isEditing ? 'Update Category' : 'Create Category'}
+                {isEditing ? 'Update Material Sub Category' : 'Create Material Sub Category'}
               </Button>
             )}
           </>
@@ -390,7 +403,7 @@ export default function MaterialSubCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Sub Category Code {!isViewing && <span className="text-rose-500">*</span>}
+              Material Sub Category Code {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.code}
@@ -409,12 +422,13 @@ export default function MaterialSubCategoryCreation() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              Sub Category Name {!isViewing && <span className="text-rose-500">*</span>}
+              Material Sub Category Name {!isViewing && <span className="text-rose-500">*</span>}
             </label>
             <Input 
               value={formData.name}
               onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
+                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setFormData({ ...formData, name: sanitized });
                 if (formErrors.name) setFormErrors({ ...formErrors, name: '' });
               }}
               placeholder="e.g. Transformers & Power"

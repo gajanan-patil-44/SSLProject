@@ -17,7 +17,10 @@ export const ITEM_CATEGORY_CREATION="/verp-service/itemCategoryCreation"
 export const MATERIAL_SUB_CATEGORY_TYPE="/verp-service/materialSubCategoryType"
 export const MATERIAL="/verp-service/material"
 export const VENDOR="/verp-service/vendor"
+export const GST_RATE="/verp-service/gstRate"
 
 export const COMPANY_MASTER="/verp-service/companyMaster"
 export const LOCATION_MASTER="/verp-service/locationMaster"
 export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
+export const DEPARTMENT="/verp-service/department"
+

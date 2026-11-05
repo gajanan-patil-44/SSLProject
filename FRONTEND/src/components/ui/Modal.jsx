@@ -50,9 +50,10 @@ export const Modal = ({
         style={{ maxHeight: 'calc(100vh - 2.5rem)', display: 'flex', flexDirection: 'column' }}
         className={`relative w-full my-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl sm:rounded-2xl shadow-2xl max-h-[88vh] overflow-hidden z-10 ${sizes[size] || sizes.md} ${className}`}
       >
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 z-20"></div>
         {/* Header - Fixed at top */}
-        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-50 truncate pr-3">{title}</h3>
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-indigo-100/70 dark:border-slate-800 bg-gradient-to-r from-slate-50/90 via-indigo-50/30 to-slate-50/90 dark:from-slate-900 dark:via-indigo-950/30 dark:to-slate-900">
+          <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-50 truncate pr-3">{title}</h3>
           <button
             onClick={onClose}
             type="button"

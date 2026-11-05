@@ -476,10 +476,22 @@ export const updatePageStatus = async (PageId, IsDisabled) => {
 // =========================================================
 // UPDATE PAGE + PAGE ROLES
 // =========================================================
-export const updatePage = async (client, PageId, PageName, PageUrl, PageIcon, ParentPageId, OrderNo, RoleIds, UpdatedByUserName) => {
+
+export const updatePage = async (
+    client,
+    PageId,
+    PageName,
+    PageUrl,
+    PageIcon,
+    ParentPageId,
+    OrderNo,
+    RoleIds,
+    UpdatedByUserName
+) => {
     // =====================================================
-    // UPDATE PAGE
+    // UPDATE PAGE DETAILS
     // =====================================================
+
     const pageQuery = `
         UPDATE "DATA"."Page"
         SET
@@ -501,62 +513,102 @@ export const updatePage = async (client, PageId, PageName, PageUrl, PageIcon, Pa
             "ParentPageId",
             "OrderNo";
     `;
-    const pageResult = await client.query(pageQuery, [PageName, PageUrl, PageIcon, ParentPageId, OrderNo, UpdatedByUserName, PageId]);
+
+    const pageResult = await client.query(pageQuery, [
+        PageName,
+        PageUrl,
+        PageIcon,
+        ParentPageId,
+        OrderNo,
+        UpdatedByUserName,
+        PageId
+    ]);
+
     const updatedPage = pageResult.rows[0] || null;
+
     if (!updatedPage) {
         return null;
     }
+
     // =====================================================
-    // UPDATE / INSERT PAGE ROLES
+    // UPDATE PAGE ROLE MAPPINGS
     // =====================================================
-    for (const RoleId of RoleIds) {
-        const roleQuery = `
+
+    // Only update roles when RoleIds is provided.
+    // An empty array means remove all roles.
+
+    if (RoleIds !== undefined) {
+
+        // First deactivate all existing roles for this page
+        await client.query(
+            `
             UPDATE "DATA"."PageRole"
             SET
-                "IsDisabled" = FALSE,
-                "IsAllocated" = TRUE,
+                "IsDisabled" = TRUE,
+                "IsAllocated" = FALSE,
                 "UpdatedAt" = CURRENT_TIMESTAMP,
-                "UpdatedByUserName" = $3
+                "UpdatedByUserName" = $2
             WHERE
-                "PageId" = $1
-                AND "RoleId" = $2
-            RETURNING
-                "PageRoleId";
-        `;
-        const roleResult = await client.query(roleQuery, [PageId, RoleId, UpdatedByUserName]);
-        // =================================================
-        // ROLE DOES NOT EXIST -> INSERT
-        // =================================================
-        if (roleResult.rowCount === 0) {
-            await client.query(
-                `
-                INSERT INTO "DATA"."PageRole"
-                (
-                    "PageId",
-                    "RoleId",
-                    "IsDisabled",
-                    "IsAllocated",
-                    "CreatedAt",
-                    "UpdatedAt",
-                    "CreatedByUserName",
-                    "UpdatedByUserName"
-                )
-                VALUES
-                (
-                    $1,
-                    $2,
-                    FALSE,
-                    TRUE,
-                    CURRENT_TIMESTAMP,
-                    CURRENT_TIMESTAMP,
-                    $3,
-                    $3
-                );
-                `,
+                "PageId" = $1;
+            `,
+            [PageId, UpdatedByUserName]
+        );
+
+        // Reactivate selected roles or insert new mappings
+        for (const RoleId of RoleIds) {
+
+            const roleQuery = `
+                UPDATE "DATA"."PageRole"
+                SET
+                    "IsDisabled" = FALSE,
+                    "IsAllocated" = TRUE,
+                    "UpdatedAt" = CURRENT_TIMESTAMP,
+                    "UpdatedByUserName" = $3
+                WHERE
+                    "PageId" = $1
+                    AND "RoleId" = $2
+                RETURNING "PageRoleId";
+            `;
+
+            const roleResult = await client.query(
+                roleQuery,
                 [PageId, RoleId, UpdatedByUserName]
             );
+
+            // Insert if this role mapping does not already exist
+            if (roleResult.rowCount === 0) {
+
+                await client.query(
+                    `
+                    INSERT INTO "DATA"."PageRole"
+                    (
+                        "PageId",
+                        "RoleId",
+                        "IsDisabled",
+                        "IsAllocated",
+                        "CreatedAt",
+                        "UpdatedAt",
+                        "CreatedByUserName",
+                        "UpdatedByUserName"
+                    )
+                    VALUES
+                    (
+                        $1,
+                        $2,
+                        FALSE,
+                        TRUE,
+                        CURRENT_TIMESTAMP,
+                        CURRENT_TIMESTAMP,
+                        $3,
+                        $3
+                    );
+                    `,
+                    [PageId, RoleId, UpdatedByUserName]
+                );
+            }
         }
     }
+
     return updatedPage;
 };
 
