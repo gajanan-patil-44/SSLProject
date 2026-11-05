@@ -141,6 +141,23 @@ export const validateGSTIN = (value, label = 'GSTIN / UIN', isRequired = false) 
 };
 
 /**
+ * Validates an Indian PAN Number
+ */
+export const validatePAN = (value, label = 'PAN No', isRequired = false) => {
+  const val = String(value || '').trim().toUpperCase();
+  if (!val) {
+    return isRequired ? `${label} is required` : '';
+  }
+  if (val.length !== 10) {
+    return `${label} must be exactly 10 characters`;
+  }
+  if (!VALIDATION_REGEX.PAN.test(val)) {
+    return `Enter a valid 10-character ${label} (e.g. ABCDE1234F)`;
+  }
+  return '';
+};
+
+/**
  * Validates an HSN / SAC Code
  */
 export const validateHSN = (value, label = 'HSN / SAC Code', isRequired = false) => {

@@ -20,7 +20,7 @@ http:
         "DesignationName":"MANAGER",
         "DesignationCode":"MG001",
         "IsDisabled":false,
-        "DesignationLevel":800,
+        "DesignationLevel":80,
         "CreatedByUserName":"kavv"
       }
   auth: inherit

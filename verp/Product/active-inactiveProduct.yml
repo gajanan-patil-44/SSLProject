@@ -4,14 +4,14 @@ info:
   seq: 5
 
 http:
-  method: POST
+  method: PATCH
   url: http://localhost:9004/verp-service/productCreation/toggleProductStatus
   body:
     type: json
     data: |-
       {
         "flagId": 4,
-        "ProductId": 1,
+        "ProductId": 11,
         "IsDisabled": true,
         "UpdatedByUserName": "praveenn"
       }

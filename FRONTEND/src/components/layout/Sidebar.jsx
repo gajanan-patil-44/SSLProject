@@ -36,6 +36,8 @@ const ICON_MAP = {
   companies: Icons.Building2,
   company: Icons.Building2,
   building: Icons.Building2,
+  'company-master': Icons.Building2,
+  'companymaster': Icons.Building2,
   'company-products': Icons.Boxes,
   companyproducts: Icons.Boxes,
   boxes: Icons.Boxes,
@@ -141,6 +143,7 @@ const normalizeNavigation = (menuData) => {
     }
     sectionsMap.get(sectionTitle).push(item);
   });
+
 
   const sections = [];
   sectionsMap.forEach((items, title) => {

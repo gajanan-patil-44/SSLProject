@@ -4,14 +4,14 @@ info:
   seq: 3
 
 http:
-  method: POST
+  method: PATCH
   url: http://localhost:9004/verp-service/designationCreation/toggleDesignationStatus
   body:
     type: json
     data: |-
       {
         "flagId":4,
-        "CompanyDesignationId":20,
+        "CompanyDesignationId":3,
         "IsDisabled":true,
         "UpdateByUserName":"kavya"
       }

@@ -1,0 +1,28 @@
+info:
+  name: edit
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/locationTypeMaster/edit
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 4,
+          "LocationTypeMasterId": 2,
+          "LocationTypeMasterName": "State",
+          "ParentTypeId": 1,
+          "UpdatedByUserName": "Admin"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkzMzU1MTk0LCJleHAiOjE3OTMzODM5OTR9.dkOEi9Jq3mrEB4MMmHi_EilGogmjtxIRHRbcDCxwrE8
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

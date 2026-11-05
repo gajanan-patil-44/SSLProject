@@ -1,0 +1,32 @@
+info:
+  name: addLocationMaster
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://192.168.23.76:9004/verp-service/locationMaster/addLocationMaster
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 4,
+          "CompanyMasterId": 1,
+          "LocationTypeMasterId": 2,
+          "ParentLocationTypeMasterId": 1,
+          "ParentLocationMasterId": 6,
+          "LocationName": "Tamil Nadu",
+          "ContactPerson": "Ramesh Kumar",
+          "ContactNumber": "9845012345",
+          "EmailId": "ramesh@example.com",
+          "Address": "Chennai, Tamil Nadu",
+          "CreatedByUserName": "Admin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
