@@ -1,5 +1,5 @@
 info:
-  name: /getLocationTypes
+  name: /locationType
   type: http
   seq: 1
 
