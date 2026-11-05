@@ -1,4 +1,3 @@
-import e from "express"
 
 export const USER_CREATION="/verp-service/userCreation"
 export const LOGIN = "/verp-service/auth"
@@ -19,17 +18,13 @@ export const ITEM_CATEGORY_CREATION="/verp-service/itemCategoryCreation"
 export const MATERIAL_SUB_CATEGORY_TYPE="/verp-service/materialSubCategoryType"
 export const MATERIAL="/verp-service/material"
 export const VENDOR="/verp-service/vendor"
-<<<<<<< HEAD
-=======
 export const GST_RATE="/verp-service/gstRate"
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
 export const COMPANY_MASTER="/verp-service/companyMaster"
 export const LOCATION_MASTER="/verp-service/locationMaster"
 export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
-<<<<<<< HEAD
 
-=======
+export const VENDOR_TYPE="/verp-service/vendorType"
+
 export const DEPARTMENT="/verp-service/department"
 export const VIEW_PRPO="/verp-service/viewPRPO"
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
