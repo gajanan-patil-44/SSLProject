@@ -16,12 +16,12 @@ export const Button = forwardRef(({
   const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer active:scale-[0.98]';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white focus:ring-indigo-500 shadow-md shadow-indigo-500/20 border border-transparent',
-    secondary: 'bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white focus:ring-cyan-500 shadow-md shadow-cyan-500/20 border border-transparent',
-    outline: 'border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus:ring-indigo-500/40 shadow-2xs',
-    ghost: 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-300 focus:ring-slate-400',
-    danger: 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white focus:ring-rose-500 shadow-md shadow-rose-500/20 border border-transparent',
-    success: 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white focus:ring-emerald-500 shadow-md shadow-emerald-500/20 border border-transparent'
+    primary: 'bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white focus:ring-indigo-500 shadow-md shadow-indigo-500/25 border border-indigo-400/20',
+    secondary: 'bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:from-cyan-500 hover:to-teal-500 text-white focus:ring-cyan-500 shadow-md shadow-cyan-500/25 border border-cyan-400/20',
+    outline: 'border border-indigo-200/80 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 hover:bg-indigo-50/60 dark:hover:bg-slate-800 hover:border-indigo-300 dark:hover:border-slate-600 focus:ring-indigo-500/30 shadow-2xs',
+    ghost: 'bg-transparent hover:bg-indigo-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 focus:ring-slate-400',
+    danger: 'bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 hover:from-rose-500 hover:to-red-500 text-white focus:ring-rose-500 shadow-md shadow-rose-500/25 border border-rose-400/20',
+    success: 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white focus:ring-emerald-500 shadow-md shadow-emerald-500/25 border border-emerald-400/20'
   };
 
   const sizes = {
@@ -88,12 +88,12 @@ export const IconButton = forwardRef(({
 // ==========================================
 // Input / Form Field Components
 // ==========================================
-export const FormField = ({ label, error, helpText, className = '', children }) => {
+export const FormField = ({ label, error, helpText, className = '', children, required }) => {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
         <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          {label}
+          {label}{required && <span className="text-rose-500 ml-0.5">*</span>}
         </label>
       )}
       {children}
@@ -260,7 +260,7 @@ export const StatusBadge = ({ status }) => {
 export const Card = ({ children, className = '', ...props }) => {
   return (
     <div
-      className={`bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-xl border border-slate-200/70 dark:border-slate-800/80 rounded-2xl shadow-xs transition-all duration-200 p-5.5 card-hover ${className}`}
+      className={`bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300/80 dark:hover:border-indigo-800/60 transition-all duration-200 p-5.5 card-hover ${className}`}
       {...props}
     >
       {children}
@@ -282,7 +282,7 @@ export const StatCard = ({
   return (
     <Card className={`relative overflow-hidden flex flex-col justify-between transition-all ${onClick ? 'cursor-pointer' : ''} ${className}`} onClick={onClick}>
       {/* Top accent light bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500/0 via-indigo-500/40 to-indigo-500/0"></div>
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400"></div>
       
       <div className="flex justify-between items-start">
         <div className="flex flex-col gap-1.5">
@@ -487,12 +487,13 @@ export const Breadcrumb = ({ items = [] }) => {
 };
 export const PageHeader = ({ title, description, actions, breadcrumbs, badge }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between pb-5 border-b border-slate-200/70 dark:border-slate-800/60 mb-6 gap-4">
+    <div className="relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between p-5 md:p-6 rounded-2xl bg-gradient-to-r from-white/90 via-indigo-50/40 to-purple-50/30 dark:from-slate-900/90 dark:via-indigo-950/40 dark:to-slate-900/90 border border-indigo-100/80 dark:border-slate-800/80 shadow-sm mb-6 gap-4 backdrop-blur-md">
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400"></div>
       <div className="flex flex-col gap-1.5">
         {breadcrumbs && <Breadcrumb items={breadcrumbs} />}
         <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl sm:text-[26px] font-extrabold text-slate-900 dark:text-white tracking-tight m-0">{title}</h1>
-          {badge && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">{badge}</span>}
+          <h1 className="text-2xl sm:text-[28px] font-extrabold bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-indigo-200 dark:to-slate-100 bg-clip-text text-transparent tracking-tight m-0">{title}</h1>
+          {badge && <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-gradient-to-r from-indigo-500/15 to-purple-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 shadow-2xs">{badge}</span>}
         </div>
         {description && <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 m-0 leading-relaxed font-normal">{description}</p>}
       </div>

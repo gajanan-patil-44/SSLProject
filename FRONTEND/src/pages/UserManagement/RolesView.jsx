@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { roleService } from '../../services/roleService';
 import { useERPStore } from '../../store/useERPStore';
+import { validateTextOnly, validateDescription } from '../../utils/validators';
 
 // Helper to get session company
 const getSessionCompany = () => {
@@ -171,8 +172,9 @@ export default function RolesView() {
 
   const validateForm = () => {
     const errs = {};
-    if (!formData.RoleName.trim()) {
-      errs.RoleName = 'Role Name is required';
+    const nameErr = validateTextOnly(formData.RoleName, 'Role Name', true, 2, 100);
+    if (nameErr) {
+      errs.RoleName = nameErr;
     }
     if (!formData.CompanyId) {
       errs.CompanyId = 'Please select a company';
@@ -180,12 +182,18 @@ export default function RolesView() {
     if (!formData.Role_Code.trim()) {
       errs.Role_Code = 'Role Code is required (e.g., ADM, MGR, SUP)';
     }
+    if (formData.Description) {
+      const descErr = validateDescription(formData.Description, 'Role Description', false, 2, 500);
+      if (descErr) {
+        errs.Description = descErr;
+      }
+    }
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleRoleNameChange = (e) => {
-    const val = e.target.value;
+    const val = e.target.value.replace(/[^a-zA-Z\s]/g, '');
     setFormData((prev) => {
       const updated = { ...prev, RoleName: val };
       if (modalMode === 'add' && (!prev.Role_Code || prev.Role_Code.length <= 4)) {
@@ -808,13 +816,20 @@ export default function RolesView() {
               </label>
               <textarea
                 value={formData.Description}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, Description: e.target.value }))
-                }
+                onChange={(e) => {
+                  const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                  setFormData((prev) => ({ ...prev, Description: sanitized }));
+                  if (formErrors.Description) setFormErrors((prev) => ({ ...prev, Description: null }));
+                }}
                 rows={3}
-                placeholder="Enter role responsibilities, permissions summary, and access scope..."
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
+                placeholder="Enter role responsibilities (text only)..."
+                className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none ${
+                  formErrors.Description ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
+                }`}
               />
+              {formErrors.Description && (
+                <p className="text-[11px] text-red-500">{formErrors.Description}</p>
+              )}
             </div>
 
             {/* Status Switch (Edit Mode) */}

@@ -8,8 +8,6 @@ import {
 import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import {
-  Edit,
-  Eye,
   Upload,
   FileText,
   X
@@ -122,8 +120,10 @@ export default function VendorManagementView() {
       }
       case 'remarks': {
         const val = (value || '').trim();
-        if (val && val.length > 250) {
-          return 'Max 250 characters';
+        if (val) {
+          if (val.length > 250) return 'Max 250 characters';
+          if (/\d/.test(val)) return 'Remarks must contain text only (no numbers)';
+          if (!/^[a-zA-Z\s]+$/.test(val)) return 'Remarks must contain text only (no special characters)';
         }
         return '';
       }
@@ -132,7 +132,8 @@ export default function VendorManagementView() {
         if (val) {
           if (val.length < 2) return 'Min 2 characters';
           if (val.length > 80) return 'Max 80 characters';
-          if (!/^[a-zA-Z\s.&-]+$/.test(val)) return 'Letters only';
+          if (/\d/.test(val)) return 'Letters only (numbers are not allowed)';
+          if (!/^[a-zA-Z\s]+$/.test(val)) return 'Letters and spaces only';
         }
         return '';
       }
@@ -141,7 +142,8 @@ export default function VendorManagementView() {
         if (val) {
           if (val.length < 2) return 'Min 2 characters';
           if (val.length > 80) return 'Max 80 characters';
-          if (!/^[a-zA-Z\s.&-]+$/.test(val)) return 'Letters only';
+          if (/\d/.test(val)) return 'Letters only (numbers are not allowed)';
+          if (!/^[a-zA-Z\s]+$/.test(val)) return 'Letters and spaces only';
         }
         return '';
       }
@@ -189,9 +191,13 @@ export default function VendorManagementView() {
 
   // Immediate validation handler on change
   const handleFieldChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    let sanitizedValue = value;
+    if (field === 'contactPerson' || field === 'bankName' || field === 'accountHolderName' || field === 'remarks') {
+      sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [field]: sanitizedValue }));
     if (errors[field]) {
-      const err = validateField(field, value, { ...formData, [field]: value });
+      const err = validateField(field, sanitizedValue, { ...formData, [field]: sanitizedValue });
       setErrors((prev) => {
         const next = { ...prev };
         if (err) next[field] = err;
@@ -238,7 +244,6 @@ export default function VendorManagementView() {
       setVendorTypes(Array.isArray(types) ? types : []);
       setVendorFileTypes(Array.isArray(fileTypes) ? fileTypes : []);
     } catch (err) {
-      console.error('Failed to load vendor dropdowns:', err);
     } finally {
       setLoadingDropdowns(false);
     }

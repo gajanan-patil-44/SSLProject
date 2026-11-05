@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { useERPStore } from '../../store/useERPStore';
@@ -8,7 +8,6 @@ import { isRouteAllowed } from '../../utils/permissionGuard';
 
 export default function AppLayout() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const theme = useERPStore((state) => state.theme);
   const isAuthenticated = useERPStore((state) => state.isAuthenticated);
   const user = useERPStore((state) => state.user);
@@ -87,12 +86,12 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="relative flex h-screen bg-[#f8fafc] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors duration-200 overflow-hidden">
-      {/* Ambient background glowing orbs (Light & Dark) */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-40 dark:opacity-25">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/20 dark:bg-indigo-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/3 -right-40 w-[420px] h-[420px] bg-cyan-500/15 dark:bg-violet-600/15 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-purple-500/15 dark:bg-indigo-700/15 rounded-full blur-3xl"></div>
+    <div className="relative flex h-screen bg-transparent text-slate-900 dark:text-slate-100 transition-colors duration-200 overflow-hidden">
+      {/* Ambient background glowing orbs (Vibrant colors!) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-70 dark:opacity-35">
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-indigo-500/25 to-violet-600/25 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }}></div>
+        <div className="absolute top-1/4 -right-40 w-[550px] h-[550px] bg-gradient-to-bl from-cyan-400/20 to-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }}></div>
+        <div className="absolute -bottom-40 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-purple-500/20 to-pink-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '12s' }}></div>
       </div>
 
       {/* Dynamic Sidebar */}
@@ -108,15 +107,17 @@ export default function AppLayout() {
           <main className="flex-1 p-4 md:p-7 w-full">
             <Outlet />
           </main>
-
-          {/* Footer */}
-          <footer className="py-4 px-6 border-t border-slate-200/70 dark:border-slate-800/60 text-xs text-slate-400 bg-white/60 dark:bg-[#0b0f19]/60 backdrop-blur-md mt-auto shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Vishvin ERP</span>
-            </div>
-            <span>2026 © Vishvin ERP Portal. All Rights Reserved.</span>
-          </footer>
         </div>
+
+        {/* Fixed Non-scrollable Footer */}
+        <footer className="relative py-3 px-6 border-t border-indigo-100/80 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 bg-white/90 dark:bg-[#0b0f19]/90 backdrop-blur-md shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2 z-10 shadow-xs">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400"></div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-700 dark:text-slate-200 tracking-tight">Vishvin ERP</span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">Enterprise Cloud</span>
+          </div>
+          <span className="font-medium text-slate-400 dark:text-slate-500">2026 © Vishvin ERP Portal. All Rights Reserved.</span>
+        </footer>
       </div>
       <ToastContainer />
     </div>

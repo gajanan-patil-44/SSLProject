@@ -23,7 +23,6 @@ export default function Topbar() {
   const theme = useERPStore((state) => state.theme);
   const setTheme = useERPStore((state) => state.setTheme);
   const toggleSidebar = useERPStore((state) => state.toggleSidebar);
-  const language = useERPStore((state) => state.language);
   const setLanguage = useERPStore((state) => state.setLanguage);
   const user = useERPStore((state) => state.user);
   const logout = useERPStore((state) => state.logout);
@@ -44,7 +43,8 @@ export default function Topbar() {
   const unreadNotifications = notifications.filter(n => !n.read);
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white/80 dark:bg-[#0b0f19]/80 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800/60 flex items-center justify-between px-5 md:px-7 transition-colors shrink-0">
+    <header className="relative sticky top-0 z-30 h-16 bg-white/90 dark:bg-[#0c1222]/90 backdrop-blur-xl border-b border-indigo-100/70 dark:border-slate-800 flex items-center justify-between px-5 md:px-7 transition-colors shrink-0 shadow-xs">
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400"></div>
       {/* Mobile Toggle & Left Search Pill */}
       <div className="flex items-center gap-3">
         {/* Mobile Hamburger Drawer Toggle */}

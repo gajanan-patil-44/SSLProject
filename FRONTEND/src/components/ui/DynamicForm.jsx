@@ -18,8 +18,10 @@ export const DynamicForm = ({
 }) => {
 
   // Precompute defaultValues from field definitions
+  const safeFields = Array.isArray(fields) ? fields : [];
+
   const computedDefaultValues = React.useMemo(() => {
-    const flatFields = fields.some(f => f.section)
+    const flatFields = safeFields.some(f => f && f.section)
       ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
       : fields;
     const initial = {};
@@ -29,10 +31,11 @@ export const DynamicForm = ({
       }
     });
     return { ...initial, ...(defaultValues || {}) };
-  }, [fields, defaultValues]);
+  }, [safeFields, defaultValues]);
 
   // 1. Programmatically build a Zod validation schema if not supplied
-  const validationSchema = schema || useFormSchema(fields);
+  const defaultSchema = useFormSchema(safeFields);
+  const validationSchema = schema || defaultSchema;
 
   // 2. Initialize React Hook Form
   const {
@@ -52,34 +55,38 @@ export const DynamicForm = ({
 
   // Render a single form field control
   const renderField = (field) => {
+    if (!field || !field.key) return null;
     const errorMsg = errors[field.key]?.message;
 
     switch (field.type) {
       case 'textarea':
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-2"}
           >
-            <Textarea
-              placeholder={field.placeholder}
-              disabled={field.disabled}
-              error={!!errorMsg}
-              {...register(field.key)}
+            <Controller
+              name={field.key}
+              control={control}
+              render={({ field: { value, onChange, ref } }) => (
+                <Textarea
+                  ref={ref}
+                  placeholder={field.placeholder}
+                  disabled={field.disabled}
+                  error={!!errorMsg}
+                  value={value !== undefined && value !== null ? value : ''}
+                  onChange={(e) => {
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    onChange(sanitized);
+                  }}
+                />
+              )}
             />
           </FormField>
         );
 
       case 'select':
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-1"}
           >
             <Controller
@@ -160,11 +167,7 @@ export const DynamicForm = ({
 
       case 'radio':
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-2"}
           >
             <div className="flex gap-4 mt-1">
@@ -184,13 +187,37 @@ export const DynamicForm = ({
           </FormField>
         );
 
-      default: // text, email, password, number, date, datetime-local
+      default: { // text, email, password, number, date, datetime-local
+        const keyLower = String(field.key || '').toLowerCase();
+        const isTextOnly = keyLower.includes('firstname') || keyLower.includes('lastname') || keyLower.includes('contactperson') || (!keyLower.includes('code') && !keyLower.includes('email') && (keyLower.endsWith('name') || keyLower.includes('name')));
+        if (isTextOnly && (!field.type || field.type === 'text')) {
+          return (
+            <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
+              className={field.gridSpan || "col-span-1"}
+            >
+              <Controller
+                name={field.key}
+                control={control}
+                render={({ field: { value, onChange, ref } }) => (
+                  <Input
+                    ref={ref}
+                    type="text"
+                    placeholder={field.placeholder}
+                    disabled={field.disabled}
+                    error={!!errorMsg}
+                    value={value !== undefined && value !== null ? value : ''}
+                    onChange={(e) => {
+                      const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      onChange(sanitized);
+                    }}
+                  />
+                )}
+              />
+            </FormField>
+          );
+        }
         return (
-          <FormField
-            key={field.key}
-            label={field.label}
-            error={errorMsg}
-            helpText={field.helpText}
+          <FormField key={field.key} label={field.label} required={field.required} error={errorMsg} helpText={field.helpText}
             className={field.gridSpan || "col-span-1"}
           >
             <Input
@@ -204,6 +231,7 @@ export const DynamicForm = ({
             />
           </FormField>
         );
+      }
     }
   };
 
@@ -254,23 +282,28 @@ export const DynamicForm = ({
 };
 
 // Helper hook to dynamically construct a Zod schema from field definitions
-function useFormSchema(fields) {
+function useFormSchema(fields = []) {
   return React.useMemo(() => {
     const shape = {};
+    const safeFields = Array.isArray(fields) ? fields : [];
 
     // Flatten fields if nested in sections
-    const flatFields = fields.some(f => f.section)
+    const flatFields = safeFields.some(f => f && f.section)
       ? fields.reduce((acc, curr) => [...acc, ...curr.fields], [])
       : fields;
 
     flatFields.forEach(field => {
+      if (!field || !field.key) return;
+
       let validator = z.any();
 
       const keyLower = String(field.key || '').toLowerCase();
       const isEmail = field.type === 'email' || keyLower.includes('email');
       const isPhone = field.type === 'tel' || keyLower.includes('phone') || keyLower.includes('mobile');
       const isCode = keyLower.endsWith('code') || keyLower.includes('code');
+      const isDescription = field.type === 'textarea' || keyLower.includes('description') || keyLower.includes('desc') || keyLower.includes('specification') || keyLower.includes('notes');
       const isPersonName = keyLower.includes('firstname') || keyLower.includes('lastname') || keyLower.includes('contactperson');
+      const isTextOnly = isPersonName || (!isCode && !isEmail && (keyLower.endsWith('name') || keyLower.includes('name')));
 
       if (isEmail) {
         if (field.required) {
@@ -324,21 +357,44 @@ function useFormSchema(fields) {
               .or(z.literal(''))
           );
         }
-      } else if (isPersonName) {
+      } else if (isDescription) {
+        if (field.required) {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .min(1, { message: `${field.label || 'Description'} is required` })
+              .refine(val => !/\d/.test(val), { message: `${field.label || 'Description'} must contain text only (numbers are not allowed)` })
+              .refine(val => /^[a-zA-Z\s]+$/.test(val), { message: `${field.label || 'Description'} must contain text only (special characters are not allowed)` })
+          );
+        } else {
+          validator = z.preprocess(
+            val => (val === undefined || val === null) ? '' : String(val).trim(),
+            z.string()
+              .refine(val => !val || !/\d/.test(val), { message: `${field.label || 'Description'} must contain text only (numbers are not allowed)` })
+              .refine(val => !val || /^[a-zA-Z\s]+$/.test(val), { message: `${field.label || 'Description'} must contain text only (special characters are not allowed)` })
+              .optional()
+              .nullable()
+              .or(z.literal(''))
+          );
+        }
+      } else if (isTextOnly) {
         if (field.required) {
           validator = z.preprocess(
             val => (val === undefined || val === null) ? '' : String(val).trim(),
             z.string()
               .min(2, { message: `${field.label || 'Name'} must be at least 2 characters` })
               .max(100, { message: `${field.label || 'Name'} cannot exceed 100 characters` })
-              .regex(/^[a-zA-Z\s.'-]+$/, { message: `${field.label || 'Name'} must contain only letters and spaces` })
+              .refine(val => !/\d/.test(val), { message: `${field.label || 'Name'} must contain text only (numbers are not allowed)` })
+              .refine(val => /^[a-zA-Z\s]+$/.test(val), { message: `${field.label || 'Name'} must contain letters and spaces only (no special characters)` })
           );
         } else {
           validator = z.preprocess(
             val => (val === undefined || val === null) ? '' : String(val).trim(),
             z.string()
-              .regex(/^[a-zA-Z\s.'-]+$/, { message: "Must contain only letters and spaces" })
+              .refine(val => !val || !/\d/.test(val), { message: `${field.label || 'Name'} must contain text only (numbers are not allowed)` })
+              .refine(val => !val || /^[a-zA-Z\s]+$/.test(val), { message: `${field.label || 'Name'} must contain letters and spaces only (no special characters)` })
               .optional()
+              .nullable()
               .or(z.literal(''))
           );
         }

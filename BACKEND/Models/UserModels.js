@@ -1309,10 +1309,6 @@ export const getAllRoles = async (CompanyId) => {
 };
 
 
-
-
-
-
 export const getDesignationById = async (DesignationId) => {
     const query = `
         SELECT
@@ -1339,4 +1335,40 @@ export const getUserCount = async () => {
     const result = await pool.query(query);
 
     return result.rows[0].UserCount;
+};
+
+
+export const getDepartmentDropdown = async (CompanyId = null) => {
+
+    try {
+
+        let query = `
+            SELECT
+                "DepartmentId" AS "DepartmentId",
+                "CompanyId" AS "CompanyId",
+                "DepartmentName" AS "DepartmentName",
+                "DepartmentCode" AS "DepartmentCode"
+
+            FROM "LKP"."Department"
+
+            WHERE "IsDisabled" = false
+        `;
+
+        const values = [];
+
+        if (CompanyId !== null) {
+            query += ` AND "CompanyId" = $1`;
+            values.push(CompanyId);
+        }
+
+        query += ` ORDER BY "DepartmentName"`;
+
+        const result = await pool.query(query, values);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
 };

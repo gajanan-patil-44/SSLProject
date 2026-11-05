@@ -61,6 +61,10 @@ const ICON_MAP = {
   'materialcategory': Icons.Tags,
   'material-sub-category': Icons.Tag,
   'materialsubcategory': Icons.Tag,
+  'gst-creation': Icons.Receipt,
+  'gstcreation': Icons.Receipt,
+  gst: Icons.Receipt,
+  receipt: Icons.Receipt,
 };
 
 const resolveIcon = (iconName) => {
@@ -101,10 +105,12 @@ const formatPageNode = (page) => {
 
   let formattedLabel = formatTitle(rawName);
   const lowerLabel = formattedLabel.toLowerCase();
-  if (lowerLabel === 'manage category' || lowerLabel === 'manage categories') {
-    formattedLabel = 'Material Category';
-  } else if (lowerLabel === 'manage sub category' || lowerLabel === 'manage sub categories') {
+  if (lowerLabel === 'manage category' || lowerLabel === 'manage categories' || lowerLabel === 'material category' || lowerLabel === 'material categories') {
+    formattedLabel = 'Material Categories Creation';
+  } else if (lowerLabel === 'manage sub category' || lowerLabel === 'manage sub categories' || lowerLabel === 'material sub category' || lowerLabel === 'material sub categories') {
     formattedLabel = 'Material Sub Category';
+  } else if (lowerLabel === 'gst' || lowerLabel === 'gst creation' || lowerLabel === 'gst master' || lowerLabel === 'gst-creation') {
+    formattedLabel = 'GST Creation';
   }
 
   const children = Array.isArray(page.children)
@@ -233,8 +239,8 @@ export default function Sidebar() {
     const linkClass = (isActive) => `
       flex items-center justify-between ${paddingLeft} py-2.5 rounded-xl ${fontSize} font-semibold transition-all duration-200 group cursor-pointer w-full relative
       ${isActive
-        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-md shadow-indigo-500/25 ring-1 ring-white/20'
-        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/70'}
+        ? 'bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white font-bold shadow-md shadow-indigo-500/25 ring-1 ring-white/20'
+        : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-indigo-50/80 dark:hover:bg-slate-800/80'}
     `;
 
     const rowContent = (
@@ -242,7 +248,7 @@ export default function Sidebar() {
         {renderIcon(
           item.icon,
           `${level === 0 ? 'w-4.5 h-4.5' : 'w-3.5 h-3.5'} shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-            isDirectActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+            isDirectActive ? 'text-white' : 'text-indigo-500 dark:text-indigo-400 group-hover:text-purple-600 dark:group-hover:text-cyan-300'
           }`
         )}
         {!sidebarCollapsed && (
@@ -310,8 +316,8 @@ export default function Sidebar() {
                   e.stopPropagation();
                   toggleSubmenu(itemKey);
                 }}
-                className={`p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors ml-0.5 ${
-                  isDirectActive ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                className={`p-1.5 rounded-lg hover:bg-indigo-100/60 dark:hover:bg-slate-700/60 transition-colors ml-0.5 ${
+                  isDirectActive ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-indigo-600 dark:hover:text-slate-200'
                 }`}
                 title={isOpen ? 'Collapse' : 'Expand'}
               >
@@ -327,7 +333,7 @@ export default function Sidebar() {
 
         {/* Recursive child list */}
         {hasChildren && isOpen && !sidebarCollapsed && (
-          <div className="pl-3.5 ml-4 border-l-2 border-indigo-100 dark:border-slate-800/80 space-y-0.5 py-0.5 mt-0.5">
+          <div className="pl-3.5 ml-4 border-l-2 border-indigo-200 dark:border-indigo-500/40 space-y-0.5 py-0.5 mt-0.5">
             {item.children.map((child, idx) =>
               renderMenuItem(child, level + 1, `${itemKey}-${idx}`)
             )}
@@ -338,14 +344,14 @@ export default function Sidebar() {
   };
 
   const SidebarContent = (
-    <div className="flex flex-col h-full bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800/70 text-slate-800 dark:text-slate-300">
+    <div className="flex flex-col h-full bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-xl border-r border-indigo-100/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 shadow-sm transition-colors duration-200">
       {/* Brand Logo Header */}
-      <div className={`flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-5'} h-18 border-b border-slate-200/70 dark:border-slate-800/60 shrink-0`}>
+      <div className={`flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-5'} h-18 border-b border-indigo-100/70 dark:border-slate-800/70 shrink-0 bg-gradient-to-r from-indigo-50/50 via-purple-50/30 to-transparent dark:from-slate-900/40 dark:via-indigo-950/20 dark:to-transparent`}>
         {sidebarCollapsed ? (
           <button
             type="button"
             onClick={toggleSidebarCollapsed}
-            className="group relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center p-2 shrink-0 shadow-md shadow-indigo-500/25 cursor-pointer hover:scale-105 hover:shadow-indigo-500/40 transition-all"
+            className="group relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-2 shrink-0 shadow-lg shadow-indigo-500/30 cursor-pointer hover:scale-105 hover:shadow-indigo-500/50 transition-all"
             title="Click to Expand Sidebar"
           >
             <img src={logo} alt="Vishvin ERP Logo" className="w-full h-full object-contain filter drop-shadow brightness-0 invert group-hover:opacity-20 transition-opacity" />
@@ -361,7 +367,7 @@ export default function Sidebar() {
               title="Refresh & Go to Main Page"
             >
               {/* Logo Icon with glowing gradient container */}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 flex items-center justify-center p-2 shrink-0 shadow-md shadow-indigo-500/25 group-hover:scale-105 group-hover:shadow-indigo-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-2 shrink-0 shadow-lg shadow-indigo-500/35 group-hover:scale-105 group-hover:shadow-indigo-500/50 transition-all">
                 <img src={logo} alt="Vishvin ERP Logo" className="w-full h-full object-contain filter drop-shadow brightness-0 invert" />
               </div>
               <div className="flex flex-col">
@@ -369,11 +375,11 @@ export default function Sidebar() {
                   <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white leading-tight">
                     Vishvin
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-xs">
                     ERP
                   </span>
                 </div>
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wide">
+                <span className="text-[10px] font-semibold text-indigo-600/80 dark:text-indigo-300/80 tracking-wide">
                   Enterprise Cloud
                 </span>
               </div>
@@ -383,7 +389,7 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={toggleSidebarCollapsed}
-              className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer transition-colors"
+              className="hidden md:flex p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600 dark:hover:text-white cursor-pointer transition-colors"
               title="Collapse Sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
@@ -396,10 +402,10 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto overscroll-contain px-3.5 py-4 space-y-5">
         {sections.length === 0 ? (
           <div className="px-3 py-8 text-center flex flex-col items-center justify-center gap-2.5 text-slate-400 dark:text-slate-500">
-            <ShieldAlert className="w-8 h-8 opacity-40 stroke-1 text-slate-400" />
+            <ShieldAlert className="w-8 h-8 opacity-40 stroke-1 text-indigo-500" />
             {!sidebarCollapsed && (
               <>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">No pages assigned</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">No pages assigned</span>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500">You don't have access to any menu pages yet.</span>
               </>
             )}
@@ -409,11 +415,11 @@ export default function Sidebar() {
             <div key={sIdx} className="space-y-1.5">
               {/* Section Title */}
               {!sidebarCollapsed ? (
-                <h5 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5">
+                <h5 className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest px-2.5">
                   {section.title}
                 </h5>
               ) : (
-                <div className="border-t border-slate-200/50 dark:border-slate-800/80 my-2 mx-1"></div>
+                <div className="border-t border-indigo-100 dark:border-slate-800 my-2 mx-1"></div>
               )}
 
               {/* Section Items */}
