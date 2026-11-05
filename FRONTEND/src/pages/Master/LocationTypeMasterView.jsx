@@ -1,4 +1,4 @@
-
+﻿
 // src/pages/Master/LocationTypeMasterView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
@@ -93,7 +93,7 @@ export default function LocationTypeMasterView() {
   // Extract session username
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;

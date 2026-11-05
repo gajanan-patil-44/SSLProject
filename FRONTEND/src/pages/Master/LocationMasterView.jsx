@@ -1,4 +1,4 @@
-// src/pages/Master/LocationMasterView.jsx
+﻿// src/pages/Master/LocationMasterView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationService } from '../../services/locationService';
@@ -97,7 +97,7 @@ export default function LocationMasterView() {
   // Extract session username dynamically (loginName)
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         return s?.data?.user?.loginName || s?.user?.loginName || '';
@@ -111,7 +111,7 @@ export default function LocationMasterView() {
   // Extract session companies list dynamically
   const getSessionCompanies = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const list = s?.data?.context?.companies || s?.context?.companies;
