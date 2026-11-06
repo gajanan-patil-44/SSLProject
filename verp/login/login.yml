@@ -1,0 +1,22 @@
+info:
+  name: login
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://192.168.23.87:9004/verp-service/auth/login
+  body:
+    type: json
+    data: |-
+      {
+          "username": "admin1@gmail.com",
+          "password": "Admin@123"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

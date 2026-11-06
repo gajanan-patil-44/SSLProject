@@ -57,35 +57,24 @@ export const checkGSTRateExists = async (
     GSTTypeId,
     GSTPercentage
 ) => {
-    let query;
-    let values;
 
-    if (CompanyId === null) {
-        query = `
-            SELECT 1
-            FROM "LKP"."GSTRate"
-            WHERE "CompanyId" IS NULL
-              AND "GSTTypeId" = $1
-              AND "GSTPercentage" = $2;
-        `;
+    const query = `
+        SELECT "GSTRateId"
+        FROM "LKP"."GSTRate"
+        WHERE "CompanyId" = $1
+          AND "GSTTypeId" = $2
+          AND "GSTPercentage" = $3
+        LIMIT 1;
+    `;
 
-        values = [GSTTypeId, GSTPercentage];
-    } else {
-        query = `
-            SELECT 1
-            FROM "LKP"."GSTRate"
-            WHERE "CompanyId" = $1
-              AND "GSTTypeId" = $2
-              AND "GSTPercentage" = $3;
-        `;
+    const result = await pool.query(query, [
+        CompanyId,
+        GSTTypeId,
+        GSTPercentage
+    ]);
 
-        values = [CompanyId, GSTTypeId, GSTPercentage];
-    }
-
-    const result = await pool.query(query, values);
-    return result.rowCount > 0;
+    return result.rows.length > 0;
 };
-
 // ======================================================
 // FLAG ID 2 - ADD GST RATE
 // ======================================================
@@ -127,6 +116,7 @@ export const addGSTRate = async (data) => {
 // CompanyId NULL = view all companies
 // ======================================================
 export const getAllGSTRates = async (CompanyId) => {
+
     const query = `
         SELECT
             GR."GSTRateId",
@@ -144,13 +134,14 @@ export const getAllGSTRates = async (CompanyId) => {
         INNER JOIN "LKP"."GSTType" GT
             ON GT."GSTTypeId" = GR."GSTTypeId"
         WHERE (
-            $1::smallint IS NULL
+            $1::SMALLINT IS NULL
             OR GR."CompanyId" = $1
         )
         ORDER BY GR."GSTRateId" DESC;
     `;
 
     const result = await pool.query(query, [CompanyId]);
+
     return result.rows;
 };
 

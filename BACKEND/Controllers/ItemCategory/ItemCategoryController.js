@@ -4,7 +4,8 @@ import {
     checkMaterialCategoryTypeCodeExistsForUpdate,
     addMaterialCategoryTypeModel,
     updateMaterialCategoryTypeModel,
-    toggleMaterialCategoryTypeStatusModel
+    toggleMaterialCategoryTypeStatusModel,
+    validateCompanyId
 } from "../../Models/ItemCategory/ItemCategoryModel.js";
 
 
@@ -16,30 +17,36 @@ export const getMaterialCategoryTypes = async (req, res) => {
 
     try {
 
-        // flagId validation
-        if (flagId === undefined || flagId === null || flagId === "") {
-
+        if (
+            flagId === undefined ||
+            flagId === null ||
+            flagId === ""
+        ) {
             return res.status(400).json({
                 status: "error",
                 message: "flagId is required"
             });
         }
 
-
-        // Check whether flagId is a valid number
         if (!Number.isInteger(Number(flagId))) {
-
             return res.status(400).json({
                 status: "error",
                 message: "flagId must be a valid number"
             });
         }
 
+        if (Number(flagId) === 1) {
 
-        // flagId 1 = Get All Item Categories
-        if (parseInt(flagId) === 1) {
+            const loggedInCompanyId = req.user?.CompanyId;
 
-            const rows = await getAllMaterialCategoryTypes();
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "User authentication information is missing"
+                });
+            }
+
+            const rows = await getAllMaterialCategoryTypes(loggedInCompanyId);
 
             return res.status(200).json({
                 status: "success",
@@ -48,8 +55,6 @@ export const getMaterialCategoryTypes = async (req, res) => {
             });
         }
 
-
-        // Invalid flagId
         return res.status(400).json({
             status: "error",
             message: "Invalid flagId"
@@ -65,7 +70,6 @@ export const getMaterialCategoryTypes = async (req, res) => {
     }
 };
 
-
 // ADD ITEM CATEGORY
 
 export const addMaterialCategoryType = async (req, res) => {
@@ -74,147 +78,218 @@ export const addMaterialCategoryType = async (req, res) => {
 
     try {
 
+        // =============================================
         // FLAG ID VALIDATION
+        // =============================================
 
-        if (flagId === undefined || flagId === null || flagId === "") {
-
+        if (
+            flagId === undefined ||
+            flagId === null ||
+            flagId === ""
+        ) {
             return res.status(400).json({
                 status: "error",
                 message: "flagId is required"
             });
         }
 
-
         if (!Number.isInteger(Number(flagId))) {
-
             return res.status(400).json({
                 status: "error",
                 message: "flagId must be a valid number"
             });
         }
 
+        // =============================================
+        // FLAG ID 2 - ADD MATERIAL CATEGORY TYPE
+        // =============================================
 
-        // flagId 2 = Add Item Category
-        if (parseInt(flagId) === 2) {
+        if (Number(flagId) === 2) {
 
             const categoryData = req.body;
 
+            // =============================================
+            // VALIDATE LOGGED-IN USER
+            // =============================================
 
-            // VALIDATE MATERIAL CATEGORY NAME - ONLY ALPHABETS
-           
+            const loggedInCompanyId = req.user?.CompanyId;
 
-            const categoryNameRegex = /^[A-Za-z\s]+$/;
-
-            if (!categoryNameRegex.test(String(categoryData.MaterialCategoryTypeName).trim())) {
-
-                return res.status(400).json({
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
                     status: "error",
-                    message: "Material category Name should contain only alphabets and spaces"
+                    message: "User authentication information is missing"
                 });
             }
 
+            // =============================================
+            // SELECT COMPANY ID
+            // =============================================
 
-            // REQUIRED FIELD VALIDATION
-          
+            // Super Admin: Take CompanyId from request.
+            // Company Admin: Take CompanyId from JWT.
+
+            const selectedCompanyId =
+                loggedInCompanyId === null
+                    ? categoryData.CompanyId
+                    : loggedInCompanyId;
 
             if (
-                categoryData.MaterialCategoryTypeName === undefined ||
-                categoryData.MaterialCategoryTypeName === null ||
-                String(categoryData.MaterialCategoryTypeName).trim() === ""
+                selectedCompanyId === undefined ||
+                selectedCompanyId === null ||
+                String(selectedCompanyId).trim() === ""
             ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+            }
 
+            // =============================================
+            // VALIDATE COMPANY ID
+            // =============================================
+
+            const companyValidation = await validateCompanyId(
+                selectedCompanyId
+            );
+
+            if (!companyValidation.valid) {
+                return res.status(400).json({
+                    status: "error",
+                    message: companyValidation.message
+                });
+            }
+
+            // =============================================
+            // VALIDATE MATERIAL CATEGORY NAME
+            // =============================================
+
+            const categoryName = String(
+                categoryData.MaterialCategoryTypeName ?? ""
+            ).trim();
+
+            if (!categoryName) {
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialCategoryTypeName is required"
                 });
             }
 
+            const categoryNameRegex = /^[A-Za-z\s]+$/;
 
-            if (
-                categoryData.MaterialCategoryTypeCode === undefined ||
-                categoryData.MaterialCategoryTypeCode === null ||
-                String(categoryData.MaterialCategoryTypeCode).trim() === ""
-            ) {
-
+            if (!categoryNameRegex.test(categoryName)) {
                 return res.status(400).json({
                     status: "error",
-                    message: "MaterialCategoryTypeCode is required"
+                    message: "Material category Name should contain only alphabets and spaces"
                 });
             }
-
-            if (
-                categoryData.IsDisabled === undefined ||
-                categoryData.IsDisabled === null ||
-                String(categoryData.IsDisabled).trim() === ""
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "IsDisabled is required"
-                });
-            }
-
-            if (
-                categoryData.CreatedByUserName === undefined ||
-                categoryData.CreatedByUserName === null ||
-                String(categoryData.CreatedByUserName).trim() === ""
-            ) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "CreatedByUserName is required"
-                });
-            }
-
-
-            // LENGTH VALIDATION
-            // Database varchar = 75
-
-            const categoryName = String(categoryData.MaterialCategoryTypeName).trim();
-
-            const categoryCode = String(categoryData.MaterialCategoryTypeCode).trim();
-
 
             if (categoryName.length > 30) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialCategoryTypeName cannot exceed 30 characters"
                 });
             }
 
+            // =============================================
+            // VALIDATE MATERIAL CATEGORY CODE
+            // =============================================
+
+            const categoryCode = String(
+                categoryData.MaterialCategoryTypeCode ?? ""
+            ).trim();
+
+            if (!categoryCode) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "MaterialCategoryTypeCode is required"
+                });
+            }
 
             if (categoryCode.length > 30) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialCategoryTypeCode cannot exceed 30 characters"
                 });
             }
 
+            // =============================================
+            // VALIDATE IS DISABLED
+            // =============================================
 
-            // CHECK DUPLICATE CATEGORY CODE
-
-            const existingCategory = await checkMaterialCategoryTypeCodeExists(categoryCode);
-
-
-            if (existingCategory.length > 0) {
-
-                return res.status(409).json({
+            if (
+                categoryData.IsDisabled === undefined ||
+                categoryData.IsDisabled === null ||
+                String(categoryData.IsDisabled).trim() === ""
+            ) {
+                return res.status(400).json({
                     status: "error",
-                    message: "Item category code already exists"
+                    message: "IsDisabled is required"
                 });
             }
 
+            const isDisabledValue = String(
+                categoryData.IsDisabled
+            ).trim().toLowerCase();
 
-            // ADD ITEM CATEGORY
+            if (!["true", "false", "0", "1"].includes(isDisabledValue)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "IsDisabled must be true or false"
+                });
+            }
+
+            const isDisabled = ["true", "1"].includes(isDisabledValue);
+
+            // =============================================
+            // VALIDATE CREATED BY USERNAME
+            // =============================================
+
+            const createdByUserName = String(
+                categoryData.CreatedByUserName ?? ""
+            ).trim();
+
+            if (!createdByUserName) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CreatedByUserName is required"
+                });
+            }
+
+            // =============================================
+            // CHECK DUPLICATE CATEGORY CODE
+            // WITHIN THE SAME COMPANY
+            // =============================================
+
+            const existingCategory =
+                await checkMaterialCategoryTypeCodeExists(
+                    companyValidation.CompanyId,
+                    categoryCode
+                );
+
+            if (existingCategory.length > 0) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Item category code already exists for this company"
+                });
+            }
+
+            // =============================================
+            // ADD MATERIAL CATEGORY TYPE
+            // =============================================
 
             const category = await addMaterialCategoryTypeModel({
-                ...categoryData,
-                MaterialCategoryTypeName: categoryName,
-                MaterialCategoryTypeCode: categoryCode
-            });
 
+                CompanyId: companyValidation.CompanyId,
+
+                MaterialCategoryTypeName: categoryName,
+
+                MaterialCategoryTypeCode: categoryCode,
+
+                IsDisabled: isDisabled,
+
+                CreatedByUserName: createdByUserName
+
+            });
 
             return res.status(201).json({
                 status: "success",
@@ -223,14 +298,18 @@ export const addMaterialCategoryType = async (req, res) => {
             });
         }
 
+        // =============================================
+        // INVALID FLAG ID
+        // =============================================
 
-        // Invalid flagId
         return res.status(400).json({
             status: "error",
             message: "Invalid flagId"
         });
 
     } catch (error) {
+
+        console.error("Add Material Category Type Error:", error);
 
         return res.status(500).json({
             status: "error",
@@ -240,7 +319,6 @@ export const addMaterialCategoryType = async (req, res) => {
     }
 };
 
-
 // UPDATE ITEM CATEGORY
 
 export const updateMaterialCategoryType = async (req, res) => {
@@ -249,185 +327,233 @@ export const updateMaterialCategoryType = async (req, res) => {
 
     try {
 
+        // =============================================
         // FLAG ID VALIDATION
+        // =============================================
 
-        if (flagId === undefined || flagId === null || flagId === "") {
-
+        if (
+            flagId === undefined ||
+            flagId === null ||
+            flagId === ""
+        ) {
             return res.status(400).json({
                 status: "error",
                 message: "flagId is required"
             });
         }
 
-
         if (!Number.isInteger(Number(flagId))) {
-
             return res.status(400).json({
                 status: "error",
                 message: "flagId must be a valid number"
             });
         }
 
+        // =============================================
+        // FLAG ID 3 = UPDATE MATERIAL CATEGORY
+        // =============================================
 
-        // flagId 3 = Update Item Category
-        if (parseInt(flagId) === 3) {
+        if (Number(flagId) === 3) {
 
             const categoryData = req.body;
 
-            // ID VALIDATION
+            // =============================================
+            // VALIDATE LOGGED-IN COMPANY
+            // =============================================
 
-            if (
-                categoryData.MaterialCategoryTypeId === undefined ||
-                categoryData.MaterialCategoryTypeId === null ||
-                categoryData.MaterialCategoryTypeId === ""
-            ) {
+            const loggedInCompanyId = req.user?.CompanyId;
 
-                return res.status(400).json({
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
                     status: "error",
-                    message: "MaterialCategoryTypeId is required"
+                    message: "User authentication information is missing"
                 });
             }
 
+            // Super Admin selects CompanyId.
+            // Company users use CompanyId from JWT.
+
+            const selectedCompanyId =
+                loggedInCompanyId === null
+                    ? categoryData.CompanyId
+                    : loggedInCompanyId;
 
             if (
-                !Number.isInteger(
-                    Number(categoryData.MaterialCategoryTypeId)
-                )
+                selectedCompanyId === undefined ||
+                selectedCompanyId === null ||
+                String(selectedCompanyId).trim() === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
-                    message: "MaterialCategoryTypeId must be a valid number"
+                    message: "CompanyId is required"
                 });
             }
 
-            // REQUIRED FIELD VALIDATION
+            // =============================================
+            // VALIDATE COMPANY
+            // =============================================
+
+            const companyValidation = await validateCompanyId(
+                selectedCompanyId
+            );
+
+            if (!companyValidation.valid) {
+                return res.status(400).json({
+                    status: "error",
+                    message: companyValidation.message
+                });
+            }
+
+            // =============================================
+            // VALIDATE MATERIAL CATEGORY ID
+            // =============================================
+
+            const categoryId = Number(
+                categoryData.MaterialCategoryTypeId
+            );
 
             if (
-                categoryData.MaterialCategoryTypeName === undefined ||
-                categoryData.MaterialCategoryTypeName === null ||
-                String(categoryData.MaterialCategoryTypeName).trim() === ""
+                !Number.isInteger(categoryId) ||
+                categoryId <= 0
             ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Valid MaterialCategoryTypeId is required"
+                });
+            }
 
+            // =============================================
+            // VALIDATE CATEGORY NAME
+            // =============================================
+
+            const categoryName = String(
+                categoryData.MaterialCategoryTypeName ?? ""
+            ).trim();
+
+            if (!categoryName) {
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialCategoryTypeName is required"
                 });
             }
 
-            // MATERIAL CATEGORY NAME VALIDATION - ONLY ALPHABETS
-
             const categoryNameRegex = /^[A-Za-z\s]+$/;
 
-            if (!categoryNameRegex.test(String(categoryData.MaterialCategoryTypeName).trim())) {
-
+            if (!categoryNameRegex.test(categoryName)) {
                 return res.status(400).json({
                     status: "error",
                     message: "Material category Name should contain only alphabets and spaces"
                 });
             }
 
+            if (categoryName.length > 30) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "MaterialCategoryTypeName cannot exceed 30 characters"
+                });
+            }
 
-            if (
-                categoryData.MaterialCategoryTypeCode === undefined ||
-                categoryData.MaterialCategoryTypeCode === null ||
-                String(categoryData.MaterialCategoryTypeCode).trim() === ""
-            ) {
+            // =============================================
+            // VALIDATE CATEGORY CODE
+            // =============================================
 
+            const categoryCode = String(
+                categoryData.MaterialCategoryTypeCode ?? ""
+            ).trim();
+
+            if (!categoryCode) {
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialCategoryTypeCode is required"
                 });
             }
 
-            if (
-                categoryData.UpdatedByUserName === undefined ||
-                categoryData.UpdatedByUserName === null ||
-                String(categoryData.UpdatedByUserName).trim() === ""
-            ) {
+            if (categoryCode.length > 30) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "MaterialCategoryTypeCode cannot exceed 30 characters"
+                });
+            }
 
+            // =============================================
+            // VALIDATE UPDATED BY USERNAME
+            // =============================================
+
+            const updatedByUserName = String(
+                categoryData.UpdatedByUserName ?? ""
+            ).trim();
+
+            if (!updatedByUserName) {
                 return res.status(400).json({
                     status: "error",
                     message: "UpdatedByUserName is required"
                 });
             }
 
-
-            const categoryName = String(categoryData.MaterialCategoryTypeName).trim();
-
-            const categoryCode = String(categoryData.MaterialCategoryTypeCode).trim();
-
-            // LENGTH VALIDATION
-
-            if (categoryName.length > 75) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "MaterialCategoryTypeName cannot exceed 75 characters"
-                });
-            }
-
-
-            if (categoryCode.length > 75) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "MaterialCategoryTypeCode cannot exceed 75 characters"
-                });
-            }
-
+            // =============================================
             // CHECK DUPLICATE CATEGORY CODE
-            // Exclude the current record
+            // WITHIN THE SAME COMPANY
+            // =============================================
 
-            const existingCategories = await checkMaterialCategoryTypeCodeExistsForUpdate(
-                categoryCode,
-                Number(categoryData.MaterialCategoryTypeId)
-            );
-
+            const existingCategories =
+                await checkMaterialCategoryTypeCodeExistsForUpdate(
+                    companyValidation.CompanyId,
+                    categoryCode,
+                    categoryId
+                );
 
             if (existingCategories.length > 0) {
-
                 return res.status(409).json({
                     status: "error",
-                    message: "Item category code already exists"
+                    message: "Item category code already exists for this company"
                 });
             }
 
+            // =============================================
+            // UPDATE MATERIAL CATEGORY
+            // =============================================
 
-            // UPDATE ITEM CATEGORY
+            const updatedCategory =
+                await updateMaterialCategoryTypeModel({
 
-            const category = await updateMaterialCategoryTypeModel({
-                ...categoryData,
-                MaterialCategoryTypeName: categoryName,
-                MaterialCategoryTypeCode: categoryCode
-            });
+                    CompanyId: companyValidation.CompanyId,
 
+                    MaterialCategoryTypeId: categoryId,
 
+                    MaterialCategoryTypeName: categoryName,
+
+                    MaterialCategoryTypeCode: categoryCode,
+
+                    UpdatedByUserName: updatedByUserName
+
+                });
+
+            // =============================================
             // RECORD NOT FOUND
+            // =============================================
 
-            if (category === 0) {
-
+            if (!updatedCategory) {
                 return res.status(404).json({
                     status: "error",
                     message: "Item category not found"
                 });
             }
 
-
             return res.status(200).json({
                 status: "success",
-                message: "Item category updated successfully"
+                message: "Item category updated successfully",
+                data: updatedCategory
             });
         }
 
-
-        // Invalid flagId
         return res.status(400).json({
             status: "error",
             message: "Invalid flagId"
         });
 
     } catch (error) {
+
+        console.error("Update Material Category Type Error:", error);
 
         return res.status(500).json({
             status: "error",
@@ -436,7 +562,6 @@ export const updateMaterialCategoryType = async (req, res) => {
         });
     }
 };
-
 
 // TOGGLE ITEM CATEGORY STATUS
 

@@ -20,13 +20,13 @@ export const getAllUserDetails = async (CompanyId) => {
         u."IsDisabled",
         u."CreatedAt",
 
-        u."GenderId", 
+        u."GenderId",
         g."GenderName" AS "GenderName",
 
-        u."MaritalStatusId", 
+        u."MaritalStatusId",
         ms."MaritalStatusName" AS "MaritalStatusName",
 
-        u."DesignationId", 
+        u."DesignationId",
         cd."DesignationName" AS "DesignationName",
 
 
@@ -211,13 +211,13 @@ export const getAllUserDetails = async (CompanyId) => {
     LEFT JOIN "LKP"."Company" rmc
         ON rmc."CompanyId" = urm."CompanyId"
 
-    LEFT JOIN "LKP"."Gender" g 
+    LEFT JOIN "LKP"."Gender" g
     ON g."GenderId" = u."GenderId"
 
-    LEFT JOIN "LKP"."MaritalStatus" ms 
+    LEFT JOIN "LKP"."MaritalStatus" ms
     ON ms."MaritalStatusId" = u."MaritalStatusId"
 
-    LEFT JOIN "LKP"."CompanyDesignation" cd 
+    LEFT JOIN "LKP"."CompanyDesignation" cd
     ON cd."CompanyDesignationId" = u."DesignationId"
 
     WHERE EXISTS (
@@ -236,11 +236,11 @@ GROUP BY
         u."LastName",
         u."Email",
         u."LoginName",
-        u."GenderId", 
-        g."GenderName", 
+        u."GenderId",
+        g."GenderName",
         u."MaritalStatusId",
-        ms."MaritalStatusName", 
-        u."DesignationId", 
+        ms."MaritalStatusName",
+        u."DesignationId",
         cd."DesignationName";
 
 `;

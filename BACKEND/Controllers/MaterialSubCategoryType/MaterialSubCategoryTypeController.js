@@ -6,19 +6,61 @@ import {
     addMaterialSubCategoryType,
     getMaterialCategoryDropdown,
     updateMaterialSubCategoryType,
-    updateMaterialSubCategoryTypeStatus
-} from "../../Models/MaterialSubCategoryType/MaterialSubCategoryTypeModels.js"
-
+    updateMaterialSubCategoryTypeStatus} from "../../Models/MaterialSubCategoryType/MaterialSubCategoryTypeModels.js"
+ import { validateCompanyId } from "../../Models/ItemCategory/ItemCategoryModel.js";
 
 // =====================================================
 // FLAG ID 1 - GET ALL SUB CATEGORIES
 // =====================================================
 
+
 export const getMaterialSubCategoryType = async (req, res) => {
+
     const { FlagId } = req.body;
+
     try {
-        if (parseInt(FlagId) === 1) {
-            const rows = await getAllMaterialSubCategoryTypes();
+
+        // =============================================
+        // FLAG ID VALIDATION
+        // =============================================
+
+        if (
+            FlagId === undefined ||
+            FlagId === null ||
+            FlagId === ""
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId is required"
+            });
+        }
+
+        if (!Number.isInteger(Number(FlagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId must be a valid number"
+            });
+        }
+
+        // =============================================
+        // FLAG ID 1 = GET MATERIAL SUB CATEGORY TYPES
+        // =============================================
+
+        if (Number(FlagId) === 1) {
+
+            const loggedInCompanyId = req.user?.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "User authentication information is missing"
+                });
+            }
+
+            const rows = await getAllMaterialSubCategoryTypes(
+                loggedInCompanyId
+            );
+
             return res.status(200).json({
                 status: "success",
                 message: "Material sub category types fetched successfully",
@@ -32,6 +74,9 @@ export const getMaterialSubCategoryType = async (req, res) => {
         });
 
     } catch (error) {
+
+        console.error("Get Material Sub Category Type Error:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch material sub category types",
@@ -39,133 +84,241 @@ export const getMaterialSubCategoryType = async (req, res) => {
         });
     }
 };
+
 // ====================================================
 // FLAG ID 2 - ADD SUB CATEGORY
 // =====================================================
+
 export const addMaterialSubCategory = async (req, res) => {
+
     const { FlagId } = req.body;
 
     try {
-        if (parseInt(FlagId) === 2) {
+
+        if (FlagId === undefined || FlagId === null || FlagId === "") {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId is required"
+            });
+        }
+
+        if (!Number.isInteger(Number(FlagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "FlagId must be a valid number"
+            });
+        }
+
+        if (Number(FlagId) === 2) {
 
             const data = req.body;
 
-            // ---------------------------------------------
-            // VALIDATE CATEGORY
-            // ---------------------------------------------
-            if (!data.MaterialCategoryTypeId) {
+            // =============================================
+            // COMPANY ACCESS
+            // =============================================
+
+            const loggedInCompanyId = req.user?.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "Company information is missing"
+                });
+            }
+
+            // Super Admin can select any company.
+            // Company Admin can only use their JWT CompanyId.
+
+            const selectedCompanyId =
+                loggedInCompanyId === null
+                    ? data.CompanyId
+                    : loggedInCompanyId;
+
+            if (
+                selectedCompanyId === undefined ||
+                selectedCompanyId === null ||
+                String(selectedCompanyId).trim() === ""
+            ) {
                 return res.status(400).json({
                     status: "error",
-                    message: "MaterialCategoryTypeId is required"
+                    message: "CompanyId is required"
+                });
+            }
+
+            const companyId = Number(selectedCompanyId);
+
+            if (!Number.isInteger(companyId) || companyId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Valid CompanyId is required"
+                });
+            }
+
+            // =============================================
+            // VALIDATE COMPANY
+            // =============================================
+
+            const companyValidation = await validateCompanyId(companyId);
+
+            if (!companyValidation.valid) {
+                return res.status(400).json({
+                    status: "error",
+                    message: companyValidation.message
+                });
+            }
+
+            // =============================================
+            // VALIDATE CATEGORY
+            // =============================================
+
+            const categoryId = Number(data.MaterialCategoryTypeId);
+
+            if (!Number.isInteger(categoryId) || categoryId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Valid MaterialCategoryTypeId is required"
                 });
             }
 
             const categoryExists = await checkMaterialCategoryExists(
-                data.MaterialCategoryTypeId
+                categoryId,
+                companyId
             );
 
             if (categoryExists.length === 0) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Invalid MaterialCategoryTypeId"
+                    message: "Invalid MaterialCategoryTypeId for this company"
                 });
             }
 
-            // ---------------------------------------------
-            // VALIDATE SUB CATEGORY NAME
-            // ---------------------------------------------
-            if (!data.MaterialSubCategoryTypeName) {
+            // =============================================
+            // VALIDATE SUBCATEGORY NAME
+            // =============================================
+
+            const subCategoryName = String(
+                data.MaterialSubCategoryTypeName ?? ""
+            ).trim();
+
+            if (!subCategoryName) {
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialSubCategoryTypeName is required"
                 });
             }
 
-            if (data.MaterialSubCategoryTypeName.length > 30) {
+            if (subCategoryName.length > 30) {
                 return res.status(400).json({
                     status: "error",
                     message: "Material sub category name must not exceed 30 characters"
                 });
             }
 
-            if (!/^[a-zA-Z0-9]+$/.test(data.MaterialSubCategoryTypeName)) {
+            if (!/^[a-zA-Z0-9]+$/.test(subCategoryName)) {
                 return res.status(400).json({
                     status: "error",
                     message: "Material sub category name must contain only alphanumeric characters"
                 });
             }
 
-            // ---------------------------------------------
-            // VALIDATE SUB CATEGORY CODE
-            // ---------------------------------------------
-            if (!data.MaterialSubCategoryTypeCode) {
+            // =============================================
+            // VALIDATE SUBCATEGORY CODE
+            // =============================================
+
+            const subCategoryCode = String(
+                data.MaterialSubCategoryTypeCode ?? ""
+            ).trim();
+
+            if (!subCategoryCode) {
                 return res.status(400).json({
                     status: "error",
                     message: "MaterialSubCategoryTypeCode is required"
                 });
             }
 
-            if (data.MaterialSubCategoryTypeCode.length > 15) {
+            if (subCategoryCode.length > 15) {
                 return res.status(400).json({
                     status: "error",
                     message: "Material sub category code must not exceed 15 characters"
                 });
             }
 
-            if (!/^[a-zA-Z0-9]+$/.test(data.MaterialSubCategoryTypeCode)) {
+            if (!/^[a-zA-Z0-9]+$/.test(subCategoryCode)) {
                 return res.status(400).json({
                     status: "error",
                     message: "Material sub category code must contain only alphanumeric characters"
                 });
             }
 
-            // ---------------------------------------------
-            // VALIDATE CREATED USER
-            // ---------------------------------------------
-            if (!data.CreatedByUserName) {
+            // =============================================
+            // VALIDATE CREATED BY USERNAME
+            // =============================================
+
+            const createdByUserName = String(
+                data.CreatedByUserName ?? ""
+            ).trim();
+
+            if (!createdByUserName) {
                 return res.status(400).json({
                     status: "error",
                     message: "CreatedByUserName is required"
                 });
             }
 
-            // ---------------------------------------------
-            // CHECK DUPLICATE
-            // ---------------------------------------------
+            // =============================================
+            // CHECK DUPLICATES WITHIN COMPANY
+            // =============================================
+
             const existing = await checkMaterialSubCategoryExists(
-                data.MaterialSubCategoryTypeName,
-                data.MaterialSubCategoryTypeCode
+                companyId,
+                subCategoryName,
+                subCategoryCode
             );
 
             if (existing.length > 0) {
 
-                const duplicate = existing[0];
+                const duplicateName = existing.some(
+                    item =>
+                        item.MaterialSubCategoryTypeName.toLowerCase() ===
+                        subCategoryName.toLowerCase()
+                );
 
-                if (
-                    duplicate.MaterialSubCategoryTypeName ===
-                    data.MaterialSubCategoryTypeName
-                ) {
+                const duplicateCode = existing.some(
+                    item =>
+                        item.MaterialSubCategoryTypeCode.toLowerCase() ===
+                        subCategoryCode.toLowerCase()
+                );
+
+                if (duplicateName) {
                     return res.status(409).json({
                         status: "error",
-                        message: "Material sub category name already exists"
+                        message: "Material sub category name already exists for this company"
                     });
                 }
 
-                if (
-                    duplicate.MaterialSubCategoryTypeCode ===
-                    data.MaterialSubCategoryTypeCode
-                ) {
+                if (duplicateCode) {
                     return res.status(409).json({
                         status: "error",
-                        message: "Material sub category code already exists"
+                        message: "Material sub category code already exists for this company"
                     });
                 }
             }
 
-            // ---------------------------------------------
+            // =============================================
             // INSERT
-            // ---------------------------------------------
-            const result = await addMaterialSubCategoryType(data);
+            // =============================================
+
+            const subCategoryData = {
+                CompanyId: companyId,
+                MaterialCategoryTypeId: categoryId,
+                MaterialSubCategoryTypeName: subCategoryName,
+                MaterialSubCategoryTypeCode: subCategoryCode,
+                CreatedByUserName: createdByUserName
+            };
+
+            const result = await addMaterialSubCategoryType(
+                subCategoryData
+            );
 
             return res.status(201).json({
                 status: "success",
@@ -180,6 +333,9 @@ export const addMaterialSubCategory = async (req, res) => {
         });
 
     } catch (error) {
+
+        console.error("Add Material Sub Category Error:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Failed to add material sub category",
@@ -191,22 +347,42 @@ export const addMaterialSubCategory = async (req, res) => {
 // FLAG ID 3 - CATEGORY DROPDOWN
 // =====================================================
 export const getMaterialCategory = async (req, res) => {
+
     const { FlagId } = req.body;
+
     try {
-        if (parseInt(FlagId) === 3) {
-            const rows = await getMaterialCategoryDropdown();
+
+        if (Number(FlagId) === 3) {
+
+            const loggedInCompanyId = req.user?.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "Company information is missing"
+                });
+            }
+
+            const rows = await getMaterialCategoryDropdown(
+                loggedInCompanyId
+            );
+
             return res.status(200).json({
                 status: "success",
                 message: "Material category dropdown fetched successfully",
                 data: rows
             });
         }
+
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
 
     } catch (error) {
+
+        console.error("Get Material Category Dropdown Error:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch material category dropdown",
@@ -224,6 +400,50 @@ export const editMaterialSubCategory = async (req, res) => {
         if (parseInt(FlagId) === 4) {
 
             const data = req.body;
+
+            // ---------------------------------------------
+            // VALIDATE LOGIN COMPANY
+            // ---------------------------------------------
+            const loggedInCompanyId = req.user?.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(403).json({
+                    status: "error",
+                    message: "Company access information is missing"
+                });
+            }
+
+            // ---------------------------------------------
+            // DETERMINE COMPANY ID
+            // Super Admin: CompanyId from request
+            // Company Admin: CompanyId from JWT
+            // ---------------------------------------------
+            let CompanyId;
+
+            if (loggedInCompanyId === null) {
+                CompanyId = data.CompanyId;
+
+                if (!CompanyId) {
+                    return res.status(400).json({
+                        status: "error",
+                        message: "CompanyId is required"
+                    });
+                }
+            } else {
+                CompanyId = loggedInCompanyId;
+            }
+
+            // ---------------------------------------------
+            // VALIDATE COMPANY
+            // ---------------------------------------------
+            const companyExists = await validateCompanyId(CompanyId);
+
+            if (!companyExists.valid) {
+                return res.status(400).json({
+                    status: "error",
+                    message: companyExists.message
+                });
+            }
 
             // ---------------------------------------------
             // VALIDATE SUB CATEGORY ID
@@ -245,14 +465,16 @@ export const editMaterialSubCategory = async (req, res) => {
                 });
             }
 
+            // Category must belong to the selected company
             const categoryExists = await checkMaterialCategoryExists(
-                data.MaterialCategoryTypeId
+                data.MaterialCategoryTypeId,
+                CompanyId
             );
 
             if (categoryExists.length === 0) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Invalid MaterialCategoryTypeId"
+                    message: "Invalid MaterialCategoryTypeId for the selected company"
                 });
             }
 
@@ -315,12 +537,28 @@ export const editMaterialSubCategory = async (req, res) => {
             }
 
             // ---------------------------------------------
-            // CHECK DUPLICATE
+            // CHECK WHETHER SUB CATEGORY BELONGS TO COMPANY
+            // ---------------------------------------------
+            const subCategoryExists = await checkMaterialSubCategoryBelongsToCompany(
+                data.MaterialSubCategoryTypeId,
+                CompanyId
+            );
+
+            if (subCategoryExists.length === 0) {
+                return res.status(404).json({
+                    status: "error",
+                    message: "Material sub category not found for this company"
+                });
+            }
+
+            // ---------------------------------------------
+            // CHECK DUPLICATE NAME AND CODE
             // ---------------------------------------------
             const existing = await checkMaterialSubCategoryExistsForUpdate(
                 data.MaterialSubCategoryTypeName,
                 data.MaterialSubCategoryTypeCode,
-                data.MaterialSubCategoryTypeId
+                data.MaterialSubCategoryTypeId,
+                CompanyId
             );
 
             if (existing.length > 0) {
@@ -351,7 +589,10 @@ export const editMaterialSubCategory = async (req, res) => {
             // ---------------------------------------------
             // UPDATE
             // ---------------------------------------------
-            const result = await updateMaterialSubCategoryType(data);
+            const result = await updateMaterialSubCategoryType({
+                ...data,
+                CompanyId
+            });
 
             if (!result) {
                 return res.status(404).json({
@@ -374,7 +615,6 @@ export const editMaterialSubCategory = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Error updating material sub category:", error);
 
         return res.status(500).json({
             status: "error",

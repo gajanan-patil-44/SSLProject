@@ -11,7 +11,6 @@ import {
     deleteProject
 } from "../../Models/ProjectModels.js";
 
-
 // GET ALL PROJECTS
 export const getProject = async (req, res) => {
 
@@ -19,11 +18,44 @@ export const getProject = async (req, res) => {
 
     try {
 
+        // =============================================
+        // FLAG ID VALIDATION
+        // =============================================
+
+        if (
+            flagId === undefined ||
+            flagId === null ||
+            flagId === ""
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+        if (!Number.isInteger(Number(flagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId must be a valid number"
+            });
+        }
+
+        // =============================================
         // FLAG ID 1 - GET ALL PROJECTS
+        // =============================================
 
-        if (parseInt(flagId) === 1) {
+        if (Number(flagId) === 1) {
 
-            const rows = await getAllProjects();
+            const loggedInCompanyId = req.user?.CompanyId;
+
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "User authentication information is missing"
+                });
+            }
+
+            const rows = await getAllProjects(loggedInCompanyId);
 
             return res.status(200).json({
                 status: "success",
@@ -32,14 +64,14 @@ export const getProject = async (req, res) => {
             });
         }
 
-        // INVALID FLAG ID
-
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
 
     } catch (error) {
+
+        console.error("Get Project Error:", error);
 
         return res.status(500).json({
             status: "error",
@@ -48,7 +80,6 @@ export const getProject = async (req, res) => {
         });
     }
 };
-
 // ADD PROJECT / COMPANY PRODUCT DROPDOWN
 export const addprojectController = async (req, res) => {
 
@@ -56,13 +87,50 @@ export const addprojectController = async (req, res) => {
 
     try {
 
-        // ==========================================================
+        // =============================================
+        // FLAG ID VALIDATION
+        // =============================================
+
+        if (
+            flagId === undefined ||
+            flagId === null ||
+            flagId === ""
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+        if (!Number.isInteger(Number(flagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId must be a valid number"
+            });
+        }
+
+        // =============================================
+        // VALIDATE LOGGED-IN COMPANY
+        // =============================================
+
+        const loggedInCompanyId = req.user?.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(401).json({
+                status: "error",
+                message: "User authentication information is missing"
+            });
+        }
+
+        // =============================================
         // FLAG ID 1 - GET COMPANY PRODUCTS
-        // ==========================================================
+        // =============================================
 
-        if (parseInt(flagId) === 1) {
+        if (Number(flagId) === 1) {
 
-            const companyProducts = await getCompanyProductsForDropdown();
+            const companyProducts = await getCompanyProductsForDropdown(
+                loggedInCompanyId
+            );
 
             return res.status(200).json({
                 status: "success",
@@ -71,11 +139,11 @@ export const addprojectController = async (req, res) => {
             });
         }
 
-        // ==========================================================
+        // =============================================
         // FLAG ID 2 - ADD PROJECT
-        // ==========================================================
+        // =============================================
 
-        if (parseInt(flagId) === 2) {
+        if (Number(flagId) === 2) {
 
             const {
                 CompanyProductId,
@@ -86,9 +154,9 @@ export const addprojectController = async (req, res) => {
                 CreatedByUserId
             } = req.body;
 
-            // =====================================================
+            // =============================================
             // VALIDATE COMPANY PRODUCT ID
-            // =====================================================
+            // =============================================
 
             if (
                 CompanyProductId === undefined ||
@@ -111,13 +179,28 @@ export const addprojectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
+            // CHECK COMPANY PRODUCT
+            // =============================================
+
+            const companyProductData =
+                await checkCompanyProductExists(
+                    Number(CompanyProductId),
+                    loggedInCompanyId
+                );
+
+            if (companyProductData.length === 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Invalid or inactive CompanyProductId for this company"
+                });
+            }
+
+            // =============================================
             // VALIDATE PROJECT NAME
-            // =====================================================
+            // =============================================
 
             if (
-                ProjectName === undefined ||
-                ProjectName === null ||
                 typeof ProjectName !== "string" ||
                 ProjectName.trim() === ""
             ) {
@@ -128,12 +211,14 @@ export const addprojectController = async (req, res) => {
             }
 
             const projectName = ProjectName.trim();
+
             if (projectName.length > 30) {
                 return res.status(400).json({
                     status: "error",
                     message: "Project name must not exceed 30 characters"
                 });
             }
+
             const projectNameRegex = /^[A-Za-z\s]+$/;
 
             if (!projectNameRegex.test(projectName)) {
@@ -143,13 +228,11 @@ export const addprojectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE PROJECT CODE
-            // =====================================================
+            // =============================================
 
             if (
-                ProjectCode === undefined ||
-                ProjectCode === null ||
                 typeof ProjectCode !== "string" ||
                 ProjectCode.trim() === ""
             ) {
@@ -168,9 +251,9 @@ export const addprojectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE DESCRIPTION
-            // =====================================================
+            // =============================================
 
             let description = null;
 
@@ -207,9 +290,9 @@ export const addprojectController = async (req, res) => {
                 }
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE IS DISABLED
-            // =====================================================
+            // =============================================
 
             if (typeof IsDisabled !== "boolean") {
                 return res.status(400).json({
@@ -218,9 +301,9 @@ export const addprojectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE CREATED BY USER ID
-            // =====================================================
+            // =============================================
 
             if (
                 CreatedByUserId === undefined ||
@@ -243,23 +326,9 @@ export const addprojectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
-            // CHECK COMPANY PRODUCT
-            // =====================================================
-
-            const companyProductData =
-                await checkCompanyProductExists(Number(CompanyProductId));
-
-            if (companyProductData.length === 0) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "Invalid or inactive CompanyProductId"
-                });
-            }
-
-            // =====================================================
+            // =============================================
             // CHECK DUPLICATE PROJECT
-            // =====================================================
+            // =============================================
 
             const existingProject = await checkProjectExists(
                 Number(CompanyProductId),
@@ -269,24 +338,26 @@ export const addprojectController = async (req, res) => {
 
             if (existingProject.length > 0) {
 
-                const duplicate = existingProject[0];
+                const duplicateName = existingProject.some(
+                    item =>
+                        item.ProjectName.trim().toLowerCase() ===
+                        projectName.toLowerCase()
+                );
 
-                if (
-                    duplicate.ProjectName &&
-                    duplicate.ProjectName.trim().toLowerCase() ===
-                    projectName.toLowerCase()
-                ) {
+                const duplicateCode = existingProject.some(
+                    item =>
+                        item.ProjectCode.trim().toLowerCase() ===
+                        projectCode.toLowerCase()
+                );
+
+                if (duplicateName) {
                     return res.status(409).json({
                         status: "error",
                         message: "Project name already exists for this company product"
                     });
                 }
 
-                if (
-                    duplicate.ProjectCode &&
-                    duplicate.ProjectCode.trim().toLowerCase() ===
-                    projectCode.toLowerCase()
-                ) {
+                if (duplicateCode) {
                     return res.status(409).json({
                         status: "error",
                         message: "Project code already exists for this company product"
@@ -294,24 +365,25 @@ export const addprojectController = async (req, res) => {
                 }
             }
 
-            // =====================================================
+            // =============================================
             // ADD PROJECT
-            // =====================================================
+            // =============================================
 
             const project = await addProject({
 
                 CompanyProductId: Number(CompanyProductId),
+
                 ProjectName: projectName,
+
                 ProjectCode: projectCode,
+
                 IsDisabled,
+
                 Description: description,
+
                 CreatedByUserId: Number(CreatedByUserId)
 
             });
-
-            // =====================================================
-            // SUCCESS
-            // =====================================================
 
             return res.status(201).json({
                 status: "success",
@@ -320,16 +392,13 @@ export const addprojectController = async (req, res) => {
             });
         }
 
-        // ==========================================================
-        // INVALID FLAG ID
-        // ==========================================================
-
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
 
     } catch (error) {
+
 
         return res.status(500).json({
             status: "error",
@@ -338,7 +407,6 @@ export const addprojectController = async (req, res) => {
         });
     }
 };
-
 // EDIT PROJECT
 export const editProjectController = async (req, res) => {
 
@@ -346,13 +414,50 @@ export const editProjectController = async (req, res) => {
 
     try {
 
-        // ==========================================================
+        // =============================================
+        // FLAG ID VALIDATION
+        // =============================================
+
+        if (
+            flagId === undefined ||
+            flagId === null ||
+            flagId === ""
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId is required"
+            });
+        }
+
+        if (!Number.isInteger(Number(flagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId must be a valid number"
+            });
+        }
+
+        // =============================================
+        // VALIDATE LOGGED-IN COMPANY
+        // =============================================
+
+        const loggedInCompanyId = req.user?.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(401).json({
+                status: "error",
+                message: "User authentication information is missing"
+            });
+        }
+
+        // =============================================
         // FLAG ID 1 - GET COMPANY PRODUCTS
-        // ==========================================================
+        // =============================================
 
-        if (parseInt(flagId) === 1) {
+        if (Number(flagId) === 1) {
 
-            const companyProducts = await getCompanyProductsForDropdown();
+            const companyProducts = await getCompanyProductsForDropdown(
+                loggedInCompanyId
+            );
 
             return res.status(200).json({
                 status: "success",
@@ -361,11 +466,11 @@ export const editProjectController = async (req, res) => {
             });
         }
 
-        // ==========================================================
+        // =============================================
         // FLAG ID 2 - EDIT PROJECT
-        // ==========================================================
+        // =============================================
 
-        if (parseInt(flagId) === 2) {
+        if (Number(flagId) === 2) {
 
             const {
                 ProjectId,
@@ -377,9 +482,9 @@ export const editProjectController = async (req, res) => {
                 UpdatedByUserId
             } = req.body;
 
-            // =====================================================
+            // =============================================
             // VALIDATE PROJECT ID
-            // =====================================================
+            // =============================================
 
             if (
                 ProjectId === undefined ||
@@ -402,9 +507,11 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            const projectId = Number(ProjectId);
+
+            // =============================================
             // VALIDATE COMPANY PRODUCT ID
-            // =====================================================
+            // =============================================
 
             if (
                 CompanyProductId === undefined ||
@@ -427,9 +534,11 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            const companyProductId = Number(CompanyProductId);
+
+            // =============================================
             // VALIDATE PROJECT NAME
-            // =====================================================
+            // =============================================
 
             if (
                 ProjectName === undefined ||
@@ -444,12 +553,14 @@ export const editProjectController = async (req, res) => {
             }
 
             const projectName = ProjectName.trim();
+
             if (projectName.length > 30) {
                 return res.status(400).json({
                     status: "error",
                     message: "Project name must not exceed 30 characters"
                 });
             }
+
             const projectNameRegex = /^[A-Za-z\s]+$/;
 
             if (!projectNameRegex.test(projectName)) {
@@ -459,9 +570,9 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE PROJECT CODE
-            // =====================================================
+            // =============================================
 
             if (
                 ProjectCode === undefined ||
@@ -484,9 +595,9 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE DESCRIPTION
-            // =====================================================
+            // =============================================
 
             let description = null;
 
@@ -523,9 +634,9 @@ export const editProjectController = async (req, res) => {
                 }
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE IS DISABLED
-            // =====================================================
+            // =============================================
 
             if (typeof IsDisabled !== "boolean") {
                 return res.status(400).json({
@@ -534,9 +645,9 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // VALIDATE UPDATED BY USER ID
-            // =====================================================
+            // =============================================
 
             if (
                 UpdatedByUserId === undefined ||
@@ -559,11 +670,15 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // CHECK PROJECT EXISTS
-            // =====================================================
+            // WITHIN LOGGED-IN COMPANY
+            // =============================================
 
-            const projectExists = await getProjectById(Number(ProjectId));
+            const projectExists = await getProjectById(
+                projectId,
+                loggedInCompanyId
+            );
 
             if (projectExists.length === 0) {
                 return res.status(404).json({
@@ -572,52 +687,60 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // CHECK COMPANY PRODUCT
-            // =====================================================
+            // WITHIN LOGGED-IN COMPANY
+            // =============================================
 
             const companyProductData =
-                await checkCompanyProductExists(Number(CompanyProductId));
+                await checkCompanyProductExists(
+                    companyProductId,
+                    loggedInCompanyId
+                );
 
             if (companyProductData.length === 0) {
                 return res.status(400).json({
                     status: "error",
-                    message: "Invalid or inactive CompanyProductId"
+                    message: "Invalid or inactive CompanyProductId for this company"
                 });
             }
 
-            // =====================================================
+            // =============================================
             // CHECK DUPLICATE PROJECT
             // EXCLUDE CURRENT PROJECT
-            // =====================================================
+            // =============================================
 
-            const existingProject = await checkProjectExistsForUpdate(
-                Number(CompanyProductId),
-                projectName,
-                projectCode,
-                Number(ProjectId)
-            );
+            const existingProject =
+                await checkProjectExistsForUpdate(
+                    companyProductId,
+                    projectName,
+                    projectCode,
+                    projectId,
+                    loggedInCompanyId
+                );
 
             if (existingProject.length > 0) {
 
-                const duplicate = existingProject[0];
+                const duplicateName = existingProject.some(
+                    item =>
+                        item.ProjectName.trim().toLowerCase() ===
+                        projectName.toLowerCase()
+                );
 
-                if (
-                    duplicate.ProjectName &&
-                    duplicate.ProjectName.trim().toLowerCase() ===
-                    projectName.toLowerCase()
-                ) {
+                const duplicateCode = existingProject.some(
+                    item =>
+                        item.ProjectCode.trim().toLowerCase() ===
+                        projectCode.toLowerCase()
+                );
+
+                if (duplicateName) {
                     return res.status(409).json({
                         status: "error",
                         message: "Project name already exists for this company product"
                     });
                 }
 
-                if (
-                    duplicate.ProjectCode &&
-                    duplicate.ProjectCode.trim().toLowerCase() ===
-                    projectCode.toLowerCase()
-                ) {
+                if (duplicateCode) {
                     return res.status(409).json({
                         status: "error",
                         message: "Project code already exists for this company product"
@@ -625,25 +748,33 @@ export const editProjectController = async (req, res) => {
                 }
             }
 
-            // =====================================================
+            // =============================================
             // UPDATE PROJECT
-            // =====================================================
+            // =============================================
 
             const result = await editProject({
 
-                ProjectId: Number(ProjectId),
-                CompanyProductId: Number(CompanyProductId),
+                ProjectId: projectId,
+
+                CompanyProductId: companyProductId,
+
                 ProjectName: projectName,
+
                 ProjectCode: projectCode,
+
                 IsDisabled,
+
                 Description: description,
-                UpdatedByUserId: Number(UpdatedByUserId)
+
+                UpdatedByUserId: Number(UpdatedByUserId),
+
+                CompanyId: loggedInCompanyId
 
             });
 
-            // =====================================================
+            // =============================================
             // PROJECT NOT FOUND
-            // =====================================================
+            // =============================================
 
             if (result === 0) {
                 return res.status(404).json({
@@ -652,20 +783,19 @@ export const editProjectController = async (req, res) => {
                 });
             }
 
-            // =====================================================
+            // =============================================
             // SUCCESS
-            // =====================================================
+            // =============================================
 
             return res.status(200).json({
                 status: "success",
-                message: "Project updated successfully",
-                data: result
+                message: "Project updated successfully"
             });
         }
 
-        // ==========================================================
+        // =============================================
         // INVALID FLAG ID
-        // ==========================================================
+        // =============================================
 
         return res.status(400).json({
             status: "error",
@@ -674,6 +804,7 @@ export const editProjectController = async (req, res) => {
 
     } catch (error) {
 
+
         return res.status(500).json({
             status: "error",
             message: "Failed to edit project",
@@ -681,7 +812,6 @@ export const editProjectController = async (req, res) => {
         });
     }
 };
-
 // TOGGLE PROJECT STATUS
 export const toggleProjectStatus = async (req, res) => {
 
@@ -823,8 +953,6 @@ export const toggleProjectStatus = async (req, res) => {
         });
     }
 };
-
-
 // DELETE PROJECT
 export const deleteProjectController = async (req, res) => {
 

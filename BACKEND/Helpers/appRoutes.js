@@ -22,8 +22,8 @@ import LocationMasterRoutes from "../Routes/LocationMaster/LocationMasterRoutes.
 import GstRateRoutes from "../Routes/GstRate/GstRate.js"
 import DepartmentRoutes from "../Routes/Department/DepartmentRoutes.js"
 import prpoRoutes from "../Routes/PRPORoutes/PoPrRoute.js"
+import VendorTypeRoutes from "../Routes/VendorType/VendorTypeRoutes.js"
 import viewPRPORoutes from "../Routes/ViewPRPO/ViewPRPORoutes.js"
-
 
 
 const applyRoutes = (app) => {
@@ -53,7 +53,6 @@ app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
 
 app.use(backendHelpers.GST_RATE, GstRateRoutes);
 
-
 app.use(backendHelpers.LOCATION_TYPE_MASTER, locationTypeMasterRoutes);
 app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
 app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
@@ -61,8 +60,9 @@ app.use(backendHelpers.DEPARTMENT, DepartmentRoutes);
 
 //PO_PR
 app.use(backendHelpers.PO_PR,prpoRoutes);
+app.use(backendHelpers.VENDOR_TYPE, VendorTypeRoutes); //written by Lohith
 app.use(backendHelpers.VIEW_PRPO, viewPRPORoutes);
-
 };
 
 export default applyRoutes;
+

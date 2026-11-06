@@ -5,21 +5,19 @@ info:
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/userEdit/toggleUserStatus
+  url: http://localhost:9004/verp-service/userEdit/getAllUserDetails
   body:
     type: json
     data: |-
       {
-        "flagId":1,
-        "IsDisabled":true,
-        "UpdatedByUserName":"kavyaaa",
-        "UserId":8
+        "flagId": 1
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkzMTYzNjQzLCJleHAiOjE3OTMxOTI0NDN9.wgOSJOSSp6L5QqQxB4jKcfxEtb3Ce0kFvCEC2PhaYkA
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: false

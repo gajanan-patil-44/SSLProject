@@ -231,6 +231,8 @@ export const getVendors = async (req, res) => {
     try {
         if (parseInt(FlagId) === 1) {
 
+       
+
             const CompanyId = req.user?.CompanyId ?? null;
 
             const data = await getAllVendors(CompanyId);

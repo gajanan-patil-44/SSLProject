@@ -1,4 +1,3 @@
-import e from "express"
 
 export const USER_CREATION="/verp-service/userCreation"
 export const LOGIN = "/verp-service/auth"
@@ -27,8 +26,6 @@ export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
 
 //PO_PR
 export const PO_PR="/verp-service/PoPr"
-
-
 export const DEPARTMENT="/verp-service/department"
+export const VENDOR_TYPE="/verp-service/vendorType"
 export const VIEW_PRPO="/verp-service/viewPRPO"
-

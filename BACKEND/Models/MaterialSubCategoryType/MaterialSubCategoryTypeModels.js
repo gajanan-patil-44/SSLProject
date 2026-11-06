@@ -4,11 +4,13 @@ import {pool} from "../../Config/db.js";
 // FLAG ID 1 - GET ALL MATERIAL SUB CATEGORY TYPES
 // =====================================================
 
-export const getAllMaterialSubCategoryTypes = async () => {
+
+export const getAllMaterialSubCategoryTypes = async (CompanyId) => {
 
     const query = `
         SELECT
             msct."MaterialSubCategoryTypeId",
+            mct."CompanyId",
             msct."MaterialCategoryTypeId",
             mct."MaterialCategoryTypeName",
             msct."MaterialSubCategoryTypeName",
@@ -18,9 +20,7 @@ export const getAllMaterialSubCategoryTypes = async () => {
             msct."UpdatedAt",
             msct."CreatedByUserName",
             msct."UpdatedByUserName"
-
         FROM "LKP"."MaterialSubCategoryType" msct
-
         INNER JOIN "LKP"."MaterialCategoryType" mct
             ON msct."MaterialCategoryTypeId" =mct."MaterialCategoryTypeId"
                
@@ -28,35 +28,44 @@ export const getAllMaterialSubCategoryTypes = async () => {
         ORDER BY msct."MaterialSubCategoryTypeId" ASC
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [CompanyId]);
 
     return result.rows;
 };
-
-
 // =====================================================
 // CHECK DUPLICATE SUB CATEGORY
 // =====================================================
 
+
 export const checkMaterialSubCategoryExists = async (
+    CompanyId,
     MaterialSubCategoryTypeName,
     MaterialSubCategoryTypeCode
 ) => {
 
     const query = `
         SELECT
-            "MaterialSubCategoryTypeId",
-            "MaterialSubCategoryTypeName",
-            "MaterialSubCategoryTypeCode"
+            msct."MaterialSubCategoryTypeId",
+            msct."MaterialSubCategoryTypeName",
+            msct."MaterialSubCategoryTypeCode",
+            mct."CompanyId"
 
-        FROM "LKP"."MaterialSubCategoryType"
+        FROM "LKP"."MaterialSubCategoryType" msct
+
+        INNER JOIN "LKP"."MaterialCategoryType" mct
+            ON msct."MaterialCategoryTypeId" =
+               mct."MaterialCategoryTypeId"
 
         WHERE
-            "MaterialSubCategoryTypeName" = $1
-            OR "MaterialSubCategoryTypeCode" = $2
+            mct."CompanyId" = $1
+            AND (
+                LOWER(msct."MaterialSubCategoryTypeName") = LOWER($2)
+                OR LOWER(msct."MaterialSubCategoryTypeCode") = LOWER($3)
+            );
     `;
 
     const result = await pool.query(query, [
+        CompanyId,
         MaterialSubCategoryTypeName,
         MaterialSubCategoryTypeCode
     ]);
@@ -70,6 +79,7 @@ export const checkMaterialSubCategoryExists = async (
 // =====================================================
 
 export const checkMaterialSubCategoryExistsForUpdate = async (
+    CompanyId,
     MaterialSubCategoryTypeName,
     MaterialSubCategoryTypeCode,
     MaterialSubCategoryTypeId
@@ -78,20 +88,21 @@ export const checkMaterialSubCategoryExistsForUpdate = async (
     const query = `
         SELECT
             "MaterialSubCategoryTypeId",
+            "CompanyId",
             "MaterialSubCategoryTypeName",
             "MaterialSubCategoryTypeCode"
-
         FROM "LKP"."MaterialSubCategoryType"
-
         WHERE
-            (
-                "MaterialSubCategoryTypeName" = $1
-                OR "MaterialSubCategoryTypeCode" = $2
+            "CompanyId" = $1
+            AND (
+                LOWER("MaterialSubCategoryTypeName") = LOWER($2)
+                OR LOWER("MaterialSubCategoryTypeCode") = LOWER($3)
             )
-            AND "MaterialSubCategoryTypeId" <> $3
+            AND "MaterialSubCategoryTypeId" <> $4;
     `;
 
     const result = await pool.query(query, [
+        CompanyId,
         MaterialSubCategoryTypeName,
         MaterialSubCategoryTypeCode,
         MaterialSubCategoryTypeId
@@ -106,22 +117,25 @@ export const checkMaterialSubCategoryExistsForUpdate = async (
 // =====================================================
 
 export const checkMaterialCategoryExists = async (
-    MaterialCategoryTypeId
+    MaterialCategoryTypeId,
+    CompanyId
 ) => {
 
     const query = `
         SELECT
-            "MaterialCategoryTypeId"
-
+            "MaterialCategoryTypeId",
+            "CompanyId"
         FROM "LKP"."MaterialCategoryType"
-
         WHERE
             "MaterialCategoryTypeId" = $1
+            AND "CompanyId" = $2
             AND "IsDisabled" = false
+        LIMIT 1;
     `;
 
     const result = await pool.query(query, [
-        MaterialCategoryTypeId
+        MaterialCategoryTypeId,
+        CompanyId
     ]);
 
     return result.rows;
@@ -131,6 +145,7 @@ export const checkMaterialCategoryExists = async (
 // =====================================================
 // FLAG ID 2 - ADD SUB CATEGORY
 // =====================================================
+
 
 export const addMaterialSubCategoryType = async (data) => {
 
@@ -152,17 +167,18 @@ export const addMaterialSubCategoryType = async (data) => {
             $3,
             $4,
             false,
-            NOW(),
+            CURRENT_TIMESTAMP,
             $5
         )
         RETURNING
             "MaterialSubCategoryTypeId",
+            "CompanyId",
             "MaterialCategoryTypeId",
             "MaterialSubCategoryTypeName",
             "MaterialSubCategoryTypeCode",
             "IsDisabled",
             "CreatedAt",
-            "CreatedByUserName"
+            "CreatedByUserName";
     `;
 
     const result = await pool.query(query, [
@@ -177,25 +193,27 @@ export const addMaterialSubCategoryType = async (data) => {
 };
 
 
+
 // =====================================================
 // FLAG ID 3 - CATEGORY DROPDOWN
 // =====================================================
 
-export const getMaterialCategoryDropdown = async () => {
+export const getMaterialCategoryDropdown = async (CompanyId) => {
 
     const query = `
         SELECT
             "MaterialCategoryTypeId",
+            "CompanyId",
             "MaterialCategoryTypeName"
-
         FROM "LKP"."MaterialCategoryType"
-
-        WHERE "IsDisabled" = false
-
-        ORDER BY "MaterialCategoryTypeName" ASC
+        WHERE
+            "IsDisabled" = false
+            AND ($1::SMALLINT IS NULL OR "CompanyId" = $1)
+        ORDER BY
+            "MaterialCategoryTypeName" ASC;
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [CompanyId]);
 
     return result.rows;
 };

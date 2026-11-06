@@ -70,7 +70,7 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
 
           {/* ── Procurement ── */}
-          <Route path="procurement/raise-pr-request" element={<RaisePRRequestView />} />
+          {/* <Route path="procurement/raise-pr-request" element={<RaisePRRequestView />} /> */}
           <Route path="procurement/raise-pr" element={<Navigate to="/procurement/raise-pr-request" replace />} />
           <Route path="procurement/pr-request" element={<Navigate to="/procurement/raise-pr-request" replace />} />
 
@@ -151,6 +151,22 @@ export default function App() {
           <Route path="work-management/review" element={<WorkUpdateReviewView />} />
           <Route path="work-management/dashboard" element={<OrganizationDashboardView />} />
           <Route path="work-management/analytics" element={<WorkReportsAnalyticsView />} />
+
+          {/* Procurement / Purchase Requisition (PR) Module */}
+          <Route path="procurement/raise-pr" element={<RaisePRView />} />
+          <Route path="procurement/view-prs" element={<ViewRaisePRsView />} />
+          <Route path="procurement/view-pr" element={<ViewRaisePRsView />} />
+          <Route path="procurement/pending-approvals" element={<MyPendingApprovalsView />} />
+          <Route path="procurement/my-pending-approvals" element={<MyPendingApprovalsView />} />
+          <Route path="procurement" element={<Navigate to="/procurement/view-prs" replace />} />
+
+          {/* Alternate / Alias PR Routes */}
+          <Route path="pr/raise-pr" element={<RaisePRView />} />
+          <Route path="pr/view-prs" element={<ViewRaisePRsView />} />
+          <Route path="pr/view-pr" element={<ViewRaisePRsView />} />
+          <Route path="pr/pending-approvals" element={<MyPendingApprovalsView />} />
+          <Route path="pr/my-pending-approvals" element={<MyPendingApprovalsView />} />
+          <Route path="pr" element={<Navigate to="/pr/view-prs" replace />} />
 
           {/* UI Design System Showcases */}
           <Route path="ui/:subpage" element={<ShowcaseView />} />
