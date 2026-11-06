@@ -29,6 +29,9 @@ import RaisePRRequestView from './pages/Procurement/RaisePRRequestView';
 
 import DepartmentView from './pages/Master/DepartmentView';
 import GSTCreationView from './pages/Master/GSTCreationView';
+import DesignationView from './pages/Master/DesignationView';
+import CompanyRoleView from './pages/Master/CompanyRoleView';
+import CompanyDesignationView from './pages/Master/CompanyDesignationView';
 
 // Work Management Module
 import {
@@ -84,7 +87,11 @@ export default function App() {
           <Route path="master/products" element={<KeyedModuleRenderer />} />
           <Route path="master/company-products" element={<KeyedModuleRenderer />} />
           <Route path="master/projects" element={<KeyedModuleRenderer />} />
-          <Route path="master/designations" element={<KeyedModuleRenderer />} />
+          <Route path="master/designations" element={<DesignationView />} />
+          <Route path="master/company-designations" element={<CompanyDesignationView />} />
+          <Route path="master/company-designation" element={<CompanyDesignationView />} />
+          <Route path="master/company-roles" element={<CompanyRoleView />} />
+          <Route path="master/company-role" element={<CompanyRoleView />} />
           <Route path="master/roles" element={<KeyedModuleRenderer />} />
           <Route path="master/user-creation" element={<UserCreationView />} />
           <Route path="master/manage-users" element={<ManageUserView />} />
@@ -118,6 +125,10 @@ export default function App() {
           <Route path="roles" element={<Navigate to="/master/roles" replace />} />
           <Route path="companies" element={<Navigate to="/master/companies" replace />} />
           <Route path="designations" element={<Navigate to="/master/designations" replace />} />
+          <Route path="company-designations" element={<Navigate to="/master/company-designations" replace />} />
+          <Route path="company-designation" element={<Navigate to="/master/company-designations" replace />} />
+          <Route path="company-roles" element={<Navigate to="/master/company-roles" replace />} />
+          <Route path="company-role" element={<Navigate to="/master/company-roles" replace />} />
           <Route path="projects" element={<Navigate to="/master/projects" replace />} />
           <Route path="manage-page" element={<Navigate to="/master/manage-page" replace />} />
           <Route path="department" element={<Navigate to="/master/department" replace />} />
@@ -128,6 +139,7 @@ export default function App() {
           {/* HRM Special Pages */}
           <Route path="hrm/employees" element={<EmployeesView />} />
           <Route path="hrm/departments" element={<DepartmentView />} />
+          <Route path="hrm/designations" element={<DesignationView />} />
           <Route path="hrm/attendance" element={<AttendanceView />} />
           <Route path="hrm/leave" element={<LeaveView />} />
 

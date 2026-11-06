@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { getAllTasks, INITIAL_PROJECTS, updateTaskProgress } from './workManagementData';
 import UpdateTaskModal from './components/UpdateTaskModal';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 export default function ProjectTaskTrackerView() {
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ export default function ProjectTaskTrackerView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [projectFilter, setProjectFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [selectedTask, setSelectedTask] = useState(null);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -285,7 +288,7 @@ export default function ProjectTaskTrackerView() {
                 </td>
               </tr>
             ) : (
-              filteredTasks.map((task) => {
+              filteredTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((task) => {
                 const isOverdue = task.status !== 'Completed' && task.dueDate < todayStr;
                 return (
                   <tr
@@ -358,6 +361,14 @@ export default function ProjectTaskTrackerView() {
             )}
           </tbody>
         </table>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredTasks.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       <UpdateTaskModal

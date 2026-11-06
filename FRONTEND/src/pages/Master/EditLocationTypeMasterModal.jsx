@@ -1,4 +1,4 @@
-﻿// src/pages/Master/EditLocationTypeMasterModal.jsx
+// src/pages/Master/EditLocationTypeMasterModal.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
@@ -208,8 +208,9 @@ export default function EditLocationTypeMasterModal({
                   type="text"
                   placeholder="e.g. Country, State, District"
                   value={locationTypeName}
+                  maxLength={50}
                   onChange={(e) => {
-                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
                     setLocationTypeName(sanitized);
                     if (errors.childName) setErrors(prev => ({ ...prev, childName: null }));
                   }}

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { productService } from '../../services/productService';
 import { Modal } from '../../components/ui/Modal';
-import { Badge, Button, Input, PageHeader } from '../../components/ui/index';
+import { Badge, Button, Input, PageHeader, PaginationControls } from '../../components/ui/index';
 
 export default function ProductsView() {
   // Data state
@@ -29,6 +29,8 @@ export default function ProductsView() {
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'ACTIVE' | 'DISABLED'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal states
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -286,7 +288,7 @@ export default function ProductsView() {
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((prod) => {
+                filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((prod) => {
                   const id = prod.ProductId ?? prod.id;
                   const code = prod.ProductCode || prod.productCode || '—';
                   const name = prod.ProductName || prod.productName || '—';
@@ -301,7 +303,7 @@ export default function ProductsView() {
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     >
                       <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
-                        #{id}
+                        {id}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
@@ -363,14 +365,14 @@ export default function ProductsView() {
           </table>
         </div>
 
-        {/* Table Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-          <span>
-            Showing <strong className="text-slate-700 dark:text-slate-200">{filteredProducts.length}</strong> of{' '}
-            <strong className="text-slate-700 dark:text-slate-200">{products.length}</strong> products
-          </span>
-          <span>API: /verp-service/productCreation/getProduct</span>
-        </div>
+        {/* Pagination Controls */}
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredProducts.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* View Details Modal */}

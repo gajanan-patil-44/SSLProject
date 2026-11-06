@@ -451,7 +451,8 @@ export default function PRDetailModal({ pr, isOpen, onClose, isApprovalMode = fa
               </div>
               <textarea
                 value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
+                maxLength={500}
+                onChange={(e) => setRejectReason(e.target.value.slice(0, 500))}
                 rows={3}
                 placeholder="Enter detailed reason for rejecting this purchase requisition..."
                 className="w-full text-xs sm:text-sm p-3 rounded-lg border border-rose-300 dark:border-rose-700 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
@@ -504,7 +505,8 @@ export default function PRDetailModal({ pr, isOpen, onClose, isApprovalMode = fa
                 <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Comments</label>
                 <textarea
                   value={forwardComment}
-                  onChange={(e) => setForwardComment(e.target.value)}
+                  maxLength={500}
+                  onChange={(e) => setForwardComment(e.target.value.slice(0, 500))}
                   rows={2}
                   className="w-full text-xs sm:text-sm p-3 rounded-lg border border-blue-300 dark:border-blue-700 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -540,7 +542,8 @@ export default function PRDetailModal({ pr, isOpen, onClose, isApprovalMode = fa
                 <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Approval Comments</label>
                 <textarea
                   value={approveComment}
-                  onChange={(e) => setApproveComment(e.target.value)}
+                  maxLength={500}
+                  onChange={(e) => setApproveComment(e.target.value.slice(0, 500))}
                   rows={2}
                   placeholder="Optional approval notes..."
                   className="w-full text-xs sm:text-sm p-3 rounded-lg border border-emerald-300 dark:border-emerald-700 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"

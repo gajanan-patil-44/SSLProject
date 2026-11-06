@@ -1,4 +1,4 @@
-﻿// src/pages/Master/EditCompanyMasterModal.jsx
+// src/pages/Master/EditCompanyMasterModal.jsx
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
@@ -217,11 +217,13 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                   type="text"
                   placeholder="e.g. GSL"
                   value={companyCode}
+                  maxLength={10}
                   onChange={(e) => {
-                    setCompanyCode(e.target.value);
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10).toUpperCase();
+                    setCompanyCode(sanitized);
                     if (errors.companyCode) setErrors(prev => ({ ...prev, companyCode: null }));
                   }}
-                  className={`${inputCls(errors.companyCode)} pl-9.5`}
+                  className={`${inputCls(errors.companyCode)} pl-9.5 font-mono uppercase`}
                 />
               </div>
             </Field>
@@ -234,8 +236,9 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                   type="text"
                   placeholder="e.g. Global Solutions Ltd"
                   value={companyName}
+                  maxLength={100}
                   onChange={(e) => {
-                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 100);
                     setCompanyName(sanitized);
                     if (errors.companyName) setErrors(prev => ({ ...prev, companyName: null }));
                   }}
@@ -250,11 +253,13 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
+                  inputMode="numeric"
                   placeholder="e.g. 9876543210"
-                  maxLength={15}
+                  maxLength={10}
                   value={contactNumber}
                   onChange={(e) => {
-                    setContactNumber(e.target.value);
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setContactNumber(digits);
                     if (errors.contactNumber) setErrors(prev => ({ ...prev, contactNumber: null }));
                   }}
                   className={`${inputCls(errors.contactNumber)} pl-9.5`}
@@ -269,10 +274,10 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                 <input
                   type="email"
                   placeholder="e.g. contact@globalsolutions.com"
-                  maxLength={150}
+                  maxLength={100}
                   value={emailId}
                   onChange={(e) => {
-                    setEmailId(e.target.value);
+                    setEmailId(e.target.value.slice(0, 100));
                     if (errors.emailId) setErrors(prev => ({ ...prev, emailId: null }));
                   }}
                   className={`${inputCls(errors.emailId)} pl-9.5`}
@@ -290,7 +295,8 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                   maxLength={15}
                   value={gstNo}
                   onChange={(e) => {
-                    setGstNo(e.target.value.toUpperCase());
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 15).toUpperCase();
+                    setGstNo(sanitized);
                     if (errors.gstNo) setErrors(prev => ({ ...prev, gstNo: null }));
                   }}
                   className={`${inputCls(errors.gstNo)} pl-9.5 uppercase font-mono`}
@@ -308,7 +314,8 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                   maxLength={10}
                   value={panNo}
                   onChange={(e) => {
-                    setPanNo(e.target.value.toUpperCase());
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10).toUpperCase();
+                    setPanNo(sanitized);
                     if (errors.panNo) setErrors(prev => ({ ...prev, panNo: null }));
                   }}
                   className={`${inputCls(errors.panNo)} pl-9.5 uppercase font-mono`}
@@ -324,10 +331,10 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                   <textarea
                     rows={2}
                     placeholder="e.g. Hyderabad, Telangana"
-                    maxLength={300}
+                    maxLength={250}
                     value={address}
                     onChange={(e) => {
-                      setAddress(e.target.value);
+                      setAddress(e.target.value.slice(0, 250));
                       if (errors.address) setErrors(prev => ({ ...prev, address: null }));
                     }}
                     className={`${inputCls(errors.address)} pl-9.5 resize-none`}

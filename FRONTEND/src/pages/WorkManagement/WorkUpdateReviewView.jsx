@@ -27,11 +27,14 @@ import {
 import { getAllReports, updateReportReview } from './workManagementData';
 import ReviewReportModal from './components/ReviewReportModal';
 import WorkUpdateDetailsModal from './components/WorkUpdateDetailsModal';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 export default function WorkUpdateReviewView() {
   const [reports, setReports] = useState(getAllReports);
   const [activeTab, setActiveTab] = useState('Pending Review'); // 'Pending Review' | 'Clarification' | 'Reviewed'
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modals
   const [selectedReport, setSelectedReport] = useState(null);
@@ -251,7 +254,7 @@ export default function WorkUpdateReviewView() {
                 </td>
               </tr>
             ) : (
-              filteredReports.map((report) => (
+              filteredReports.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((report) => (
                 <tr
                   key={report.id || report.reportId}
                   className="border-b border-slate-100 dark:border-slate-800/70 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:via-purple-50/30 hover:to-indigo-50/50 dark:hover:bg-gradient-to-r dark:hover:from-indigo-950/30 dark:hover:via-purple-950/20 dark:hover:to-indigo-950/30 transition-all text-xs"
@@ -329,6 +332,14 @@ export default function WorkUpdateReviewView() {
             )}
           </tbody>
         </table>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredReports.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* Review Modal */}

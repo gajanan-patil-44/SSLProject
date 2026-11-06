@@ -1,4 +1,4 @@
-﻿// src/pages/Master/LocationMasterView.jsx
+// src/pages/Master/LocationMasterView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationService } from '../../services/locationService';
@@ -370,20 +370,6 @@ export default function LocationMasterView() {
           { label: 'Master', href: '/master/companies' },
           { label: 'Location Master' }
         ]}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              icon={RotateCcw}
-              onClick={handleReset}
-              className="cursor-pointer"
-            >
-              Reset Form
-            </Button>
-          </div>
-        }
       />
 
       {/* 2. Top Card: Location Registration Form */}
@@ -576,8 +562,9 @@ export default function LocationMasterView() {
                       type="text"
                       placeholder="e.g. Tamil Nadu, Karnataka, Bengaluru North"
                       value={locationName}
+                      maxLength={100}
                       onChange={(e) => {
-                        const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                        const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 100);
                         setLocationName(sanitized);
                         if (errors.locationName) setErrors((prev) => ({ ...prev, locationName: null }));
                       }}
@@ -595,8 +582,9 @@ export default function LocationMasterView() {
                     type="text"
                     placeholder="e.g. Ramesh Kumar"
                     value={contactPerson}
+                    maxLength={50}
                     onChange={(e) => {
-                      const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                      const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
                       setContactPerson(sanitized);
                       if (errors.contactPerson) setErrors((prev) => ({ ...prev, contactPerson: null }));
                     }}
@@ -611,10 +599,13 @@ export default function LocationMasterView() {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
+                    inputMode="numeric"
                     placeholder="e.g. 9845012345"
                     value={contactNumber}
+                    maxLength={10}
                     onChange={(e) => {
-                      setContactNumber(e.target.value);
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setContactNumber(digits);
                       if (errors.contactNumber) setErrors((prev) => ({ ...prev, contactNumber: null }));
                     }}
                     className={`${inputCls(errors.contactNumber)} pl-9.5`}
@@ -631,8 +622,9 @@ export default function LocationMasterView() {
                       type="email"
                       placeholder="e.g. ramesh@example.com"
                       value={emailId}
+                      maxLength={100}
                       onChange={(e) => {
-                        setEmailId(e.target.value);
+                        setEmailId(e.target.value.slice(0, 100));
                         if (errors.emailId) setErrors((prev) => ({ ...prev, emailId: null }));
                       }}
                       className={`${inputCls(errors.emailId)} pl-9.5`}
@@ -650,8 +642,9 @@ export default function LocationMasterView() {
                       rows={2}
                       placeholder="e.g. Chennai, Tamil Nadu"
                       value={address}
+                      maxLength={250}
                       onChange={(e) => {
-                        setAddress(e.target.value);
+                        setAddress(e.target.value.slice(0, 250));
                         if (errors.address) setErrors((prev) => ({ ...prev, address: null }));
                       }}
                       className={`${inputCls(errors.address)} pl-9.5 resize-none py-2`}

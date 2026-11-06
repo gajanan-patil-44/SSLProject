@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { procurementPRService } from './procurementData';
 import PRDetailModal, { StatusBadge, PriorityBadge } from './components/PRDetailModal';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 export default function ViewRaisePRsView() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function ViewRaisePRsView() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedPR, setSelectedPR] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Load PRs and listen to reactive updates
   const loadPRs = () => {
@@ -165,14 +168,16 @@ export default function ViewRaisePRsView() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredPRs.length > 0 ? (
-                filteredPRs.map((pr, idx) => (
+                filteredPRs.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((pr, idx) => {
+                  const rowNumber = (currentPage - 1) * pageSize + idx + 1;
+                  return (
                   <tr
                     key={pr.id}
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition cursor-pointer"
                     onClick={() => handleViewPR(pr)}
                   >
                     <td className="py-3.5 px-4 text-center font-medium text-slate-500">
-                      {idx + 1}
+                      {rowNumber}
                     </td>
                     <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
                       {pr.requirementNo}
@@ -207,7 +212,7 @@ export default function ViewRaisePRsView() {
                       </button>
                     </td>
                   </tr>
-                ))
+                );})
               ) : (
                 <tr>
                   <td colSpan="8" className="py-12 text-center">
@@ -224,6 +229,14 @@ export default function ViewRaisePRsView() {
             </tbody>
           </table>
         </div>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredPRs.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* PR Detail Modal */}

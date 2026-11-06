@@ -137,7 +137,17 @@ export default function RaisePRView() {
   const handleItemFieldChange = (index, field, value) => {
     setItems((prev) => {
       const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: value };
+      if (field === 'qty') {
+        if (value === '') {
+          copy[index] = { ...copy[index], qty: '' };
+        } else {
+          const digits = String(value).replace(/\D/g, '').slice(0, 6);
+          const num = parseInt(digits, 10);
+          copy[index] = { ...copy[index], qty: isNaN(num) ? '' : Math.min(999999, Math.max(1, num)) };
+        }
+      } else {
+        copy[index] = { ...copy[index], [field]: value };
+      }
 
       // Auto-set UOM if item selected
       if (field === 'itemName') {
@@ -538,8 +548,9 @@ export default function RaisePRView() {
             <textarea
               rows={4}
               value={purpose}
+              maxLength={500}
               onChange={(e) => {
-                setPurpose(e.target.value);
+                setPurpose(e.target.value.slice(0, 500));
                 if (errors.purpose) setErrors((prev) => ({ ...prev, purpose: null }));
               }}
               placeholder="Enter purpose or justification."
@@ -616,8 +627,12 @@ export default function RaisePRView() {
                           <input
                             type="number"
                             min="1"
+                            max="999999"
                             step="1"
                             value={row.qty}
+                            onKeyDown={(e) => {
+                              if (['-', '+', 'e', 'E', '.'].includes(e.key)) e.preventDefault();
+                            }}
                             onChange={(e) => handleItemFieldChange(idx, 'qty', e.target.value)}
                             className="w-full h-9 px-3 text-xs sm:text-sm font-mono font-semibold rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
                           />
