@@ -31,11 +31,7 @@ export const companyService = {
   addCompanyMaster: async (data) => {
     const sessionUserName = (() => {
       try {
-<<<<<<< HEAD
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
         const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         if (raw) {
           const s = JSON.parse(raw);
           return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || s?.data?.user?.name || '';
@@ -69,11 +65,7 @@ export const companyService = {
   updateCompanyMaster: async (data) => {
     const sessionUserName = (() => {
       try {
-<<<<<<< HEAD
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
         const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         if (raw) {
           const s = JSON.parse(raw);
           const user = s?.data?.user || s?.user || s;
@@ -114,11 +106,7 @@ export const companyService = {
   toggleCompanyMasterStatus: async (data) => {
     const sessionUserName = (() => {
       try {
-<<<<<<< HEAD
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
         const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         if (raw) {
           const s = JSON.parse(raw);
           const user = s?.data?.user || s?.user || s;

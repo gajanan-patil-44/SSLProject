@@ -306,10 +306,7 @@ export default function UserCreationView() {
   const [photo, setPhoto]                     = useState(null);   // { file, preview }
   const [userFiles, setUserFiles]             = useState({});     // { [fileTypeId]: File }
   const [fileErrors, setFileErrors]           = useState({});     // { [fileTypeId]: string }
-<<<<<<< HEAD
-=======
   const [departments, setDepartments]         = useState([]);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   const [designations, setDesignations]       = useState([]);
   const [genders, setGenders]                 = useState([]);
   const [maritalStatuses, setMaritalStatuses] = useState([]);
@@ -474,22 +471,14 @@ export default function UserCreationView() {
     }
 
     if (name === 'CompanyId') {
-<<<<<<< HEAD
-      setForm(f => ({ ...f, CompanyId: value, DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
-=======
       setForm(f => ({ ...f, CompanyId: value, DepartmentId: '', DesignationId: '', RoleId: '', CompanyProductId: [], ProjectId: [], ReportingManagerUserId: [] }));
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       setProducts([]);
       setProjects([]);
       setDepartments([]);
       setDesignations([]);
       setRoles([]);
       setReportingManagers([]);
-<<<<<<< HEAD
-      setErrors(er => ({ ...er, CompanyId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
-=======
       setErrors(er => ({ ...er, CompanyId: '', DepartmentId: '', DesignationId: '', RoleId: '', CompanyProductId: '', ProjectId: '', ReportingManagerUserId: '' }));
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (!value) return;
 
       // 1. Fetch Company Products
@@ -549,8 +538,6 @@ export default function UserCreationView() {
       } catch (err) {
         setRoles([]);
       }
-<<<<<<< HEAD
-=======
       return;
     }
 
@@ -558,7 +545,6 @@ export default function UserCreationView() {
       const sanitized = value.replace(/[^a-zA-Z\s]/g, '');
       setForm(f => ({ ...f, [name]: sanitized }));
       setErrors(er => ({ ...er, [name]: '' }));
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       return;
     }
 
@@ -601,13 +587,9 @@ export default function UserCreationView() {
         fieldError = 'Login username must be at least 3 characters';
       }
     } else if (name === 'Password') {
-<<<<<<< HEAD
-      fieldError = validatePassword(value, 'Password', 6, true);
-=======
       fieldError = validatePassword(value, 'Password', 8, true);
     } else if (name === 'DesignationId') {
       if (!value && Number(form.RoleId) > 2) fieldError = 'Select a designation';
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     } else if (name === 'CompanyId') {
       if (!value) fieldError = 'Select a company';
     } else if (name === 'RoleId') {
@@ -701,17 +683,10 @@ export default function UserCreationView() {
     setErrors(er => ({ ...er, Photo: '' }));
   };
 
-<<<<<<< HEAD
-  // ── Per-FileType upload handlers (Multiple Images Only) ────────────────────
-  const onAddFiles = () => {}; // kept for ref compat
-
-  // Helper to ensure file is strictly an image
-=======
   // ── Per-FileType upload handlers (Multiple Images & PDFs) ────────────────────
   const onAddFiles = () => {}; // kept for ref compat
 
   // Helper to ensure file is an image
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   const isImageFile = (file) => {
     if (!file) return false;
     if (file.type && file.type.startsWith('image/')) return true;
@@ -719,8 +694,6 @@ export default function UserCreationView() {
     return /\.(jpe?g|png|webp|gif|bmp|svg|avif)$/i.test(name);
   };
 
-<<<<<<< HEAD
-=======
   // Helper to ensure file is a PDF
   const isPdfFile = (file) => {
     if (!file) return false;
@@ -734,24 +707,10 @@ export default function UserCreationView() {
     return isImageFile(file) || isPdfFile(file);
   };
 
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   const onFilesForType = (fileTypeId, incomingFiles, fileTypeLabel = '') => {
     if (!incomingFiles || incomingFiles.length === 0) return;
     const filesArray = Array.from(incomingFiles);
 
-<<<<<<< HEAD
-    // 1. Strict Image-Only Validation (reject PDFs, Word, Excel, etc.)
-    const nonImageFiles = filesArray.filter(f => !isImageFile(f));
-    if (nonImageFiles.length > 0) {
-      const invalidNames = nonImageFiles.map(f => f.name).join(', ');
-      const errorMsg = `Only image files (JPG, PNG, WebP) are allowed. Rejected non-image file(s): ${invalidNames}`;
-      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
-      useERPStore.getState().showToast(`Only image files are allowed for ${fileTypeLabel || 'documents'}.`, 'error');
-      return;
-    }
-
-    // 2. Size limit per image
-=======
     // 1. Image and PDF Validation (allows JPG, PNG, WebP, PDF)
     const disallowedFiles = filesArray.filter(f => !isAllowedDocFile(f));
     if (disallowedFiles.length > 0) {
@@ -763,7 +722,6 @@ export default function UserCreationView() {
     }
 
     // 2. Size limit per file
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     const is1MbRestricted = /aadhaar|aadhar|pan\b/i.test(fileTypeLabel);
     const maxSize = is1MbRestricted ? MAX_PHOTO_SIZE : 5 * 1024 * 1024;
     const limitText = is1MbRestricted ? '1 MB' : '5 MB';
@@ -771,15 +729,9 @@ export default function UserCreationView() {
     const oversizedFiles = filesArray.filter(f => f.size > maxSize);
     if (oversizedFiles.length > 0) {
       const oversizedNames = oversizedFiles.map(f => f.name).join(', ');
-<<<<<<< HEAD
-      const errorMsg = `Image size exceeds ${limitText} limit (${oversizedNames})`;
-      setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
-      useERPStore.getState().showToast(`Image exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
-=======
       const errorMsg = `File size exceeds ${limitText} limit (${oversizedNames})`;
       setFileErrors(prev => ({ ...prev, [fileTypeId]: errorMsg }));
       useERPStore.getState().showToast(`File exceeds ${limitText} limit for ${fileTypeLabel || 'Document'}.`, 'error');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       return;
     }
 
@@ -922,11 +874,7 @@ export default function UserCreationView() {
     }
 
     if (step === 5) {
-<<<<<<< HEAD
-      // Validate that all attached files are images and within allowed size limits
-=======
       // Validate that all attached files are images or PDFs and within allowed size limits
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       for (const [ftId, files] of Object.entries(userFiles)) {
         if (!files) continue;
         const fileList = Array.isArray(files) ? files : [files];
@@ -936,13 +884,8 @@ export default function UserCreationView() {
 
         for (const file of fileList) {
           if (!file) continue;
-<<<<<<< HEAD
-          if (!isImageFile(file)) {
-            e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain image files only`;
-=======
           if (!isAllowedDocFile(file)) {
             e[`file_${ftId}`] = `${ft?.label || 'Document'} must contain images or PDF files only`;
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             break;
           } else if (file.size > max) {
             e[`file_${ftId}`] = `${ft?.label || 'File'} (${file.name}) exceeds ${is1Mb ? '1 MB' : '5 MB'} limit`;
@@ -1555,10 +1498,6 @@ export default function UserCreationView() {
               <Field label="Company" required error={errors.CompanyId}>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none z-10" />
-<<<<<<< HEAD
-                  <select name="CompanyId" value={form.CompanyId} onChange={change} onBlur={handleBlur}
-                    className={`${selectCls(errors.CompanyId)} pl-8`}>
-=======
                   <select
                     name="CompanyId"
                     value={form.CompanyId}
@@ -1567,7 +1506,6 @@ export default function UserCreationView() {
                     onBlur={handleBlur}
                     className={`${selectCls(errors.CompanyId)} pl-8 ${sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}`}
                   >
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                     <option value="">— Select Company —</option>
                     {companies.map(o => <option key={o.key} value={o.value}>{o.label}</option>)}
                     {sessionCompanyId && !companies.some(o => String(o.value) === String(sessionCompanyId)) && (
@@ -1734,11 +1672,7 @@ export default function UserCreationView() {
               icon={Image}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Supporting Documents"
-<<<<<<< HEAD
-              subtitle="Upload multiple images for each required document type (Images only: JPG, PNG, WEBP). Other document formats are not permitted."
-=======
               subtitle="Upload documents for each required document type (Images: JPG, PNG, WEBP or PDF). Maximum 5 MB per file (1 MB for Aadhaar/PAN)."
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             />
 
             {/* File-type compact grid — 3 per row */}
@@ -1777,11 +1711,7 @@ export default function UserCreationView() {
                               ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                               : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500'
                           }`}>
-<<<<<<< HEAD
-                            {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <Image className="w-3.5 h-3.5" />}
-=======
                             {hasErr ? <AlertCircle className="w-3.5 h-3.5" /> : <FileText className="w-3.5 h-3.5" />}
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate leading-tight">
@@ -1794,20 +1724,12 @@ export default function UserCreationView() {
                                 </span>
                               ) : (
                                 <span className="text-[9px] text-slate-400 shrink-0">
-<<<<<<< HEAD
-                                  Images only
-=======
                                   Images or PDF
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                                 </span>
                               )}
                               {hasFiles && (
                                 <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-<<<<<<< HEAD
-                                  {uploadedList.length} {uploadedList.length === 1 ? 'image' : 'images'}
-=======
                                   {uploadedList.length} {uploadedList.length === 1 ? 'file' : 'files'}
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                                 </span>
                               )}
                             </div>
@@ -1823,11 +1745,7 @@ export default function UserCreationView() {
                                 ? 'border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
                                 : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                             }`}
-<<<<<<< HEAD
-                            title={hasFiles ? 'Add more images' : 'Upload images'}
-=======
                             title={hasFiles ? 'Add more files' : 'Upload files'}
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                           >
                             <Upload className="w-3 h-3" />
                             {hasFiles ? '+ Add' : 'Upload'}
@@ -1837,11 +1755,7 @@ export default function UserCreationView() {
                               type="button"
                               onClick={() => removeFileForType(ft.value)}
                               className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
-<<<<<<< HEAD
-                              title="Clear all images"
-=======
                               title="Clear all files"
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -1850,11 +1764,7 @@ export default function UserCreationView() {
                             id={`ft-upload-${ft.value}`}
                             type="file"
                             multiple
-<<<<<<< HEAD
-                            accept="image/*,image/jpeg,image/png,image/webp,image/gif"
-=======
                             accept="image/*,image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf"
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                             className="hidden"
                             onChange={e => {
                               const files = e.target.files;
@@ -1875,11 +1785,7 @@ export default function UserCreationView() {
                         </p>
                       )}
 
-<<<<<<< HEAD
-                      {/* Uploaded Images Strip */}
-=======
                       {/* Uploaded Files Strip */}
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                       {hasFiles && (
                         <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800">
                           {uploadedList.map((file, imgIdx) => (
@@ -1887,15 +1793,11 @@ export default function UserCreationView() {
                               key={`${file.name}-${imgIdx}`}
                               className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-2xs group"
                             >
-<<<<<<< HEAD
-                              <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
-=======
                               {isPdfFile(file) ? (
                                 <FileText className="w-2.5 h-2.5 text-rose-500 shrink-0" />
                               ) : (
                                 <Image className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
                               )}
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                               <span className="truncate max-w-[100px]" title={file.name}>
                                 {file.name}
                               </span>
@@ -1921,11 +1823,7 @@ export default function UserCreationView() {
 
                       {!hasFiles && !hasErr && (
                         <p className="text-[10px] text-slate-400 leading-tight">
-<<<<<<< HEAD
-                          No images uploaded · Images only (JPG, PNG, WebP)
-=======
                           No files uploaded · Images (JPG, PNG, WebP) or PDF
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                         </p>
                       )}
                     </div>

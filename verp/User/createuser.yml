@@ -92,7 +92,11 @@ http:
       - name: UserFile
         type: file
         value:
+<<<<<<< HEAD
+          - C:\Users\Praveen.VISHVIN\Downloads\WhatsApp Image 2026-09-21 at 5.05.02 PM (1).jpeg
+=======
           - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\1598765622876.jpeg
+>>>>>>> c19e1dc3e4c0f21eade8c29d4ab3d1a80df3824a
         contentType: image/jpeg
       - name: FileTypeId
         type: text
@@ -126,4 +130,3 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: false

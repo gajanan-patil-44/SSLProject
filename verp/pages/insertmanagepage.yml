@@ -1,0 +1,30 @@
+info:
+  name: insertmanagepage
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/managePages/add
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 1,
+          "PageName": "Manage-Page",
+          "PageUrl": "/master/manage-page",
+          "PageIcon": "pages",
+          "PageType": "MainPage",
+          "ParentPageId": null,
+          "RoleIds": [1],
+          "CreatedByUserName": "admin1"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkzMTY1MTEyLCJleHAiOjE3OTMxOTM5MTJ9.AdfNsGTRsEDsosNH8rGqMYbTk5Y_VpZEz3k1H4uQlMY
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

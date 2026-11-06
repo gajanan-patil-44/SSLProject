@@ -5,24 +5,20 @@ info:
 
 http:
   method: POST
-<<<<<<< HEAD
   url: http://192.168.23.76:9004/verp-service/companyCreation/addCompany
-=======
-  url: http://192.168.23.107:9004/verp-service/companyCreation/addCompany
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   body:
     type: json
     data: |2-
       
           {
             "flagId": 2,
-              "CompanyName": " Tech",
-              "CompanyCode": "ABC_003",
+              "CompanyName": "globle Technologies",
+              "CompanyCode": "vishvin_002",
               "CreatedByUserName": "hithin",
-              "UpdatedByUserName": "hithin",
+      //         "UpdatedByUserName": "hithin",
               "IsDisabled": false,
-              "Email": "c@technology.com",
-              "PhoneNumber": "8876543260",
+              "Email": "globle@technology.com",
+              "PhoneNumber": "8876543263",
               "Address": "Bangalore, Karnataka"
           }
   auth:

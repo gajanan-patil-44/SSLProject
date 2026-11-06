@@ -242,8 +242,8 @@ export const addPage = async (req, res) => {
             PageType,
             ParentPageId,
             RoleIds,
-            IsChangeOrder,
-            OrderType,
+            IsChangeOrder,  
+            OrderType,   //befor after
             TargetPageId,
             CreatedByUserName
         } = req.body;
@@ -732,37 +732,6 @@ export const editPage = async (req, res) => {
 
     try {
 
-<<<<<<< HEAD
-       const {
-    FlagId,
-    PageId,
-    PageName,
-    PageUrl,
-    PageIcon,
-    PageType,
-    ParentPageId,
-    RoleIds,
-    IsChangeOrder,
-    OrderType,
-    TargetPageId,
-    UpdatedByUserName
-} = req.body;
-
-
-
-const validPageTypes = [
-    "MainPage",
-    "ParentPage",
-    "ChildPage"
-];
-
-if (!validPageTypes.includes(PageType)) {
-    return res.status(400).json({
-        status: "error",
-        message: "Invalid PageType"
-    });
-}
-=======
         const {
             FlagId,
             PageId,
@@ -792,7 +761,6 @@ if (!validPageTypes.includes(PageType)) {
                 message: "Invalid PageType"
             });
         }
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         // =====================================================
         // BASIC VALIDATION
         // =====================================================
@@ -1005,13 +973,9 @@ if (!validPageTypes.includes(PageType)) {
                 : currentPage.PageIcon;
 
         const pageType =
-<<<<<<< HEAD
-           PageType;
-=======
             PageType !== undefined
                 ? PageType
                 : currentPage.PageType;
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
         const effectiveParentPageId =
             ParentPageId !== undefined
