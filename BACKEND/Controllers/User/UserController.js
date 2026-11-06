@@ -132,7 +132,8 @@ export const userDropdownController = async (req, res) => {
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch user dropdown",
-            error: error.message
+            error: error.message,
+            stack:error.stack
         });
     }
 };
@@ -1022,7 +1023,8 @@ export const companyProductProjectDropdownController = async (req, res) => {
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch dropdown data",
-            error: error.message
+            error: error.message,
+            stack:error.stack
         });
     }
 };
