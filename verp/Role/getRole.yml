@@ -5,16 +5,17 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.76:9004/verp-service/roleCreation/getRole
+  url: http://192.168.23.79:9004/verp-service/roleCreation/getRole
   body:
     type: json
     data: |-
       {
-        "FlagId" :1
+          "FlagId": 1
+      //     "CompanyId": 1
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3ODg0MTAxNTIsImV4cCI6MTc4ODQ1MzM1Mn0.poZhS2gtv8po1JfdTyDh6BZNOdnLRd6Ip8QuUUSEQF8
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM3NzI1MjIsImV4cCI6MTc5MzgwMTMyMn0.7WxpF0xJqFbrldUvS1kWfVHeT0fzdnsa11B2hR4AH1o
 
 settings:
   encodeUrl: true

@@ -12,7 +12,7 @@ import {
 // GET ALL ACTIVE PRODUCTS
 
 export const getProduct = async (req, res) => {
-    
+
     const { flagId } = req.body;
 
     try {
@@ -25,7 +25,17 @@ export const getProduct = async (req, res) => {
         }
 
         if (parseInt(flagId) === 1) {
-            const rows = await getAllProducts();
+
+            const CompanyId = req.user.CompanyId;
+
+            if (CompanyId === undefined) {
+                return res.status(403).json({
+                    status: "error",
+                    message: "Company access information is missing"
+                });
+            }
+
+            const rows = await getAllProducts(CompanyId);
 
             return res.status(200).json({
                 status: "success",
@@ -37,12 +47,12 @@ export const getProduct = async (req, res) => {
             return res.status(400).json({
                 status: "error",
                 message: "Invalid flagId"
-            })
+            });
         }
 
     } catch (error) {
 
-        // console.error("Error fetching products:", error);
+        console.error("Error fetching products:", error);
 
         return res.status(500).json({
             status: "error",
@@ -51,7 +61,6 @@ export const getProduct = async (req, res) => {
         });
     }
 };
-
 
 // ADD PRODUCT
 

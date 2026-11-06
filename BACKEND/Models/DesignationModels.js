@@ -3,73 +3,72 @@ import { pool } from "../Config/db.js";
 
 // GET ALL DESIGNATIONS
 
-export const getAllDesignations = async () => {
+
+export const getAllDesignations = async (CompanyId) => {
 
     try {
 
         const query = `
             SELECT
-                cd."CompanyDesignationId",
-                cd."CompanyId",
-                c."CompanyName",
-                c."CompanyCode",
-                cd."DesignationName",
-                cd."DesignationCode",
-                cd."IsDisabled",
-                cd."CreatedAt",
-                cd."CreatedByUserName",
-                cd."UpdateByUserName",
-                cd."UpdatedAt",
-                cd."DesignationLevel",
-                cd."CanBeReportingManager"
-            
-            FROM "LKP"."CompanyDesignation" cd
-            INNER JOIN "LKP"."Company" c
-                ON c."CompanyId" = cd."CompanyId"
-            ORDER BY cd."CompanyDesignationId" ASC
+                CD."CompanyDesignationId",
+                CD."CompanyId",
+                C."CompanyName",
+                C."CompanyCode",
+
+                D."DesignationId",
+                D."DesignationName",
+                D."DesignationCode",
+
+                CD."IsDisabled",
+                CD."CreatedAt",
+                CD."CreatedByUserName",
+                CD."UpdateByUserName",
+                CD."UpdatedAt",
+                CD."DesignationLevel",
+                CD."CanBeReportingManager"
+
+            FROM "LKP"."Designation" D
+
+            INNER JOIN "DATA"."CompanyDesignation" CD
+                ON D."DesignationId" = CD."DesignationId"
+
+            LEFT JOIN "LKP"."Company" C
+                ON C."CompanyId" = CD."CompanyId"
+
+            WHERE
+                ($1::SMALLINT IS NULL OR CD."CompanyId" = $1)
+
+            ORDER BY CD."CompanyDesignationId" ASC;
         `;
 
-
-        const result = await pool.query(query);
+        const result = await pool.query(query, [CompanyId]);
 
         return result.rows;
 
     } catch (error) {
-
-        // console.error("Error fetching all designations:", error);
 
         throw error;
     }
 };
 
 
-
 // GET COMPANIES FOR DROPDOWN
 
-export const getCompaniesForDropdown = async () => {
+export const getCompaniesForDropdown = async (CompanyId) => {
 
-    try {
+    const query = `
+        SELECT
+            "CompanyId",
+            "CompanyName"
+        FROM "LKP"."Company"
+        WHERE "IsDisabled" = false
+        AND ($1::SMALLINT IS NULL OR "CompanyId" = $1)
+        ORDER BY "CompanyName";
+    `;
 
-        const query = `
-            SELECT
-                "CompanyId",
-                "CompanyName"
-            FROM "LKP"."Company"
-            ORDER BY "CompanyName";
-        `;
+    const result = await pool.query(query, [CompanyId]);
 
-
-        const result = await pool.query(query);
-
-
-        return result.rows;
-
-    } catch (error) {
-
-        // console.error("Error fetching companies for designation dropdown:", error);
-
-        throw error;
-    }
+    return result.rows;
 };
 
 
@@ -167,71 +166,120 @@ export const checkDesignationExists = async (
 
 // ADD DESIGNATION
 
+
 export const addDesignation = async (designationData) => {
+
+    const client = await pool.connect();
 
     try {
 
-        const query = `
-            INSERT INTO "LKP"."CompanyDesignation"
+        await client.query("BEGIN");
+
+        // ==========================================
+        // 1. INSERT INTO LKP.DESIGNATION
+        // ==========================================
+
+        const designationQuery = `
+            INSERT INTO "LKP"."Designation"
             (
-                "CompanyId",
                 "DesignationName",
                 "DesignationCode",
+                "IsDisabled",
+                "CreatedAt",
+                "CreatedByUserName"
+            )
+            VALUES
+            (
+                $1,
+                $2,
+                $3,
+                CURRENT_TIMESTAMP,
+                $4
+            )
+            RETURNING
+                "DesignationId",
+                "DesignationName",
+                "DesignationCode";
+        `;
+
+        const designationValues = [
+            designationData.DesignationName,
+            designationData.DesignationCode,
+            designationData.IsDisabled ?? false,
+            designationData.CreatedByUserName
+        ];
+
+        const designationResult = await client.query(
+            designationQuery,
+            designationValues
+        );
+
+        const designationId = designationResult.rows[0].DesignationId;
+
+        // ==========================================
+        // 2. INSERT INTO DATA.COMPANYDESIGNATION
+        // ==========================================
+
+        const companyDesignationQuery = `
+            INSERT INTO "DATA"."CompanyDesignation"
+            (
+                "CompanyId",
+                "DesignationId",
                 "DesignationLevel",
                 "IsDisabled",
                 "CreatedAt",
                 "CreatedByUserName",
                 "CanBeReportingManager"
             )
-
             VALUES
             (
                 $1,
                 $2,
                 $3,
                 $4,
-                $5,
                 CURRENT_TIMESTAMP,
-                $6,
-                true
+                $5,
+                $6
             )
-
-            RETURNING
-                "CompanyDesignationId",
-                "CompanyId",
-                "DesignationName",
-                "DesignationCode",
-                "DesignationLevel",
-                "IsDisabled",
-                "CreatedAt",
-                "CreatedByUserName";
+            RETURNING *;
         `;
 
-        const values = [
-            designationData.CompanyId,
-            designationData.DesignationName,
-            designationData.DesignationCode,
-            designationData.DesignationLevel,
-            designationData.IsDisabled,
-            designationData.CreatedByUserName
+        const companyDesignationValues = [
+            designationData.CompanyId ?? null,
+            designationId,
+            designationData.DesignationLevel ?? null,
+            designationData.IsDisabled ?? false,
+            designationData.CreatedByUserName,
+            designationData.CanBeReportingManager ?? false
         ];
 
-        const result = await pool.query(
-            query,
-            values
+        const companyDesignationResult = await client.query(
+            companyDesignationQuery,
+            companyDesignationValues
         );
 
+        await client.query("COMMIT");
 
-        return result.rows[0];
+        return {
+            ...designationResult.rows[0],
+            CompanyDesignation: companyDesignationResult.rows[0]
+        };
 
     } catch (error) {
 
+        await client.query("ROLLBACK");
         throw error;
+
+    } finally {
+
+        client.release();
     }
 };
 
 
+
 // CHECK DESIGNATION FOR UPDATE
+
 
 export const checkDesignationExistsForUpdate = async (
     CompanyId,
@@ -244,28 +292,31 @@ export const checkDesignationExistsForUpdate = async (
 
         const query = `
             SELECT
-                "CompanyDesignationId",
-                "CompanyId",
-                "DesignationName",
-                "DesignationCode"
+                CD."CompanyDesignationId",
+                CD."CompanyId",
+                D."DesignationId",
+                D."DesignationName",
+                D."DesignationCode"
 
-            FROM "LKP"."CompanyDesignation"
+            FROM "DATA"."CompanyDesignation" CD
 
-            WHERE "CompanyId" = $1
+            INNER JOIN "LKP"."Designation" D
+                ON D."DesignationId" = CD."DesignationId"
 
-            AND "CompanyDesignationId" <> $4
+            WHERE
+                CD."CompanyId" IS NOT DISTINCT FROM $1::SMALLINT
 
-            AND (
-                LOWER(TRIM("DesignationName")) =
-                    LOWER(TRIM($2))
+                AND CD."CompanyDesignationId" <> $4
 
-                OR
+                AND (
+                    LOWER(TRIM(D."DesignationName")) =
+                        LOWER(TRIM($2))
 
-                LOWER(TRIM("DesignationCode")) =
-                    LOWER(TRIM($3))
-            );
+                    OR
+
+                    D."DesignationCode" = $3::SMALLINT
+                );
         `;
-
 
         const values = [
             CompanyId,
@@ -274,18 +325,11 @@ export const checkDesignationExistsForUpdate = async (
             CompanyDesignationId
         ];
 
-
-        const result = await pool.query(
-            query,
-            values
-        );
-
+        const result = await pool.query(query, values);
 
         return result.rows;
 
     } catch (error) {
-
-        // console.error("Error checking designation for update:", error);
 
         throw error;
     }
@@ -295,52 +339,104 @@ export const checkDesignationExistsForUpdate = async (
 // EDIT DESIGNATION
 
 
+
 export const editDesignation = async (designationData) => {
+
+    const client = await pool.connect();
 
     try {
 
-        const query = `
-            UPDATE "LKP"."CompanyDesignation"
+        await client.query("BEGIN");
 
-            SET
-                "CompanyId" = $1,
-                "DesignationName" = $2,
-                "DesignationCode" = $3,
-                "DesignationLevel" = $4,
-                "IsDisabled" = $5,
-                "UpdateByUserName" = $6,
-                "UpdatedAt" = CURRENT_TIMESTAMP,
-                "CanBeReportingManager" = $7
+        // ==========================================
+        // 1. GET DESIGNATION ID
+        // ==========================================
 
-            WHERE
-                "CompanyDesignationId" = $8;
+        const getDesignationQuery = `
+            SELECT "DesignationId"
+            FROM "DATA"."CompanyDesignation"
+            WHERE "CompanyDesignationId" = $1;
         `;
 
-        const values = [
-            designationData.CompanyId,
+        const getDesignationResult = await client.query(
+            getDesignationQuery,
+            [designationData.CompanyDesignationId]
+        );
+
+        if (getDesignationResult.rowCount === 0) {
+            throw new Error("Company designation not found");
+        }
+
+        const designationId = getDesignationResult.rows[0].DesignationId;
+
+        // ==========================================
+        // 2. UPDATE LKP.DESIGNATION
+        // ==========================================
+
+        const designationQuery = `
+            UPDATE "LKP"."Designation"
+            SET
+                "DesignationName" = $1,
+                "DesignationCode" = $2,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "UpdatedByUserName" = $3
+            WHERE "DesignationId" = $4;
+        `;
+
+        const designationValues = [
             designationData.DesignationName,
             designationData.DesignationCode,
-            designationData.DesignationLevel,
-            designationData.IsDisabled,
             designationData.UpdateByUserName,
-            designationData.CanBeReportingManager,
+            designationId
+        ];
+
+        await client.query(designationQuery, designationValues);
+
+        // ==========================================
+        // 3. UPDATE DATA.COMPANYDESIGNATION
+        // ==========================================
+
+        const companyDesignationQuery = `
+            UPDATE "DATA"."CompanyDesignation"
+            SET
+                "CompanyId" = $1,
+                "DesignationLevel" = $2,
+                "IsDisabled" = $3,
+                "UpdateByUserName" = $4,
+                "UpdatedAt" = CURRENT_TIMESTAMP,
+                "CanBeReportingManager" = $5
+            WHERE "CompanyDesignationId" = $6;
+        `;
+
+        const companyDesignationValues = [
+            designationData.CompanyId ?? null,
+            designationData.DesignationLevel ?? null,
+            designationData.IsDisabled ?? false,
+            designationData.UpdateByUserName,
+            designationData.CanBeReportingManager ?? false,
             designationData.CompanyDesignationId
         ];
 
-        const result = await pool.query(
-            query,
-            values
+        const result = await client.query(
+            companyDesignationQuery,
+            companyDesignationValues
         );
+
+        await client.query("COMMIT");
 
         return result.rowCount;
 
     } catch (error) {
 
-        // console.error("Error editing designation:", error);
-
+        await client.query("ROLLBACK");
         throw error;
+
+    } finally {
+
+        client.release();
     }
 };
+
 
 
 

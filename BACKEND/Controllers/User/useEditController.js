@@ -5,12 +5,19 @@ import { getAllGenders, getAllMaritalStatuses, getAllDesignations, getAllCompani
 import bcrypt from "bcrypt";
 
 export const getAllUserDetailsController = async (req, res) => {
-    const { flagId } = req.body
+    const { flagId, CompanyId } = req.body
     try {
+
+        if (Number(CompanyId) <= 0 || !Number.isInteger(Number(CompanyId)) || CompanyId === undefined || CompanyId === null || CompanyId === "") {
+            return res.status(400).json({
+                status: false,
+                message: "Please Enter Valid CompanyId"
+            })
+        }
         if (Number(flagId) !== 1) {
             return res.status(400).json({ status: false, message: "Please Enter Valid FlagId" })
         }
-        const result = await getAllUserDetails();
+        const result = await getAllUserDetails(CompanyId);
         return res.status(200).json({
             status: true,
             message: "UserDetails Fetched Successfully",

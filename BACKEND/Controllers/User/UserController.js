@@ -21,7 +21,6 @@ import {
     convertUploadedImagesToPdf
 } from "../../Helpers/convertUploadedImagesToPdf.js";
 import { readFile } from "fs/promises";
-import { processUserFilesUsingWorker } from "../../Helpers/userFileWorkerHelper.js";
 
 import { getAllUserDetails, editUserdetails } from "../../Models/userEditDetails/UserEdit.js";
 // =====================================================
@@ -142,6 +141,7 @@ export const userDropdownController = async (req, res) => {
 // ==========================================================
 
 export const createUserController = async (req, res) => {
+
     try {
         // ==========================================================
         // FORM DATA
@@ -169,8 +169,7 @@ export const createUserController = async (req, res) => {
             "Email",
             "LoginName",
             "Password",
-            "RoleId",
-            "DepartmentId"
+            "RoleId"
         ];
 
         for (const field of requiredFields) {
@@ -183,35 +182,20 @@ export const createUserController = async (req, res) => {
         }
 
         // EMPLOYEE ID AND LOGIN NAME VALIDATION
-<<<<<<< HEAD
-
-        const employeeId = String(userData.EmployeeId ?? "").trim();
-
-        if (!/^[A-Za-z0-9]+$/.test(employeeId)) {
-            return res.status(400).json({
-                status: "error",
-                message: "EmployeeId must contain only alphanumeric characters"
-=======
         // ==========================================================
         // EMPLOYEE ID VALIDATION
         // ==========================================================
 
         const employeeId = String(userData.EmployeeId ?? "").trim();
 
-        if (!/^[A-Za-z0-9]{1,6}$/.test(employeeId)) {
+        if (!/^[A-Za-z0-9]+$/.test(employeeId)) {
             return res.status(400).json({
                 status: "error",
                 message: "EmployeeId must contain only alphanumeric characters and must not exceed 6 characters"
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             });
         }
 
         userData.EmployeeId = employeeId;
-<<<<<<< HEAD
-
-
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         const loginName = String(userData.LoginName ?? "").trim();
 
         if (!/^[A-Za-z0-9]+$/.test(loginName)) {
@@ -267,13 +251,8 @@ export const createUserController = async (req, res) => {
 
         const email = String(userData.Email).trim();
 
-<<<<<<< HEAD
-        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-
-=======
         const emailRegex =
             /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         if (!emailRegex.test(email)) {
             return res.status(400).json({
                 status: "error",
@@ -359,6 +338,7 @@ export const createUserController = async (req, res) => {
             userData.ProjectId = null;
             userData.ReportingManagerUserId = null;
             userData.DesignationId = null;
+            userData.DepartmentId = null;
         }
 
         // ==========================================================
@@ -389,25 +369,18 @@ export const createUserController = async (req, res) => {
             userData.ProjectId = null;
             userData.ReportingManagerUserId = null;
             userData.DesignationId = null;
+            userData.DepartmentId = null;
         }
 
         // ==========================================================
         // ROLE ID > 2 : NORMAL USER
         // ==========================================================
 
-<<<<<<< HEAD
-     
-else {
-    // ------------------------------------------------------
-    // COMPANY ID
-    // ------------------------------------------------------
-=======
 
         else {
             // ------------------------------------------------------
             // COMPANY ID
             // ------------------------------------------------------
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
     if (isEmpty(userData.CompanyId)) {
         return res.status(400).json({
@@ -428,38 +401,9 @@ else {
         });
     }
 
-<<<<<<< HEAD
-    // ------------------------------------------------------
-    // DESIGNATION
-    // ------------------------------------------------------
-
-    if (isEmpty(userData.DesignationId)) {
-        return res.status(400).json({
-            status: "error",
-            message: "DesignationId is required"
-        });
-    }
-
-    userData.DesignationId = Number(userData.DesignationId);
-
-    if (
-        !Number.isInteger(userData.DesignationId) ||
-        userData.DesignationId <= 0
-    ) {
-        return res.status(400).json({
-            status: "error",
-            message: "DesignationId must be a valid number"
-        });
-    }
-
-    // ------------------------------------------------------
-    // GET DESIGNATION DETAILS
-    // ------------------------------------------------------
-=======
             // ------------------------------------------------------
             // DESIGNATION
             // ------------------------------------------------------
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
     const designation = await getDesignationById(
         userData.DesignationId
@@ -478,26 +422,28 @@ else {
     // are not required
     // ------------------------------------------------------
 
-<<<<<<< HEAD
-    if (Number(designation.DesignationLevel) === 100) {
-        userData.CompanyProductId = null;
-        userData.ProjectId = null;
-        userData.ReportingManagerUserId = null;
-    } else {
-        // --------------------------------------------------
-        // COMPANY PRODUCT
-        // --------------------------------------------------
+            // ------------------------------------------------------
+            // DEPARTMENT VALIDATION
+            // ------------------------------------------------------
 
-        if (
-            !Array.isArray(userData.CompanyProductId) ||
-            userData.CompanyProductId.length === 0
-        ) {
-            return res.status(400).json({
-                status: "error",
-                message:
-                    "CompanyProductId must be a non-empty array"
-            });
-=======
+            if (isEmpty(userData.DepartmentId)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DepartmentId is required"
+                });
+            }
+
+            userData.DepartmentId = Number(userData.DepartmentId);
+
+            if (
+                !Number.isInteger(userData.DepartmentId) ||
+                userData.DepartmentId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DepartmentId must be a valid number"
+                });
+            }
             // ------------------------------------------------------
             // GET DESIGNATION DETAILS
             // ------------------------------------------------------
@@ -568,7 +514,6 @@ else {
                     });
                 }
             }
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         }
 
         // --------------------------------------------------
@@ -738,6 +683,7 @@ else {
         // GET UPLOADED FILES
         // Supports multer array() and fields()
         // ==========================================================
+
         // ==========================================================
         // GET UPLOADED FILES
         // ==========================================================
@@ -745,20 +691,6 @@ else {
        const uploadedFiles = Array.isArray(req.files)
     ? req.files
     : Object.values(req.files || {}).flat();
-
-<<<<<<< HEAD
-try {
-    await convertUploadedImagesToPdf(uploadedFiles);
-} catch (error) {
-    return res.status(400).json({
-        status: "error",
-        message: error.message
-    });
-}
-        
-        // ==========================================================
-        // PHOTO - STORE AS BINARY BUFFER
-        // ==========================================================
 
         const uploadedPhoto = uploadedFiles.find(
             (file) => file.fieldname === "Photo"
@@ -797,62 +729,132 @@ try {
             (file) => file.fieldname === "UserFile"
         );
 
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         const fileTypeIds = Array.isArray(userData.FileTypeId)
             ? userData.FileTypeId
             : userData.FileTypeId
                 ? [userData.FileTypeId]
                 : [];
 
-        let processedFiles;
+        // ==========================================================
+        // GET FILE TYPE IDS
+        // ==========================================================
 
-        try {
-            processedFiles = await convertUploadedImagesToPdf(
-                uploadedFiles,
-                fileTypeIds
-            );
-        } catch (error) {
+        let rawFileTypeIds =
+            userData.FileTypeId ?? userData["FileTypeId[]"];
+
+        let fileTypeIds = [];
+
+        if (
+            rawFileTypeIds !== undefined &&
+            rawFileTypeIds !== null &&
+            rawFileTypeIds !== ""
+        ) {
+            const values = Array.isArray(rawFileTypeIds)
+                ? rawFileTypeIds
+                : [rawFileTypeIds];
+
+            try {
+                for (const value of values) {
+
+                    if (typeof value === "string") {
+
+                        const trimmedValue = value.trim();
+
+                        if (trimmedValue.startsWith("[")) {
+
+                            const parsedValue = JSON.parse(trimmedValue);
+
+                            if (!Array.isArray(parsedValue)) {
+                                throw new Error("Invalid FileTypeId array");
+                            }
+
+                            fileTypeIds.push(...parsedValue);
+
+                        } else if (trimmedValue !== "") {
+                            fileTypeIds.push(trimmedValue);
+                        }
+
+                    } else {
+                        fileTypeIds.push(value);
+                    }
+                }
+
+            } catch (error) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "FileTypeId must be a valid JSON array"
+                });
+            }
+        }
+
+        // ==========================================================
+        // VALIDATE FILE COUNT
+        // ==========================================================
+
+        if (uploadedUserFiles.length !== fileTypeIds.length) {
             return res.status(400).json({
                 status: "error",
-                message: error.message
+                message: "Each UserFile must have one matching FileTypeId",
+                details: {
+                    UserFileCount: uploadedUserFiles.length,
+                    FileTypeIdCount: fileTypeIds.length
+                }
             });
         }
 
         // ==========================================================
-        // PHOTO - STORE CONVERTED PDF AS BYTEA
+        // VALIDATE FILE TYPE IDS
         // ==========================================================
 
-<<<<<<< HEAD
-        await createUser(
-            userData,
-            req.files
-=======
         const uploadedPhoto = processedFiles.find(
             file => file.fieldname === "Photo"
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         );
 
         userData.Photo = null;
 
-        if (uploadedPhoto) {
-            userData.Photo = await readFile(uploadedPhoto.path);
+        if (convertedPhoto) {
+
+            if (!convertedPhoto.path) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Photo PDF path is missing"
+                });
+            }
+
+            userData.Photo = await readFile(convertedPhoto.path);
+
+            if (
+                !Buffer.isBuffer(userData.Photo) ||
+                userData.Photo.length === 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Photo PDF binary data is empty or invalid"
+                });
+            }
         }
 
         // ==========================================================
-        // USER FILES - STORE MERGED PDF PATHS
+        // MAP FINAL USER FILES
         // ==========================================================
 
-        const uploadedUserFiles = processedFiles.filter(
+        const convertedUserFiles = finalFiles.filter(
             file => file.fieldname === "UserFile"
         );
 
-        userData.UserFiles = uploadedUserFiles.map(file => ({
-            FileTypeId: Number(file.FileTypeId),
+        userData.UserFiles = convertedUserFiles.map(file => ({
+            FileTypeId: file.FileTypeId,
             FilePath: file.path
         }));
 
-        await createUser(userData, processedFiles);
+        // ==========================================================
+        // CREATE USER
+        // ==========================================================
+
+        await createUser(
+            userData,
+            finalFiles
+        );
 
         // ==========================================================
         // SUCCESS RESPONSE
@@ -863,7 +865,9 @@ try {
             message: "User created successfully"
         });
 
+
     } catch (error) {
+
         console.error("Create User Error:", error);
 
         return res.status(500).json({
@@ -880,7 +884,6 @@ try {
 // FlagId = 1 -> Company
 // FlagId = 2 -> Product
 // FlagId = 3 -> Project
-//flagId = 4 -> Role
 // ==========================================================
 export const companyProductProjectDropdownController = async (req, res) => {
 
@@ -992,9 +995,16 @@ export const companyProductProjectDropdownController = async (req, res) => {
                 });
             }
 
-            const result = await getRoleDropdown(
-                parseInt(CompanyId)
-            );
+            const companyId = Number(CompanyId);
+
+            if (!Number.isInteger(companyId) || companyId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId must be a valid positive integer"
+                });
+            }
+
+            const result = await getRoleDropdown(companyId);
 
             return res.status(200).json({
                 status: "success",

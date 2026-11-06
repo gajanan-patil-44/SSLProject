@@ -49,7 +49,6 @@ app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
 app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
 app.use(backendHelpers.GST_RATE, GstRateRoutes);
 
-
 app.use(backendHelpers.LOCATION_TYPE_MASTER, locationTypeMasterRoutes);
 app.use(backendHelpers.COMPANY_MASTER, CompanyMasterRoutes);
 app.use(backendHelpers.LOCATION_MASTER, LocationMasterRoutes);
