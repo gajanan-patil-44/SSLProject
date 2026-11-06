@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Shield,
   ShieldCheck,
@@ -30,7 +30,7 @@ import { validateTextOnly, validateDescription } from '../../utils/validators';
 // Helper to get session company
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;

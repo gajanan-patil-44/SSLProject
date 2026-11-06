@@ -16,10 +16,13 @@ const allowedOrigins = [
     "http://localhost:5175",
     "http://localhost:5175",
     "http://192.168.23.67:5175",
+    "http://192.168.23.79:5175",
     "http://192.168.23.99:5175",
     "http://192.168.23.59:5175",
     "http://192.168.23.83:5175",
-    "http://192.168.23.78:5175"
+
+
+
 ];
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 

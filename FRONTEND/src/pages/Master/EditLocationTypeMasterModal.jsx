@@ -1,10 +1,17 @@
+<<<<<<< HEAD
 // src/pages/Master/EditLocationTypeMasterModal.jsx
+=======
+﻿// src/pages/Master/EditLocationTypeMasterModal.jsx
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
 import { useERPStore } from '../../store/useERPStore';
 import { locationTypeService } from '../../services/locationTypeService';
+<<<<<<< HEAD
+=======
 import { validateTextOnly } from '../../utils/validators';
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import {
   GitFork,
   MapPin,
@@ -92,12 +99,20 @@ export default function EditLocationTypeMasterModal({
         setDropdownOptions(raw);
       }
     } catch (err) {
+<<<<<<< HEAD
+      console.warn('Failed to fetch parent dropdown for edit:', err);
+=======
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     }
   };
 
   const getSessionUserName = () => {
     try {
+<<<<<<< HEAD
       const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+=======
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -129,9 +144,19 @@ export default function EditLocationTypeMasterModal({
 
   const validate = () => {
     const errs = {};
+<<<<<<< HEAD
+    const trimmed = locationTypeName.trim();
+    if (!trimmed) {
+      errs.childName = 'Location Type Name is required';
+    } else if (trimmed.length < 2) {
+      errs.childName = 'Location Type Name must be at least 2 characters';
+    } else if (trimmed.length > 100) {
+      errs.childName = 'Location Type Name must not exceed 100 characters';
+=======
     const locNameErr = validateTextOnly(locationTypeName, 'Location Type Name', true, 2, 100);
     if (locNameErr) {
       errs.childName = locNameErr;
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     }
 
     // If not root, parent location is required
@@ -165,6 +190,10 @@ export default function EditLocationTypeMasterModal({
       if (onSaveSuccess) onSaveSuccess();
       onClose();
     } catch (err) {
+<<<<<<< HEAD
+      console.error('Failed to update location type:', err);
+=======
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to update location type', 'error');
     } finally {
       setSaving(false);
@@ -209,8 +238,12 @@ export default function EditLocationTypeMasterModal({
                   placeholder="e.g. Country, State, District"
                   value={locationTypeName}
                   onChange={(e) => {
+<<<<<<< HEAD
+                    setLocationTypeName(e.target.value);
+=======
                     const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                     setLocationTypeName(sanitized);
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                     if (errors.childName) setErrors(prev => ({ ...prev, childName: null }));
                   }}
                   className={`${inputCls(errors.childName)} pl-9.5`}

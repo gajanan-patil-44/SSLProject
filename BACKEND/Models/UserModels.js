@@ -48,13 +48,24 @@ export const getMaritalStatusDropdown = async () => {
 export const getDesignationDropdown = async (CompanyId) => {
     const query = `
         SELECT
-            "CompanyDesignationId" AS "DesignationId",
-            "DesignationName",
-            "DesignationLevel"
-        FROM "LKP"."CompanyDesignation"
-        WHERE "CompanyId" = $1
-          AND "IsDisabled" = false
-        ORDER BY "DesignationName";
+            CD."CompanyDesignationId",
+            CD."CompanyId",
+            D."DesignationId",  
+            D."DesignationName",
+            CD."DesignationLevel",
+            CD."CanBeReportingManager"
+        FROM "LKP"."Designation" D
+        LEFT JOIN "DATA"."CompanyDesignation" CD
+            ON CD."DesignationId" = D."DesignationId"
+            AND CD."IsDisabled" = false
+        WHERE
+            D."IsDisabled" = false
+            AND (
+                $1 IS NULL
+                OR CD."CompanyId" = $1
+            )
+        ORDER BY
+            D."DesignationName";
     `;
 
     const result = await pool.query(query, [CompanyId]);
@@ -73,50 +84,70 @@ export const getUserReportingManagerDropdown = async (CompanyId, DesignationId) 
         SELECT
             u."UserId",
             u."EmployeeId",
+
             CONCAT_WS(
                 ' ',
                 u."FirstName",
                 u."MiddleName",
                 u."LastName"
             ) AS "ReportingManagerName",
+
             u."DesignationId",
-            managerDesignation."DesignationName",
-            managerDesignation."DesignationLevel"
+
+            D."DesignationName",
+            CD."DesignationLevel"
 
         FROM "DATA"."User" u
 
-        INNER JOIN "LKP"."CompanyDesignation" managerDesignation
-            ON managerDesignation."CompanyDesignationId" = u."DesignationId"
+        -- Join user's company designation mapping
+        INNER JOIN "DATA"."CompanyDesignation" CD
+            ON CD."CompanyDesignationId" = u."DesignationId"
+
+        -- Get designation name from designation master
+        INNER JOIN "LKP"."Designation" D
+            ON D."DesignationId" = CD."DesignationId"
 
         WHERE
+
             -- Manager's designation belongs to selected company
-            managerDesignation."CompanyId" = $1
+            CD."CompanyId" = $1
 
-            -- Manager's designation is active
-            AND managerDesignation."IsDisabled" = true
+            -- Company designation must be active
+            AND CD."IsDisabled" = false
 
-            -- Manager is allowed to be a reporting manager
-            AND managerDesignation."CanBeReportingManager" = true
+            -- Designation master must be active
+            AND D."IsDisabled" = false
 
-            -- Manager must be higher than selected user's designation
-            AND managerDesignation."DesignationLevel" > (
+            -- Manager must be allowed as reporting manager
+            AND CD."CanBeReportingManager" = true
+
+            -- Manager must have a higher designation level
+            AND CD."DesignationLevel" > (
+
                 SELECT
-                    selectedDesignation."DesignationLevel"
+                    SelectedCD."DesignationLevel"
 
-                FROM "LKP"."CompanyDesignation" selectedDesignation
+                FROM "DATA"."CompanyDesignation" SelectedCD
+
+                INNER JOIN "LKP"."Designation" SelectedD
+                    ON SelectedD."DesignationId" = SelectedCD."DesignationId"
 
                 WHERE
-                    selectedDesignation."CompanyDesignationId" = $2
-                    AND selectedDesignation."CompanyId" = $1
-                    AND selectedDesignation."IsDisabled" = false
+                    SelectedCD."CompanyDesignationId" = $2
+                    AND SelectedCD."CompanyId" = $1
+                    AND SelectedCD."IsDisabled" = false
+                    AND SelectedD."IsDisabled" = false
+
             )
 
             -- Existing user must be active
             AND u."IsDisabled" = false
+
+            -- Existing user must not be blocked
             AND u."IsBlocked" = false
 
         ORDER BY
-            managerDesignation."DesignationLevel" ASC,
+            CD."DesignationLevel" ASC,
             "ReportingManagerName" ASC;
     `;
 
@@ -163,11 +194,21 @@ export const checkMaritalStatusExists = async (MaritalStatusId) => {
 export const checkDesignationExists = async (DesignationId) => {
     const query = `
         SELECT
-            "CompanyDesignationId",
-            "DesignationName"
-        FROM "LKP"."CompanyDesignation"
-        WHERE "CompanyDesignationId" = $1
-        AND "IsDisabled" = false;
+            CD."CompanyDesignationId",
+            CD."CompanyId",
+            D."DesignationId",
+            D."DesignationName",
+            CD."DesignationLevel",
+            CD."CanBeReportingManager"
+        FROM "DATA"."CompanyDesignation" CD
+
+        INNER JOIN "LKP"."Designation" D
+            ON D."DesignationId" = CD."DesignationId"
+
+        WHERE
+            CD."CompanyDesignationId" = $1
+            AND CD."IsDisabled" = false
+            AND D."IsDisabled" = false;
     `;
 
     const result = await pool.query(query, [DesignationId]);
@@ -1006,13 +1047,22 @@ export const getRoleDropdown = async (CompanyId) => {
 
     const query = `
         SELECT
-            "RoleId",
-            "RoleName",
-            "CompanyId"
-        FROM "LKP"."Role"
-        WHERE "IsDisabled" = false
-          AND "CompanyId" = $1
-        ORDER BY "RoleName" ASC;
+            R."RoleId",
+            R."RoleName",
+            CR."CompanyId",
+            CR."CompanyRoleId"
+        FROM "DATA"."CompanyRole" CR
+
+        INNER JOIN "LKP"."Role" R
+            ON R."RoleId" = CR."RoleId"
+
+        WHERE
+            CR."IsDisabled" = false
+            AND R."IsDisabled" = false
+            AND CR."CompanyId" = $1
+
+        ORDER BY
+            R."RoleName" ASC;
     `;
 
     const result = await pool.query(query, [CompanyId]);
@@ -1088,18 +1138,24 @@ export const getAllDesignations = async (CompanyId) => {
     try {
 
         const result = await pool.query(`
-            SELECT
-                cd."CompanyDesignationId" AS "CompanyDesignationId",
-                cd."DesignationName" AS "DesignationName",
-                cd."DesignationCode" AS "DesignationCode",
-                cd."CompanyId" AS "CompanyId"
+        SELECT
+            CD."CompanyDesignationId" AS "CompanyDesignationId",
+            D."DesignationName" AS "DesignationName",
+            D."DesignationCode" AS "DesignationCode",
+            CD."CompanyId" AS "CompanyId"
 
-            FROM "LKP"."CompanyDesignation" cd
+        FROM "DATA"."CompanyDesignation" CD
 
-            WHERE cd."IsDisabled" = false
-            AND cd."CompanyId" = $1
+        INNER JOIN "LKP"."Designation" D
+            ON D."DesignationId" = CD."DesignationId"
 
-            ORDER BY cd."DesignationName"
+        WHERE
+            CD."IsDisabled" = false
+            AND D."IsDisabled" = false
+            AND CD."CompanyId" = $1
+
+        ORDER BY
+            D."DesignationName" ASC;
         `, [CompanyId]);
 
         return result.rows;
@@ -1262,19 +1318,24 @@ export const getAllRoles = async (CompanyId) => {
     try {
 
         const result = await pool.query(`
-            SELECT
-                "RoleId" AS "RoleId",
-                "RoleCode" AS "RoleCode",
-                "RoleName" AS "RoleName",
-                "RoleDescription" AS "RoleDescription",
-                "CompanyId" AS "CompanyId"
+        SELECT
+            R."RoleId" AS "RoleId",
+            R."RoleCode" AS "RoleCode",
+            R."RoleName" AS "RoleName",
+            CR."CompanyId" AS "CompanyId"
 
-            FROM "LKP"."Role"
+        FROM "DATA"."CompanyRole" CR
 
-            WHERE "CompanyId" = $1
-            AND "IsDisabled" = false
+        INNER JOIN "LKP"."Role" R
+            ON R."RoleId" = CR."RoleId"
 
-            ORDER BY "RoleName"
+        WHERE
+            CR."CompanyId" = $1
+            AND CR."IsDisabled" = false
+            AND R."IsDisabled" = false
+
+        ORDER BY
+            R."RoleName" ASC;
         `, [CompanyId]);
 
         return result.rows;
@@ -1288,14 +1349,20 @@ export const getAllRoles = async (CompanyId) => {
 
 export const getDesignationById = async (DesignationId) => {
     const query = `
-        SELECT
-            "CompanyDesignationId" AS "DesignationId",
-            "DesignationName",
-            "CompanyId",
-            "DesignationLevel"
-        FROM "LKP"."CompanyDesignation"
-        WHERE "CompanyDesignationId" = $1
-          AND "IsDisabled" = false;
+       SELECT
+            CD."CompanyDesignationId" AS "DesignationId",
+            D."DesignationName",
+            CD."CompanyId",
+            CD."DesignationLevel"
+        FROM "DATA"."CompanyDesignation" CD
+
+        INNER JOIN "LKP"."Designation" D
+            ON D."DesignationId" = CD."DesignationId"
+
+        WHERE
+            CD."CompanyDesignationId" = $1
+            AND CD."IsDisabled" = false
+            AND D."IsDisabled" = false;
     `;
 
     const result = await pool.query(query, [DesignationId]);
@@ -1320,15 +1387,23 @@ export const getDepartmentDropdown = async (CompanyId = null) => {
     try {
 
         let query = `
-            SELECT
-                "DepartmentId" AS "DepartmentId",
-                "CompanyId" AS "CompanyId",
-                "DepartmentName" AS "DepartmentName",
-                "DepartmentCode" AS "DepartmentCode"
+        SELECT
+            D."DepartmentId" AS "DepartmentId",
+            CD."CompanyId" AS "CompanyId",
+            D."DepartmentName" AS "DepartmentName",
+            D."DepartmentCode" AS "DepartmentCode"
 
-            FROM "LKP"."Department"
+        FROM "DATA"."ComapnyDepartment" CD
 
-            WHERE "IsDisabled" = false
+        INNER JOIN "LKP"."Department" D
+            ON D."DepartmentId" = CD."DepartmentId"
+
+        WHERE
+            CD."IsDsiabled" = false
+            AND D."IsDisabled" = false
+
+        ORDER BY
+            D."DepartmentName" ASC;
         `;
 
         const values = [];

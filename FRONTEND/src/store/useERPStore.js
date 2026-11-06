@@ -28,10 +28,10 @@ const isTokenExpired = (token) => {
 // Safe parse helper for session
 const safeParseSession = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    const token = parsed?.token?.accessToken || localStorage.getItem('erp_token');
+    const token = parsed?.token?.accessToken || sessionStorage.getItem('erp_token') || localStorage.getItem('erp_token');
     if (token && isTokenExpired(token)) {
       localStorage.removeItem('session');
       sessionStorage.removeItem('session');
@@ -152,7 +152,8 @@ export const useERPStore = create((set) => ({
       'erp_user_context',
       'erp_session',
       'erp_photo',
-      'erp_company'
+      'erp_company',
+      'UserLoginDetailId'
     ];
     legacyKeys.forEach(k => {
       localStorage.removeItem(k);
@@ -160,7 +161,8 @@ export const useERPStore = create((set) => ({
     });
 
     if (rawResponse) {
-      localStorage.setItem('session', JSON.stringify(rawResponse));
+      sessionStorage.setItem('session', JSON.stringify(rawResponse));
+      localStorage.removeItem('session');
     }
 
     set({
@@ -184,7 +186,8 @@ export const useERPStore = create((set) => ({
       'erp_user_context',
       'erp_session',
       'erp_photo',
-      'erp_company'
+      'erp_company',
+      'UserLoginDetailId'
     ];
     legacyKeys.forEach(k => {
       localStorage.removeItem(k);

@@ -65,7 +65,6 @@ export const getParentLocationTypeController = async (req, res) => {
         }
 
         if (!LocationTypeMasterId || !Number.isInteger(Number(LocationTypeMasterId)) || Number(LocationTypeMasterId) <= 0) {
-
             return res.status(400).json({
                 status: "error",
                 message: "Valid LocationTypeMasterId is required."
@@ -113,7 +112,6 @@ export const getParentLocationMasterController = async (req, res) => {
             !Number.isInteger(Number(ParentLocationTypeMasterId)) ||
             Number(ParentLocationTypeMasterId) <= 0
         ) {
-
             return res.status(400).json({
                 status: "error",
                 message: "Valid ParentLocationTypeMasterId is required."
@@ -145,7 +143,6 @@ export const getParentLocationMasterController = async (req, res) => {
 
 
 // 4. Add Location Details and Contact Channels
-
 
 export const addLocationMaster = async (req, res) => {
 
@@ -197,7 +194,6 @@ export const addLocationMaster = async (req, res) => {
             !Number.isInteger(Number(LocationTypeMasterId)) ||
             Number(LocationTypeMasterId) <= 0
         ) {
-
             return res.status(400).json({
                 status: "error",
                 message: "CompanyMasterId and LocationTypeMasterId must be valid positive integers."
@@ -210,7 +206,6 @@ export const addLocationMaster = async (req, res) => {
             !LocationName.trim() ||
             LocationName.trim().length > 100
         ) {
-
             return res.status(400).json({
                 status: "error",
                 message: "LocationName is required and cannot exceed 100 characters."
@@ -223,7 +218,6 @@ export const addLocationMaster = async (req, res) => {
             !ContactPerson.trim() ||
             ContactPerson.trim().length > 100
         ) {
-
             return res.status(400).json({
                 status: "error",
                 message: "ContactPerson is required and cannot exceed 100 characters."
@@ -232,7 +226,6 @@ export const addLocationMaster = async (req, res) => {
 
         // Contact Number validation - exactly 10 digits
         if (!/^[0-9]{10}$/.test(String(ContactNumber).trim())) {
-
             return res.status(400).json({
                 status: "error",
                 message: "ContactNumber must contain exactly 10 digits."
@@ -317,7 +310,6 @@ export const addLocationMaster = async (req, res) => {
                 !Number.isInteger(Number(ParentLocationTypeMasterId)) ||
                 Number(ParentLocationTypeMasterId) <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ParentLocationTypeMasterId is required."
@@ -341,7 +333,6 @@ export const addLocationMaster = async (req, res) => {
                 !Number.isInteger(Number(ParentLocationMasterId)) ||
                 Number(ParentLocationMasterId) <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "ParentLocationMasterId is required."
@@ -371,7 +362,6 @@ export const addLocationMaster = async (req, res) => {
         );
 
         if (emailExists) {
-
             return res.status(400).json({
                 status: "error",
                 message: "This EmailId already exists for this company."

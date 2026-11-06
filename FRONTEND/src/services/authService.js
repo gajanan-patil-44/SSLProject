@@ -31,7 +31,7 @@ export const authService = {
    */
   getSession: () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
@@ -54,8 +54,9 @@ export const authService = {
       // Purge all legacy and mock keys from storage
       purgeStorage();
 
-      // Store ONLY the unified login response object
-      localStorage.setItem('session', JSON.stringify(response));
+      // Store ONLY the unified login response object in sessionStorage
+      sessionStorage.setItem('session', JSON.stringify(response));
+      localStorage.removeItem('session');
 
       // Hit login detail API
       try {
@@ -122,7 +123,8 @@ export const authService = {
           const detailResp = await apiClient.post(API_ROUTES.AUTH.LOGIN_DETAIL, detailPayload);
           const detailId = detailResp?.data?.UserLoginDetailId || detailResp?.UserLoginDetailId || (detailResp?.value && detailResp.value[0]?.UserLoginDetailId) || detailResp?.value?.UserLoginDetailId;
           if (detailId) {
-            localStorage.setItem('UserLoginDetailId', detailId);
+            sessionStorage.setItem('UserLoginDetailId', detailId);
+            localStorage.removeItem('UserLoginDetailId');
           }
         }
       } catch (err) {
@@ -139,7 +141,7 @@ export const authService = {
   logout: async () => {
     const session = authService.getSession();
     const userId = session?.data?.user?.id || session?.data?.user?.UserId;
-    const loginDetailId = localStorage.getItem('UserLoginDetailId');
+    const loginDetailId = sessionStorage.getItem('UserLoginDetailId') || localStorage.getItem('UserLoginDetailId');
 
     if (userId && loginDetailId) {
       try {
@@ -154,8 +156,9 @@ export const authService = {
       }
     }
 
-    localStorage.removeItem('session');
     sessionStorage.removeItem('session');
+    localStorage.removeItem('session');
+    sessionStorage.removeItem('UserLoginDetailId');
     localStorage.removeItem('UserLoginDetailId');
     purgeStorage();
   },

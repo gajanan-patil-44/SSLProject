@@ -31,7 +31,6 @@ export const getLocationTypes = async () => {
 // 2. Get Parent Location Type based on selected Location Type
 export const getParentLocationTypes = async (LocationTypeMasterId) => {
     try {
-
         const result = await pool.query(
             `
             SELECT
@@ -63,7 +62,6 @@ export const getParentLocationTypes = async (LocationTypeMasterId) => {
 
 export const getParentLocationMasters = async (ParentLocationTypeMasterId) => {
     try {
-
         const result = await pool.query(
             `
             SELECT
@@ -121,7 +119,6 @@ export const checkCompanyMasterExists = async (CompanyMasterId) => {
 // 5. Check whether Location Type exists
 export const checkLocationTypeExists = async (LocationTypeMasterId) => {
     try {
-
         const result = await pool.query(
             `
             SELECT
@@ -224,7 +221,6 @@ export const addLocation = async (locationData) => {
                 "IsDisabled"
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, false)
-
             RETURNING *;
             `,
             [

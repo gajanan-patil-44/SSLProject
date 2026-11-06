@@ -1,0 +1,16 @@
+info:
+  name: View
+  type: http
+  seq: 25
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/vendorType/view
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

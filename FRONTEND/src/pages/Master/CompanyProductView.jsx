@@ -27,7 +27,7 @@ import { useERPStore } from '../../store/useERPStore';
 // Helper to get session company
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
