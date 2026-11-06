@@ -1,19 +1,11 @@
-<<<<<<< HEAD
-// src/services/locationService.js
-=======
 ﻿// src/services/locationService.js
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
 // Helper to extract session username dynamically (loginName)
 const getSessionUserName = () => {
   try {
-<<<<<<< HEAD
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
     const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     if (raw) {
       const s = JSON.parse(raw);
       return s?.data?.user?.loginName || s?.user?.loginName || '';
@@ -27,11 +19,7 @@ const getSessionUserName = () => {
 // Helper to extract session company ID dynamically from session context.companies
 const getSessionCompanyId = () => {
   try {
-<<<<<<< HEAD
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
     const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     if (raw) {
       const s = JSON.parse(raw);
       const companies = s?.data?.context?.companies || s?.context?.companies;

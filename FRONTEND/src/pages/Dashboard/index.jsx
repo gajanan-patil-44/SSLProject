@@ -142,25 +142,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-<<<<<<< HEAD
-      {/* Greeting Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-1.5 leading-tight m-0">
-            Good morning
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-none">
-            You have 7 leave requests and 2 urgent alerts pending for <span className="font-semibold text-slate-700 dark:text-slate-300">{activeCompany}</span>.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" icon={Download} onClick={handleExport}>
-            Export
-          </Button>
-          <Button variant="secondary" size="sm" icon={Plus} onClick={() => setIsAddEmployeeOpen(true)}>
-            Add Employee
-          </Button>
-=======
       {/* Greeting Header Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-950 text-white p-6 md:p-8 shadow-xl shadow-indigo-950/20 border border-indigo-800/40">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -179,7 +160,6 @@ export default function Dashboard() {
               Welcome back to <span className="font-bold text-white underline decoration-cyan-400 decoration-2">{activeCompany || 'Vishvin ERP'}</span>. You have 7 pending requests and 2 alerts.
             </p>
           </div>
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         </div>
       </div>
 

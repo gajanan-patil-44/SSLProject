@@ -89,7 +89,9 @@ export const getGSTTypeDropdownController = async (req, res) => {
 // FLAG ID 2 - ADD GST RATE
 // ======================================================
 export const addGSTRateController = async (req, res) => {
+
     try {
+
         const {
             FlagId,
             CompanyId,
@@ -105,8 +107,34 @@ export const addGSTRateController = async (req, res) => {
             });
         }
 
-        // Validate CompanyId
-        const companyValidation = await validateCompanyId(CompanyId);
+        // ---------------------------------------------
+        // VALIDATE LOGGED-IN COMPANY
+        // ---------------------------------------------
+
+        const loggedInCompanyId = req.user.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(403).json({
+                status: "error",
+                message: "Company access information is missing"
+            });
+        }
+
+        const selectedCompanyId =
+            loggedInCompanyId === null
+                ? CompanyId
+                : loggedInCompanyId;
+
+        if (!selectedCompanyId) {
+            return res.status(400).json({
+                status: "error",
+                message: "CompanyId is required"
+            });
+        }
+
+        const companyValidation = await validateCompanyId(
+            selectedCompanyId
+        );
 
         if (!companyValidation.valid) {
             return res.status(400).json({
@@ -115,7 +143,10 @@ export const addGSTRateController = async (req, res) => {
             });
         }
 
-        // Validate GST Type
+        // ---------------------------------------------
+        // VALIDATE GST TYPE
+        // ---------------------------------------------
+
         const typeId = Number(GSTTypeId);
 
         if (
@@ -138,10 +169,13 @@ export const addGSTRateController = async (req, res) => {
             });
         }
 
-        // Accept values like 18, 18%, and 18.50 %
+        // ---------------------------------------------
+        // VALIDATE GST PERCENTAGE
+        // ---------------------------------------------
+
         const percentageInput = String(GSTPercentage ?? "")
             .trim()
-            .replace(/\s*%\s*$/, "");
+            .replace(/%\s*$/, "");
 
         if (!/^\d+(\.\d{1,2})?$/.test(percentageInput)) {
             return res.status(400).json({
@@ -159,6 +193,10 @@ export const addGSTRateController = async (req, res) => {
             });
         }
 
+        // ---------------------------------------------
+        // VALIDATE CREATED BY USER
+        // ---------------------------------------------
+
         if (
             !CreatedByUserName ||
             !String(CreatedByUserName).trim()
@@ -169,7 +207,10 @@ export const addGSTRateController = async (req, res) => {
             });
         }
 
-        // Check duplicate
+        // ---------------------------------------------
+        // CHECK DUPLICATE GST RATE
+        // ---------------------------------------------
+
         const duplicate = await checkGSTRateExists(
             companyValidation.CompanyId,
             typeId,
@@ -179,9 +220,12 @@ export const addGSTRateController = async (req, res) => {
         if (duplicate) {
             return res.status(409).json({
                 status: "error",
-                message: "This GST Rate already exists"
+                message: "This GST Percentage already exists for this Company and GST Type"
             });
         }
+        // ---------------------------------------------
+        // ADD GST RATE
+        // ---------------------------------------------
 
         const data = await addGSTRate({
             CompanyId: companyValidation.CompanyId,
@@ -197,7 +241,7 @@ export const addGSTRateController = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Add GST Rate Error:", error);
+
 
         return res.status(500).json({
             status: "error",
@@ -205,12 +249,13 @@ export const addGSTRateController = async (req, res) => {
         });
     }
 };
-
 // ======================================================
 // FLAG ID 3 - VIEW GST RATES
 // ======================================================
 export const getAllGSTRatesController = async (req, res) => {
+
     try {
+
         const { FlagId, CompanyId } = req.body;
 
         if (Number(FlagId) !== 3) {
@@ -220,18 +265,35 @@ export const getAllGSTRatesController = async (req, res) => {
             });
         }
 
-        const companyValidation = await validateCompanyId(CompanyId);
+        const loggedInCompanyId = req.user.CompanyId;
 
-        if (!companyValidation.valid) {
-            return res.status(400).json({
+        if (loggedInCompanyId === undefined) {
+            return res.status(403).json({
                 status: "error",
-                message: companyValidation.message
+                message: "Company access information is missing"
             });
         }
 
-        const data = await getAllGSTRates(
-            companyValidation.CompanyId
-        );
+        const selectedCompanyId =
+            loggedInCompanyId === null
+                ? (CompanyId || null)
+                : loggedInCompanyId;
+
+        if (selectedCompanyId !== null) {
+
+            const companyValidation = await validateCompanyId(
+                selectedCompanyId
+            );
+
+            if (!companyValidation.valid) {
+                return res.status(400).json({
+                    status: "error",
+                    message: companyValidation.message
+                });
+            }
+        }
+
+        const data = await getAllGSTRates(selectedCompanyId);
 
         return res.status(200).json({
             status: "success",
@@ -240,6 +302,7 @@ export const getAllGSTRatesController = async (req, res) => {
         });
 
     } catch (error) {
+
         console.error("Get GST Rates Error:", error);
 
         return res.status(500).json({

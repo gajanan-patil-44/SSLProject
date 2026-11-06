@@ -1,15 +1,8 @@
-<<<<<<< HEAD
-// src/pages/Master/LocationMasterView.jsx
-import React, { useState, useEffect, useMemo } from 'react';
-import { useERPStore } from '../../store/useERPStore';
-import { locationService } from '../../services/locationService';
-=======
 ﻿// src/pages/Master/LocationMasterView.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { locationService } from '../../services/locationService';
 import { validateTextOnly, validateName } from '../../utils/validators';
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import {
   PageHeader,
   Card,
@@ -104,11 +97,7 @@ export default function LocationMasterView() {
   // Extract session username dynamically (loginName)
   const getSessionUserName = () => {
     try {
-<<<<<<< HEAD
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
       const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (raw) {
         const s = JSON.parse(raw);
         return s?.data?.user?.loginName || s?.user?.loginName || '';
@@ -122,11 +111,7 @@ export default function LocationMasterView() {
   // Extract session companies list dynamically
   const getSessionCompanies = () => {
     try {
-<<<<<<< HEAD
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
       const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (raw) {
         const s = JSON.parse(raw);
         const list = s?.data?.context?.companies || s?.context?.companies;
@@ -190,10 +175,6 @@ export default function LocationMasterView() {
       const list = Array.isArray(raw) ? raw : [];
       setLocationTypes(list);
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to load location types:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       setLocationTypes([]);
     } finally {
       setLoadingLocationTypes(false);
@@ -225,10 +206,6 @@ export default function LocationMasterView() {
         }
       }
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to load parent location type:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       setParentLocationTypes([]);
     } finally {
       setLoadingParentLocationTypes(false);
@@ -249,10 +226,6 @@ export default function LocationMasterView() {
       const list = Array.isArray(raw) ? raw : [];
       setParentLocationsList(list);
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to load parent locations:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       setParentLocationsList([]);
     } finally {
       setLoadingParentLocations(false);
@@ -300,15 +273,6 @@ export default function LocationMasterView() {
       }
     }
 
-<<<<<<< HEAD
-    const trimmedName = locationName.trim();
-    if (!trimmedName) {
-      errs.locationName = 'Location Name is required';
-    } else if (trimmedName.length < 2) {
-      errs.locationName = 'Location Name must be at least 2 characters';
-    } else if (trimmedName.length > 100) {
-      errs.locationName = 'Location Name must not exceed 100 characters';
-=======
     const locNameErr = validateTextOnly(locationName, 'Location Name', true, 2, 100);
     if (locNameErr) {
       errs.locationName = locNameErr;
@@ -317,7 +281,6 @@ export default function LocationMasterView() {
     if (contactPerson.trim()) {
       const cpErr = validateName(contactPerson, 'Contact Person', false);
       if (cpErr) errs.contactPerson = cpErr;
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     }
 
     if (contactNumber.trim()) {
@@ -376,10 +339,6 @@ export default function LocationMasterView() {
       showToast('Location added successfully!', 'success');
       handleReset();
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to add Location via /verp-service/locationMaster/addLocationMaster:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to add Location', 'error');
     } finally {
       setLoading(false);
@@ -618,12 +577,8 @@ export default function LocationMasterView() {
                       placeholder="e.g. Tamil Nadu, Karnataka, Bengaluru North"
                       value={locationName}
                       onChange={(e) => {
-<<<<<<< HEAD
-                        setLocationName(e.target.value);
-=======
                         const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                         setLocationName(sanitized);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                         if (errors.locationName) setErrors((prev) => ({ ...prev, locationName: null }));
                       }}
                       className={`${inputCls(errors.locationName)} pl-9.5`}
@@ -641,12 +596,8 @@ export default function LocationMasterView() {
                     placeholder="e.g. Ramesh Kumar"
                     value={contactPerson}
                     onChange={(e) => {
-<<<<<<< HEAD
-                      setContactPerson(e.target.value);
-=======
                       const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       setContactPerson(sanitized);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                       if (errors.contactPerson) setErrors((prev) => ({ ...prev, contactPerson: null }));
                     }}
                     className={`${inputCls(errors.contactPerson)} pl-9.5`}

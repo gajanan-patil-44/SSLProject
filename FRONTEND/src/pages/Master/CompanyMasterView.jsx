@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-// src/pages/Master/CompanyMasterView.jsx
-=======
 ﻿// src/pages/Master/CompanyMasterView.jsx
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import React, { useState, useEffect } from 'react';
 import { useERPStore } from '../../store/useERPStore';
 import { companyService } from '../../services/companyService';
@@ -32,10 +28,7 @@ import {
 } from 'lucide-react';
 import {
   validateCode,
-<<<<<<< HEAD
-=======
   validateTextOnly,
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   validateEmail,
   validatePhone,
   validateGSTIN,
@@ -101,11 +94,7 @@ export default function CompanyMasterView() {
   // Helper to extract session username
   const getSessionUserName = () => {
     try {
-<<<<<<< HEAD
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
       const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -147,10 +136,6 @@ export default function CompanyMasterView() {
       showToast(`Company ${newIsDisabled ? 'disabled' : 'enabled'} successfully!`, 'success');
       await fetchCompanies();
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to toggle company status:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to toggle status', 'error');
     } finally {
       setTogglingId(null);
@@ -184,10 +169,6 @@ export default function CompanyMasterView() {
       setCompanyToDelete(null);
       await fetchCompanies();
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to delete company:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to delete company', 'error');
     } finally {
       setIsDeleting(false);
@@ -222,10 +203,6 @@ export default function CompanyMasterView() {
       const list = Array.isArray(rawList) ? rawList : [];
       setCompanies(list);
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to load company master via getCompanyMaster:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast('Failed to load companies', 'error');
       setCompanies([]);
     } finally {
@@ -233,27 +210,6 @@ export default function CompanyMasterView() {
     }
   };
 
-<<<<<<< HEAD
-  // Row selection handler
-  const handleSelectRow = (company) => {
-    const id = company.CompanyId ?? company.id;
-    if (selectedId === id) {
-      handleReset();
-    } else {
-      setSelectedId(id);
-      setCompanyCode(company.CompanyCode || company.companyCode || '');
-      setCompanyName(company.CompanyName || company.companyName || '');
-      setContactNumber(company.ContactNumber || company.contactNumber || company.PhoneNumber || company.phone || '');
-      setEmailId(company.EmailId || company.emailId || company.Email || company.email || '');
-      setGstNo(company.GSTNo || company.gstNo || company.GstNo || '');
-      setPanNo(company.PanNo || company.panNo || '');
-      setAddress(company.Address || company.address || '');
-      setErrors({});
-    }
-  };
-
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   // Validate form fields for Add / Edit
   const validate = () => {
     const errs = {};
@@ -262,21 +218,9 @@ export default function CompanyMasterView() {
     const codeErr = validateCode(companyCode, 'Company Code', true);
     if (codeErr) errs.companyCode = codeErr;
 
-<<<<<<< HEAD
-    // Company Name: required, 2-100 chars
-    const nameTrim = companyName.trim();
-    if (!nameTrim) {
-      errs.companyName = 'Company Name is required';
-    } else if (nameTrim.length < 2) {
-      errs.companyName = 'Company Name must be at least 2 characters';
-    } else if (nameTrim.length > 100) {
-      errs.companyName = 'Company Name must not exceed 100 characters';
-    }
-=======
     // Company Name: required, text only, 2-100 chars
     const nameErr = validateTextOnly(companyName, 'Company Name', true, 2, 100);
     if (nameErr) errs.companyName = nameErr;
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
     // Contact Number: optional, but if entered must be valid 10 digits
     if (contactNumber.trim()) {
@@ -337,10 +281,6 @@ export default function CompanyMasterView() {
       handleReset();
       await fetchCompanies();
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Error adding company:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to add company', 'error');
     } finally {
       setLoading(false);
@@ -379,10 +319,6 @@ export default function CompanyMasterView() {
       handleReset();
       await fetchCompanies();
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Error updating company:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to update company', 'error');
     } finally {
       setLoading(false);
@@ -472,12 +408,8 @@ export default function CompanyMasterView() {
                   placeholder="e.g. Global Solutions Ltd"
                   value={companyName}
                   onChange={(e) => {
-<<<<<<< HEAD
-                    setCompanyName(e.target.value);
-=======
                     const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                     setCompanyName(sanitized);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                     if (errors.companyName) setErrors(prev => ({ ...prev, companyName: null }));
                   }}
                   className={`${inputCls(errors.companyName)} pl-9.5`}

@@ -11,9 +11,12 @@ http:
     data: |-
       {
           "FlagId": 3,
-          "CompanyId": 1
+          "CompanyId": 1,
+          "GSTTypeId": 2
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM3NzI1MjIsImV4cCI6MTc5MzgwMTMyMn0.7WxpF0xJqFbrldUvS1kWfVHeT0fzdnsa11B2hR4AH1o
 
 settings:
   encodeUrl: true

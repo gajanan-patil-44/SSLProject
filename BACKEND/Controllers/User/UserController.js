@@ -141,7 +141,7 @@ export const userDropdownController = async (req, res) => {
 // ==========================================================
 
 export const createUserController = async (req, res) => {
-   
+
     try {
         // ==========================================================
         // FORM DATA
@@ -169,8 +169,7 @@ export const createUserController = async (req, res) => {
             "Email",
             "LoginName",
             "Password",
-            "RoleId",
-            "DepartmentId"
+            "RoleId"
         ];
 
         for (const field of requiredFields) {
@@ -338,6 +337,7 @@ export const createUserController = async (req, res) => {
             userData.ProjectId = null;
             userData.ReportingManagerUserId = null;
             userData.DesignationId = null;
+            userData.DepartmentId = null;
         }
 
         // ==========================================================
@@ -368,6 +368,7 @@ export const createUserController = async (req, res) => {
             userData.ProjectId = null;
             userData.ReportingManagerUserId = null;
             userData.DesignationId = null;
+            userData.DepartmentId = null;
         }
 
         // ==========================================================
@@ -422,6 +423,28 @@ export const createUserController = async (req, res) => {
                 });
             }
 
+            // ------------------------------------------------------
+            // DEPARTMENT VALIDATION
+            // ------------------------------------------------------
+
+            if (isEmpty(userData.DepartmentId)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DepartmentId is required"
+                });
+            }
+
+            userData.DepartmentId = Number(userData.DepartmentId);
+
+            if (
+                !Number.isInteger(userData.DepartmentId) ||
+                userData.DepartmentId <= 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "DepartmentId must be a valid number"
+                });
+            }
             // ------------------------------------------------------
             // GET DESIGNATION DETAILS
             // ------------------------------------------------------
@@ -631,185 +654,185 @@ export const createUserController = async (req, res) => {
         // Supports multer array() and fields()
         // ==========================================================
 
-// ==========================================================
-// GET UPLOADED FILES
-// ==========================================================
+        // ==========================================================
+        // GET UPLOADED FILES
+        // ==========================================================
 
-const uploadedFiles = Array.isArray(req.files)
-    ? req.files
-    : Object.values(req.files || {}).flat();
+        const uploadedFiles = Array.isArray(req.files)
+            ? req.files
+            : Object.values(req.files || {}).flat();
 
-const uploadedUserFiles = uploadedFiles.filter(
-    file => file.fieldname === "UserFile"
-);
+        const uploadedUserFiles = uploadedFiles.filter(
+            file => file.fieldname === "UserFile"
+        );
 
-// ==========================================================
-// GET FILE TYPE IDS
-// ==========================================================
+        // ==========================================================
+        // GET FILE TYPE IDS
+        // ==========================================================
 
-let rawFileTypeIds =
-    userData.FileTypeId ?? userData["FileTypeId[]"];
+        let rawFileTypeIds =
+            userData.FileTypeId ?? userData["FileTypeId[]"];
 
-let fileTypeIds = [];
+        let fileTypeIds = [];
 
-if (
-    rawFileTypeIds !== undefined &&
-    rawFileTypeIds !== null &&
-    rawFileTypeIds !== ""
-) {
-    const values = Array.isArray(rawFileTypeIds)
-        ? rawFileTypeIds
-        : [rawFileTypeIds];
+        if (
+            rawFileTypeIds !== undefined &&
+            rawFileTypeIds !== null &&
+            rawFileTypeIds !== ""
+        ) {
+            const values = Array.isArray(rawFileTypeIds)
+                ? rawFileTypeIds
+                : [rawFileTypeIds];
 
-    try {
-        for (const value of values) {
+            try {
+                for (const value of values) {
 
-            if (typeof value === "string") {
+                    if (typeof value === "string") {
 
-                const trimmedValue = value.trim();
+                        const trimmedValue = value.trim();
 
-                if (trimmedValue.startsWith("[")) {
+                        if (trimmedValue.startsWith("[")) {
 
-                    const parsedValue = JSON.parse(trimmedValue);
+                            const parsedValue = JSON.parse(trimmedValue);
 
-                    if (!Array.isArray(parsedValue)) {
-                        throw new Error("Invalid FileTypeId array");
+                            if (!Array.isArray(parsedValue)) {
+                                throw new Error("Invalid FileTypeId array");
+                            }
+
+                            fileTypeIds.push(...parsedValue);
+
+                        } else if (trimmedValue !== "") {
+                            fileTypeIds.push(trimmedValue);
+                        }
+
+                    } else {
+                        fileTypeIds.push(value);
                     }
-
-                    fileTypeIds.push(...parsedValue);
-
-                } else if (trimmedValue !== "") {
-                    fileTypeIds.push(trimmedValue);
                 }
 
-            } else {
-                fileTypeIds.push(value);
+            } catch (error) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "FileTypeId must be a valid JSON array"
+                });
             }
         }
 
-    } catch (error) {
-        return res.status(400).json({
-            status: "error",
-            message: "FileTypeId must be a valid JSON array"
-        });
-    }
-}
+        // ==========================================================
+        // VALIDATE FILE COUNT
+        // ==========================================================
 
-// ==========================================================
-// VALIDATE FILE COUNT
-// ==========================================================
-
-if (uploadedUserFiles.length !== fileTypeIds.length) {
-    return res.status(400).json({
-        status: "error",
-        message: "Each UserFile must have one matching FileTypeId",
-        details: {
-            UserFileCount: uploadedUserFiles.length,
-            FileTypeIdCount: fileTypeIds.length
+        if (uploadedUserFiles.length !== fileTypeIds.length) {
+            return res.status(400).json({
+                status: "error",
+                message: "Each UserFile must have one matching FileTypeId",
+                details: {
+                    UserFileCount: uploadedUserFiles.length,
+                    FileTypeIdCount: fileTypeIds.length
+                }
+            });
         }
-    });
-}
 
-// ==========================================================
-// VALIDATE FILE TYPE IDS
-// ==========================================================
+        // ==========================================================
+        // VALIDATE FILE TYPE IDS
+        // ==========================================================
 
-fileTypeIds = fileTypeIds.map(Number);
+        fileTypeIds = fileTypeIds.map(Number);
 
-if (
-    fileTypeIds.some(
-        id => !Number.isInteger(id) || id <= 0
-    )
-) {
-    return res.status(400).json({
-        status: "error",
-        message: "Each FileTypeId must be a valid positive integer"
-    });
-}
+        if (
+            fileTypeIds.some(
+                id => !Number.isInteger(id) || id <= 0
+            )
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "Each FileTypeId must be a valid positive integer"
+            });
+        }
 
-// ==========================================================
-// CONVERT PHOTO AND USER FILES INTO PDF
-// ==========================================================
+        // ==========================================================
+        // CONVERT PHOTO AND USER FILES INTO PDF
+        // ==========================================================
 
-const finalFiles = await convertUploadedImagesToPdf(
-    uploadedFiles,
-    fileTypeIds
-);
+        const finalFiles = await convertUploadedImagesToPdf(
+            uploadedFiles,
+            fileTypeIds
+        );
 
-// ==========================================================
-// PHOTO - STORE AS BINARY BUFFER
-// ==========================================================
+        // ==========================================================
+        // PHOTO - STORE AS BINARY BUFFER
+        // ==========================================================
 
-const convertedPhoto = finalFiles.find(
-    file => file.fieldname === "Photo"
-);
+        const convertedPhoto = finalFiles.find(
+            file => file.fieldname === "Photo"
+        );
 
-userData.Photo = null;
+        userData.Photo = null;
 
-if (convertedPhoto) {
+        if (convertedPhoto) {
 
-    if (!convertedPhoto.path) {
-        return res.status(400).json({
+            if (!convertedPhoto.path) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Photo PDF path is missing"
+                });
+            }
+
+            userData.Photo = await readFile(convertedPhoto.path);
+
+            if (
+                !Buffer.isBuffer(userData.Photo) ||
+                userData.Photo.length === 0
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Photo PDF binary data is empty or invalid"
+                });
+            }
+        }
+
+        // ==========================================================
+        // MAP FINAL USER FILES
+        // ==========================================================
+
+        const convertedUserFiles = finalFiles.filter(
+            file => file.fieldname === "UserFile"
+        );
+
+        userData.UserFiles = convertedUserFiles.map(file => ({
+            FileTypeId: file.FileTypeId,
+            FilePath: file.path
+        }));
+
+        // ==========================================================
+        // CREATE USER
+        // ==========================================================
+
+        await createUser(
+            userData,
+            finalFiles
+        );
+
+        // ==========================================================
+        // SUCCESS RESPONSE
+        // ==========================================================
+
+        return res.status(201).json({
+            status: "success",
+            message: "User created successfully"
+        });
+
+
+    } catch (error) {
+
+        console.error("Create User Error:", error);
+
+        return res.status(500).json({
             status: "error",
-            message: "Photo PDF path is missing"
+            message: "Internal server error",
+            error: error.message
         });
     }
-
-    userData.Photo = await readFile(convertedPhoto.path);
-
-    if (
-        !Buffer.isBuffer(userData.Photo) ||
-        userData.Photo.length === 0
-    ) {
-        return res.status(400).json({
-            status: "error",
-            message: "Photo PDF binary data is empty or invalid"
-        });
-    }
-}
-
-// ==========================================================
-// MAP FINAL USER FILES
-// ==========================================================
-
-const convertedUserFiles = finalFiles.filter(
-    file => file.fieldname === "UserFile"
-);
-
-userData.UserFiles = convertedUserFiles.map(file => ({
-    FileTypeId: file.FileTypeId,
-    FilePath: file.path
-}));
-
-// ==========================================================
-// CREATE USER
-// ==========================================================
-
-await createUser(
-    userData,
-    finalFiles
-);
-
-// ==========================================================
-// SUCCESS RESPONSE
-// ==========================================================
-
-return res.status(201).json({
-    status: "success",
-    message: "User created successfully"
-});
-
-
-} catch (error) {
-
-    console.error("Create User Error:", error);
-
-    return res.status(500).json({
-        status: "error",
-        message: "Internal server error",
-        error: error.message
-    });
-}
 };
 
 // ==========================================================
@@ -916,36 +939,36 @@ export const companyProductProjectDropdownController = async (req, res) => {
         // FLAG ID 4 - ROLE
         // ==================================================
 
-     if (parseInt(FlagId) === 4) {
+        if (parseInt(FlagId) === 4) {
 
-    if (
-        CompanyId === undefined ||
-        CompanyId === null ||
-        String(CompanyId).trim() === ""
-    ) {
-        return res.status(400).json({
-            status: "error",
-            message: "CompanyId is required"
-        });
-    }
+            if (
+                CompanyId === undefined ||
+                CompanyId === null ||
+                String(CompanyId).trim() === ""
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId is required"
+                });
+            }
 
-    const companyId = Number(CompanyId);
+            const companyId = Number(CompanyId);
 
-    if (!Number.isInteger(companyId) || companyId <= 0) {
-        return res.status(400).json({
-            status: "error",
-            message: "CompanyId must be a valid positive integer"
-        });
-    }
+            if (!Number.isInteger(companyId) || companyId <= 0) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "CompanyId must be a valid positive integer"
+                });
+            }
 
-    const result = await getRoleDropdown(companyId);
+            const result = await getRoleDropdown(companyId);
 
-    return res.status(200).json({
-        status: "success",
-        message: "Role data fetched successfully",
-        data: result
-    });
-}
+            return res.status(200).json({
+                status: "success",
+                message: "Role data fetched successfully",
+                data: result
+            });
+        }
 
         // ==================================================
         // FLAG ID 5 - DEPARTMENT

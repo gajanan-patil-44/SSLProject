@@ -19,11 +19,18 @@ export const getDesignation = async (req, res) => {
 
     try {
 
-        // FLAG ID 1 - GET ALL DESIGNATIONS
+        if (Number(flagId) === 1) {
 
-        if (parseInt(flagId) === 1) {
+            const loggedInCompanyId = req.user?.CompanyId;
 
-            const rows = await getAllDesignations();
+            if (loggedInCompanyId === undefined) {
+                return res.status(401).json({
+                    status: "error",
+                    message: "User authentication information is missing"
+                });
+            }
+
+            const rows = await getAllDesignations(loggedInCompanyId);
 
             return res.status(200).json({
                 status: "success",
@@ -32,17 +39,12 @@ export const getDesignation = async (req, res) => {
             });
         }
 
-
-        // INVALID FLAG ID
-
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
 
     } catch (error) {
-
-        // console.error("Error fetching designations:", error);
 
         return res.status(500).json({
             status: "error",
@@ -58,15 +60,23 @@ export const getCompanyDropdown = async (req, res) => {
 
         const { FlagId } = req.body;
 
-        if (parseInt(FlagId) !== 1) {
-
+        if (Number(FlagId) !== 1) {
             return res.status(400).json({
                 status: "error",
                 message: "Invalid FlagId"
             });
         }
 
-        const companies = await getCompaniesForDropdown();
+        const loggedInCompanyId = req.user?.CompanyId;
+
+        if (loggedInCompanyId === undefined) {
+            return res.status(401).json({
+                status: "error",
+                message: "User authentication information is missing"
+            });
+        }
+
+        const companies = await getCompaniesForDropdown(loggedInCompanyId);
 
         return res.status(200).json({
             status: "success",
@@ -83,7 +93,6 @@ export const getCompanyDropdown = async (req, res) => {
         });
     }
 };
-
 
 // ADD DESIGNATION / COMPANY DROPDOWN
 
