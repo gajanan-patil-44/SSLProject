@@ -8,7 +8,8 @@ import {
   PageHeader,
   Card,
   Button,
-  StatusBadge
+  StatusBadge,
+  PaginationControls
 } from '../../components/ui/index';
 import {
   Building2,
@@ -94,7 +95,7 @@ export default function CompanyMasterView() {
   // Helper to extract session username
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -115,6 +116,8 @@ export default function CompanyMasterView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Toggle company master status (flagId: 4)
   const handleToggleStatus = async (company) => {
@@ -348,20 +351,6 @@ export default function CompanyMasterView() {
           { label: 'Master', href: '/master/companies' },
           { label: 'Companies' }
         ]}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              icon={RotateCcw}
-              onClick={handleReset}
-              className="cursor-pointer"
-            >
-              Reset Form
-            </Button>
-          </div>
-        }
       />
 
       {/* 2. Top Card: Company Registration Form */}
@@ -390,11 +379,13 @@ export default function CompanyMasterView() {
                   type="text"
                   placeholder="e.g. GSL"
                   value={companyCode}
+                  maxLength={10}
                   onChange={(e) => {
-                    setCompanyCode(e.target.value);
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 10).toUpperCase();
+                    setCompanyCode(sanitized);
                     if (errors.companyCode) setErrors(prev => ({ ...prev, companyCode: null }));
                   }}
-                  className={`${inputCls(errors.companyCode)} pl-9.5`}
+                  className={`${inputCls(errors.companyCode)} pl-9.5 font-mono uppercase`}
                 />
               </div>
             </Field>
@@ -407,8 +398,9 @@ export default function CompanyMasterView() {
                   type="text"
                   placeholder="e.g. Global Solutions Ltd"
                   value={companyName}
+                  maxLength={100}
                   onChange={(e) => {
-                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 100);
                     setCompanyName(sanitized);
                     if (errors.companyName) setErrors(prev => ({ ...prev, companyName: null }));
                   }}
@@ -423,11 +415,13 @@ export default function CompanyMasterView() {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
+                  inputMode="numeric"
                   placeholder="e.g. 9876543210"
-                  maxLength={15}
+                  maxLength={10}
                   value={contactNumber}
                   onChange={(e) => {
-                    setContactNumber(e.target.value);
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setContactNumber(digits);
                     if (errors.contactNumber) setErrors(prev => ({ ...prev, contactNumber: null }));
                   }}
                   className={`${inputCls(errors.contactNumber)} pl-9.5`}
@@ -442,10 +436,10 @@ export default function CompanyMasterView() {
                 <input
                   type="email"
                   placeholder="e.g. contact@globalsolutions.com"
-                  maxLength={150}
+                  maxLength={100}
                   value={emailId}
                   onChange={(e) => {
-                    setEmailId(e.target.value);
+                    setEmailId(e.target.value.slice(0, 100));
                     if (errors.emailId) setErrors(prev => ({ ...prev, emailId: null }));
                   }}
                   className={`${inputCls(errors.emailId)} pl-9.5`}
@@ -463,7 +457,8 @@ export default function CompanyMasterView() {
                   maxLength={15}
                   value={gstNo}
                   onChange={(e) => {
-                    setGstNo(e.target.value.toUpperCase());
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 15).toUpperCase();
+                    setGstNo(sanitized);
                     if (errors.gstNo) setErrors(prev => ({ ...prev, gstNo: null }));
                   }}
                   className={`${inputCls(errors.gstNo)} pl-9.5 uppercase font-mono`}
@@ -481,7 +476,8 @@ export default function CompanyMasterView() {
                   maxLength={10}
                   value={panNo}
                   onChange={(e) => {
-                    setPanNo(e.target.value.toUpperCase());
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10).toUpperCase();
+                    setPanNo(sanitized);
                     if (errors.panNo) setErrors(prev => ({ ...prev, panNo: null }));
                   }}
                   className={`${inputCls(errors.panNo)} pl-9.5 uppercase font-mono`}
@@ -497,10 +493,10 @@ export default function CompanyMasterView() {
                   <textarea
                     rows={2}
                     placeholder="e.g. Hyderabad, Telangana"
-                    maxLength={300}
+                    maxLength={250}
                     value={address}
                     onChange={(e) => {
-                      setAddress(e.target.value);
+                      setAddress(e.target.value.slice(0, 250));
                       if (errors.address) setErrors(prev => ({ ...prev, address: null }));
                     }}
                     className={`${inputCls(errors.address)} pl-9.5 resize-none`}
@@ -607,10 +603,11 @@ export default function CompanyMasterView() {
                   </td>
                 </tr>
               ) : (
-                companies.map((row, idx) => {
+                companies.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((row, idx) => {
                   const id = row.CompanyMasterId ?? row.companyMasterId ?? row.CompanyId ?? row.id ?? idx;
                   const isSelected = selectedId === id;
                   const isDisabled = row.IsDisabled === true || row.status === 'Inactive' || row.status === 'Disabled';
+                  const rowNumber = (currentPage - 1) * pageSize + idx + 1;
 
                   return (
                     <tr
@@ -622,7 +619,7 @@ export default function CompanyMasterView() {
                       }`}
                     >
                       <td className="py-3.5 px-4 text-center font-semibold text-slate-400 text-xs">
-                        {idx + 1}
+                        {rowNumber}
                       </td>
                       <td className="py-3.5 px-5">
                         <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono text-xs">
@@ -701,6 +698,14 @@ export default function CompanyMasterView() {
             </tbody>
           </table>
         </div>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={companies.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </Card>
 
       {/* Separate Edit Company Master Component */}

@@ -23,7 +23,13 @@ export default function UpdateTaskModal({ isOpen, onClose, task, onTaskUpdate })
   if (!task) return null;
 
   const handleProgressChange = (val) => {
-    const num = Math.min(100, Math.max(0, Number(val) || 0));
+    if (val === '') {
+      setProgress('');
+      return;
+    }
+    const cleanStr = String(val).replace(/\D/g, '').slice(0, 3);
+    const parsed = parseInt(cleanStr, 10);
+    const num = isNaN(parsed) ? 0 : Math.min(100, Math.max(0, parsed));
     setProgress(num);
     if (num === 100 && status !== 'Completed') {
       setStatus('Completed');
@@ -116,6 +122,9 @@ export default function UpdateTaskModal({ isOpen, onClose, task, onTaskUpdate })
               min="0"
               max="100"
               value={progress}
+              onKeyDown={(e) => {
+                if (['-', '+', 'e', 'E', '.'].includes(e.key)) e.preventDefault();
+              }}
               onChange={(e) => handleProgressChange(e.target.value)}
               className="w-20 text-center text-xs font-bold"
             />
@@ -129,7 +138,7 @@ export default function UpdateTaskModal({ isOpen, onClose, task, onTaskUpdate })
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
                   : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500'
               }`}
-              style={{ width: `${progress}%` }}
+              style={{ width: `${progress || 0}%` }}
             ></div>
           </div>
         </div>
@@ -150,11 +159,12 @@ export default function UpdateTaskModal({ isOpen, onClose, task, onTaskUpdate })
         </FormField>
 
         {/* Progress Remarks */}
-        <FormField label="Progress Remarks / Challenges" helpText="Summarize recent developments, completed sub-tasks, or blockers.">
+        <FormField label="Progress Remarks / Challenges" helpText="Summarize recent developments, completed sub-tasks, or blockers (max 300 chars).">
           <Textarea
             rows={3}
             value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
+            maxLength={300}
+            onChange={(e) => setRemarks(e.target.value.slice(0, 300))}
             placeholder="e.g. Unit tests implemented for form controllers. Ready for PR review."
             className="w-full text-xs"
           />

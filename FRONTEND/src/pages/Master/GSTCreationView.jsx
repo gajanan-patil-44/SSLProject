@@ -32,7 +32,7 @@ export default function GSTCreationView() {
   // Dynamic session username resolution
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const u = s?.data?.user || s?.user || s;
@@ -128,13 +128,11 @@ export default function GSTCreationView() {
 
     setTogglingId(rateId);
     try {
-      const sessionUserName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.username || '';
-      const resolvedCompanyId = sessionCompanyId ? Number(sessionCompanyId) : (item.CompanyId ? Number(item.CompanyId) : null);
+      const sessionUserName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.username || 'Admin';
 
       const payload = {
         FlagId: 4,
         GSTRateId: rateId,
-        CompanyId: resolvedCompanyId,
         IsDisabled: newIsDisabled,
         UpdatedByUserName: sessionUserName
       };
@@ -142,6 +140,12 @@ export default function GSTCreationView() {
       const res = await gstService.toggleGSTStatus(payload);
       const msg = res?.message || res?.data?.message || `GST Rate status updated successfully!`;
       showToast(msg, 'success');
+
+      setGstList((prev) =>
+        prev.map((row) =>
+          (row.GSTRateId ?? row.id) === rateId ? { ...row, IsDisabled: newIsDisabled } : row
+        )
+      );
 
       await fetchGSTList();
     } catch (err) {
@@ -349,6 +353,7 @@ export default function GSTCreationView() {
           onSearchChange={setSearchTerm}
           onAddClick={handleOpenAddModal}
           onEditClick={handleOpenEditModal}
+          onToggleStatusClick={handleToggleStatus}
           onToggleStatus={handleToggleStatus}
           onRefresh={loadInitialData}
           showActions={true}
@@ -442,8 +447,18 @@ export default function GSTCreationView() {
                 max="100"
                 placeholder="e.g. 18"
                 value={addGstPercentage}
+                onKeyDown={(e) => {
+                  if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                }}
                 onChange={(e) => {
-                  setAddGstPercentage(e.target.value);
+                  const val = e.target.value;
+                  if (val === '') {
+                    setAddGstPercentage('');
+                    setFormErrors((prev) => ({ ...prev, gstPercentage: '' }));
+                    return;
+                  }
+                  if (parseFloat(val) > 100) return;
+                  setAddGstPercentage(val);
                   setFormErrors((prev) => ({ ...prev, gstPercentage: '' }));
                 }}
                 className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border ${

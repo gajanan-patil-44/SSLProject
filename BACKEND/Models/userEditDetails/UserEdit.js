@@ -4,7 +4,6 @@ import bcrypt from "bcrypt";
 export const getAllUserDetails = async (CompanyId) => {
     try {
 
-
         const query = `
     SELECT
         u."UserId",
@@ -132,7 +131,7 @@ export const getAllUserDetails = async (CompanyId) => {
                         rmc."CompanyName"
                 )
             ) FILTER (
-                WHERE urm."UserReportingManagerId" IS NOT NULL AND urm."CompanyId" = $1
+                WHERE urm."UserReportingManagerId" IS NOT NULL AND urm."CompanyId" =$1
             ),
             '[]'
         ) AS "ReportingManagers"
@@ -245,6 +244,7 @@ GROUP BY
         cd."DesignationName";
 
 `;
+
         const result = await pool.query(query,[CompanyId]);
         return result.rows
     } catch (error) {

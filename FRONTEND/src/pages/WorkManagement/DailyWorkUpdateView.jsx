@@ -268,14 +268,26 @@ export default function DailyWorkUpdateView() {
                   </select>
                 </FormField>
 
-                <FormField label="Hours Spent" required helpText="e.g. 0.5, 1.5, 3.0, 4.0">
+                <FormField label="Hours Spent" required helpText="e.g. 0.5, 1.5, 3.0, 4.0 (max 24 hrs)">
                   <Input
                     type="number"
                     step="0.25"
                     min="0.25"
-                    max="16"
+                    max="24"
                     value={hours}
-                    onChange={(e) => setHours(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                    }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setHours('');
+                        return;
+                      }
+                      const num = parseFloat(val);
+                      if (num > 24) return;
+                      setHours(val);
+                    }}
                     className="text-xs font-semibold"
                     placeholder="2.0"
                   />
@@ -299,7 +311,8 @@ export default function DailyWorkUpdateView() {
                 <Textarea
                   rows={3}
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  maxLength={500}
+                  onChange={(e) => setDescription(e.target.value.slice(0, 500))}
                   placeholder="e.g. Developed the customer transaction ledger component and connected it with the backend ledger service..."
                   className="text-xs"
                 />
@@ -310,7 +323,8 @@ export default function DailyWorkUpdateView() {
                 <Textarea
                   rows={2}
                   value={challenges}
-                  onChange={(e) => setChallenges(e.target.value)}
+                  maxLength={300}
+                  onChange={(e) => setChallenges(e.target.value.slice(0, 300))}
                   placeholder="e.g. Awaiting staging DB replication key from IT infrastructure team..."
                   className="text-xs"
                 />
@@ -321,24 +335,15 @@ export default function DailyWorkUpdateView() {
                 <Input
                   type="text"
                   value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
+                  maxLength={200}
+                  onChange={(e) => setRemarks(e.target.value.slice(0, 200))}
                   placeholder="e.g. PR #149 approved by tech lead"
                   className="text-xs"
                 />
               </FormField>
 
               {/* Form Buttons */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  icon={RotateCcw}
-                  onClick={handleResetForm}
-                >
-                  Reset Form
-                </Button>
-
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
                 <Button
                   type="submit"
                   variant="primary"
@@ -480,7 +485,8 @@ export default function DailyWorkUpdateView() {
               <Textarea
                 rows={3}
                 value={overallSummary}
-                onChange={(e) => setOverallSummary(e.target.value)}
+                maxLength={1000}
+                onChange={(e) => setOverallSummary(e.target.value.slice(0, 1000))}
                 placeholder="High-level recap for management: key accomplishments, overall sprint status, and planned work for tomorrow..."
                 className="text-xs"
               />

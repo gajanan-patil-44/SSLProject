@@ -512,3 +512,5 @@ export const SectionHeader = ({ title, description, actions }) => {
     </div>
   );
 };
+
+export { default as PaginationControls } from './PaginationControls';

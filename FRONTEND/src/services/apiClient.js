@@ -21,7 +21,7 @@ let isHandlingSessionExpiry = false;
 apiClient.interceptors.request.use(
   (config) => {
     let token = null;
-    const sessionStr = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const sessionStr = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (sessionStr) {
       try {
         const sessionObj = JSON.parse(sessionStr);
@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
       }
     }
     if (!token) {
-      token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+      token = sessionStorage.getItem('erp_token') || localStorage.getItem('erp_token');
     }
 
     if (token) {
@@ -41,7 +41,7 @@ apiClient.interceptors.request.use(
     // Attach CompanyId from active session to outgoing payloads across all screens/APIs
     const sessionCompanyId = (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = typeof raw === 'string' ? JSON.parse(raw) : raw;
           const active = s?.data?.context?.activeCompany || s?.context?.activeCompany;
@@ -62,8 +62,16 @@ apiClient.interceptors.request.use(
       return null;
     })();
 
-    const isAuthUrl = config.url && (config.url.includes('/login') || config.url.includes('/auth/'));
-    if (!isAuthUrl && sessionCompanyId && config.data) {
+    const isExcludedUrl = config.url && (
+      config.url.includes('/login') ||
+      config.url.includes('/auth/') ||
+      config.url.includes('/roleCreation') ||
+      config.url.includes('/designationCreation') ||
+      config.url.includes('/companyRole') ||
+      config.url.includes('/companyDesignation') ||
+      config.url.includes('/gstRate')
+    );
+    if (!isExcludedUrl && sessionCompanyId && config.data) {
       if (config.data instanceof FormData) {
         if (!config.data.has('CompanyId') && !config.data.has('companyId')) {
           config.data.append('CompanyId', String(sessionCompanyId));

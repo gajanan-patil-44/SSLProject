@@ -50,7 +50,7 @@ export default function EditGSTModal({
   // Extract session username
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -200,8 +200,18 @@ export default function EditGSTModal({
               max="100"
               placeholder="e.g. 18"
               value={gstPercentage}
+              onKeyDown={(e) => {
+                if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+              }}
               onChange={(e) => {
-                setGstPercentage(e.target.value);
+                const val = e.target.value;
+                if (val === '') {
+                  setGstPercentage('');
+                  setErrors((prev) => ({ ...prev, gstPercentage: '' }));
+                  return;
+                }
+                if (parseFloat(val) > 100) return;
+                setGstPercentage(val);
                 setErrors((prev) => ({ ...prev, gstPercentage: '' }));
               }}
               className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border ${
