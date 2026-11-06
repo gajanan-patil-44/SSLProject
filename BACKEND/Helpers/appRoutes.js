@@ -20,13 +20,15 @@ import CompanyMasterRoutes from "../Routes/CompanyMaster/CompanyMasterRoutes.js"
 import LocationMasterRoutes from "../Routes/LocationMaster/LocationMasterRoutes.js"
 import GstRateRoutes from "../Routes/GstRate/GstRate.js"
 import DepartmentRoutes from "../Routes/Department/DepartmentRoutes.js"
+import CompanyRoleRoutes from "../Routes/CompanyRole/CompanyRole.js"
 
 
 const applyRoutes = (app) => {
 app.use(backendHelpers.USER_CREATION, UserRoutes);   // written by  hithin
 app.use(backendHelpers.LOGIN, Login);   // written by  hithin
 
-app.use(backendHelpers.ROLES_CREATION, RoleRoutes); // written by  hithin
+app.use(backendHelpers.ROLES_CREATION, RoleRoutes);
+app.use(backendHelpers.CompanyRole, CompanyRoleRoutes);   // written by  hithin
 app.use(backendHelpers.FILE_TYPE,FileTypeRoutes);   // written by  hithin
 app.use(backendHelpers.COMPANY_PRODUCT_CREATION, CompanyProductRoutes);   // written by  hithin
 app.use(backendHelpers.PRODUCT_CREATION, ProductRoute);  //Done by kavya

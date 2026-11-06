@@ -1,0 +1,26 @@
+info:
+  name: dropdown
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: http://192.168.23.87:9004/verp-service/companyRole/status
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 4,
+          "CompanyRoleId": 1,
+          "IsDisabled": false
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NDk4NzYsImV4cCI6MTc5Mzk3ODY3Nn0.r5tyvC5E3mrth5iz27h3MGENsFmsgviyaF6hW-kCmNg
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

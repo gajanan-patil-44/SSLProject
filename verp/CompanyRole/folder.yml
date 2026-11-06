@@ -1,0 +1,7 @@
+info:
+  name: CompanyRole
+  type: folder
+  seq: 20
+
+request:
+  auth: inherit

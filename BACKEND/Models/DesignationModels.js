@@ -167,6 +167,7 @@ export const checkDesignationExists = async (
 // ADD DESIGNATION
 
 
+
 export const addDesignation = async (designationData) => {
 
     const client = await pool.connect();
@@ -176,48 +177,94 @@ export const addDesignation = async (designationData) => {
         await client.query("BEGIN");
 
         // ==========================================
-        // 1. INSERT INTO LKP.DESIGNATION
+        // 1. CHECK EXISTING DESIGNATION
         // ==========================================
 
-        const designationQuery = `
-            INSERT INTO "LKP"."Designation"
-            (
-                "DesignationName",
-                "DesignationCode",
-                "IsDisabled",
-                "CreatedAt",
-                "CreatedByUserName"
-            )
-            VALUES
-            (
-                $1,
-                $2,
-                $3,
-                CURRENT_TIMESTAMP,
-                $4
-            )
-            RETURNING
+        const existingQuery = `
+            SELECT
                 "DesignationId",
                 "DesignationName",
-                "DesignationCode";
+                "DesignationCode"
+            FROM "LKP"."Designation"
+            WHERE LOWER(TRIM("DesignationName")) =
+                  LOWER(TRIM($1))
+            LIMIT 1;
         `;
 
-        const designationValues = [
-            designationData.DesignationName,
-            designationData.DesignationCode,
-            designationData.IsDisabled ?? false,
-            designationData.CreatedByUserName
-        ];
-
-        const designationResult = await client.query(
-            designationQuery,
-            designationValues
+        const existingResult = await client.query(
+            existingQuery,
+            [designationData.DesignationName]
         );
 
-        const designationId = designationResult.rows[0].DesignationId;
+        let designationId;
 
         // ==========================================
-        // 2. INSERT INTO DATA.COMPANYDESIGNATION
+        // 2. INSERT OR REUSE LKP.DESIGNATION
+        // ==========================================
+
+        if (existingResult.rowCount > 0) {
+
+            designationId = existingResult.rows[0].DesignationId;
+
+        } else {
+
+            const designationQuery = `
+                INSERT INTO "LKP"."Designation"
+                (
+                    "DesignationName",
+                    "DesignationCode",
+                    "IsDisabled",
+                    "CreatedAt",
+                    "CreatedByUserName"
+                )
+                VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
+                RETURNING "DesignationId", "DesignationName",
+                          "DesignationCode";
+            `;
+
+            const designationValues = [
+                designationData.DesignationName,
+                designationData.DesignationCode,
+                designationData.IsDisabled ?? false,
+                designationData.CreatedByUserName
+            ];
+
+            const designationResult = await client.query(
+                designationQuery,
+                designationValues
+            );
+
+            designationId = designationResult.rows[0].DesignationId;
+        }
+
+        // ==========================================
+        // 3. CHECK COMPANY DESIGNATION DUPLICATE
+        // ==========================================
+
+        const duplicateQuery = `
+            SELECT "CompanyDesignationId"
+            FROM "DATA"."CompanyDesignation"
+            WHERE
+                "DesignationId" = $1
+                AND "CompanyId" IS NOT DISTINCT FROM $2::SMALLINT;
+        `;
+
+        const duplicateResult = await client.query(
+            duplicateQuery,
+            [
+                designationId,
+                designationData.CompanyId ?? null
+            ]
+        );
+
+        if (duplicateResult.rowCount > 0) {
+            throw new Error(
+                "This designation is already assigned to this company"
+            );
+        }
+
+        // ==========================================
+        // 4. INSERT DATA.COMPANYDESIGNATION
         // ==========================================
 
         const companyDesignationQuery = `
@@ -233,13 +280,8 @@ export const addDesignation = async (designationData) => {
             )
             VALUES
             (
-                $1,
-                $2,
-                $3,
-                $4,
-                CURRENT_TIMESTAMP,
-                $5,
-                $6
+                $1, $2, $3, $4,
+                CURRENT_TIMESTAMP, $5, $6
             )
             RETURNING *;
         `;
@@ -261,7 +303,7 @@ export const addDesignation = async (designationData) => {
         await client.query("COMMIT");
 
         return {
-            ...designationResult.rows[0],
+            DesignationId: designationId,
             CompanyDesignation: companyDesignationResult.rows[0]
         };
 
@@ -275,6 +317,7 @@ export const addDesignation = async (designationData) => {
         client.release();
     }
 };
+
 
 
 
