@@ -1,4 +1,4 @@
-﻿// src/pages/Master/CompanyProductView.jsx
+// src/pages/Master/CompanyProductView.jsx
 import React, { useState, useMemo } from 'react';
 import {
   Boxes,
@@ -21,7 +21,7 @@ import {
   Square
 } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
-import { Button, PageHeader, Switch, IconButton } from '../../components/ui/index';
+import { Button, PageHeader, Switch, IconButton, PaginationControls } from '../../components/ui/index';
 import { useERPStore } from '../../store/useERPStore';
 
 // Helper to get session company
@@ -247,6 +247,8 @@ export default function CompanyProductView() {
   };
   const [formData, setFormData] = useState(initialForm);
   const [formErrors, setFormErrors] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [toastMessage, setToastMessage] = useState(null);
 
   const showToast = (msg) => {
@@ -771,7 +773,7 @@ export default function CompanyProductView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
-                {filteredData.map((row) => {
+                {filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((row) => {
                   const isChecked = selectedIds.includes(row.id);
                   const isRowDisabled = row.IsDisabled;
 
@@ -794,7 +796,7 @@ export default function CompanyProductView() {
 
                       {/* ID */}
                       <td className="py-3 px-4 font-mono text-slate-400">
-                        #{row.CompanyProductId}
+                        {row.CompanyProductId}
                       </td>
 
                       {/* Company */}
@@ -929,7 +931,7 @@ export default function CompanyProductView() {
         ) : (
           /* Grid View Mode */
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredData.map((row) => (
+            {filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((row) => (
               <div
                 key={row.id}
                 className={`bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3.5 hover:shadow-md transition-all ${
@@ -1048,6 +1050,14 @@ export default function CompanyProductView() {
             ))}
           </div>
         )}
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* ========================================================= */}
@@ -1131,7 +1141,11 @@ export default function CompanyProductView() {
                   type="text"
                   placeholder="e.g. VGT-ERP-01"
                   value={formData.CompanyProductCode}
-                  onChange={(e) => setFormData((f) => ({ ...f, CompanyProductCode: e.target.value }))}
+                  maxLength={20}
+                  onChange={(e) => {
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20).toUpperCase();
+                    setFormData((f) => ({ ...f, CompanyProductCode: sanitized }));
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary font-mono uppercase"
                 />
                 {formErrors.CompanyProductCode && (
@@ -1164,8 +1178,22 @@ export default function CompanyProductView() {
                 <input
                   type="number"
                   min="1"
+                  max="100000"
                   value={formData.MaxUsers}
-                  onChange={(e) => setFormData((f) => ({ ...f, MaxUsers: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (['-', '+', 'e', 'E', '.'].includes(e.key)) e.preventDefault();
+                  }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setFormData((f) => ({ ...f, MaxUsers: '' }));
+                      return;
+                    }
+                    const clean = val.replace(/\D/g, '').slice(0, 6);
+                    const num = parseInt(clean, 10);
+                    if (num > 100000) return;
+                    setFormData((f) => ({ ...f, MaxUsers: num }));
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20"
                 />
                 {formErrors.MaxUsers && (
@@ -1254,9 +1282,10 @@ export default function CompanyProductView() {
               </label>
               <textarea
                 rows={2}
+                maxLength={500}
                 placeholder="Scope of work, SLA terms, or custom notes..."
                 value={formData.Description}
-                onChange={(e) => setFormData((f) => ({ ...f, Description: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, Description: e.target.value.slice(0, 500) }))}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
               />
             </div>
@@ -1351,8 +1380,12 @@ export default function CompanyProductView() {
                 </label>
                 <input
                   type="text"
+                  maxLength={20}
                   value={formData.CompanyProductCode}
-                  onChange={(e) => setFormData((f) => ({ ...f, CompanyProductCode: e.target.value }))}
+                  onChange={(e) => {
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20).toUpperCase();
+                    setFormData((f) => ({ ...f, CompanyProductCode: sanitized }));
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-mono uppercase"
                 />
               </div>
@@ -1380,8 +1413,22 @@ export default function CompanyProductView() {
                 <input
                   type="number"
                   min="1"
+                  max="100000"
                   value={formData.MaxUsers}
-                  onChange={(e) => setFormData((f) => ({ ...f, MaxUsers: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (['-', '+', 'e', 'E', '.'].includes(e.key)) e.preventDefault();
+                  }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setFormData((f) => ({ ...f, MaxUsers: '' }));
+                      return;
+                    }
+                    const clean = val.replace(/\D/g, '').slice(0, 6);
+                    const num = parseInt(clean, 10);
+                    if (num > 100000) return;
+                    setFormData((f) => ({ ...f, MaxUsers: num }));
+                  }}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
                 />
               </div>
@@ -1437,8 +1484,9 @@ export default function CompanyProductView() {
               </label>
               <textarea
                 rows={2}
+                maxLength={500}
                 value={formData.Description}
-                onChange={(e) => setFormData((f) => ({ ...f, Description: e.target.value }))}
+                onChange={(e) => setFormData((f) => ({ ...f, Description: e.target.value.slice(0, 500) }))}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg"
               />
             </div>

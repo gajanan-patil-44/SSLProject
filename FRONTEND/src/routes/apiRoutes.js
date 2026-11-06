@@ -123,7 +123,10 @@ export const DESIGNATION_ROUTES = {
   ADD_DESIGNATION: '/verp-service/designationCreation/designation',
   EDIT_DESIGNATION: '/verp-service/designationCreation/editdesignation',
   TOGGLE_STATUS: '/verp-service/designationCreation/toggleDesignationStatus',
-  DELETE_DESIGNATION: '/verp-service/designationCreation/deleteDesignation'
+  DELETE_DESIGNATION: '/verp-service/designationCreation/deleteDesignation',
+  COMPANY_DESIGNATION_DROPDOWN: '/verp-service/designationCreation/companyDesignationDpdwn',
+  INSERT_COMPANY_DESIGNATION: '/verp-service/designationCreation/insertCompanyDesignation',
+  FETCH_COMPANY_DESIGNATION_VIEW: '/verp-service/designationCreation/fetchCompanyDesignationView'
 };
 
 /**
@@ -265,12 +268,41 @@ export const GST_ROUTES = GST_RATE_ROUTES;
 
 /**
  * ============================================================================
+ * COMPANY ROLE ROUTES
+ * ============================================================================
+ */
+export const COMPANY_ROLE_ROUTES = {
+  VIEW: '/verp-service/companyRole/view',
+  ADD: '/verp-service/companyRole/add',
+  EDIT: '/verp-service/companyRole/edit',
+  STATUS: '/verp-service/companyRole/status',
+  DROPDOWN: '/verp-service/companyRole/dropdown'
+};
+
+/**
+ * ============================================================================
+ * COMPANY DESIGNATION ROUTES
+ * ============================================================================
+ */
+export const COMPANY_DESIGNATION_ROUTES = {
+  VIEW: '/verp-service/designationCreation/fetchCompanyDesignationView',
+  ADD: '/verp-service/designationCreation/insertCompanyDesignation',
+  INSERT: '/verp-service/designationCreation/insertCompanyDesignation',
+  EDIT: '/verp-service/companyDesignation/edit',
+  STATUS: '/verp-service/companyDesignation/status',
+  DROPDOWN: '/verp-service/designationCreation/companyDesignationDpdwn'
+};
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
 export const API_ROUTES = {
   AUTH: AUTH_ROUTES,
   ROLE: ROLE_ROUTES,
+  COMPANY_ROLE: COMPANY_ROLE_ROUTES,
+  COMPANY_DESIGNATION: COMPANY_DESIGNATION_ROUTES,
   PRODUCT: PRODUCT_ROUTES,
   COMPANY: COMPANY_ROUTES,
   COMPANY_MASTER: COMPANY_MASTER_ROUTES,

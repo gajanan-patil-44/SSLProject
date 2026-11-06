@@ -62,8 +62,16 @@ apiClient.interceptors.request.use(
       return null;
     })();
 
-    const isAuthUrl = config.url && (config.url.includes('/login') || config.url.includes('/auth/'));
-    if (!isAuthUrl && sessionCompanyId && config.data) {
+    const isExcludedUrl = config.url && (
+      config.url.includes('/login') ||
+      config.url.includes('/auth/') ||
+      config.url.includes('/roleCreation') ||
+      config.url.includes('/designationCreation') ||
+      config.url.includes('/companyRole') ||
+      config.url.includes('/companyDesignation') ||
+      config.url.includes('/gstRate')
+    );
+    if (!isExcludedUrl && sessionCompanyId && config.data) {
       if (config.data instanceof FormData) {
         if (!config.data.has('CompanyId') && !config.data.has('companyId')) {
           config.data.append('CompanyId', String(sessionCompanyId));

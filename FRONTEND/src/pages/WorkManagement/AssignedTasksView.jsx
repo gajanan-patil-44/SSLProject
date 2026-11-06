@@ -27,12 +27,15 @@ import {
 import { getAllTasks, INITIAL_PROJECTS, updateTaskProgress } from './workManagementData';
 import UpdateTaskModal from './components/UpdateTaskModal';
 import { Modal } from '../../components/ui/Modal';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 export default function AssignedTasksView() {
   const [tasks, setTasks] = useState(getAllTasks);
   const [searchTerm, setSearchTerm] = useState('');
   const [projectFilter, setProjectFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modals state
   const [selectedTask, setSelectedTask] = useState(null);
@@ -285,7 +288,7 @@ export default function AssignedTasksView() {
                 </td>
               </tr>
             ) : (
-              filteredTasks.map((task) => (
+              filteredTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((task) => (
                 <tr
                   key={task.id}
                   className="border-b border-slate-100 dark:border-slate-800/70 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:via-purple-50/30 hover:to-indigo-50/50 dark:hover:bg-gradient-to-r dark:hover:from-indigo-950/30 dark:hover:via-purple-950/20 dark:hover:to-indigo-950/30 transition-all text-xs"
@@ -363,6 +366,14 @@ export default function AssignedTasksView() {
             )}
           </tbody>
         </table>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredTasks.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* Update Task Modal */}

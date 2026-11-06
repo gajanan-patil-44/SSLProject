@@ -174,22 +174,24 @@ export default function TaskAssignmentView() {
               </div>
 
               {/* Task Title */}
-              <FormField label="Task Title" required helpText="Brief, high-impact headline for the task.">
+              <FormField label="Task Title" required helpText="Brief, high-impact headline for the task (max 120 chars).">
                 <Input
                   type="text"
                   value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
+                  maxLength={120}
+                  onChange={(e) => setTaskTitle(e.target.value.slice(0, 120))}
                   placeholder="e.g. Implement multi-tier approval workflow for expense reports"
                   className="text-xs font-semibold"
                 />
               </FormField>
 
               {/* Task Description */}
-              <FormField label="Task Description & Deliverables" required helpText="Specify acceptance criteria, API endpoints, or edge case considerations.">
+              <FormField label="Task Description & Deliverables" required helpText="Specify acceptance criteria, API endpoints, or edge case considerations (max 1000 chars).">
                 <Textarea
                   rows={4}
                   value={taskDescription}
-                  onChange={(e) => setTaskDescription(e.target.value)}
+                  maxLength={1000}
+                  onChange={(e) => setTaskDescription(e.target.value.slice(0, 1000))}
                   placeholder="e.g. 1. Build client form with validation for amount and department. 2. Connect with /expense/submit API endpoint. 3. Handle rejected states gracefully..."
                   className="text-xs"
                 />

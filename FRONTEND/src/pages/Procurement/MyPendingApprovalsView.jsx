@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { procurementPRService } from './procurementData';
 import PRDetailModal, { PriorityBadge } from './components/PRDetailModal';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 export default function MyPendingApprovalsView() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function MyPendingApprovalsView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPR, setSelectedPR] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Load pending approvals (only 'Pending Approval' and 'Forwarded')
   const loadPendingList = () => {
@@ -135,14 +138,16 @@ export default function MyPendingApprovalsView() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredPending.length > 0 ? (
-                filteredPending.map((pr, idx) => (
+                filteredPending.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((pr, idx) => {
+                  const rowNumber = (currentPage - 1) * pageSize + idx + 1;
+                  return (
                   <tr
                     key={pr.id}
                     className="hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition cursor-pointer"
                     onClick={() => handleOpenApprovalModal(pr)}
                   >
                     <td className="py-3.5 px-4 text-center font-medium text-slate-500">
-                      {idx + 1}
+                      {rowNumber}
                     </td>
                     <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
                       {pr.requirementNo}
@@ -179,7 +184,7 @@ export default function MyPendingApprovalsView() {
                       </button>
                     </td>
                   </tr>
-                ))
+                );})
               ) : (
                 <tr>
                   <td colSpan="7" className="py-12 text-center">
@@ -198,6 +203,14 @@ export default function MyPendingApprovalsView() {
             </tbody>
           </table>
         </div>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredPending.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* PR Detail Modal with Approval Actions */}
