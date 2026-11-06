@@ -20,7 +20,7 @@ http:
         value: "1"
       - name: ProjectId
         type: text
-        value: "3"
+        value: 3pokyh
       - name: DesignationId
         type: text
         value: "3"
@@ -46,7 +46,8 @@ http:
         type: text
         value: |-
           [
-          {"MaterialId":1,
+          {
+          "MaterialId":1,
           "Quantity":1,
           "MaterialDescription":"Blower"
           }
@@ -64,12 +65,6 @@ http:
         value:
           - C:\Users\manoj\Pictures\Screenshots\pit bull.png
         contentType: image/png
-      - name: files
-        type: file
-        value:
-          - C:\Users\manoj\Pictures\Screenshots\pit bull.png
-        contentType: image/png
-        disabled: true
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiI0ODE0ODQ0IiwiTG9naW5OYW1lIjoiQWRtaW4yIiwiRW1haWwiOiJwcmF2ZWVuLm1AdmlzaHZpbi5jb20iLCJEZXNpZ25hdGlvbklkIjpudWxsLCJpYXQiOjE3OTM4NTY3MTcsImV4cCI6MTc5Mzg4NTUxN30.cHEKp1yCW-rMFQ3e5GPVqVJ2HbJPLw2NaoKt9cKEy8w

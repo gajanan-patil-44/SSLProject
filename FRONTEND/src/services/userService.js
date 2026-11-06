@@ -92,18 +92,12 @@ export const userService = {
    * FlagId: 4, CompanyId: number
    */
   getRoleDropdown: async (companyId) => {
-<<<<<<< HEAD
-    return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
-      FlagId: 4,
-      CompanyId: Number(companyId)
-=======
     const compId = companyId !== undefined && companyId !== null && String(companyId).trim() !== ''
       ? Number(companyId)
       : getSessionCompanyId();
     return apiClient.post(API_ROUTES.USER.CPP_DROPDOWN, {
       FlagId: 4,
       CompanyId: compId
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
     });
   },
 

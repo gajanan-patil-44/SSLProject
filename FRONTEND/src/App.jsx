@@ -24,9 +24,9 @@ import VendorManagement from './pages/Master/VendorManagementView';
 import LocationTypeMasterView from './pages/Master/LocationTypeMasterView';
 import LocationMasterView from './pages/Master/LocationMasterView';
 import CompanyMasterView from './pages/Master/CompanyMasterView';
-<<<<<<< HEAD
+
 import RaisePRRequestView from './pages/Procurement/RaisePRRequestView';
-=======
+
 import DepartmentView from './pages/Master/DepartmentView';
 import GSTCreationView from './pages/Master/GSTCreationView';
 
@@ -42,7 +42,7 @@ import {
   OrganizationDashboardView,
   WorkReportsAnalyticsView
 } from './pages/WorkManagement';
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';

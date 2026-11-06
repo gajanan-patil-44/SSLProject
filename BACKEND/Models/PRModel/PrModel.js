@@ -340,3 +340,355 @@ export const createPRPOModel = async ({
 
     }
 };
+
+export const updateActionPRPOStatusModel = async ({
+    PRPOHeaderId,
+    PRPOStatusId,
+    ActionByUserId,
+    ActionForUserId,
+    Comments
+}) => {
+
+    const client = await pool.connect();
+
+    try {
+
+        await client.query("BEGIN");
+
+        // ==========================================
+        // 1. FETCH PRPO HEADER AND LOCK ROW
+        // ==========================================
+
+        const headerQuery = `
+            SELECT
+                "PRPOHeaderId",
+                "PRPOHeaderNumber",
+                "PRPOStatusId"
+            FROM "PRPO"."PRPOHeader"
+            WHERE
+                "PRPOHeaderId" = $1
+                AND "IsDisabled" = false
+            FOR UPDATE
+        `;
+
+        const headerResult = await client.query(
+            headerQuery,
+            [PRPOHeaderId]
+        );
+
+        if (headerResult.rows.length === 0) {
+
+            const error = new Error("PRPO not found.");
+            error.statusCode = 404;
+            throw error;
+        }
+
+        const header = headerResult.rows[0];
+
+        const FromPRPOStatusId = header.PRPOStatusId;
+
+
+        // ==========================================
+        // 2. FETCH CURRENT APPROVER AND LOCK ROW
+        // ==========================================
+
+        const approvalQuery = `
+            SELECT
+                "PRPOApprovalId",
+                "ApprovalLevel",
+                "AssignmentRound",
+                "ApproverUserId",
+                "ForwardedToUserId",
+                "PRPOStatusId"
+            FROM "PRPO"."PRPOApproval"
+            WHERE
+                "PRPOHeaderId" = $1
+                AND "IsCurrent" = true
+                AND "IsDisabled" = false
+            FOR UPDATE
+        `;
+
+        const approvalResult = await client.query(
+            approvalQuery,
+            [PRPOHeaderId]
+        );
+
+        if (approvalResult.rows.length === 0) {
+
+            const error = new Error(
+                "No current approver found for this PRPO."
+            );
+
+            error.statusCode = 400;
+            throw error;
+        }
+
+        const currentApproval = approvalResult.rows[0];
+
+
+        // ==========================================
+        // 3. VALIDATE LOGGED-IN APPROVER
+        // ==========================================
+
+        if (
+            Number(currentApproval.ApproverUserId) !==
+            Number(ActionByUserId)
+        ) {
+
+            const error = new Error(
+                "You are not authorized to perform this PRPO action."
+            );
+
+            error.statusCode = 403;
+            throw error;
+        }
+
+
+        // ==========================================
+        // 4. VALIDATE ACTION
+        // ==========================================
+
+        if (![3, 4, 5].includes(PRPOStatusId)) {
+
+            const error = new Error("Invalid PRPO status.");
+
+            error.statusCode = 400;
+            throw error;
+        }
+
+        if (![2, 3].includes(FromPRPOStatusId)) {
+
+            const error = new Error(
+                "This PRPO is already approved or rejected."
+            );
+
+            error.statusCode = 400;
+            throw error;
+        }
+
+        if (![2, 3].includes(currentApproval.PRPOStatusId)) {
+
+            const error = new Error(
+                "Current approval is already completed."
+            );
+
+            error.statusCode = 400;
+            throw error;
+        }
+
+        // Forward requires a different next approver.
+        if (
+            PRPOStatusId === 3 &&
+            (
+                !ActionForUserId ||
+                Number(ActionForUserId) === Number(ActionByUserId)
+            )
+        ) {
+
+            const error = new Error(
+                "A valid next approver is required for forwarding."
+            );
+
+            error.statusCode = 400;
+            throw error;
+        }
+
+
+        // ==========================================
+        // 5. UPDATE CURRENT APPROVAL RECORD
+        // ==========================================
+
+        const updateApprovalQuery = `
+            UPDATE "PRPO"."PRPOApproval"
+            SET
+                "PRPOStatusId" = $1,
+                "ForwardedToUserId" = $2,
+                "IsCurrent" = false
+            WHERE
+                "PRPOApprovalId" = $3
+            RETURNING "PRPOApprovalId"
+        `;
+
+        await client.query(
+            updateApprovalQuery,
+            [
+                PRPOStatusId,
+                PRPOStatusId === 3
+                    ? ActionForUserId
+                    : null,
+                currentApproval.PRPOApprovalId
+            ]
+        );
+
+
+        // ==========================================
+        // 6. IF FORWARDED, CREATE NEXT APPROVAL
+        // ==========================================
+
+        let newApprovalId = null;
+
+        if (PRPOStatusId === 3) {
+
+            const nextApprovalQuery = `
+                INSERT INTO "PRPO"."PRPOApproval"
+                (
+                    "PRPOHeaderId",
+                    "ApprovalLevel",
+                    "AssignmentRound",
+                    "ApproverUserId",
+                    "ForwardedToUserId",
+                    "PRPOStatusId",
+                    "AssignedAt",
+                    "IsCurrent",
+                    "IsDisabled"
+                )
+                VALUES
+                (
+                    $1, $2, $3, $4, NULL, 2,
+                    CURRENT_TIMESTAMP, true, false
+                )
+                RETURNING "PRPOApprovalId"
+            `;
+
+            const nextApprovalResult = await client.query(
+                nextApprovalQuery,
+                [
+                    PRPOHeaderId,
+
+                    Number(currentApproval.ApprovalLevel) + 1,
+
+                    currentApproval.AssignmentRound,
+
+                    ActionForUserId
+                ]
+            );
+
+            newApprovalId =
+                nextApprovalResult.rows[0].PRPOApprovalId;
+        }
+
+
+        // ==========================================
+        // 7. UPDATE PRPO HEADER STATUS
+        // ==========================================
+
+        const updateHeaderQuery = `
+            UPDATE "PRPO"."PRPOHeader"
+            SET
+                "PRPOStatusId" = $1
+            WHERE
+                "PRPOHeaderId" = $2
+            RETURNING
+                "PRPOHeaderId",
+                "PRPOHeaderNumber",
+                "PRPOStatusId"
+        `;
+
+        const updateHeaderResult = await client.query(
+            updateHeaderQuery,
+            [
+                PRPOStatusId,
+                PRPOHeaderId
+            ]
+        );
+
+
+        // ==========================================
+        // 8. INSERT PRPO STATUS HISTORY
+        // ==========================================
+
+        const historyQuery = `
+            INSERT INTO "PRPO"."PRPOStatusHistory"
+            (
+                "PRPOHeaderId",
+                "FromPRPOStatusId",
+                "ToPRPOStatusId",
+                "ActionByUserId",
+                "ActionForUserId",
+                "ActionAt",
+                "Comments",
+                "IsDisabled"
+            )
+            VALUES
+            (
+                $1, $2, $3, $4, $5,
+                CURRENT_TIMESTAMP, $6, false
+            )
+            RETURNING "PRPOStatusHistoryId"
+        `;
+
+        const historyResult = await client.query(
+            historyQuery,
+            [
+                PRPOHeaderId,
+
+                FromPRPOStatusId,
+
+                PRPOStatusId,
+
+                ActionByUserId,
+
+                PRPOStatusId === 3
+                    ? ActionForUserId
+                    : ActionByUserId,
+
+                Comments
+            ]
+        );
+
+
+        // ==========================================
+        // 9. COMMIT TRANSACTION
+        // ==========================================
+
+        await client.query("COMMIT");
+
+
+        const messages = {
+            3: "PRPO forwarded successfully.",
+            4: "PRPO approved successfully.",
+            5: "PRPO rejected successfully."
+        };
+
+        return {
+
+            message: messages[PRPOStatusId],
+
+            data: {
+
+                ...updateHeaderResult.rows[0],
+
+                ActionByUserId,
+
+                ActionForUserId:
+                    PRPOStatusId === 3
+                        ? ActionForUserId
+                        : ActionByUserId,
+
+                PRPOApprovalId:
+                    currentApproval.PRPOApprovalId,
+
+                NewPRPOApprovalId: newApprovalId,
+
+                PRPOStatusHistoryId:
+                    historyResult.rows[0].PRPOStatusHistoryId
+
+            }
+
+        };
+
+    } catch (error) {
+
+        await client.query("ROLLBACK");
+
+        throw error;
+
+    } finally {
+
+        client.release();
+
+    }
+
+};
+
+

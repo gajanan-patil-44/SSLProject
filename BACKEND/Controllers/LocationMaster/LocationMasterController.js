@@ -1,5 +1,3 @@
-
-
 import {
     getLocationTypes,
     getParentLocationTypes,
@@ -37,12 +35,8 @@ export const getLocationTypeController = async (req, res) => {
         });
 
     } catch (error) {
-<<<<<<< HEAD
-        console.error("Get Location Type Error:", error);
-=======
 
         // console.error("Get Location Type Error:", error);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
         return res.status(500).json({
             status: "error",
@@ -55,12 +49,6 @@ export const getLocationTypeController = async (req, res) => {
 
 // 2. Parent Location Type dropdown
 export const getParentLocationTypeController = async (req, res) => {
-<<<<<<< HEAD
-    const { flagId, LocationTypeMasterId } = req.body;
-
-    try {
-        if (Number(flagId) !== 2) {
-=======
 
     const { flagId, LocationTypeMasterId } = req.body;
 
@@ -68,7 +56,6 @@ export const getParentLocationTypeController = async (req, res) => {
 
         if (Number(flagId) !== 2) {
 
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "Use flagId 2 to get Parent Location Type."
@@ -76,10 +63,6 @@ export const getParentLocationTypeController = async (req, res) => {
         }
 
         if (!LocationTypeMasterId || !Number.isInteger(Number(LocationTypeMasterId)) || Number(LocationTypeMasterId) <= 0) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "Valid LocationTypeMasterId is required."
@@ -95,12 +78,8 @@ export const getParentLocationTypeController = async (req, res) => {
         });
 
     } catch (error) {
-<<<<<<< HEAD
-        console.error("Get Parent Location Type Error:", error);
-=======
 
         // console.error("Get Parent Location Type Error:", error);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
         return res.status(500).json({
             status: "error",
@@ -114,17 +93,11 @@ export const getParentLocationTypeController = async (req, res) => {
 // 3. Parent Location Master dropdown
 
 export const getParentLocationMasterController = async (req, res) => {
-<<<<<<< HEAD
-    const { flagId, ParentLocationTypeMasterId } = req.body;
-
-    try {
-=======
 
     const { flagId, ParentLocationTypeMasterId } = req.body;
 
     try {
 
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         if (Number(flagId) !== 3) {
             return res.status(400).json({
                 status: "error",
@@ -137,10 +110,6 @@ export const getParentLocationMasterController = async (req, res) => {
             !Number.isInteger(Number(ParentLocationTypeMasterId)) ||
             Number(ParentLocationTypeMasterId) <= 0
         ) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "Valid ParentLocationTypeMasterId is required."
@@ -158,12 +127,8 @@ export const getParentLocationMasterController = async (req, res) => {
         });
 
     } catch (error) {
-<<<<<<< HEAD
-        console.error("Get Parent Location Master Error:", error);
-=======
 
         // console.error("Get Parent Location Master Error:", error);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
         return res.status(500).json({
             status: "error",
@@ -177,10 +142,6 @@ export const getParentLocationMasterController = async (req, res) => {
 
 // 4. Add Location Details and Contact Channels
 
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 export const addLocationMaster = async (req, res) => {
 
     const {
@@ -231,10 +192,6 @@ export const addLocationMaster = async (req, res) => {
             !Number.isInteger(Number(LocationTypeMasterId)) ||
             Number(LocationTypeMasterId) <= 0
         ) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "CompanyMasterId and LocationTypeMasterId must be valid positive integers."
@@ -247,10 +204,6 @@ export const addLocationMaster = async (req, res) => {
             !LocationName.trim() ||
             LocationName.trim().length > 100
         ) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "LocationName is required and cannot exceed 100 characters."
@@ -263,10 +216,6 @@ export const addLocationMaster = async (req, res) => {
             !ContactPerson.trim() ||
             ContactPerson.trim().length > 100
         ) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "ContactPerson is required and cannot exceed 100 characters."
@@ -275,10 +224,6 @@ export const addLocationMaster = async (req, res) => {
 
         // Contact Number validation - exactly 10 digits
         if (!/^[0-9]{10}$/.test(String(ContactNumber).trim())) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "ContactNumber must contain exactly 10 digits."
@@ -363,10 +308,6 @@ export const addLocationMaster = async (req, res) => {
                 !Number.isInteger(Number(ParentLocationTypeMasterId)) ||
                 Number(ParentLocationTypeMasterId) <= 0
             ) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                 return res.status(400).json({
                     status: "error",
                     message: "ParentLocationTypeMasterId is required."
@@ -390,10 +331,6 @@ export const addLocationMaster = async (req, res) => {
                 !Number.isInteger(Number(ParentLocationMasterId)) ||
                 Number(ParentLocationMasterId) <= 0
             ) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                 return res.status(400).json({
                     status: "error",
                     message: "ParentLocationMasterId is required."
@@ -423,10 +360,6 @@ export const addLocationMaster = async (req, res) => {
         );
 
         if (emailExists) {
-<<<<<<< HEAD
-=======
-
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "This EmailId already exists for this company."
@@ -440,10 +373,7 @@ export const addLocationMaster = async (req, res) => {
         );
 
         if (contactExists) {
-<<<<<<< HEAD
-=======
             
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
             return res.status(400).json({
                 status: "error",
                 message: "This ContactNumber already exists for this company."
@@ -488,4 +418,3 @@ export const addLocationMaster = async (req, res) => {
         });
     }
 };
-

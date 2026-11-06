@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 
-import { createPRPOModel, getMaterialDrpDwnModel, getPriorityLevelDrpDwnModel } from "../../Models/PRModel/PrModel.js";
+import { createPRPOModel, getMaterialDrpDwnModel, getPriorityLevelDrpDwnModel,updateActionPRPOStatusModel } from "../../Models/PRModel/PrModel.js";
 
 import { processPRPOFiles } from "../../Helpers/PrcoessPRPOfiles.js";
 
@@ -380,5 +380,141 @@ export const getPriorityLevelDrpDwnController = async (req, res) => {
     }
 }
 
+export const updatePRPOActionController = async (req, res) => {
+    try {
+        const {
+            PRPOHeaderId,
+            PRPOStatusId,
+            UserId,
+            ActionForUserId,
+            Comments
+        } = req.body;
 
+
+        // ==========================================
+        // 1. REQUIRED FIELD VALIDATION
+        // ==========================================
+
+        if (
+            !PRPOHeaderId ||
+            !PRPOStatusId ||
+            !UserId
+        ) {
+
+            return res.status(400).json({
+                status: false,
+                message: "PRPOHeaderId, PRPOStatusId and UserId are required."
+            });
+        }
+
+
+        // ==========================================
+        // 2. VALIDATE NUMERIC VALUES
+        // ==========================================
+
+        const headerId = Number(PRPOHeaderId);
+        const statusId = Number(PRPOStatusId);
+        const userId = Number(UserId);
+
+        if (
+            !Number.isInteger(headerId) ||
+            headerId <= 0 ||
+            !Number.isInteger(userId) ||
+            userId <= 0 ||
+            !Number.isInteger(statusId)
+        ) {
+
+            return res.status(400).json({
+                status: false,
+                message: "Invalid PRPOHeaderId, UserId or PRPOStatusId."
+            });
+        }
+
+
+        // ==========================================
+        // 3. VALIDATE STATUS
+        // ==========================================
+
+        if (![3, 4, 5].includes(statusId)) {
+
+            return res.status(400).json({
+                status: false,
+                message: "Allowed PRPOStatusId values are 3, 4 and 5."
+            });
+        }
+
+
+        // ==========================================
+        // 4. VALIDATE FORWARD USER
+        // ==========================================
+
+        let nextApproverId = null;
+
+        if (statusId === 3) {
+
+            nextApproverId = Number(ActionForUserId);
+
+            if (
+                !Number.isInteger(nextApproverId) ||
+                nextApproverId <= 0 ||
+                nextApproverId === userId
+            ) {
+
+                return res.status(400).json({
+                    status: false,
+                    message: "A valid next approver UserId is required."
+                });
+            }
+        }
+
+
+        // ==========================================
+        // 5. CALL MODEL
+        // ==========================================
+
+        const result = await updateActionPRPOStatusModel({
+
+            PRPOHeaderId: headerId,
+
+            PRPOStatusId: statusId,
+
+            ActionByUserId: userId,
+
+            ActionForUserId: nextApproverId,
+
+            Comments: Comments || null
+
+        });
+
+
+        // ==========================================
+        // 6. SUCCESS RESPONSE
+        // ==========================================
+
+        return res.status(200).json({
+
+            status: true,
+
+            message: result.message,
+
+            data: result.data
+
+        });
+
+
+    } catch (error) {
+
+        console.error("Update PRPO Status Error:", error);
+
+        return res.status(error.statusCode || 500).json({
+
+            status: false,
+
+            message: error.message || "Internal Server Error."
+
+        });
+
+    }
+
+};
 

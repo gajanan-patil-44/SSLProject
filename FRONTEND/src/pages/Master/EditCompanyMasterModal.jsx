@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-// src/pages/Master/EditCompanyMasterModal.jsx
-=======
 ﻿// src/pages/Master/EditCompanyMasterModal.jsx
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/index';
@@ -24,10 +20,7 @@ import {
 } from 'lucide-react';
 import {
   validateCode,
-<<<<<<< HEAD
-=======
   validateTextOnly,
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
   validateEmail,
   validatePhone,
   validateGSTIN,
@@ -96,11 +89,7 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
 
   const getSessionUserName = () => {
     try {
-<<<<<<< HEAD
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
-=======
       const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -121,21 +110,9 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
     const codeErr = validateCode(companyCode, 'Company Code', true);
     if (codeErr) errs.companyCode = codeErr;
 
-<<<<<<< HEAD
-    // Company Name: required, 2-100 chars
-    const nameTrim = companyName.trim();
-    if (!nameTrim) {
-      errs.companyName = 'Company Name is required';
-    } else if (nameTrim.length < 2) {
-      errs.companyName = 'Company Name must be at least 2 characters';
-    } else if (nameTrim.length > 100) {
-      errs.companyName = 'Company Name must not exceed 100 characters';
-    }
-=======
     // Company Name: required, text only, 2-100 chars
     const nameErr = validateTextOnly(companyName, 'Company Name', true, 2, 100);
     if (nameErr) errs.companyName = nameErr;
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
 
     // Contact Number: optional, but if entered must be valid 10 digits
     if (contactNumber.trim()) {
@@ -197,10 +174,6 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
       if (onSaveSuccess) onSaveSuccess();
       onClose();
     } catch (err) {
-<<<<<<< HEAD
-      console.error('Failed to update company master:', err);
-=======
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       showToast(err?.response?.data?.message || err?.message || 'Failed to update company master', 'error');
     } finally {
       setSaving(false);
@@ -262,12 +235,8 @@ export default function EditCompanyMasterModal({ isOpen, onClose, company, onSav
                   placeholder="e.g. Global Solutions Ltd"
                   value={companyName}
                   onChange={(e) => {
-<<<<<<< HEAD
-                    setCompanyName(e.target.value);
-=======
                     const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                     setCompanyName(sanitized);
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
                     if (errors.companyName) setErrors(prev => ({ ...prev, companyName: null }));
                   }}
                   className={`${inputCls(errors.companyName)} pl-9.5`}
