@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 const allowedOrigins = [
 
-    "http://localhost:5175",
+    "http://localhost:5173",
     "http://localhost:5175",
     "http://192.168.23.67:5175",
     "http://192.168.23.79:5175",
