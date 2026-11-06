@@ -808,10 +808,16 @@ export const editUserdetailsController = async (req, res) => {
 
         return res.status(isValidationError ? 400 : 500).json({
             success: false,
+<<<<<<< HEAD
+            message: "Failed to update user details.",
+            error: error.message,
+            stack: error.stack
+=======
             message: isValidationError
                 ? error.message
                 : "Failed to update user details.",
             error: error.message
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         });
 
     }

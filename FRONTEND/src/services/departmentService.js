@@ -1,4 +1,4 @@
-// src/services/departmentService.js
+﻿// src/services/departmentService.js
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
@@ -8,7 +8,7 @@ import { useERPStore } from '../store/useERPStore';
  */
 export const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = typeof raw === 'string' ? JSON.parse(raw) : raw;
       const active = s?.data?.context?.activeCompany || s?.context?.activeCompany;

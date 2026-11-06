@@ -186,6 +186,7 @@ const normalizeNavigation = (menuData) => {
     sectionsMap.get(sectionTitle).push(item);
   });
 
+
   const sections = [];
   sectionsMap.forEach((items, title) => {
     sections.push({
@@ -217,7 +218,7 @@ export default function Sidebar() {
   // Directly read session from storage to guarantee menu is refreshed on browser reload
   const sessionMenu = React.useMemo(() => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       return parsed?.data?.menuPage || parsed?.menuPage || parsed?.data?.userMenu || parsed?.userMenu || null;
