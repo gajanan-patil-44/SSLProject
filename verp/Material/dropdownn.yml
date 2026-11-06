@@ -8,16 +8,23 @@ http:
   url: http://localhost:9004/verp-service/material/dropdown
   body:
     type: json
-    data: |-
+    data: |
       // {
       //   "FlagId":5
       // }
 
+      // {
+      //   "FlagId":6,
+      //   "GSTTypeId":4
+      // }
+
+
       {
-        "FlagId":6,
-        "GSTTypeId":4
+        "FlagId":12
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM4NjI1MjcsImV4cCI6MTc5Mzg5MTMyN30.cGDmmdsQOZOaYxSFPCliJkTT66bTYlKkTJuy2TANpKw
 
 settings:
   encodeUrl: true

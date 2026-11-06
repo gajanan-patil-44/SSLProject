@@ -5,6 +5,7 @@ import { pool } from "../Config/db.js";
 // FIND USER FOR LOGIN
 // ==========================================================
 
+
 export const findUserForLogin = async (username) => {
 
     // ==========================================================
@@ -12,8 +13,7 @@ export const findUserForLogin = async (username) => {
     // ==========================================================
 
     const loginFieldsResult = await pool.query(`
-        SELECT
-            "LoginFieldName"
+        SELECT "LoginFieldName"
         FROM "DATA"."LoginField"
         WHERE
             "IsDisabled" = FALSE
@@ -21,69 +21,85 @@ export const findUserForLogin = async (username) => {
             AND "LoginFieldName" <> ''
     `);
 
-    const loginFields = loginFieldsResult.rows;
+    const allowedFields = [
+        "EmployeeId",
+        "FirstName",
+        "LastName",
+        "PhoneNumber",
+        "Email",
+        "LoginName"
+    ];
+
+    const loginFields = loginFieldsResult.rows
+        .map(field => String(field.LoginFieldName))
+        .filter(field => allowedFields.includes(field));
 
     if (loginFields.length === 0) {
         return null;
     }
 
-
-
-
     const loginConditions = loginFields
-        .map(field => {
-
-            const fieldName =
-                String(field.LoginFieldName);
-
-            return `
-                u."${fieldName}" = $1
-            `;
-        })
+        .map(field => `u."${field}" = $1`)
         .join(" OR ");
 
-
     // ==========================================================
-    // FIND USER
+    // FIND USER + DESIGNATION + DEPARTMENT
     // ==========================================================
 
-    const userQuery = `
-        SELECT
-            u."UserId",
-            u."EmployeeId",
-            u."FirstName",
-            u."MiddleName",
-            u."LastName",
-            u."PhoneNumber",
-            u."Email",
-            u."Password",
-            u."LoginName",
-            u."Photo",
-            u."DesignationId",
-            u."IsForcePasswordChange",
-            u."IsDisabled",
-            u."AttemptCount",
-            u."IsTempBlocked",
-            u."TempBlockedOn",
-            u."IsBlocked",
-            u."BlockedOn",
-            u."CreatedAt",
-            u."UpdatedAt",
-            d."CompanyDesignationId",
-            d."DesignationCode",
-            d."DesignationName",
-            d."DesignationLevel",
-            d."CompanyId"
-                AS "DesignationCompanyId"
-        FROM
-            "DATA"."User" u
-        LEFT JOIN
-            "LKP"."CompanyDesignation" d
-            ON d."CompanyDesignationId" =
-               u."DesignationId"
-        WHERE (${loginConditions}) AND u."IsDisabled" = FALSE
-        LIMIT 1
-    `;
+   
+const userQuery = `
+    SELECT
+        u."UserId",
+        u."EmployeeId",
+        u."FirstName",
+        u."MiddleName",
+        u."LastName",
+        u."PhoneNumber",
+        u."Email",
+        u."Password",
+        u."LoginName",
+        u."Photo",
+        u."DesignationId",
+        u."DepartmentId",
+        u."IsForcePasswordChange",
+        u."IsDisabled",
+        u."AttemptCount",
+        u."IsTempBlocked",
+        u."TempBlockedOn",
+        u."IsBlocked",
+        u."BlockedOn",
+        u."CreatedAt",
+        u."UpdatedAt",
+
+        cd."CompanyDesignationId",
+        d."DesignationId" AS "MasterDesignationId",
+        d."DesignationCode",
+        d."DesignationName",
+        cd."DesignationLevel",
+        cd."CompanyId" AS "DesignationCompanyId",
+        cd."CanBeReportingManager",
+
+        dept."DepartmentName",
+        dept."DepartmentCode"
+
+    FROM "DATA"."User" u
+
+    LEFT JOIN "DATA"."CompanyDesignation" cd
+        ON cd."CompanyDesignationId" = u."DesignationId"
+
+    LEFT JOIN "LKP"."Designation" d
+        ON d."DesignationId" = cd."DesignationId"
+
+    LEFT JOIN "LKP"."Department" dept
+        ON dept."DepartmentId" = u."DepartmentId"
+
+    WHERE
+        (${loginConditions})
+        AND u."IsDisabled" = FALSE
+
+    LIMIT 1
+`;
+
 
     const userResult = await pool.query(userQuery, [username]);
 
@@ -92,23 +108,31 @@ export const findUserForLogin = async (username) => {
     }
 
     const user = userResult.rows[0];
+
     // ==========================================================
     // COMPANY
     // ==========================================================
+
     const companyQuery = `
         SELECT
             uc."CompanyId",
             c."CompanyName"
         FROM "DATA"."UserCompany" uc
-        LEFT JOIN "LKP"."Company" c ON c."CompanyId" = uc."CompanyId"
-        WHERE uc."UserId" = $1
+        LEFT JOIN "LKP"."Company" c
+            ON c."CompanyId" = uc."CompanyId"
+        WHERE
+            uc."UserId" = $1
         ORDER BY uc."CompanyId"
     `;
-    const companyResult = await pool.query(companyQuery, [user.UserId]);
 
-user.CompanyId = companyResult.rows.length > 0
-    ? companyResult.rows[0].CompanyId
-    : null;
+    const companyResult = await pool.query(
+        companyQuery,
+        [user.UserId]
+    );
+
+    user.CompanyId = companyResult.rows.length > 0
+        ? companyResult.rows[0].CompanyId
+        : null;
 
     // ==========================================================
     // PRODUCT
@@ -121,12 +145,26 @@ user.CompanyId = companyResult.rows.length > 0
             cp."ProductId",
             p."ProductName"
         FROM "DATA"."UserProduct" up
-        INNER JOIN "LKP"."CompanyProduct" cp ON cp."CompanyProductId" = up."CompanyProductId"
-        INNER JOIN "LKP"."Product" p ON p."ProductId" = cp."ProductId"
-        WHERE up."UserId" = $1 AND p."IsDisabled" = FALSE
-        ORDER BY cp."CompanyId", up."CompanyProductId"
+
+        INNER JOIN "LKP"."CompanyProduct" cp
+            ON cp."CompanyProductId" = up."CompanyProductId"
+
+        INNER JOIN "LKP"."Product" p
+            ON p."ProductId" = cp."ProductId"
+
+        WHERE
+            up."UserId" = $1
+            AND p."IsDisabled" = FALSE
+
+        ORDER BY
+            cp."CompanyId",
+            up."CompanyProductId"
     `;
-    const productResult = await pool.query(productQuery, [user.UserId]);
+
+    const productResult = await pool.query(
+        productQuery,
+        [user.UserId]
+    );
 
     // ==========================================================
     // PROJECT
@@ -138,100 +176,135 @@ user.CompanyId = companyResult.rows.length > 0
             pr."ProjectName",
             pr."CompanyProductId"
         FROM "DATA"."UserProject" upj
-        INNER JOIN "LKP"."Project" pr ON pr."ProjectId" = upj."ProjectId"
-        WHERE upj."UserId" = $1 AND pr."IsDisabled" = FALSE
+
+        INNER JOIN "LKP"."Project" pr
+            ON pr."ProjectId" = upj."ProjectId"
+
+        WHERE
+            upj."UserId" = $1
+            AND pr."IsDisabled" = FALSE
+
         ORDER BY upj."ProjectId"
     `;
 
-    const projectResult = await pool.query(projectQuery, [user.UserId]);
+    const projectResult = await pool.query(
+        projectQuery,
+        [user.UserId]
+    );
+
     // ==========================================================
     // ROLE
     // ==========================================================
+
     const roleQuery = `
         SELECT DISTINCT
             ur."RoleId",
             r."RoleName"
         FROM "DATA"."UserRole" ur
+
         INNER JOIN "LKP"."Role" r
             ON r."RoleId" = ur."RoleId"
+
         WHERE
             ur."UserId" = $1
             AND r."IsDisabled" = FALSE
+
         ORDER BY ur."RoleId"
     `;
-    const roleResult = await pool.query(roleQuery, [user.UserId]);
+
+    const roleResult = await pool.query(
+        roleQuery,
+        [user.UserId]
+    );
+
     // ==========================================================
     // REPORTING MANAGER
     // ==========================================================
 
-    const reportingManagerQuery = `
-        SELECT
-            urm."UserReportingManagerId",
-            urm."UserId",
-            urm."ReportingManagerUserId",
-            manager."EmployeeId" AS "ReportingManagerEmployeeId",
-            CONCAT_WS(
-                ' ',
-                manager."FirstName",
-                manager."MiddleName",
-                manager."LastName"
-            )
-                AS "ReportingManagerName",
-            manager."Email"
-                AS "ReportingManagerEmail",
-            manager."PhoneNumber"
-                AS "ReportingManagerPhoneNumber",
-            manager."DesignationId"
-                AS "ReportingManagerDesignationId",
-            d."DesignationCode"
-                AS "ReportingManagerDesignationCode",
-            d."DesignationName"
-                AS "ReportingManagerDesignationName",
-            d."DesignationLevel"
-                AS "ReportingManagerDesignationLevel"
-        FROM "DATA"."UserReportingManager" urm
-        INNER JOIN "DATA"."User" manager
-            ON manager."UserId" = urm."ReportingManagerUserId"
-        LEFT JOIN "LKP"."CompanyDesignation" d
-            ON d."CompanyDesignationId" = manager."DesignationId"
-        WHERE
-            urm."UserId" = $1
-            AND manager."IsDisabled" = FALSE
-            AND manager."IsBlocked" = FALSE
-        ORDER BY d."DesignationLevel" ASC
-    `;
+   
+const reportingManagerQuery = `
+    SELECT
+        urm."ReportingManagerUserId",
 
-    const reportingManagerResult = await pool.query(reportingManagerQuery, [user.UserId]);
+        CONCAT_WS(
+            ' ',
+            manager."FirstName",
+            manager."MiddleName",
+            manager."LastName"
+        ) AS "ReportingManagerName",
+
+        cd."DesignationLevel" AS "ReportingManagerDesignationLevel",
+
+        d."DesignationName" AS "ReportingManagerDesignationName",
+
+        manager."PhoneNumber" AS "ReportingManagerPhoneNumber",
+        manager."Email" AS "ReportingManagerEmail"
+
+    FROM "DATA"."UserReportingManager" urm
+
+    INNER JOIN "DATA"."User" manager
+        ON manager."UserId" = urm."ReportingManagerUserId"
+
+    LEFT JOIN "DATA"."CompanyDesignation" cd
+        ON cd."CompanyDesignationId" = manager."DesignationId"
+
+    LEFT JOIN "LKP"."Designation" d
+        ON d."DesignationId" = cd."DesignationId"
+
+    WHERE
+        urm."UserId" = $1
+        AND manager."IsDisabled" = FALSE
+        AND manager."IsBlocked" = FALSE
+
+    ORDER BY cd."DesignationLevel" ASC
+`;
+
+
+    const reportingManagerResult = await pool.query(
+        reportingManagerQuery,
+        [user.UserId]
+    );
+
     // ==========================================================
     // MENU PAGE
     // ==========================================================
-    const menuPageQuery = `
-    SELECT DISTINCT
-        p."PageId",
-        p."PageName",
-        p."PageUrl",
-        p."PageIcon",
-        p."ParentPageId",
-        p."OrderNo"
-    FROM "DATA"."Page" p
-    INNER JOIN "DATA"."PageRole" pr
-        ON pr."PageId" = p."PageId"
-    INNER JOIN "DATA"."UserRole" ur
-        ON ur."RoleId" = pr."RoleId"
-    INNER JOIN "LKP"."Role" r
-        ON r."RoleId" = ur."RoleId"
-    WHERE
-        ur."UserId" = $1
-        AND COALESCE(pr."IsDisabled", FALSE) = FALSE
-        AND COALESCE(pr."IsAllocated", TRUE) = TRUE
-        AND COALESCE(p."IsDisabled", FALSE) = FALSE
-        AND COALESCE(r."IsDisabled", FALSE) = FALSE
-`;
 
-    const menuPageResult = await pool.query(menuPageQuery, [user.UserId]);
+    const menuPageQuery = `
+        SELECT DISTINCT
+            p."PageId",
+            p."PageName",
+            p."PageUrl",
+            p."PageIcon",
+            p."ParentPageId",
+            p."OrderNo"
+        FROM "DATA"."Page" p
+
+        INNER JOIN "DATA"."PageRole" pr
+            ON pr."PageId" = p."PageId"
+
+        INNER JOIN "DATA"."UserRole" ur
+            ON ur."RoleId" = pr."RoleId"
+
+        INNER JOIN "LKP"."Role" r
+            ON r."RoleId" = ur."RoleId"
+
+        WHERE
+            ur."UserId" = $1
+            AND COALESCE(pr."IsDisabled", FALSE) = FALSE
+            AND COALESCE(pr."IsAllocated", TRUE) = TRUE
+            AND COALESCE(p."IsDisabled", FALSE) = FALSE
+            AND COALESCE(r."IsDisabled", FALSE) = FALSE
+    `;
+
+    const menuPageResult = await pool.query(
+        menuPageQuery,
+        [user.UserId]
+    );
+
     // ==========================================================
     // RETURN
     // ==========================================================
+
     return {
         user,
         companies: companyResult.rows,

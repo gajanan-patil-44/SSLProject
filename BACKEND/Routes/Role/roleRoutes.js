@@ -4,7 +4,7 @@ import {authenticateToken} from "../../MiddleWare/authMiddleware.js"
 const router = express.Router();
 
 router.post("/getRole",authenticateToken, getRole);
-router.post("/addRole",authenticateToken, addRoles);
+router.post("/addRole", addRoles);
 router.post("/companyexists",authenticateToken, getCompanyForRole);  //drodown
 router.patch("/updateRole",authenticateToken, updateRole);
 router.post("/deleteRole",authenticateToken, deleteRole);
