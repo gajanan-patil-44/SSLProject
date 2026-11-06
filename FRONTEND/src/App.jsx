@@ -24,6 +24,9 @@ import VendorManagement from './pages/Master/VendorManagementView';
 import LocationTypeMasterView from './pages/Master/LocationTypeMasterView';
 import LocationMasterView from './pages/Master/LocationMasterView';
 import CompanyMasterView from './pages/Master/CompanyMasterView';
+
+import RaisePRRequestView from './pages/Procurement/RaisePRRequestView';
+
 import DepartmentView from './pages/Master/DepartmentView';
 import GSTCreationView from './pages/Master/GSTCreationView';
 
@@ -40,12 +43,6 @@ import {
   WorkReportsAnalyticsView
 } from './pages/WorkManagement';
 
-// Procurement / Purchase Requisition (PR) Module
-import {
-  RaisePRView,
-  ViewRaisePRsView,
-  MyPendingApprovalsView
-} from './pages/Procurement';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';

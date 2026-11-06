@@ -24,7 +24,8 @@ export const COMPANY_MASTER="/verp-service/companyMaster"
 export const LOCATION_MASTER="/verp-service/locationMaster"
 export const LOCATION_TYPE_MASTER="/verp-service/locationTypeMaster"
 
-export const VENDOR_TYPE="/verp-service/vendorType"
-
+//PO_PR
+export const PO_PR="/verp-service/PoPr"
 export const DEPARTMENT="/verp-service/department"
+export const VENDOR_TYPE="/verp-service/vendorType"
 export const VIEW_PRPO="/verp-service/viewPRPO"

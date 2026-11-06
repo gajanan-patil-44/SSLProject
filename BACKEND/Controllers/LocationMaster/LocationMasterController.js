@@ -1,5 +1,3 @@
-
-
 import {
     getLocationTypes,
     getParentLocationTypes,
@@ -420,4 +418,3 @@ export const addLocationMaster = async (req, res) => {
         });
     }
 };
-

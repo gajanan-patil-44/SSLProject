@@ -11,11 +11,8 @@ http:
     data:
       - name: EmployeeId
         type: text
-<<<<<<< HEAD
+        value: EMP231
         value: EMP7
-=======
-        value: EMP23
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       - name: FirstName
         type: text
         value: htihin
@@ -27,17 +24,14 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-<<<<<<< HEAD
+        value: "9994989460"
         value: "9999989866"
       - name: AltPhoneNumber
         type: text
         value: "9999989866"
-=======
-        value: "9994989466"
       - name: AltPhoneNumber
         type: text
         value: "9495989866"
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       - name: DateOfBirth
         type: text
         value: 2004-08-12
@@ -52,22 +46,19 @@ http:
         value: "3"
       - name: Email
         type: text
-<<<<<<< HEAD
+        value: admin231@gmail.com
+      - name: LoginName
+        type: text
+        value: admin231
         value: admin7@gmail.com
       - name: LoginName
         type: text
         value: ""
-=======
-        value: admin23@gmail.com
-      - name: LoginName
-        type: text
-        value: admin23
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
       - name: Photo
         type: file
         value:
-          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\a668a0e4c3d82bf4adcbb1ed76b7ee55.jpg
-        contentType: image/jpeg
+          - C:\Users\manoj\Pictures\Screenshots\pit bull.png
+        contentType: image/png
       - name: Password
         type: text
         value: Admin@123
@@ -92,11 +83,9 @@ http:
       - name: UserFile
         type: file
         value:
-<<<<<<< HEAD
+          - C:\Users\manoj\Pictures\Screenshots\pit bull.png
+        contentType: image/png
           - C:\Users\Praveen.VISHVIN\Downloads\WhatsApp Image 2026-09-21 at 5.05.02 PM (1).jpeg
-=======
-          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\1598765622876.jpeg
->>>>>>> c19e1dc3e4c0f21eade8c29d4ab3d1a80df3824a
         contentType: image/jpeg
       - name: FileTypeId
         type: text
@@ -121,6 +110,9 @@ http:
       - name: DateOfJoining
         type: text
         value: 2024-08-12
+      - name: DepartmentId
+        type: text
+        value: "15"
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAyIiwiTG9naW5OYW1lIjoiYWRtaW4yIiwiRW1haWwiOiJhZG1pbjJAZXhhbXBsZS5jb20iLCJEZXNpZ25hdGlvbklkIjoxLCJpYXQiOjE3OTAzMTMxODgsImV4cCI6MTc5MDM0MTk4OH0.vyqqqbe4wdC0qn_mXTNRhaZXlfpNhRSZrc1SWrVmvpo

@@ -1,4 +1,3 @@
-
 import { pool } from "../../Config/db.js";
 
 // 1. Get Location Type dropdown
