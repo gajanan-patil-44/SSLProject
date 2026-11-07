@@ -14,19 +14,19 @@ http:
         value: "1"
       - name: UserId
         type: text
-        value: "33"
+        value: "2"
       - name: CompanyId
         type: text
         value: "1"
       - name: ProjectId
         type: text
-        value: 3pokyh
+        value: "3"
       - name: DesignationId
         type: text
         value: "3"
       - name: DepartmentId
         type: text
-        value: "15"
+        value: "1"
       - name: ReportingToUserId
         type: text
         value: "2"
@@ -67,7 +67,7 @@ http:
         contentType: image/png
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiI0ODE0ODQ0IiwiTG9naW5OYW1lIjoiQWRtaW4yIiwiRW1haWwiOiJwcmF2ZWVuLm1AdmlzaHZpbi5jb20iLCJEZXNpZ25hdGlvbklkIjpudWxsLCJpYXQiOjE3OTM4NTY3MTcsImV4cCI6MTc5Mzg4NTUxN30.cHEKp1yCW-rMFQ3e5GPVqVJ2HbJPLw2NaoKt9cKEy8w
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NTcwOTMsImV4cCI6MTc5Mzk4NTg5M30.luNwMUu8Os4MMGTTZOTJrzNbZxaT0AR3wy17ccPf9lY
 
 settings:
   encodeUrl: true
