@@ -4,13 +4,15 @@ info:
   seq: 4
 
 http:
-  method: POST
-  url: http://192.168.23.87:9004/verp-service/companyRole/view
+  method: PATCH
+  url: http://192.168.23.87:9004/verp-service/companyRole/status
   body:
     type: json
     data: |-
       {
-          "FlagId": 1
+          "FlagId": 4,
+          "CompanyRoleId": 1,
+          "IsDisabled": false
       }
   auth:
     type: bearer
