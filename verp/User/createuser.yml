@@ -11,7 +11,7 @@ http:
     data:
       - name: EmployeeId
         type: text
-        value: EMP23
+        value: EMP3
       - name: FirstName
         type: text
         value: htihin
@@ -23,10 +23,10 @@ http:
         value: chitriki
       - name: PhoneNumber
         type: text
-        value: "9994989466"
+        value: "9999999947"
       - name: AltPhoneNumber
         type: text
-        value: "9495989866"
+        value: "9999999947"
       - name: DateOfBirth
         type: text
         value: 2004-08-12
@@ -38,13 +38,13 @@ http:
         value: "1"
       - name: DesignationId
         type: text
-        value: "3"
+        value: ""
       - name: Email
         type: text
-        value: admin23@gmail.com
+        value: admin2@gmail.com
       - name: LoginName
         type: text
-        value: admin23
+        value: admin2
       - name: Photo
         type: file
         value:
@@ -61,13 +61,13 @@ http:
         value: "1"
       - name: CompanyProductId
         type: text
-        value: "[1,8,7]"
+        value: ""
       - name: ProjectId
         type: text
-        value: "[3,7]"
+        value: ""
       - name: RoleId
         type: text
-        value: "3"
+        value: "2"
       - name: FileTypeId
         type: text
         value: "1"
@@ -94,7 +94,7 @@ http:
         disabled: true
       - name: ReportingManagerUserId
         type: text
-        value: "[2]"
+        value: ""
       - name: DateOfJoining
         type: text
         value: 2024-08-12

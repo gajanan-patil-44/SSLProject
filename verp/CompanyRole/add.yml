@@ -5,12 +5,15 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.87:9004/verp-service/companyRole/view
+  url: http://192.168.23.87:9004/verp-service/companyRole/add
   body:
     type: json
     data: |-
       {
-          "FlagId": 1
+          "FlagId": 2,
+          "RoleId": 2,
+          "CompanyId": 1,
+          "CreatedByUserName": "Admin"
       }
   auth:
     type: bearer

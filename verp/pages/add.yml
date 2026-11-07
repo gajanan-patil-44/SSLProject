@@ -31,7 +31,7 @@ http:
           "PageIcon": "pages",
           "PageType": "MainPage",
           "ParentPageId": null,
-          "RoleIds": [3],
+          "RoleIds": [1],
           "CreatedByUserName": "admin1"
       }
   auth: inherit
