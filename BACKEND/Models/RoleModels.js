@@ -6,35 +6,26 @@ import { pool } from "../Config/db.js";
 // ==========================================
 
 export const getAllRoles = async () => {
+
     const query = `
         SELECT
-            R."RoleId",
-            R."RoleName",
-            R."RoleCode",
-            R."RoleDescription",
-            R."IsDisabled" AS "RoleIsDisabled",
-            R."CreatedByUserName",
-            R."CreatedAt",
-            R."UpdatedAt",
-            R."UpdatedByUserName",
-
-            CR."CompanyRoleId",
-            CR."IsDisabled" AS "CompanyRoleIsDisabled",
-            CR."CreatedByUserName" AS "CompanyRoleCreatedByUserName",
-            CR."CreatedAt" AS "CompanyRoleCreatedAt",
-            CR."UpdatedAt" AS "CompanyRoleUpdatedAt",
-            CR."UpdatedByUserName" AS "CompanyRoleUpdatedByUserName"
-
-        FROM "LKP"."Role" R
-        LEFT JOIN "DATA"."CompanyRole" CR
-            ON CR."RoleId" = R."RoleId"
-        ORDER BY R."RoleId" DESC, CR."CompanyRoleId" DESC;
+            "RoleId",
+            "RoleName",
+            "RoleCode",
+            "RoleDescription",
+            "IsDisabled",
+            "CreatedByUserName",
+            "CreatedAt",
+            "UpdatedAt",
+            "UpdatedByUserName"
+        FROM "LKP"."Role"
+        ORDER BY "RoleId" DESC;
     `;
 
     const result = await pool.query(query);
+
     return result.rows;
 };
-
 
 // ==========================================
 // CHECK ROLE NAME / ROLE CODE
@@ -225,50 +216,25 @@ export const updateRoles = async (userRole) => {
 // UPDATE ROLE STATUS
 // UPDATE BOTH TABLES
 // ==========================================
-
 export const updateRoleStatus = async (RoleId, IsDisabled) => {
-    const client = await pool.connect();
-
     try {
-        await client.query("BEGIN");
 
-        // 1. Update LKP.Role
-        const roleResult = await client.query(
-            `
+        const query = `
             UPDATE "LKP"."Role"
-            SET
-                "IsDisabled" = $1,
-                "UpdatedAt" = CURRENT_TIMESTAMP
-            WHERE "RoleId" = $2;
-            `,
-            [IsDisabled, RoleId]
-        );
+            SET "IsDisabled" = $1
+            WHERE "RoleId" = $2
+            RETURNING "RoleId", "IsDisabled";
+        `;
 
-        if (roleResult.rowCount === 0) {
-            await client.query("ROLLBACK");
-            return 0;
-        }
+        const result = await pool.query(query, [
+            IsDisabled,
+            RoleId
+        ]);
 
-        // 2. Update DATA.CompanyRole
-        await client.query(
-            `
-            UPDATE "DATA"."CompanyRole"
-            SET
-                "IsDisabled" = $1,
-                "UpdatedAt" = CURRENT_TIMESTAMP
-            WHERE "RoleId" = $2;
-            `,
-            [IsDisabled, RoleId]
-        );
-
-        await client.query("COMMIT");
-
-        return roleResult.rowCount;
+        return result.rowCount > 0 ? result.rows[0] : 0;
 
     } catch (error) {
-        await client.query("ROLLBACK");
+        console.error("Update Role Status Model Error:", error);
         throw error;
-    } finally {
-        client.release();
     }
 };

@@ -1,0 +1,26 @@
+info:
+  name: status
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/department/edit
+  body:
+    type: json
+    data: |-
+      {
+          "flagId": 2,
+          "ComapnyDepartmentId": 1,
+          "CompanyId": 1,
+          "DepartmentId": 27,
+          "UpdateByUserName": "Admin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -37,8 +37,12 @@ http:
 <<<<<<< HEAD
           "RoleIds": [1],
 =======
+<<<<<<< HEAD
+          "RoleIds": [1],
+=======
           "RoleIds": [3],
 >>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+>>>>>>> 387fae5107b8cdde06744a21e56fa3f4bab38063
           "CreatedByUserName": "admin1"
 >>>>>>> 5c51827001527a9dbef9101417ecb00b1262b187
       }

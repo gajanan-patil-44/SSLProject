@@ -4,13 +4,16 @@ info:
   seq: 3
 
 http:
-  method: POST
-  url: http://192.168.23.87:9004/verp-service/companyRole/view
+  method: PATCH
+  url: http://192.168.23.87:9004/verp-service/companyRole/edit
   body:
     type: json
     data: |-
       {
-          "FlagId": 1
+          "FlagId": 3,
+          "CompanyRoleId": 2,
+          "RoleId": 3,
+          "UpdatedByUserName": "Admin"
       }
   auth:
     type: bearer

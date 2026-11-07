@@ -23,8 +23,8 @@ export const getAllMaterialSubCategoryTypes = async (CompanyId) => {
         FROM "LKP"."MaterialSubCategoryType" msct
         INNER JOIN "LKP"."MaterialCategoryType" mct
             ON msct."MaterialCategoryTypeId" =mct."MaterialCategoryTypeId"
-               
 
+        WHERE ($1::SMALLINT IS NULL OR mct."CompanyId" = $1)
         ORDER BY msct."MaterialSubCategoryTypeId" ASC
     `;
 
@@ -292,5 +292,4 @@ export const updateMaterialSubCategoryTypeStatus = async (
 
     return result.rows[0];
 };
-
 
