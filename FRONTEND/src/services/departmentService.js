@@ -1,4 +1,4 @@
-﻿// src/services/departmentService.js
+// src/services/departmentService.js
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 import { useERPStore } from '../store/useERPStore';
@@ -60,16 +60,13 @@ export const departmentService = {
    * Fetch departments list for viewing in table
    * Endpoint: /verp-service/department/getDepartment
    * Method: POST
-   * Payload: { flagId: 1, CompanyId }
+   * Payload: { flagId: 1 }
    */
   getDepartments: async (params = {}) => {
-    const compId = params.CompanyId !== undefined && params.CompanyId !== null && params.CompanyId !== ''
-      ? Number(params.CompanyId)
-      : getSessionCompanyId();
+    const { CompanyId, companyId, ...rest } = params;
     const payload = {
       flagId: 1,
-      CompanyId: compId,
-      ...params
+      ...rest
     };
     return apiClient.post(API_ROUTES.DEPARTMENT.GET_DEPARTMENTS, payload);
   },
@@ -78,15 +75,11 @@ export const departmentService = {
    * Add new department
    * Endpoint: /verp-service/department/addDepartment
    * Method: POST
-   * Payload: { flagId: 2, CompanyId, DepartmentName, DepartmentCode, CreatedByUserName }
+   * Payload: { flagId: 2, DepartmentName, DepartmentCode, CreatedByUserName }
    */
   addDepartment: async (data = {}) => {
-    const compId = data.CompanyId !== undefined && data.CompanyId !== null && data.CompanyId !== ''
-      ? Number(data.CompanyId)
-      : getSessionCompanyId();
     const payload = {
       flagId: 2,
-      CompanyId: compId,
       DepartmentName: String(data.DepartmentName || '').trim(),
       DepartmentCode: String(data.DepartmentCode || '').trim(),
       CreatedByUserName: data.CreatedByUserName
@@ -98,41 +91,47 @@ export const departmentService = {
    * Update department
    * Endpoint: /verp-service/department/updateDepartment
    * Method: PATCH
-   * Payload: { flagId: 3, DepartmentId, CompanyId, DepartmentName, DepartmentCode, UpdatedByUserName }
+   * Payload: { flagId: 3, DepartmentId, DepartmentName, DepartmentCode, UpdatedByUserName }
    */
   updateDepartment: async (data = {}) => {
-    const compId = data.CompanyId !== undefined && data.CompanyId !== null && data.CompanyId !== ''
-      ? Number(data.CompanyId)
-      : getSessionCompanyId();
     const payload = {
       flagId: 3,
       DepartmentId: Number(data.DepartmentId),
-      CompanyId: compId,
       DepartmentName: String(data.DepartmentName || '').trim(),
       DepartmentCode: String(data.DepartmentCode || '').trim(),
       UpdatedByUserName: data.UpdatedByUserName
     };
-    return apiClient.patch(API_ROUTES.DEPARTMENT.UPDATE_DEPARTMENT, payload);
+    try {
+      return await apiClient.patch(API_ROUTES.DEPARTMENT.UPDATE_DEPARTMENT, payload);
+    } catch (err) {
+      if (err?.response?.status === 405) {
+        return await apiClient.post(API_ROUTES.DEPARTMENT.UPDATE_DEPARTMENT, payload);
+      }
+      throw err;
+    }
   },
 
   /**
    * Toggle department status (enable / disable)
    * Endpoint: /verp-service/department/toggleDepartmentStatus
    * Method: PATCH
-   * Payload: { flagId: 4, DepartmentId, CompanyId, IsDisabled, UpdatedByUserName }
+   * Payload: { flagId: 4, DepartmentId, IsDisabled, UpdatedByUserName }
    */
   toggleDepartmentStatus: async (data = {}) => {
-    const compId = data.CompanyId !== undefined && data.CompanyId !== null && data.CompanyId !== ''
-      ? Number(data.CompanyId)
-      : getSessionCompanyId();
     const payload = {
       flagId: 4,
       DepartmentId: Number(data.DepartmentId),
-      CompanyId: compId,
       IsDisabled: Boolean(data.IsDisabled),
       UpdatedByUserName: data.UpdatedByUserName
     };
-    return apiClient.patch(API_ROUTES.DEPARTMENT.TOGGLE_DEPARTMENT_STATUS, payload);
+    try {
+      return await apiClient.patch(API_ROUTES.DEPARTMENT.TOGGLE_DEPARTMENT_STATUS, payload);
+    } catch (err) {
+      if (err?.response?.status === 405) {
+        return await apiClient.post(API_ROUTES.DEPARTMENT.TOGGLE_DEPARTMENT_STATUS, payload);
+      }
+      throw err;
+    }
   }
 };
 

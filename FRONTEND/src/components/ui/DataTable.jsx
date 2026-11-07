@@ -63,8 +63,14 @@ export const DataTable = ({
         header: 'Actions',
         cell: ({ row }) => {
           const rec = row.original;
-          const isDisabled = rec.IsDisabled === true || rec.status === 'Inactive' || rec.status === 'Disabled';
-          const isEnabled = rec.isEnabled !== undefined ? rec.isEnabled : !isDisabled;
+          const rawDisabled = rec.IsDisabled ?? rec.IsDsiabled ?? rec.isDisabled ?? rec.isDsiabled;
+          const isDisabled = Boolean(Number(rawDisabled)) || 
+            rawDisabled === true || 
+            rawDisabled === 'true' || 
+            rawDisabled === 1 || 
+            rec.status === 'Inactive' || 
+            rec.status === 'Disabled';
+          const isEnabled = rec.isEnabled !== undefined ? Boolean(rec.isEnabled) : !isDisabled;
 
           return (
             <div className="flex items-center justify-end gap-2">
@@ -186,7 +192,7 @@ export const DataTable = ({
   return (
     <div className="flex flex-col gap-4">
       {/* Table Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white/95 dark:bg-slate-900/95 p-4 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm backdrop-blur-md">
+      <div className="relative z-30 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white/95 dark:bg-slate-900/95 p-4 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm backdrop-blur-md">
         <div className="flex-1 flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative w-full max-w-xs">
@@ -231,26 +237,39 @@ export const DataTable = ({
         <div className="flex items-center gap-2">
           {/* Column Visibility */}
           <Dropdown
+            closeOnClick={false}
+            widthClass="w-56"
             trigger={
               <Button variant="outline" size="sm" icon={SlidersHorizontal}>
                 Columns
               </Button>
             }
           >
-            {table.getAllLeafColumns().map(column => {
-              if (column.id === 'actions') return null;
-              return (
-                <div key={column.id} className="px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={column.getIsVisible()}
-                    onChange={column.getToggleVisibilityHandler()}
-                    className="rounded text-secondary focus:ring-secondary"
-                  />
-                  <span className="text-xs text-slate-700 dark:text-slate-400">{column.id}</span>
-                </div>
-              );
-            })}
+            <div className="max-h-64 overflow-y-auto px-1 py-1 space-y-0.5">
+              <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800 mb-1">
+                Toggle Columns
+              </div>
+              {table.getAllLeafColumns().map(column => {
+                if (column.id === 'actions') return null;
+                const headerText = typeof column.columnDef.header === 'string'
+                  ? column.columnDef.header
+                  : column.id;
+                return (
+                  <label
+                    key={column.id}
+                    className="px-2.5 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2.5 cursor-pointer text-xs text-slate-700 dark:text-slate-300 transition-colors select-none"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={column.getIsVisible()}
+                      onChange={column.getToggleVisibilityHandler()}
+                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600 cursor-pointer"
+                    />
+                    <span className="truncate">{headerText}</span>
+                  </label>
+                );
+              })}
+            </div>
           </Dropdown>
 
           {/* Export CSV */}
@@ -283,7 +302,7 @@ export const DataTable = ({
       )}
 
       {/* Table Container */}
-      <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-x-auto relative shadow-md shadow-slate-200/40 dark:shadow-black/40">
+      <div className="relative z-10 bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-md shadow-slate-200/40 dark:shadow-black/40">
         <table className="w-full text-left border-collapse">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (

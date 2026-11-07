@@ -19,7 +19,7 @@ const getSessionCompany = () => {
     }
     const ctx = useERPStore.getState()?.userContext;
     if (ctx?.companies?.length > 0) return ctx.companies[0];
-  } catch {}
+  } catch { }
   return null;
 };
 import {
@@ -345,14 +345,14 @@ export const registryConfigs = {
                   year: 'numeric'
                 });
               }
-            } catch {}
+            } catch { }
           }
 
-          const compMatch = compList.find(c => 
+          const compMatch = compList.find(c =>
             (c.CompanyName && (c.CompanyName === cp.CompanyName || c.CompanyName === cp.companyName)) ||
             (c.CompanyId && (Number(c.CompanyId) === Number(cp.CompanyId || cp.companyId)))
           );
-          const prodMatch = prodList.find(p => 
+          const prodMatch = prodList.find(p =>
             (p.ProductName && (p.ProductName === cp.ProductName || p.ProductName === cp.productName)) ||
             (p.ProductId && (Number(p.ProductId) === Number(cp.ProductId || cp.productId)))
           );
@@ -442,33 +442,33 @@ export const registryConfigs = {
     },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
-      { 
-        id: 'companyName', 
-        header: 'Company Name', 
-        accessorKey: 'companyName', 
-        key: 'companyName', 
-        cell: ({ row }) => <span className="font-bold text-slate-900 dark:text-white">{row.original.companyName}</span> 
+      {
+        id: 'companyName',
+        header: 'Company Name',
+        accessorKey: 'companyName',
+        key: 'companyName',
+        cell: ({ row }) => <span className="font-bold text-slate-900 dark:text-white">{row.original.companyName}</span>
       },
-      { 
-        id: 'productName', 
-        header: 'Product Name', 
-        accessorKey: 'productName', 
-        key: 'productName', 
-        cell: ({ row }) => <span className="font-semibold text-primary">{row.original.productName}</span> 
+      {
+        id: 'productName',
+        header: 'Product Name',
+        accessorKey: 'productName',
+        key: 'productName',
+        cell: ({ row }) => <span className="font-semibold text-primary">{row.original.productName}</span>
       },
-      { 
-        id: 'createdOn', 
-        header: 'Created On', 
-        accessorKey: 'createdOn', 
+      {
+        id: 'createdOn',
+        header: 'Created On',
+        accessorKey: 'createdOn',
         key: 'createdOn',
         cell: ({ row }) => <span className="text-slate-500 dark:text-slate-400 text-xs">{row.original.createdOn}</span>
       },
-      { 
-        id: 'status', 
-        header: 'Status', 
-        accessorKey: 'status', 
-        key: 'status', 
-        cell: ({ row }) => <StatusBadge status={row.original.status} /> 
+      {
+        id: 'status',
+        header: 'Status',
+        accessorKey: 'status',
+        key: 'status',
+        cell: ({ row }) => <StatusBadge status={row.original.status} />
       }
     ],
     formFields: [
@@ -900,12 +900,9 @@ export const registryConfigs = {
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
-      const sessionCompany = getSessionCompany();
-      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       if (api.role.addRole) {
         return await api.role.addRole({
-          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -917,13 +914,10 @@ export const registryConfigs = {
       const userState = useERPStore.getState().user;
       const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const roleId = Number(formData.RoleId ?? formData.id);
-      const sessionCompany = getSessionCompany();
-      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       if (api.role.updateRole) {
         return await api.role.updateRole({
           RoleId: roleId,
-          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -937,72 +931,31 @@ export const registryConfigs = {
         return await api.role.updateRoleStatus(roleId, Boolean(newIsDisabled));
       }
     },
-    apiDelete: async (idOrRecord) => {
-      const roleId = typeof idOrRecord === 'object' ? (idOrRecord.RoleId ?? idOrRecord.id) : idOrRecord;
-      return await api.role.deleteRole(roleId);
-    },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
       { id: 'roleCode', header: 'Role Code', accessorKey: 'roleCode', key: 'roleCode' },
       { id: 'roleName', header: 'Role Name', accessorKey: 'roleName', key: 'roleName', cell: ({ row }) => <span className="font-bold">{row.original.roleName}</span> },
-      { id: 'company', header: 'Company', accessorKey: 'company', key: 'company' },
       { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
     fetchDropdowns: async (mode = 'add', record = null) => {
-      let companyOptions = [];
-      const sessionCompany = getSessionCompany();
-      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
-      const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
-
-      try {
-        const res = await api.role.getCompaniesForRole();
-        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
-        companyOptions = list.map(c => ({
-          value: Number(c.CompanyId || c.id),
-          label: c.CompanyName || c.name || `Company #${c.CompanyId || c.id}`
-        }));
-
-        if (sessionCompanyId && !companyOptions.some(c => Number(c.value) === Number(sessionCompanyId))) {
-          companyOptions.unshift({
-            value: Number(sessionCompanyId),
-            label: sessionCompanyName || `Company #${sessionCompanyId}`
-          });
-        }
-      } catch (err) {}
-      
-      const effectiveCompanyId = sessionCompanyId ? Number(sessionCompanyId) : (record?.CompanyId ? Number(record.CompanyId) : undefined);
-
       return [
-        {
-          key: "CompanyId",
-          label: "Company",
-          type: "select",
-          required: true,
-          options: companyOptions,
-          placeholder: sessionCompanyName || "Select Company",
-          defaultValue: effectiveCompanyId,
-          disabled: Boolean(sessionCompanyId)
-        },
         { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
         { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
         { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
       ];
     },
     formFields: [
-      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     addFormFields: [
-      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     editFormFields: [
-      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }

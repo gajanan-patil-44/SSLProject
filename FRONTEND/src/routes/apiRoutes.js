@@ -248,9 +248,14 @@ export const VENDOR_ROUTES = {
  */
 export const DEPARTMENT_ROUTES = {
   GET_DEPARTMENTS: '/verp-service/department/getDepartment',
+  VIEW: '/verp-service/department/view',
   ADD_DEPARTMENT: '/verp-service/department/addDepartment',
   UPDATE_DEPARTMENT: '/verp-service/department/updateDepartment',
-  TOGGLE_DEPARTMENT_STATUS: '/verp-service/department/toggleDepartmentStatus'
+  TOGGLE_DEPARTMENT_STATUS: '/verp-service/department/toggleDepartmentStatus',
+  DROPDOWN: '/verp-service/department/dropdown',
+  ADD: '/verp-service/department/add',
+  EDIT: '/verp-service/department/edit',
+  STATUS: '/verp-service/department/status'
 };
 
 /**
@@ -299,6 +304,22 @@ export const COMPANY_DESIGNATION_ROUTES = {
 
 /**
  * ============================================================================
+ * COMPANY DEPARTMENT ROUTES
+ * ============================================================================
+ */
+export const COMPANY_DEPARTMENT_ROUTES = {
+  VIEW: '/verp-service/department/view',
+  ADD: '/verp-service/department/add',
+  EDIT: '/verp-service/department/edit',
+  STATUS: '/verp-service/department/status',
+  DROPDOWN: '/verp-service/department/dropdown',
+  FETCH_VIEW: '/verp-service/department/view',
+  INSERT: '/verp-service/department/add',
+  TOGGLE_STATUS: '/verp-service/department/status'
+};
+
+/**
+ * ============================================================================
  * API ENDPOINTS AGGREGATOR
  * ============================================================================
  */
@@ -307,6 +328,7 @@ export const API_ROUTES = {
   ROLE: ROLE_ROUTES,
   COMPANY_ROLE: COMPANY_ROLE_ROUTES,
   COMPANY_DESIGNATION: COMPANY_DESIGNATION_ROUTES,
+  COMPANY_DEPARTMENT: COMPANY_DEPARTMENT_ROUTES,
   PRODUCT: PRODUCT_ROUTES,
   COMPANY: COMPANY_ROUTES,
   COMPANY_MASTER: COMPANY_MASTER_ROUTES,

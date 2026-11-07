@@ -1,7 +1,14 @@
 // src/components/ui/Dropdown.jsx
 import React, { useState, useEffect, useRef } from 'react';
 
-export const Dropdown = ({ trigger, children, align = 'right', widthClass = 'w-48', className = '' }) => {
+export const Dropdown = ({
+  trigger,
+  children,
+  align = 'right',
+  widthClass = 'w-48',
+  className = '',
+  closeOnClick = true
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -28,15 +35,20 @@ export const Dropdown = ({ trigger, children, align = 'right', widthClass = 'w-4
       </div>
 
       {isOpen && (
-        <div className={`absolute ${alignments[align]} mt-2 ${widthClass} rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg z-50 py-1 overflow-hidden focus:outline-none animate-fade-in`}>
+        <div
+          className={`absolute ${alignments[align]} mt-2 ${widthClass} rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl z-[100] py-1.5 focus:outline-none animate-fade-in`}
+        >
           {React.Children.map(children, (child) => {
             if (React.isValidElement(child)) {
-              return React.cloneElement(child, {
-                onClick: (...args) => {
-                  if (child.props.onClick) child.props.onClick(...args);
-                  setIsOpen(false);
-                }
-              });
+              if (closeOnClick) {
+                return React.cloneElement(child, {
+                  onClick: (...args) => {
+                    if (child.props.onClick) child.props.onClick(...args);
+                    setIsOpen(false);
+                  }
+                });
+              }
+              return child;
             }
             return child;
           })}
