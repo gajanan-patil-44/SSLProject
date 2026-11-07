@@ -7,7 +7,7 @@ import {
 } from '../../components/ui/index';
 import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
-import { companyDepartmentService } from '../../services/companyDepartmentService';
+import { companyDepartmentService, extractArray } from '../../services/companyDepartmentService';
 import { useERPStore } from '../../store/useERPStore';
 import {
   Building2,
@@ -72,7 +72,7 @@ export default function CompanyDepartmentView() {
   const isFetchingRef = useRef(false);
 
   /**
-   * Fetch company departments list (POST /verp-service/department/view with { flagId: 1 } / { flagId: 2 })
+   * Fetch company departments list (POST /verp-service/department/view with { flagId: 1 })
    */
   const fetchDepartments = useCallback(async () => {
     try {
@@ -81,9 +81,27 @@ export default function CompanyDepartmentView() {
         flagId: 1,
         ...(hasSessionCompany ? { CompanyId: Number(sessionCompanyId) } : {})
       });
-      const raw = res?.data?.data || res?.data?.result || res?.data || (Array.isArray(res) ? res : []);
-      const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-      setCompanyDepartments(list);
+      const list = extractArray(res);
+      const normalizedList = list.map((item) => {
+        const rawDisabled = item.IsDisabled ?? item.IsDsiabled ?? item.isDisabled ?? item.isDsiabled;
+        const isDisabled = Boolean(Number(rawDisabled)) || 
+          rawDisabled === true || 
+          rawDisabled === 'true' || 
+          rawDisabled === 1 || 
+          item.status === 'Inactive' || 
+          item.status === 'Disabled';
+
+        return {
+          ...item,
+          CompanyDepartmentId: item.CompanyDepartmentId ?? item.ComapnyDepartmentId ?? item.id,
+          ComapnyDepartmentId: item.ComapnyDepartmentId ?? item.CompanyDepartmentId ?? item.id,
+          IsDisabled: isDisabled,
+          IsDsiabled: isDisabled,
+          isEnabled: !isDisabled,
+          status: isDisabled ? 'Inactive' : 'Active'
+        };
+      });
+      setCompanyDepartments(normalizedList);
     } catch (err) {
       showToast(err?.response?.data?.message || err?.message || 'Failed to fetch company departments', 'error');
       setCompanyDepartments([]);
@@ -270,6 +288,23 @@ export default function CompanyDepartmentView() {
       record.status === 'Disabled';
     const newIsDisabled = !currentlyDisabled;
 
+    // Immediate optimistic UI update
+    setCompanyDepartments((prev) =>
+      prev.map((item) => {
+        const itemId = item.CompanyDepartmentId ?? item.ComapnyDepartmentId ?? item.id;
+        if (itemId === id) {
+          return {
+            ...item,
+            IsDisabled: newIsDisabled,
+            IsDsiabled: newIsDisabled,
+            isEnabled: !newIsDisabled,
+            status: newIsDisabled ? 'Inactive' : 'Active'
+          };
+        }
+        return item;
+      })
+    );
+
     try {
       const res = await companyDepartmentService.toggleCompanyDepartmentStatus({
         flagId: 3,
@@ -278,15 +313,24 @@ export default function CompanyDepartmentView() {
       });
       const msg = res?.data?.message || res?.message || `Company department ${newIsDisabled ? 'disabled' : 'enabled'} successfully!`;
       showToast(msg, 'success');
-      setCompanyDepartments((prev) =>
-        prev.map((item) =>
-          (item.CompanyDepartmentId ?? item.ComapnyDepartmentId ?? item.id) === id 
-            ? { ...item, IsDisabled: newIsDisabled, IsDsiabled: newIsDisabled } 
-            : item
-        )
-      );
-      fetchDepartments();
+      await fetchDepartments();
     } catch (err) {
+      // Revert optimistic update on failure
+      setCompanyDepartments((prev) =>
+        prev.map((item) => {
+          const itemId = item.CompanyDepartmentId ?? item.ComapnyDepartmentId ?? item.id;
+          if (itemId === id) {
+            return {
+              ...item,
+              IsDisabled: currentlyDisabled,
+              IsDsiabled: currentlyDisabled,
+              isEnabled: !currentlyDisabled,
+              status: currentlyDisabled ? 'Inactive' : 'Active'
+            };
+          }
+          return item;
+        })
+      );
       showToast(err?.response?.data?.message || err?.message || 'Failed to update status', 'error');
     }
   };

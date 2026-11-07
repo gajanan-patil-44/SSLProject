@@ -2,6 +2,21 @@
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
+/**
+ * Universal array extractor to dynamically unwrap backend responses
+ * Handles: res.result, res.data, res.data.result, res.data.data, raw arrays
+ */
+export const extractArray = (res) => {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.result)) return res.result;
+  if (Array.isArray(res.data)) return res.data;
+  if (Array.isArray(res.data?.result)) return res.data.result;
+  if (Array.isArray(res.data?.data)) return res.data.data;
+  if (Array.isArray(res.result?.data)) return res.result.data;
+  return [];
+};
+
 const getUserName = () => {
   if (typeof window === 'undefined') return '';
   try {
@@ -47,15 +62,11 @@ export const companyDepartmentService = {
   getCompaniesDropdown: async () => {
     const endpoint = API_ROUTES.DEPARTMENT?.DROPDOWN || '/verp-service/department/dropdown';
     const res = await apiClient.post(endpoint, { flagId: 1 });
-    const raw = res?.data?.data || res?.data?.result || res?.data || (Array.isArray(res) ? res : []);
-    const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-    if (Array.isArray(list)) {
-      return list.map((c) => ({
-        CompanyId: Number(c.CompanyId ?? c.id ?? c.CompanyMasterId ?? c.companyId),
-        CompanyName: c.CompanyName || c.companyName || c.name || ''
-      }));
-    }
-    return [];
+    const list = extractArray(res);
+    return list.map((c) => ({
+      CompanyId: Number(c.CompanyId ?? c.id ?? c.CompanyMasterId ?? c.companyId),
+      CompanyName: c.CompanyName || c.companyName || c.name || ''
+    }));
   },
 
   /**
@@ -65,16 +76,12 @@ export const companyDepartmentService = {
   getDepartmentsDropdown: async () => {
     const endpoint = API_ROUTES.DEPARTMENT?.DROPDOWN || '/verp-service/department/dropdown';
     const res = await apiClient.post(endpoint, { flagId: 2 });
-    const raw = res?.data?.data || res?.data?.result || res?.data || (Array.isArray(res) ? res : []);
-    const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-    if (Array.isArray(list)) {
-      return list.map((d) => ({
-        DepartmentId: Number(d.DepartmentId ?? d.id ?? d.departmentId),
-        DepartmentName: d.DepartmentName || d.departmentName || d.name || '',
-        DepartmentCode: d.DepartmentCode || d.departmentCode || d.code || ''
-      }));
-    }
-    return [];
+    const list = extractArray(res);
+    return list.map((d) => ({
+      DepartmentId: Number(d.DepartmentId ?? d.id ?? d.departmentId),
+      DepartmentName: d.DepartmentName || d.departmentName || d.name || '',
+      DepartmentCode: d.DepartmentCode || d.departmentCode || d.code || ''
+    }));
   },
 
   /**

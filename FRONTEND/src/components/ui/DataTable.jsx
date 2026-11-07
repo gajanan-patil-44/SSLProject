@@ -63,8 +63,14 @@ export const DataTable = ({
         header: 'Actions',
         cell: ({ row }) => {
           const rec = row.original;
-          const isDisabled = rec.IsDisabled === true || rec.status === 'Inactive' || rec.status === 'Disabled';
-          const isEnabled = rec.isEnabled !== undefined ? rec.isEnabled : !isDisabled;
+          const rawDisabled = rec.IsDisabled ?? rec.IsDsiabled ?? rec.isDisabled ?? rec.isDsiabled;
+          const isDisabled = Boolean(Number(rawDisabled)) || 
+            rawDisabled === true || 
+            rawDisabled === 'true' || 
+            rawDisabled === 1 || 
+            rec.status === 'Inactive' || 
+            rec.status === 'Disabled';
+          const isEnabled = rec.isEnabled !== undefined ? Boolean(rec.isEnabled) : !isDisabled;
 
           return (
             <div className="flex items-center justify-end gap-2">
