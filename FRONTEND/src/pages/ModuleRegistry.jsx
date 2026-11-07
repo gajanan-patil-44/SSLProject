@@ -900,12 +900,9 @@ export const registryConfigs = {
     apiCreate: async (formData) => {
       const userState = useERPStore.getState().user;
       const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
-      const sessionCompany = getSessionCompany();
-      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       if (api.role.addRole) {
         return await api.role.addRole({
-          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -917,13 +914,10 @@ export const registryConfigs = {
       const userState = useERPStore.getState().user;
       const userName = userState?.loginName || userState?.EmployeeId || (typeof userState?.name === 'string' ? userState.name : '') || '';
       const roleId = Number(formData.RoleId ?? formData.id);
-      const sessionCompany = getSessionCompany();
-      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
 
       if (api.role.updateRole) {
         return await api.role.updateRole({
           RoleId: roleId,
-          CompanyId: Number(formData.CompanyId || sessionCompanyId),
           RoleName: formData.roleName || formData.RoleName || '',
           Role_Code: formData.roleCode || formData.RoleCode || formData.Role_Code || '',
           Description: formData.description || formData.RoleDescription || formData.Description || '',
@@ -950,59 +944,23 @@ export const registryConfigs = {
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
     fetchDropdowns: async (mode = 'add', record = null) => {
-      let companyOptions = [];
-      const sessionCompany = getSessionCompany();
-      const sessionCompanyId = sessionCompany?.CompanyId ?? sessionCompany?.CompanyMasterId ?? sessionCompany?.companyId;
-      const sessionCompanyName = sessionCompany?.CompanyName ?? sessionCompany?.name;
-
-      try {
-        const res = await api.role.getCompaniesForRole();
-        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
-        companyOptions = list.map(c => ({
-          value: Number(c.CompanyId || c.id),
-          label: c.CompanyName || c.name || `Company #${c.CompanyId || c.id}`
-        }));
-
-        if (sessionCompanyId && !companyOptions.some(c => Number(c.value) === Number(sessionCompanyId))) {
-          companyOptions.unshift({
-            value: Number(sessionCompanyId),
-            label: sessionCompanyName || `Company #${sessionCompanyId}`
-          });
-        }
-      } catch (err) {}
-      
-      const effectiveCompanyId = sessionCompanyId ? Number(sessionCompanyId) : (record?.CompanyId ? Number(record.CompanyId) : undefined);
-
       return [
-        {
-          key: "CompanyId",
-          label: "Company",
-          type: "select",
-          required: true,
-          options: companyOptions,
-          placeholder: sessionCompanyName || "Select Company",
-          defaultValue: effectiveCompanyId,
-          disabled: Boolean(sessionCompanyId)
-        },
         { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
         { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
         { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
       ];
     },
     formFields: [
-      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     addFormFields: [
-      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
     ],
     editFormFields: [
-      { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },
       { key: "roleCode", label: "Role Code", type: "text", required: true, placeholder: "e.g. ROLE_MGR" },
       { key: "roleName", label: "Role Name", type: "text", required: true, placeholder: "e.g. Operations Manager" },
       { key: "description", label: "Description", type: "textarea", placeholder: "e.g. Manages core operations" }
