@@ -19,7 +19,7 @@ const getSessionCompany = () => {
     }
     const ctx = useERPStore.getState()?.userContext;
     if (ctx?.companies?.length > 0) return ctx.companies[0];
-  } catch {}
+  } catch { }
   return null;
 };
 import {
@@ -345,14 +345,14 @@ export const registryConfigs = {
                   year: 'numeric'
                 });
               }
-            } catch {}
+            } catch { }
           }
 
-          const compMatch = compList.find(c => 
+          const compMatch = compList.find(c =>
             (c.CompanyName && (c.CompanyName === cp.CompanyName || c.CompanyName === cp.companyName)) ||
             (c.CompanyId && (Number(c.CompanyId) === Number(cp.CompanyId || cp.companyId)))
           );
-          const prodMatch = prodList.find(p => 
+          const prodMatch = prodList.find(p =>
             (p.ProductName && (p.ProductName === cp.ProductName || p.ProductName === cp.productName)) ||
             (p.ProductId && (Number(p.ProductId) === Number(cp.ProductId || cp.productId)))
           );
@@ -442,33 +442,33 @@ export const registryConfigs = {
     },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
-      { 
-        id: 'companyName', 
-        header: 'Company Name', 
-        accessorKey: 'companyName', 
-        key: 'companyName', 
-        cell: ({ row }) => <span className="font-bold text-slate-900 dark:text-white">{row.original.companyName}</span> 
+      {
+        id: 'companyName',
+        header: 'Company Name',
+        accessorKey: 'companyName',
+        key: 'companyName',
+        cell: ({ row }) => <span className="font-bold text-slate-900 dark:text-white">{row.original.companyName}</span>
       },
-      { 
-        id: 'productName', 
-        header: 'Product Name', 
-        accessorKey: 'productName', 
-        key: 'productName', 
-        cell: ({ row }) => <span className="font-semibold text-primary">{row.original.productName}</span> 
+      {
+        id: 'productName',
+        header: 'Product Name',
+        accessorKey: 'productName',
+        key: 'productName',
+        cell: ({ row }) => <span className="font-semibold text-primary">{row.original.productName}</span>
       },
-      { 
-        id: 'createdOn', 
-        header: 'Created On', 
-        accessorKey: 'createdOn', 
+      {
+        id: 'createdOn',
+        header: 'Created On',
+        accessorKey: 'createdOn',
         key: 'createdOn',
         cell: ({ row }) => <span className="text-slate-500 dark:text-slate-400 text-xs">{row.original.createdOn}</span>
       },
-      { 
-        id: 'status', 
-        header: 'Status', 
-        accessorKey: 'status', 
-        key: 'status', 
-        cell: ({ row }) => <StatusBadge status={row.original.status} /> 
+      {
+        id: 'status',
+        header: 'Status',
+        accessorKey: 'status',
+        key: 'status',
+        cell: ({ row }) => <StatusBadge status={row.original.status} />
       }
     ],
     formFields: [
@@ -931,15 +931,10 @@ export const registryConfigs = {
         return await api.role.updateRoleStatus(roleId, Boolean(newIsDisabled));
       }
     },
-    apiDelete: async (idOrRecord) => {
-      const roleId = typeof idOrRecord === 'object' ? (idOrRecord.RoleId ?? idOrRecord.id) : idOrRecord;
-      return await api.role.deleteRole(roleId);
-    },
     columns: [
       { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
       { id: 'roleCode', header: 'Role Code', accessorKey: 'roleCode', key: 'roleCode' },
       { id: 'roleName', header: 'Role Name', accessorKey: 'roleName', key: 'roleName', cell: ({ row }) => <span className="font-bold">{row.original.roleName}</span> },
-      { id: 'company', header: 'Company', accessorKey: 'company', key: 'company' },
       { id: 'description', header: 'Description', accessorKey: 'description', key: 'description' },
       { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
     ],
