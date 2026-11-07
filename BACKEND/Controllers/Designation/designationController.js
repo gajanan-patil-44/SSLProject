@@ -175,7 +175,7 @@ export const add_designationController = async (req, res) => {
 
                 DesignationName: DesignationName.trim(),
 
-                DesignationCode: Number(DesignationCode),
+                DesignationCode: DesignationCode,
 
                 DesignationDescription:
                     DesignationDescription?.trim() || null,

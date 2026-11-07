@@ -16,4 +16,5 @@ router.post("/addDepartment", authenticateToken, addDepartment);  // ADD DEPARTM
 router.patch("/updateDepartment", authenticateToken, updateDepartment);  // UPDATE DEPARTMENT
 router.patch("/toggleDepartmentStatus", authenticateToken, toggleDepartmentStatus);  // TOGGLE DEPARTMENT STATUS
 
+
 export default router;

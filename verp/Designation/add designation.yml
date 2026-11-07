@@ -11,15 +11,15 @@ http:
     data: |-
       {
           "flagId": 2,
-          "DesignationName": "Project Manager",
-          "DesignationCode": 101,
-          "DesignationDescription": "Responsible for managing projects and teams",
+          "DesignationName": "Projecttttttttt Manager",
+          "DesignationCode": "MD_00r01",
+          "DesignationDescription": "Responsible for managing projects and teamrrrrrs",
           "IsDisabled": false,
           "CreatedByUserName": "Praveen"
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NTcwMDUsImV4cCI6MTc5Mzk4NTgwNX0.9_Jani7VahHGksp4SOd_WasSX6WcbZaELT_o-o2x_O4
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTQwMjg2OTgsImV4cCI6MTc5NDA1NzQ5OH0.D-3J-Yvu0p2RsnxEtpiucXVUfn_2_pU006ODHpOneyE
 
 settings:
   encodeUrl: true

@@ -17,11 +17,7 @@ export const getAllFileTypes = async () => {
             "CreatedByUserName",
             "UpdatedByUserName"
         FROM "LKP"."FileType"
-<<<<<<< HEAD
-        WHERE "FileTypeId" IN (1, 2, 3)
-=======
         WHERE "FileTypeId" IN (1, 2)
->>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
         ORDER BY "FileTypeId";
     `;
 
