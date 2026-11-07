@@ -8,6 +8,7 @@ import {
 import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import { companyRoleService } from '../../services/companyRoleService';
+import { companyService } from '../../services/companyService';
 import { useERPStore } from '../../store/useERPStore';
 import { validateTextOnly } from '../../utils/validators';
 import {
@@ -18,7 +19,8 @@ import {
   FileText,
   AlertCircle,
   Plus,
-  Pencil
+  Pencil,
+  Lock
 } from 'lucide-react';
 import { getSessionCompanyId, getSessionCompany } from '../../services/departmentService';
 
@@ -110,9 +112,19 @@ export default function CompanyRoleView() {
    */
   const fetchCompanies = useCallback(async () => {
     try {
-      const list = await companyRoleService.getCompaniesDropdown();
-      setCompanies(list);
-      if (list.length > 0 && !addCompanyId) {
+      let list = await companyRoleService.getCompaniesDropdown();
+      if (!list || list.length === 0) {
+        const res = await companyService.getCompanies();
+        const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+        if (Array.isArray(raw)) {
+          list = raw.map((c) => ({
+            CompanyId: Number(c.CompanyId ?? c.id ?? c.CompanyMasterId),
+            CompanyName: c.CompanyName || c.companyName || c.name || ''
+          }));
+        }
+      }
+      setCompanies(list || []);
+      if (list && list.length > 0 && !addCompanyId) {
         setAddCompanyId(String(list[0].CompanyId));
       }
     } catch {
@@ -144,6 +156,8 @@ export default function CompanyRoleView() {
   // Add Handlers
   const handleOpenAddModal = () => {
     fetchMasterRoles();
+    fetchCompanies();
+    setAddCompanyId(sessionCompanyId ? String(sessionCompanyId) : (companies.length > 0 ? String(companies[0].CompanyId) : ''));
     setAddRoleId(masterRoles.length > 0 ? String(masterRoles[0].RoleId) : '');
     setAddErrors({});
     setIsAddModalOpen(true);
@@ -159,6 +173,14 @@ export default function CompanyRoleView() {
     e.preventDefault();
     const errs = {};
 
+    const effectiveCompanyId = hasSessionCompany
+      ? Number(sessionCompanyId)
+      : Number(addCompanyId);
+
+    if (!effectiveCompanyId || isNaN(effectiveCompanyId) || effectiveCompanyId <= 0) {
+      errs.companyId = 'Please select a Company';
+    }
+
     if (!addRoleId || isNaN(Number(addRoleId)) || Number(addRoleId) <= 0) {
       errs.roleId = 'Please select a Role';
     }
@@ -167,10 +189,6 @@ export default function CompanyRoleView() {
       setAddErrors(errs);
       return;
     }
-
-    const effectiveCompanyId = sessionCompanyId
-      ? Number(sessionCompanyId)
-      : (companies.length > 0 ? Number(companies[0].CompanyId) : 1);
 
     setSubmitting(true);
     try {
@@ -193,12 +211,13 @@ export default function CompanyRoleView() {
   // Edit Handlers
   const handleOpenEditModal = (record) => {
     fetchMasterRoles();
+    fetchCompanies();
     setEditRecord(record);
     const initialRoleId = record.RoleId !== undefined && record.RoleId !== null && record.RoleId !== '' 
       ? String(record.RoleId) 
       : (masterRoles.length > 0 ? String(masterRoles[0].RoleId) : '1');
     setEditRoleId(initialRoleId);
-    setEditCompanyId(String(record.CompanyId || ''));
+    setEditCompanyId(hasSessionCompany ? String(sessionCompanyId) : String(record.CompanyId || ''));
     setEditRoleName(record.RoleName || '');
     setEditRoleCode(record.RoleCode || '');
     setEditDescription(record.RoleDescription || record.Description || '');
@@ -217,6 +236,14 @@ export default function CompanyRoleView() {
     e.preventDefault();
     const errs = {};
 
+    const effectiveCompanyId = hasSessionCompany
+      ? Number(sessionCompanyId)
+      : Number(editCompanyId || editRecord.CompanyId);
+
+    if (!effectiveCompanyId || isNaN(effectiveCompanyId) || effectiveCompanyId <= 0) {
+      errs.companyId = 'Please select a valid Company';
+    }
+
     if (!editRoleId || isNaN(Number(editRoleId))) {
       errs.roleId = 'Please select a valid Role';
     }
@@ -231,6 +258,7 @@ export default function CompanyRoleView() {
       const res = await companyRoleService.editCompanyRole({
         FlagId: 3,
         CompanyRoleId: Number(editRecord.CompanyRoleId ?? editRecord.id),
+        CompanyId: effectiveCompanyId,
         RoleId: Number(editRoleId)
       });
       const msg = res?.data?.message || res?.message || 'Company role updated successfully';
@@ -248,7 +276,7 @@ export default function CompanyRoleView() {
   // Status Toggle Handler (PATCH /verp-service/companyRole/status with { FlagId: 4, CompanyRoleId, IsDisabled })
   const handleToggleStatus = async (record) => {
     const id = record.CompanyRoleId ?? record.id;
-    const currentlyDisabled = record.IsDisabled === true || record.status === 'Inactive' || record.status === 'Disabled';
+    const currentlyDisabled = Boolean(Number(record.IsDisabled)) || record.IsDisabled === true || record.IsDisabled === 'true' || record.status === 'Inactive' || record.status === 'Disabled';
     const newIsDisabled = !currentlyDisabled;
 
     try {
@@ -335,7 +363,7 @@ export default function CompanyRoleView() {
       header: 'STATUS',
       accessorKey: 'IsDisabled',
       cell: ({ row }) => {
-        const isDisabled = row.original.IsDisabled === true || row.original.status === 'Inactive' || row.original.status === 'Disabled';
+        const isDisabled = Boolean(Number(row.original.IsDisabled)) || row.original.IsDisabled === true || row.original.IsDisabled === 'true' || row.original.status === 'Inactive' || row.original.status === 'Disabled';
         return (
           <Badge variant={isDisabled ? 'neutral' : 'success'} className="font-semibold text-xs">
             {isDisabled ? 'Inactive' : 'Active'}
@@ -417,6 +445,54 @@ export default function CompanyRoleView() {
         }
       >
         <form id="add-company-role-form" onSubmit={handleAddSubmit} className="space-y-4">
+          {/* Company Selection */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Company <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <select
+                value={hasSessionCompany ? String(sessionCompanyId) : addCompanyId}
+                onChange={(e) => {
+                  if (!hasSessionCompany) {
+                    setAddCompanyId(e.target.value);
+                    setAddErrors((prev) => ({ ...prev, companyId: '' }));
+                  }
+                }}
+                disabled={hasSessionCompany}
+                className={`w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border ${
+                  addErrors.companyId
+                    ? 'border-rose-400 focus:ring-rose-500'
+                    : 'border-slate-200 dark:border-slate-700/80 focus:ring-indigo-500/20 focus:border-indigo-500'
+                } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 transition-all font-medium ${
+                  hasSessionCompany ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-800/80' : 'cursor-pointer'
+                }`}
+              >
+                {hasSessionCompany && !companies.some((c) => String(c.CompanyId) === String(sessionCompanyId)) && (
+                  <option value={String(sessionCompanyId)}>
+                    {sessionCompanyName || `Company #${sessionCompanyId}`}
+                  </option>
+                )}
+                {!hasSessionCompany && <option value="">— Select Company —</option>}
+                {companies.map((c) => (
+                  <option key={c.CompanyId} value={c.CompanyId}>
+                    {c.CompanyName}
+                  </option>
+                ))}
+              </select>
+              {hasSessionCompany && (
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              )}
+            </div>
+            {addErrors.companyId && (
+              <span className="text-[11px] text-rose-500 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                {addErrors.companyId}
+              </span>
+            )}
+          </div>
+
           {/* Master Role Selection */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
@@ -486,25 +562,57 @@ export default function CompanyRoleView() {
           }
         >
           <form id="edit-company-role-form" onSubmit={handleEditSubmit} className="space-y-4">
-            {/* Context Summary Card */}
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs">
-              <div>
-                <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
-                  Current Role
-                </span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                  {editRecord.RoleName || '—'}
-                </span>
+            {/* Company Selection */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                Company <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <select
+                  value={hasSessionCompany ? String(sessionCompanyId) : editCompanyId}
+                  onChange={(e) => {
+                    if (!hasSessionCompany) {
+                      setEditCompanyId(e.target.value);
+                      setEditErrors((prev) => ({ ...prev, companyId: '' }));
+                    }
+                  }}
+                  disabled={hasSessionCompany}
+                  className={`w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border ${
+                    editErrors.companyId
+                      ? 'border-rose-400 focus:ring-rose-500'
+                      : 'border-slate-200 dark:border-slate-700/80 focus:ring-indigo-500/20 focus:border-indigo-500'
+                  } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 transition-all font-medium ${
+                    hasSessionCompany ? 'opacity-80 cursor-not-allowed bg-slate-100 dark:bg-slate-800/80' : 'cursor-pointer'
+                  }`}
+                >
+                  {hasSessionCompany && !companies.some((c) => String(c.CompanyId) === String(sessionCompanyId)) && (
+                    <option value={String(sessionCompanyId)}>
+                      {sessionCompanyName || `Company #${sessionCompanyId}`}
+                    </option>
+                  )}
+                  {!hasSessionCompany && <option value="">— Select Company —</option>}
+                  {companies.map((c) => (
+                    <option key={c.CompanyId} value={c.CompanyId}>
+                      {c.CompanyName}
+                    </option>
+                  ))}
+                  {editCompanyId && !companies.some((c) => String(c.CompanyId) === String(editCompanyId)) && (
+                    <option value={editCompanyId}>
+                      {editRecord?.CompanyName || `Company #${editCompanyId}`}
+                    </option>
+                  )}
+                </select>
+                {hasSessionCompany && (
+                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                )}
               </div>
-              <div className="text-right">
-                <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
-                  Company
+              {editErrors.companyId && (
+                <span className="text-[11px] text-rose-500 font-medium flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  {editErrors.companyId}
                 </span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 mt-0.5">
-                  <Building2 className="w-3.5 h-3.5 text-indigo-500" />
-                  {editRecord.CompanyName || 'All Companies'}
-                </span>
-              </div>
+              )}
             </div>
 
             {/* Master Role Dropdown */}
@@ -579,24 +687,25 @@ export default function CompanyRoleView() {
                 <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
                   Role Code
                 </span>
-                <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 mt-1">
+                  <Tag className="w-3 h-3 text-indigo-500" />
                   {viewRecord.RoleCode || '—'}
                 </span>
               </div>
-              <div className="col-span-2">
+              <div>
                 <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
                   Company
                 </span>
-                <span className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1.5 mt-0.5">
-                  <Building2 className="w-4 h-4 text-indigo-500" />
+                <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-500" />
                   {viewRecord.CompanyName || 'All Companies'}
                 </span>
               </div>
-              <div className="col-span-2">
+              <div>
                 <span className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block">
                   Role Name
                 </span>
-                <span className="font-bold text-slate-900 dark:text-white text-base">
+                <span className="font-bold text-slate-900 dark:text-white mt-1 block">
                   {viewRecord.RoleName || '—'}
                 </span>
               </div>
@@ -649,4 +758,3 @@ export default function CompanyRoleView() {
     </div>
   );
 }
-

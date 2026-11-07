@@ -8,9 +8,7 @@ import {
 import { Modal } from '../../components/ui/Modal';
 import EditDepartmentModal from './EditDepartmentModal';
 import { DataTable } from '../../components/ui/DataTable';
-import { departmentService, getSessionCompany, getSessionCompanyId } from '../../services/departmentService';
-import { companyService } from '../../services/companyService';
-import { userService } from '../../services/userService';
+import { departmentService } from '../../services/departmentService';
 import { useERPStore } from '../../store/useERPStore';
 import { validateTextOnly } from '../../utils/validators';
 import {
@@ -18,19 +16,13 @@ import {
   Calendar,
   User,
   Tag,
-  Building,
   AlertCircle,
-  Check,
-  Lock
+  Check
 } from 'lucide-react';
 
 export default function DepartmentView() {
   const showToast = useERPStore((state) => state.showToast);
   const currentUser = useERPStore((state) => state.user);
-
-  const sessionCompany = getSessionCompany();
-  const sessionCompanyId = getSessionCompanyId();
-  const sessionCompanyName = sessionCompany?.CompanyName || sessionCompany?.companyName || sessionCompany?.name;
 
   // Helper to extract session username dynamically
   const getSessionUserName = () => {
@@ -50,13 +42,11 @@ export default function DepartmentView() {
 
   // State
   const [departments, setDepartments] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Add Department Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addCompanyId, setAddCompanyId] = useState('');
   const [addDepartmentName, setAddDepartmentName] = useState('');
   const [addDepartmentCode, setAddDepartmentCode] = useState('');
   const [formErrors, setFormErrors] = useState({});
@@ -77,7 +67,7 @@ export default function DepartmentView() {
     setEditingDepartment(null);
   };
 
-  // Toggle department status via /verp-service/department/toggleDepartmentStatus (flagId: 4, PATCH)
+  // Toggle department status via /verp-service/department/toggleDepartmentStatus (flagId: 4)
   const handleToggleStatus = async (department) => {
     const departmentId = Number(department.DepartmentId ?? department.id);
     const currentIsDisabled = Boolean(department.IsDisabled);
@@ -86,12 +76,10 @@ export default function DepartmentView() {
     setTogglingId(departmentId);
     try {
       const sessionUserName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.username || '';
-      const resolvedCompanyId = sessionCompanyId ? Number(sessionCompanyId) : (department.CompanyId ? Number(department.CompanyId) : null);
 
       const payload = {
         flagId: 4,
         DepartmentId: departmentId,
-        CompanyId: resolvedCompanyId,
         IsDisabled: newIsDisabled,
         UpdatedByUserName: sessionUserName
       };
@@ -114,11 +102,8 @@ export default function DepartmentView() {
 
   const fetchDepartments = useCallback(async () => {
     try {
-      // Hit /verp-service/department/getDepartment with { flagId: 1, CompanyId }
-      const res = await departmentService.getDepartments({
-        flagId: 1,
-        CompanyId: sessionCompanyId ? Number(sessionCompanyId) : undefined
-      });
+      // Hit /verp-service/department/getDepartment with { flagId: 1 }
+      const res = await departmentService.getDepartments({ flagId: 1 });
       const rawList = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
       const list = Array.isArray(rawList) ? rawList : [];
       setDepartments(list);
@@ -126,17 +111,7 @@ export default function DepartmentView() {
       showToast(err?.response?.data?.message || err?.message || 'Failed to fetch departments', 'error');
       setDepartments([]);
     }
-  }, [sessionCompanyId, showToast]);
-
-  const fetchCompanies = useCallback(async () => {
-    try {
-      const res = await companyService.getCompanies();
-      const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
-      setCompanies(Array.isArray(raw) ? raw : []);
-    } catch (err) {
-      setCompanies([]);
-    }
-  }, []);
+  }, [showToast]);
 
   // Coordinated single-pass data load
   const loadInitialData = useCallback(async () => {
@@ -144,25 +119,18 @@ export default function DepartmentView() {
     isFetchingRef.current = true;
     setLoading(true);
     try {
-      const tasks = [fetchDepartments()];
-      // Only call company service when company is not locked from active session
-      if (!sessionCompanyId) {
-        tasks.push(fetchCompanies());
-      }
-      await Promise.all(tasks);
+      await fetchDepartments();
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [fetchDepartments, fetchCompanies, sessionCompanyId]);
+  }, [fetchDepartments]);
 
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
 
   const handleOpenAddModal = () => {
-    const defaultComp = sessionCompanyId ? String(sessionCompanyId) : (companies.length > 0 ? String(companies[0].CompanyId ?? companies[0].id ?? '') : '');
-    setAddCompanyId(defaultComp);
     setAddDepartmentName('');
     setAddDepartmentCode('');
     setFormErrors({});
@@ -176,11 +144,6 @@ export default function DepartmentView() {
 
   const validateAddForm = () => {
     const errs = {};
-    const compCheck = sessionCompanyId || addCompanyId;
-
-    if (!compCheck) {
-      errs.companyId = 'Please select a company';
-    }
 
     const codeTrim = addDepartmentCode.trim();
     if (!codeTrim) {
@@ -206,11 +169,9 @@ export default function DepartmentView() {
     setSubmitting(true);
     try {
       const sessionUserName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.username || '';
-      const resolvedCompanyId = sessionCompanyId ? Number(sessionCompanyId) : Number(addCompanyId);
 
       const payload = {
         flagId: 2,
-        CompanyId: resolvedCompanyId,
         DepartmentName: addDepartmentName.trim(),
         DepartmentCode: addDepartmentCode.trim(),
         CreatedByUserName: sessionUserName
@@ -238,13 +199,11 @@ export default function DepartmentView() {
     return departments.filter((item) => {
       const code = String(item.DepartmentCode || '').toLowerCase();
       const name = String(item.DepartmentName || '').toLowerCase();
-      const companyId = String(item.CompanyId || '').toLowerCase();
       const createdBy = String(item.CreatedByUserName || '').toLowerCase();
 
       return (
         code.includes(term) ||
         name.includes(term) ||
-        companyId.includes(term) ||
         createdBy.includes(term)
       );
     });
@@ -266,7 +225,7 @@ export default function DepartmentView() {
     }
   };
 
-  // Table Columns Definition
+  // Table Columns Definition (without Company column)
   const columns = useMemo(() => [
     {
       header: 'DEPARTMENT CODE',
@@ -291,20 +250,6 @@ export default function DepartmentView() {
           </span>
         </div>
       )
-    },
-    {
-      header: 'COMPANY',
-      accessorKey: 'CompanyId',
-      cell: ({ row }) => {
-        const comp = companies.find(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(row.original.CompanyId));
-        const compName = row.original.CompanyName || comp?.CompanyName || comp?.companyName || comp?.name || (String(row.original.CompanyId) === String(sessionCompanyId) ? sessionCompanyName : (row.original.CompanyId ? String(row.original.CompanyId) : '—'));
-        return (
-          <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
-            <Building className="w-3.5 h-3.5 text-slate-400" />
-            <span>{compName}</span>
-          </div>
-        );
-      }
     },
     {
       header: 'STATUS',
@@ -333,7 +278,7 @@ export default function DepartmentView() {
         </div>
       )
     }
-  ], [companies, sessionCompanyId, sessionCompanyName]);
+  ], []);
 
   return (
     <div className="space-y-6 pb-12 w-full">
@@ -355,7 +300,7 @@ export default function DepartmentView() {
         onAddClick={handleOpenAddModal}
         onEditClick={(row) => handleOpenEditModal(row)}
         onToggleStatusClick={handleToggleStatus}
-        searchPlaceholder="Search by department name, code, company..."
+        searchPlaceholder="Search by department name, code..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         onRefresh={fetchDepartments}
@@ -393,56 +338,6 @@ export default function DepartmentView() {
         }
       >
         <form onSubmit={handleAddSubmit} className="space-y-4 py-2">
-          {/* Company Selection (Locked to Session Company) */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-              Company <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <select
-                value={addCompanyId || (sessionCompanyId ? String(sessionCompanyId) : '')}
-                onChange={(e) => {
-                  setAddCompanyId(e.target.value);
-                  setFormErrors((prev) => ({ ...prev, companyId: '' }));
-                }}
-                disabled={Boolean(sessionCompanyId)}
-                className={`w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border ${
-                  formErrors.companyId
-                    ? 'border-rose-400 focus:ring-rose-500'
-                    : 'border-slate-200 dark:border-slate-700/80 focus:ring-indigo-500/20 focus:border-indigo-500'
-                } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 transition-all ${
-                  sessionCompanyId ? 'opacity-75 cursor-not-allowed bg-slate-100 dark:bg-slate-800 font-medium' : 'cursor-pointer'
-                }`}
-              >
-                {sessionCompanyId && !companies.some(c => String(c.CompanyId ?? c.id ?? c.CompanyMasterId) === String(sessionCompanyId)) && (
-                  <option value={String(sessionCompanyId)}>
-                    {sessionCompanyName || sessionCompanyId}
-                  </option>
-                )}
-                <option value="">— Select Company —</option>
-                {companies.map((c, idx) => {
-                  const id = c.CompanyId ?? c.id ?? c.CompanyMasterId;
-                  const name = c.CompanyName || c.companyName || c.name || id;
-                  return (
-                    <option key={`${id}_${idx}`} value={String(id)}>
-                      {name}
-                    </option>
-                  );
-                })}
-              </select>
-              {sessionCompanyId && (
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              )}
-            </div>
-            {formErrors.companyId && (
-              <span className="text-[11px] text-rose-500 font-medium flex items-center gap-1">
-                <AlertCircle className="w-3 h-3 shrink-0" />
-                {formErrors.companyId}
-              </span>
-            )}
-          </div>
-
           {/* Department Code */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
@@ -509,14 +404,11 @@ export default function DepartmentView() {
         </form>
       </Modal>
 
-      {/* 4. Edit Department Modal (Separate Dedicated Component) */}
+      {/* 4. Edit Department Modal */}
       <EditDepartmentModal
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         department={editingDepartment}
-        companies={companies}
-        sessionCompanyId={sessionCompanyId}
-        sessionCompanyName={sessionCompanyName}
         onSaveSuccess={fetchDepartments}
       />
     </div>
