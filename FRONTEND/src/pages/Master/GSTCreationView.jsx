@@ -128,7 +128,7 @@ export default function GSTCreationView() {
 
     setTogglingId(rateId);
     try {
-      const sessionUserName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.username || 'Admin';
+      const sessionUserName = getSessionUserName() || currentUser?.loginName || currentUser?.name || currentUser?.username || '';
 
       const payload = {
         FlagId: 4,
