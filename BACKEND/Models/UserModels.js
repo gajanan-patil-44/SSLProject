@@ -1395,7 +1395,7 @@ export const getDepartmentDropdown = async (CompanyId = null) => {
                 D."DepartmentId",
                 CD."CompanyId",
                 D."DepartmentName",
-                D."DepartmentCode"
+                D."DepartmentCode" 
 
             FROM "DATA"."CompanyDepartment" CD
 
