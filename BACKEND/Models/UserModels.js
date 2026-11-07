@@ -1388,6 +1388,36 @@ export const getUserCount = async () => {
 export const getDepartmentDropdown = async (CompanyId = null) => {
 
     try {
+
+        let query = `
+            SELECT
+                CD."CompanyDepartmentId",
+                D."DepartmentId",
+                CD."CompanyId",
+                D."DepartmentName",
+                D."DepartmentCode" 
+
+            FROM "DATA"."CompanyDepartment" CD
+
+            INNER JOIN "LKP"."Department" D
+                ON D."DepartmentId" = CD."DepartmentId"
+
+            WHERE
+                CD."IsDisabled" = false
+                AND D."IsDisabled" = false AND CD."CompanyId" = $1
+        `;
+
+        const values = [CompanyId??null];
+
+        if (CompanyId !== null && CompanyId !== undefined) {
+            values.push(CompanyId);
+            query += ` AND CD."CompanyId" = $1`;
+        }
+
+        query += ` ORDER BY D."DepartmentName" ASC`;
+
+        const result = await pool.query(query, values);
+
         return result.rows;
 
     } catch (error) {

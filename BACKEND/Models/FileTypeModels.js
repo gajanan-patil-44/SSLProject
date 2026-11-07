@@ -17,7 +17,7 @@ export const getAllFileTypes = async () => {
             "CreatedByUserName",
             "UpdatedByUserName"
         FROM "LKP"."FileType"
-        WHERE "FileTypeId" IN (1, 2, 3)
+        WHERE "FileTypeId" IN (1, 2)
         ORDER BY "FileTypeId";
     `;
 
