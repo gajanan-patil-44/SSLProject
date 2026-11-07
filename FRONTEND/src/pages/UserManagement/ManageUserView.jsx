@@ -1,4 +1,4 @@
-// src/pages/UserManagement/ManageUserView.jsx
+﻿// src/pages/UserManagement/ManageUserView.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   PageHeader,
@@ -14,7 +14,7 @@ import { useERPStore } from '../../store/useERPStore';
 // Helper to get session company
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
@@ -181,7 +181,7 @@ export default function ManageUserView() {
 
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const u = s?.data?.user || s?.user || s;

@@ -28,7 +28,7 @@ export default function MaterialSubCategoryCreation() {
 
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const u = s?.data?.user || s?.user || s;
@@ -407,13 +407,15 @@ export default function MaterialSubCategoryCreation() {
             </label>
             <Input 
               value={formData.code}
+              maxLength={20}
               onChange={(e) => {
-                setFormData({ ...formData, code: e.target.value });
+                const sanitized = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20).toUpperCase();
+                setFormData({ ...formData, code: sanitized });
                 if (formErrors.code) setFormErrors({ ...formErrors, code: '' });
               }}
               placeholder="e.g. SUB-001"
               disabled={isViewing}
-              className={formErrors.code ? 'border-rose-400 focus:border-rose-500' : ''}
+              className={`font-mono uppercase ${formErrors.code ? 'border-rose-400 focus:border-rose-500' : ''}`}
             />
             {formErrors.code && (
               <span className="text-[11px] text-rose-500 font-medium block">{formErrors.code}</span>
@@ -426,8 +428,9 @@ export default function MaterialSubCategoryCreation() {
             </label>
             <Input 
               value={formData.name}
+              maxLength={100}
               onChange={(e) => {
-                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 100);
                 setFormData({ ...formData, name: sanitized });
                 if (formErrors.name) setFormErrors({ ...formErrors, name: '' });
               }}

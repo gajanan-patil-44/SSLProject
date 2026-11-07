@@ -242,8 +242,8 @@ export const addPage = async (req, res) => {
             PageType,
             ParentPageId,
             RoleIds,
-            IsChangeOrder,
-            OrderType,
+            IsChangeOrder,  
+            OrderType,   //befor after
             TargetPageId,
             CreatedByUserName
         } = req.body;

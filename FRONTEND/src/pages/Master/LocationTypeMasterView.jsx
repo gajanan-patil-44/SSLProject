@@ -8,7 +8,8 @@ import EditLocationTypeMasterModal from './EditLocationTypeMasterModal';
 import {
   PageHeader,
   Card,
-  Button
+  Button,
+  PaginationControls
 } from '../../components/ui/index';
 import {
   GitFork,
@@ -93,7 +94,7 @@ export default function LocationTypeMasterView() {
   // Extract session username
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -110,6 +111,8 @@ export default function LocationTypeMasterView() {
   const [items, setItems] = useState([]);
   const [parentDropdownOptions, setParentDropdownOptions] = useState([]);
   const [fetching, setFetching] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -247,7 +250,7 @@ export default function LocationTypeMasterView() {
       await loadFlowData();
       await fetchParentDropdown();
     } catch (err) {
-      showToast(err?.response?.data?.message || err?.message || 'Failed to add Location Type', 'error');
+      showToast(err?.response?.data?.message || err?.message || 'Failed to save Location Type', 'error');
     } finally {
       setLoading(false);
     }
@@ -270,20 +273,6 @@ export default function LocationTypeMasterView() {
           { label: 'Master', href: '/master/companies' },
           { label: 'Location Type Master' }
         ]}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              icon={RotateCcw}
-              onClick={handleReset}
-              className="cursor-pointer"
-            >
-              Reset Form
-            </Button>
-          </div>
-        }
       />
 
       {/* 2. Top Card: Location Hierarchy Definition Form */}
@@ -305,8 +294,9 @@ export default function LocationTypeMasterView() {
                   type="text"
                   placeholder="e.g. Country, State, District"
                   value={locationTypeName}
+                  maxLength={50}
                   onChange={(e) => {
-                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
                     setLocationTypeName(sanitized);
                     if (errors.childName) setErrors(prev => ({ ...prev, childName: null }));
                   }}
@@ -354,7 +344,7 @@ export default function LocationTypeMasterView() {
               disabled={loading}
               className="px-6 cursor-pointer"
             >
-              {loading ? 'Adding...' : 'Add Location Type'}
+              {loading ? 'Adding...' : 'Save Location Type'}
             </Button>
             <Button
               type="button"
@@ -409,8 +399,9 @@ export default function LocationTypeMasterView() {
                   </td>
                 </tr>
               ) : (
-                items.map((row, idx) => {
+                items.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((row, idx) => {
                   const isRoot = !row.parentName || row.parentName === '-';
+                  const rowNumber = (currentPage - 1) * pageSize + idx + 1;
 
                   return (
                     <tr
@@ -418,7 +409,7 @@ export default function LocationTypeMasterView() {
                       className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       <td className="py-3.5 px-4 text-center font-semibold text-slate-400 text-xs">
-                        {idx + 1}
+                        {rowNumber}
                       </td>
                       <td className="py-3.5 px-6">
                         <div className="flex items-center gap-2.5">
@@ -467,6 +458,14 @@ export default function LocationTypeMasterView() {
             </tbody>
           </table>
         </div>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={items.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </Card>
 
       {/* Dedicated Edit Location Type Modal */}

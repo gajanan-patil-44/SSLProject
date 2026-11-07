@@ -1,0 +1,29 @@
+info:
+  name: updatecompanyDesignation
+  type: http
+  seq: 9
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/designationCreation/editCompanyDesignation
+  body:
+    type: json
+    data: |-
+      {
+        "flagId": 2,
+        "CompanyDesignationId": 1,
+        "CompanyId": 2,
+        "DesignationId": 1,
+        "DesignationLevel": 3,
+        "CanBeReportingManager": true,
+        "UpdateByUserName": "Praveen"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NTcwMDUsImV4cCI6MTc5Mzk4NTgwNX0.9_Jani7VahHGksp4SOd_WasSX6WcbZaELT_o-o2x_O4
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

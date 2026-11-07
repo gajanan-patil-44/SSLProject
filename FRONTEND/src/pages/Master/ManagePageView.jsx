@@ -718,8 +718,9 @@ export default function ManagePageView() {
             <Input
               placeholder="Enter PageName"
               value={formData.PageName}
+              maxLength={50}
               onChange={(e) => {
-                setFormData({ ...formData, PageName: e.target.value });
+                setFormData({ ...formData, PageName: e.target.value.slice(0, 50) });
                 if (formErrors.PageName) setFormErrors({ ...formErrors, PageName: null });
               }}
               error={formErrors.PageName}
@@ -734,8 +735,9 @@ export default function ManagePageView() {
             <Input
               placeholder="Enter PageURL"
               value={formData.PageURL}
+              maxLength={100}
               onChange={(e) => {
-                setFormData({ ...formData, PageURL: e.target.value });
+                setFormData({ ...formData, PageURL: e.target.value.slice(0, 100) });
                 if (formErrors.PageURL) setFormErrors({ ...formErrors, PageURL: null });
               }}
               error={formErrors.PageURL}
@@ -750,8 +752,9 @@ export default function ManagePageView() {
             <Input
               placeholder="Enter IconName"
               value={formData.IconName}
+              maxLength={50}
               onChange={(e) => {
-                setFormData({ ...formData, IconName: e.target.value });
+                setFormData({ ...formData, IconName: e.target.value.slice(0, 50) });
                 if (formErrors.IconName) setFormErrors({ ...formErrors, IconName: null });
               }}
               error={formErrors.IconName}

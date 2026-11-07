@@ -1199,13 +1199,15 @@ export default function ItemCreation() {
                 </label>
                 <input 
                   value={formData.code}
+                  maxLength={20}
                   onChange={(e) => {
-                    setFormData({ ...formData, code: e.target.value });
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20).toUpperCase();
+                    setFormData({ ...formData, code: sanitized });
                     if (formErrors.code) setFormErrors(prev => ({ ...prev, code: '' }));
                   }}
                   placeholder="e.g. MAT001"
                   disabled={isViewing || !isCompanySelected}
-                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs font-mono uppercase text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
                     formErrors.code ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                   }`}
                 />
@@ -1221,8 +1223,9 @@ export default function ItemCreation() {
                 </label>
                 <input 
                   value={formData.name}
+                  maxLength={100}
                   onChange={(e) => {
-                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 100);
                     setFormData({ ...formData, name: sanitized });
                     if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
                   }}
@@ -1244,7 +1247,8 @@ export default function ItemCreation() {
                 </label>
                 <input 
                   value={formData.brand}
-                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  maxLength={50}
+                  onChange={(e) => setFormData({ ...formData, brand: e.target.value.slice(0, 50) })}
                   placeholder="e.g. Polycab"
                   disabled={isViewing || !isCompanySelected}
                   className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
@@ -1258,7 +1262,8 @@ export default function ItemCreation() {
                 </label>
                 <input 
                   value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  maxLength={50}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value.slice(0, 50) })}
                   placeholder="e.g. CW-102"
                   disabled={isViewing || !isCompanySelected}
                   className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
@@ -1308,8 +1313,21 @@ export default function ItemCreation() {
                 <input 
                   type="number"
                   step="0.5"
+                  min="0"
+                  max="50"
                   value={formData.warrantyYears}
-                  onChange={(e) => setFormData({ ...formData, warrantyYears: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                  }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setFormData({ ...formData, warrantyYears: '' });
+                      return;
+                    }
+                    if (parseFloat(val) > 50) return;
+                    setFormData({ ...formData, warrantyYears: val });
+                  }}
                   placeholder="e.g. 1.0"
                   disabled={isViewing || !isCompanySelected}
                   className="w-full h-8.5 px-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800"
@@ -1411,13 +1429,16 @@ export default function ItemCreation() {
                 </label>
                 <input 
                   value={formData.hsnSac}
+                  maxLength={10}
+                  inputMode="numeric"
                   onChange={(e) => {
-                    setFormData({ ...formData, hsnSac: e.target.value });
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData({ ...formData, hsnSac: digits });
                     if (formErrors.hsnSac) setFormErrors(prev => ({ ...prev, hsnSac: '' }));
                   }}
                   placeholder="e.g. 84713010"
                   disabled={isViewing || !isCompanySelected}
-                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
+                  className={`w-full h-8.5 px-2.5 rounded-lg border bg-white dark:bg-slate-900 text-xs font-mono text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 ${
                     formErrors.hsnSac ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'
                   }`}
                 />
@@ -1548,12 +1569,13 @@ export default function ItemCreation() {
                 <textarea
                   rows={2}
                   value={formData.description}
+                  maxLength={500}
                   onChange={(e) => {
-                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    const sanitized = e.target.value.replace(/[^a-zA-Z0-9\s.,\-_()/]/g, '').slice(0, 500);
                     setFormData({ ...formData, description: sanitized });
                     if (formErrors.description) setFormErrors(prev => ({ ...prev, description: '' }));
                   }}
-                  placeholder="Enter specifications (text only)..."
+                  placeholder="Enter specifications (alphanumeric and notes)..."
                   disabled={isViewing || !isCompanySelected}
                   className={`w-full h-8.5 px-2.5 py-1 rounded-lg border bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-75 disabled:bg-slate-100 dark:disabled:bg-slate-800 resize-none ${
                     formErrors.description ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700'

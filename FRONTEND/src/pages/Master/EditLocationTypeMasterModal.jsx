@@ -97,7 +97,7 @@ export default function EditLocationTypeMasterModal({
 
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -208,8 +208,9 @@ export default function EditLocationTypeMasterModal({
                   type="text"
                   placeholder="e.g. Country, State, District"
                   value={locationTypeName}
+                  maxLength={50}
                   onChange={(e) => {
-                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                    const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
                     setLocationTypeName(sanitized);
                     if (errors.childName) setErrors(prev => ({ ...prev, childName: null }));
                   }}

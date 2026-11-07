@@ -23,7 +23,7 @@ import {
 // ─── Helper to retrieve session company ──────────────────────────────────────
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
@@ -42,7 +42,7 @@ const getSessionAuth = () => {
 
   // 1. Read from the unified session object in localStorage or sessionStorage
   try {
-    const rawSession = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const rawSession = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (rawSession) {
       const sessionObj = JSON.parse(rawSession);
       const user = sessionObj?.data?.user;
@@ -542,8 +542,41 @@ export default function UserCreationView() {
     }
 
     if (name === 'FirstName' || name === 'MiddleName' || name === 'LastName') {
-      const sanitized = value.replace(/[^a-zA-Z\s]/g, '');
+      const sanitized = value.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
       setForm(f => ({ ...f, [name]: sanitized }));
+      setErrors(er => ({ ...er, [name]: '' }));
+      return;
+    }
+
+    if (name === 'EmployeeId') {
+      const sanitized = value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20).toUpperCase();
+      setForm(f => ({ ...f, [name]: sanitized }));
+      setErrors(er => ({ ...er, [name]: '' }));
+      return;
+    }
+
+    if (name === 'PhoneNumber' || name === 'AltPhoneNumber') {
+      const digits = value.replace(/\D/g, '').slice(0, 10);
+      setForm(f => ({ ...f, [name]: digits }));
+      setErrors(er => ({ ...er, [name]: '' }));
+      return;
+    }
+
+    if (name === 'Email') {
+      setForm(f => ({ ...f, [name]: value.slice(0, 100) }));
+      setErrors(er => ({ ...er, [name]: '' }));
+      return;
+    }
+
+    if (name === 'LoginName') {
+      const sanitized = value.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 30);
+      setForm(f => ({ ...f, [name]: sanitized }));
+      setErrors(er => ({ ...er, [name]: '' }));
+      return;
+    }
+
+    if (name === 'Password') {
+      setForm(f => ({ ...f, [name]: value.slice(0, 50) }));
       setErrors(er => ({ ...er, [name]: '' }));
       return;
     }
@@ -1138,13 +1171,6 @@ export default function UserCreationView() {
           { label: 'Master', href: '/master/companies' },
           { label: 'User Creation' },
         ]}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" icon={RefreshCw} onClick={handleReset} disabled={submitting}>
-              Reset Form
-            </Button>
-          </div>
-        }
       />
 
       {/* Result / Success Celebration Card */}
@@ -1310,8 +1336,8 @@ export default function UserCreationView() {
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="EmployeeId" value={form.EmployeeId} onChange={change} onBlur={handleBlur}
-                    placeholder="Employee ID"
-                    className={`${inputCls(errors.EmployeeId)} pl-8`}
+                    placeholder="Employee ID" maxLength={20}
+                    className={`${inputCls(errors.EmployeeId)} pl-8 uppercase font-mono`}
                   />
                 </div>
               </Field>
@@ -1322,7 +1348,7 @@ export default function UserCreationView() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="FirstName" value={form.FirstName} onChange={change} onBlur={handleBlur}
-                    placeholder="First name"
+                    placeholder="First name" maxLength={50}
                     className={`${inputCls(errors.FirstName)} pl-8`}
                   />
                 </div>
@@ -1334,7 +1360,7 @@ export default function UserCreationView() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="MiddleName" value={form.MiddleName} onChange={change} onBlur={handleBlur}
-                    placeholder="Middle name"
+                    placeholder="Middle name" maxLength={50}
                     className={`${inputCls(errors.MiddleName)} pl-8`}
                   />
                 </div>
@@ -1346,7 +1372,7 @@ export default function UserCreationView() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="LastName" value={form.LastName} onChange={change} onBlur={handleBlur}
-                    placeholder="Last name"
+                    placeholder="Last name" maxLength={50}
                     className={`${inputCls(errors.LastName)} pl-8`}
                   />
                 </div>
@@ -1437,7 +1463,7 @@ export default function UserCreationView() {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     type="email" name="Email" value={form.Email} onChange={change} onBlur={handleBlur}
-                    placeholder="Email address"
+                    placeholder="Email address" maxLength={100}
                     className={`${inputCls(errors.Email)} pl-8`}
                   />
                 </div>
@@ -1449,7 +1475,7 @@ export default function UserCreationView() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                   <input
                     name="LoginName" value={form.LoginName} onChange={change} onBlur={handleBlur}
-                    placeholder="Login username"
+                    placeholder="Login username" maxLength={30}
                     className={`${inputCls(errors.LoginName)} pl-8`}
                   />
                 </div>
@@ -1462,6 +1488,7 @@ export default function UserCreationView() {
                   <input
                     type={showPwd ? 'text' : 'password'} name="Password"
                     value={form.Password} onChange={change} onBlur={handleBlur} placeholder="••••••••"
+                    maxLength={50}
                     className={`${inputCls(errors.Password)} pl-8 pr-10`}
                   />
                   <button
@@ -1669,7 +1696,7 @@ export default function UserCreationView() {
         {currentStep === 5 && (
           <div className="animate-in fade-in duration-300">
             <SectionHeader
-              icon={FileText}
+              icon={Image}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Supporting Documents"
               subtitle="Upload documents for each required document type (Images: JPG, PNG, WEBP or PDF). Maximum 5 MB per file (1 MB for Aadhaar/PAN)."

@@ -5,9 +5,17 @@ import { API_ROUTES } from '../routes/apiRoutes';
 export const designationService = {
   /**
    * View all designations (flagId: 1)
+   * Route: POST /verp-service/designationCreation/view
+   * Payload: { flagId: 1 }
    */
-  getDesignations: async () => {
-    return apiClient.post(API_ROUTES.DESIGNATION.GET_DESIGNATIONS, {
+  getDesignations: async (payload) => {
+    return apiClient.post('/verp-service/designationCreation/view', {
+      flagId: payload?.flagId ?? 1
+    });
+  },
+
+  viewDesignations: async () => {
+    return apiClient.post('/verp-service/designationCreation/view', {
       flagId: 1
     });
   },
@@ -22,31 +30,48 @@ export const designationService = {
   },
 
   /**
+   * Fetch company designation dropdowns
+   * Route: POST /verp-service/designationCreation/companyDesignationDpdwn
+   * @param {number} flagId 1 for company dropdown, 2 for designation dropdown
+   */
+  getCompanyDesignationDropdown: async (flagId) => {
+    return apiClient.post(
+      API_ROUTES.DESIGNATION.COMPANY_DESIGNATION_DROPDOWN || '/verp-service/designationCreation/companyDesignationDpdwn',
+      { flagId: Number(flagId) }
+    );
+  },
+
+  /**
    * Add a new designation (flagId: 2)
-   * @param {Object} data - { CompanyId, DesignationName, DesignationCode, IsDisabled, CreatedByUserName }
+   * Route: POST /verp-service/designationCreation/designation
+   * Payload: { flagId: 2, DesignationName, DesignationCode, DesignationDescription, IsDisabled, CreatedByUserName }
    */
   addDesignation: async (data) => {
-    const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
+    const userState = (typeof window !== 'undefined') ? (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
-          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+          const u = s?.data?.user || s?.user;
+          return u?.loginName || u?.LoginName || u?.name?.first || (typeof u?.name === 'string' && u.name !== 'Andrew' ? u.name : '') || u?.EmployeeId || '';
         }
         const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+        return u?.loginName || u?.LoginName || u?.name?.first || u?.EmployeeId || '';
       } catch { return ''; }
     })() : '';
 
-    const userName = data.CreatedByUserName || data.CreateByUserName || data.UpdatedByUserName || data.UpdateByUserName || userState;
+    const userName = data.CreatedByUserName || data.CreateByUserName || userState || 'Admin';
 
-    return apiClient.post(API_ROUTES.DESIGNATION.ADD_DESIGNATION, {
+    const rawCode = data.DesignationCode ?? data.designationCode ?? '';
+    const code = (typeof rawCode === 'string' && /^\d+$/.test(rawCode.trim()))
+      ? Number(rawCode.trim())
+      : rawCode;
+
+    return apiClient.post('/verp-service/designationCreation/designation', {
       flagId: 2,
-      CompanyId: Number(data.CompanyId),
       DesignationName: data.DesignationName || data.designationName || '',
-      DesignationCode: data.DesignationCode || data.designationCode || '',
-      DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
-      CanBeReportingManager: (data.CanBeReportingManager !== undefined && data.CanBeReportingManager !== null) ? Boolean(data.CanBeReportingManager) : true,
+      DesignationCode: code,
+      DesignationDescription: data.DesignationDescription || data.Description || data.description || '',
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
       CreatedByUserName: userName
     });
@@ -63,60 +88,69 @@ export const designationService = {
 
   /**
    * Edit existing designation (flagId: 2)
-   * @param {Object} data - { CompanyDesignationId, CompanyId, DesignationName, DesignationCode, IsDisabled, UpdateByUserName, CanBeReportingManager }
+   * Route: PATCH /verp-service/designationCreation/editdesignation
+   * Payload: { flagId: 2, DesignationId, DesignationName, DesignationCode, DesignationDescription, IsDisabled, UpdatedByUserName }
    */
   editDesignation: async (data) => {
-    const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
+    const userState = (typeof window !== 'undefined') ? (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
-          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+          const u = s?.data?.user || s?.user;
+          return u?.loginName || u?.LoginName || u?.name?.first || (typeof u?.name === 'string' && u.name !== 'Andrew' ? u.name : '') || u?.EmployeeId || '';
         }
         const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+        return u?.loginName || u?.LoginName || u?.name?.first || u?.EmployeeId || '';
       } catch { return ''; }
     })() : '';
 
-    const userName = data.UpdateByUserName || data.UpdatedByUserName || data.CreatedByUserName || userState;
+    const userName = data.UpdatedByUserName || data.UpdateByUserName || userState || 'Admin';
+    const designationId = Number(data.DesignationId ?? data.CompanyDesignationId ?? data.id);
+
+    const rawCode = data.DesignationCode ?? data.designationCode ?? '';
+    const code = (typeof rawCode === 'string' && /^\d+$/.test(rawCode.trim()))
+      ? Number(rawCode.trim())
+      : rawCode;
 
     return apiClient.patch(API_ROUTES.DESIGNATION.EDIT_DESIGNATION, {
       flagId: Number(data.flagId || 2),
-      CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
-      CompanyId: Number(data.CompanyId),
+      DesignationId: designationId,
       DesignationName: data.DesignationName || data.designationName || '',
-      DesignationCode: data.DesignationCode || data.designationCode || '',
-      DesignationLevel: data.DesignationLevel !== undefined ? Number(data.DesignationLevel) : 0,
-      CanBeReportingManager: (data.CanBeReportingManager !== undefined && data.CanBeReportingManager !== null) ? Boolean(data.CanBeReportingManager) : true,
+      DesignationCode: code,
+      DesignationDescription: data.DesignationDescription || data.Description || data.description || '',
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : false,
-      UpdateByUserName: userName
+      UpdatedByUserName: userName
     });
   },
 
   /**
    * Toggle designation status (flagId: 4)
-   * @param {Object} data - { CompanyDesignationId, IsDisabled, UpdateByUserName }
+   * Route: PATCH /verp-service/designationCreation/toggleDesignationStatus
+   * Payload: { flagId: 4, DesignationId, IsDisabled, UpdatedByUserName }
    */
   toggleDesignationStatus: async (data) => {
-    const userState = (typeof window !== 'undefined' && window.localStorage) ? (() => {
+    const userState = (typeof window !== 'undefined') ? (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
-          return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || '';
+          const u = s?.data?.user || s?.user;
+          return u?.loginName || u?.LoginName || u?.name?.first || (typeof u?.name === 'string' && u.name !== 'Andrew' ? u.name : '') || u?.EmployeeId || '';
         }
         const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-        return u?.loginName || u?.LoginName || u?.EmployeeId || '';
+        return u?.loginName || u?.LoginName || u?.name?.first || u?.EmployeeId || '';
       } catch { return ''; }
     })() : '';
 
-    const userName = data.UpdateByUserName || data.UpdatedByUserName || userState;
+    const userName = data.UpdatedByUserName || data.UpdateByUserName || userState || 'Admin';
+    const designationId = Number(data.DesignationId ?? data.CompanyDesignationId ?? data.id);
 
     return apiClient.patch(API_ROUTES.DESIGNATION.TOGGLE_STATUS, {
       flagId: 4,
-      CompanyDesignationId: Number(data.CompanyDesignationId ?? data.id),
+      DesignationId: designationId,
       IsDisabled: typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled),
-      UpdateByUserName: userName
+      UpdatedByUserName: userName
     });
   },
 

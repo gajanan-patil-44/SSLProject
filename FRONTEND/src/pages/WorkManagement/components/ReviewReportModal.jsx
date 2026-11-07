@@ -174,7 +174,8 @@ export default function ReviewReportModal({ isOpen, onClose, report, onReviewSub
           <Textarea
             rows={3}
             value={comments}
-            onChange={(e) => setComments(e.target.value)}
+            maxLength={500}
+            onChange={(e) => setComments(e.target.value.slice(0, 500))}
             placeholder="e.g. Excellent execution on the UI refactor. Please ensure documentation is updated..."
             className="w-full text-xs"
           />

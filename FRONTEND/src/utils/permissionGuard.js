@@ -114,6 +114,32 @@ export const ROUTE_ALIASES = {
   ],
   '/documents/letter-builder': [
     '/documents/letter-builder'
+  ],
+  '/procurement/raise-pr': [
+    '/procurement/raise-pr',
+    '/pr/raise-pr',
+    'procurement/raise-pr',
+    'pr/raise-pr'
+  ],
+  '/procurement/view-prs': [
+    '/procurement/view-prs',
+    '/procurement/view-pr',
+    '/pr/view-prs',
+    '/pr/view-pr',
+    'procurement/view-prs',
+    'procurement/view-pr',
+    'pr/view-prs',
+    'pr/view-pr'
+  ],
+  '/procurement/pending-approvals': [
+    '/procurement/pending-approvals',
+    '/procurement/my-pending-approvals',
+    '/pr/pending-approvals',
+    '/pr/my-pending-approvals',
+    'procurement/pending-approvals',
+    'procurement/my-pending-approvals',
+    'pr/pending-approvals',
+    'pr/my-pending-approvals'
   ]
 };
 
@@ -199,11 +225,13 @@ export const isRouteAllowed = (pathname, menuData, user, userContext) => {
     return true;
   }
 
-  // 2. Authentication, Error & Work Management pages are always accessible
+  // 2. Authentication, Error, Work Management & Procurement PR pages are always accessible
   if (
     normalizedCurrent.startsWith('/pages/auth/') ||
     normalizedCurrent.startsWith('/pages/error/') ||
-    normalizedCurrent.startsWith('/work-management')
+    normalizedCurrent.startsWith('/work-management') ||
+    normalizedCurrent.startsWith('/procurement') ||
+    normalizedCurrent.startsWith('/pr')
   ) {
     return true;
   }

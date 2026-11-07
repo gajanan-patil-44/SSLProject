@@ -1,4 +1,4 @@
-// src/services/companyService.js
+﻿// src/services/companyService.js
 import apiClient from './apiClient';
 import { API_ROUTES } from '../routes/apiRoutes';
 
@@ -31,7 +31,7 @@ export const companyService = {
   addCompanyMaster: async (data) => {
     const sessionUserName = (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
           return s?.data?.user?.loginName || s?.data?.user?.LoginName || s?.data?.user?.EmployeeId || s?.data?.user?.name || '';
@@ -65,7 +65,7 @@ export const companyService = {
   updateCompanyMaster: async (data) => {
     const sessionUserName = (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
           const user = s?.data?.user || s?.user || s;
@@ -106,7 +106,7 @@ export const companyService = {
   toggleCompanyMasterStatus: async (data) => {
     const sessionUserName = (() => {
       try {
-        const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
         if (raw) {
           const s = JSON.parse(raw);
           const user = s?.data?.user || s?.user || s;

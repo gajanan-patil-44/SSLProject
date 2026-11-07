@@ -36,6 +36,7 @@ export const DataTable = ({
   onChangePasswordClick,
   onDeleteClick,
   onToggleStatusClick,
+  onToggleStatus,
   searchPlaceholder = "Search records...",
   searchKey = "",
   actions,
@@ -53,9 +54,10 @@ export const DataTable = ({
   // Prepend Selection Column if bulk actions are enabled
   const tableColumns = useMemo(() => {
     const cols = [...columns];
+    const handleToggle = onToggleStatusClick || onToggleStatus;
 
     // Add actions column if handlers are provided
-    if (onViewClick || onEditClick || onChangePasswordClick || onDeleteClick || onToggleStatusClick) {
+    if (onViewClick || onEditClick || onChangePasswordClick || onDeleteClick || handleToggle) {
       cols.push({
         id: 'actions',
         header: 'Actions',
@@ -66,11 +68,11 @@ export const DataTable = ({
 
           return (
             <div className="flex items-center justify-end gap-2">
-              {onToggleStatusClick && (
+              {handleToggle && (
                 <div className="flex items-center mr-1" title={isEnabled ? "Active - Click to Disable" : "Disabled - Click to Enable"}>
                   <Switch
                     checked={isEnabled}
-                    onChange={() => onToggleStatusClick(rec)}
+                    onChange={() => handleToggle(rec)}
                     size="sm"
                   />
                 </div>
@@ -121,7 +123,7 @@ export const DataTable = ({
       });
     }
     return cols;
-  }, [columns, onViewClick, onEditClick, onChangePasswordClick, onDeleteClick, onToggleStatusClick]);
+  }, [columns, onViewClick, onEditClick, onChangePasswordClick, onDeleteClick, onToggleStatusClick, onToggleStatus]);
 
   const table = useReactTable({
     data,

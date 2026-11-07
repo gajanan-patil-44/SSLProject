@@ -11,7 +11,7 @@ import { CalendarRange, Coins, TrendingUp, Wallet } from 'lucide-react';
 // Dynamic extraction of session company details
 const getSessionCompany = () => {
   try {
-    const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+    const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
     if (raw) {
       const s = JSON.parse(raw);
       const comps = s?.data?.context?.companies || s?.context?.companies || s?.data?.companies || s?.companies;
@@ -706,26 +706,27 @@ export const registryConfigs = {
     title: "Designations",
     description: "Manage job roles and company designation hierarchies.",
     apiFetch: async () => {
-      const res = await api.designation.getDesignations();
-      const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      const res = await api.designation.getDesignations({ flagId: 1 });
+      const raw = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+      const items = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
       return items.map((d, idx) => {
-        const isDisabled = d.IsDisabled === true || d.status === 'Inactive' || d.status === 'Disabled';
-        const isEnabled = !isDisabled;
+        const id = d.DesignationId ?? d.CompanyDesignationId ?? (idx + 1);
+        const code = d.DesignationCode || '—';
+        const name = d.DesignationName || '—';
+        const desc = d.DesignationDescription || d.Description || '—';
+        const createdAt = d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('en-GB') : '—';
         return {
-          id: d.CompanyDesignationId ?? (idx + 1),
-          CompanyDesignationId: d.CompanyDesignationId ?? (idx + 1),
-          CompanyId: d.CompanyId,
-          designationName: d.DesignationName || '—',
-          DesignationName: d.DesignationName || '',
-          designationCode: d.DesignationCode || '—',
+          id,
+          DesignationId: id,
+          CompanyDesignationId: id,
+          designationCode: code,
           DesignationCode: d.DesignationCode || '',
-          companyName: d.CompanyName || '—',
-          CompanyName: d.CompanyName || '',
-          DesignationLevel: d.DesignationLevel !== undefined && d.DesignationLevel !== null ? d.DesignationLevel : '',
-          CanBeReportingManager: (d.CanBeReportingManager !== undefined && d.CanBeReportingManager !== null) ? Boolean(d.CanBeReportingManager) : true,
-          status: isDisabled ? "Inactive" : "Active",
-          IsDisabled: Boolean(isDisabled),
-          isEnabled: isEnabled,
+          designationName: name,
+          DesignationName: d.DesignationName || '',
+          designationDescription: desc,
+          DesignationDescription: d.DesignationDescription || d.Description || '',
+          createdAt,
+          CreatedAt: d.CreatedAt,
           raw: d
         };
       });
@@ -803,15 +804,11 @@ export const registryConfigs = {
 
       const payload = {
         flagId: 2,
-        CompanyId: Number(formData.CompanyId || userCompanyId),
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
-        DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
-        CanBeReportingManager: (formData.CanBeReportingManager !== undefined && formData.CanBeReportingManager !== null) ? Boolean(formData.CanBeReportingManager) : true,
+        DesignationDescription: formData.DesignationDescription || formData.Description || formData.description || '',
         IsDisabled: false,
-        Description: '',
-        CreatedByUserName: userName,
-        CreatedByUserId: userId
+        CreatedByUserName: userName
       };
 
       return await api.designation.addDesignation(payload);
@@ -823,21 +820,16 @@ export const registryConfigs = {
       const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
       const userCompanyId = Number(userState?.CompanyId || userState?.companyId || userContext?.companies?.[0]?.CompanyId || session?.CompanyId);
-      const companyDesignationId = Number(formData.CompanyDesignationId ?? formData.id);
+      const designationId = Number(formData.DesignationId ?? formData.CompanyDesignationId ?? formData.id);
 
       const payload = {
         flagId: 2,
-        CompanyDesignationId: companyDesignationId,
-        CompanyId: Number(formData.CompanyId || userCompanyId),
+        DesignationId: designationId,
         DesignationName: formData.DesignationName || formData.designationName || '',
         DesignationCode: formData.DesignationCode || formData.designationCode || '',
-        DesignationLevel: formData.DesignationLevel ? parseInt(formData.DesignationLevel, 10) : 0,
-        CanBeReportingManager: (formData.CanBeReportingManager !== undefined && formData.CanBeReportingManager !== null) ? Boolean(formData.CanBeReportingManager) : true,
+        DesignationDescription: formData.DesignationDescription || formData.Description || formData.description || '',
         IsDisabled: Boolean(formData.IsDisabled),
-        Description: '',
-        UpdateByUserName: userName,
-        UpdatedByUserName: userName,
-        UpdatedByUserId: userId
+        UpdatedByUserName: userName
       };
 
       return await api.designation.editDesignation(payload);
@@ -847,15 +839,13 @@ export const registryConfigs = {
       const session = useERPStore.getState().session;
       const userName = userState?.loginName || userState?.LoginName || session?.LoginName || session?.loginName || userState?.EmployeeId || session?.EmployeeId || (typeof userState?.name === 'string' && userState.name !== 'Andrew' ? userState.name : '') || '';
       const userId = Number(session?.UserId ?? userState?.UserId ?? userState?.id ?? 1);
-      const companyDesignationId = Number(record.CompanyDesignationId ?? record.id);
+      const designationId = Number(record.DesignationId ?? record.CompanyDesignationId ?? record.id);
 
       const payload = {
         flagId: 4,
-        CompanyDesignationId: companyDesignationId,
+        DesignationId: designationId,
         IsDisabled: Boolean(newIsDisabled),
-        UpdateByUserName: userName,
-        UpdatedByUserName: userName,
-        UpdatedByUserId: userId
+        UpdatedByUserName: userName
       };
 
       return await api.designation.toggleDesignationStatus(payload);
@@ -865,11 +855,11 @@ export const registryConfigs = {
       return await api.designation.deleteDesignation(companyDesignationId);
     },
     columns: [
-      { id: 'id', header: '#', accessorKey: 'id', key: 'id' },
-      { id: 'designationCode', header: 'Designation Code', accessorKey: 'designationCode', key: 'designationCode', cell: ({ row }) => <span className="font-semibold text-primary">{row.original.designationCode}</span> },
-      { id: 'designationName', header: 'Designation Name', accessorKey: 'designationName', key: 'designationName', cell: ({ row }) => <span className="font-bold">{row.original.designationName}</span> },
-      { id: 'companyName', header: 'Company', accessorKey: 'companyName', key: 'companyName' },
-      { id: 'status', header: 'Status', accessorKey: 'status', key: 'status', cell: ({ row }) => <StatusBadge status={row.original.status} /> }
+      { id: 'id', header: 'Sl No', accessorKey: 'id', key: 'id' },
+      { id: 'designationCode', header: 'Designation Code', accessorKey: 'designationCode', key: 'designationCode', cell: ({ row }) => <span className="font-semibold text-primary font-mono">{row.original.designationCode}</span> },
+      { id: 'designationName', header: 'Designation Name', accessorKey: 'designationName', key: 'designationName', cell: ({ row }) => <span className="font-bold text-slate-800 dark:text-slate-100">{row.original.designationName}</span> },
+      { id: 'designationDescription', header: 'Description', accessorKey: 'designationDescription', key: 'designationDescription' },
+      { id: 'createdAt', header: 'Created Date', accessorKey: 'createdAt', key: 'createdAt' }
     ],
     formFields: [
       { key: "CompanyId", label: "Company", type: "select", required: true, options: [], placeholder: "Select Company" },

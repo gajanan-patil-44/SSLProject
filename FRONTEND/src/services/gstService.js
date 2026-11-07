@@ -82,20 +82,42 @@ export const gstService = {
    * Toggle GST status (enable / disable)
    * Endpoint: /verp-service/gstRate/status
    * Method: PATCH
-   * Payload: { FlagId: 4, GSTRateId, IsDisabled, UpdatedByUserName, CompanyId }
+   * Payload: { FlagId: 4, GSTRateId, IsDisabled, UpdatedByUserName }
    */
   toggleGSTStatus: async (data = {}) => {
-    const compId = data.CompanyId !== undefined && data.CompanyId !== null && data.CompanyId !== ''
-      ? Number(data.CompanyId)
-      : getSessionCompanyId();
+    const userState = (typeof window !== 'undefined') ? (() => {
+      try {
+        const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
+        if (raw) {
+          const s = JSON.parse(raw);
+          const u = s?.data?.user || s?.user;
+          return u?.loginName || u?.LoginName || u?.name?.first || (typeof u?.name === 'string' && u.name !== 'Andrew' ? u.name : '') || u?.EmployeeId || '';
+        }
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        return u?.loginName || u?.LoginName || u?.name?.first || u?.EmployeeId || '';
+      } catch { return ''; }
+    })() : '';
+
+    const userName = data.UpdatedByUserName || userState || '';
+    const rateId = Number(data.GSTRateId ?? data.id ?? data.GSTId ?? data.gstRateId);
+    const isDisabled = typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled);
+
     const payload = {
       FlagId: 4,
-      GSTRateId: Number(data.GSTRateId ?? data.id),
-      IsDisabled: Boolean(data.IsDisabled),
-      UpdatedByUserName: data.UpdatedByUserName || '',
-      ...(compId ? { CompanyId: compId } : {})
+      GSTRateId: rateId,
+      IsDisabled: isDisabled,
+      UpdatedByUserName: userName
     };
-    return apiClient.patch(API_ROUTES.GST_RATE.STATUS, payload);
+
+    const endpoint = API_ROUTES.GST_RATE?.STATUS || '/verp-service/gstRate/status';
+    try {
+      return await apiClient.patch(endpoint, payload);
+    } catch (err) {
+      if (err?.response?.status === 405) {
+        return await apiClient.post(endpoint, payload);
+      }
+      throw err;
+    }
   }
 };
 

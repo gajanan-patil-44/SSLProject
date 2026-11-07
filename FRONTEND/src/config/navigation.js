@@ -43,8 +43,18 @@ export const navigationConfig = [
         path: "/master/designations"
       },
       {
-        label: "Roles & Permissions",
+        label: "Company Designations",
+        icon: "Briefcase",
+        path: "/master/company-designations"
+      },
+      {
+        label: "Company Roles",
         icon: "ShieldCheck",
+        path: "/master/company-roles"
+      },
+      {
+        label: "Roles & Permissions",
+        icon: "ShieldAlert",
         path: "/master/roles"
       },
       {

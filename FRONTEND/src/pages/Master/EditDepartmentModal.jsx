@@ -57,7 +57,7 @@ export default function EditDepartmentModal({
   // Extract session username
   const getSessionUserName = () => {
     try {
-      const raw = localStorage.getItem('session') || sessionStorage.getItem('session');
+      const raw = sessionStorage.getItem('session') || localStorage.getItem('session');
       if (raw) {
         const s = JSON.parse(raw);
         const user = s?.data?.user || s?.user || s;
@@ -223,8 +223,10 @@ export default function EditDepartmentModal({
             <input
               type="text"
               value={departmentCode}
+              maxLength={20}
               onChange={(e) => {
-                setDepartmentCode(e.target.value);
+                const sanitized = e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 20).toUpperCase();
+                setDepartmentCode(sanitized);
                 setErrors((prev) => ({ ...prev, departmentCode: '' }));
               }}
               placeholder="e.g. HR0002"
@@ -232,7 +234,7 @@ export default function EditDepartmentModal({
                 errors.departmentCode
                   ? 'border-rose-400 focus:ring-rose-500'
                   : 'border-slate-200 dark:border-slate-700/80 focus:ring-indigo-500/20 focus:border-indigo-500'
-              } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 transition-all font-medium`}
+              } bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 transition-all font-mono uppercase`}
             />
           </div>
           {errors.departmentCode && (
@@ -253,8 +255,9 @@ export default function EditDepartmentModal({
             <input
               type="text"
               value={departmentName}
+              maxLength={100}
               onChange={(e) => {
-                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                const sanitized = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 100);
                 setDepartmentName(sanitized);
                 setErrors((prev) => ({ ...prev, departmentName: '' }));
               }}

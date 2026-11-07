@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { getAllReports } from './workManagementData';
 import WorkUpdateDetailsModal from './components/WorkUpdateDetailsModal';
+import PaginationControls from '../../components/ui/PaginationControls';
 
 export default function WorkHistoryView() {
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ export default function WorkHistoryView() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Selected report for modal
   const [selectedReport, setSelectedReport] = useState(null);
@@ -279,7 +282,7 @@ export default function WorkHistoryView() {
                 </td>
               </tr>
             ) : (
-              filteredReports.map((report) => (
+              filteredReports.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((report) => (
                 <tr
                   key={report.id || report.reportId}
                   className="border-b border-slate-100 dark:border-slate-800/70 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:via-purple-50/30 hover:to-indigo-50/50 dark:hover:bg-gradient-to-r dark:hover:from-indigo-950/30 dark:hover:via-purple-950/20 dark:hover:to-indigo-950/30 transition-all text-xs"
@@ -324,6 +327,14 @@ export default function WorkHistoryView() {
             )}
           </tbody>
         </table>
+
+        <PaginationControls
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredReports.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* Details Modal */}
