@@ -11,7 +11,7 @@ import PipelineView from './pages/CRM/PipelineView';
 import POSView from './pages/POS/POSView';
 import TicketsView from './pages/Support/TicketsView';
 import ShowcaseView from './pages/UIInterface/ShowcaseView';
-import PagesView from './pages/Pages/Login';
+import PagesView from './pages/Pages/PagesView';
 import HelpView from './pages/Help/HelpView';
 import LetterBuilderView from './pages/Documents/LetterBuilderView';
 import UserCreationView from './pages/Master/UserCreationView';
@@ -24,9 +24,6 @@ import VendorManagement from './pages/Master/VendorManagementView';
 import LocationTypeMasterView from './pages/Master/LocationTypeMasterView';
 import LocationMasterView from './pages/Master/LocationMasterView';
 import CompanyMasterView from './pages/Master/CompanyMasterView';
-
-import RaisePRRequestView from './pages/Procurement/RaisePRRequestView';
-
 import DepartmentView from './pages/Master/DepartmentView';
 import GSTCreationView from './pages/Master/GSTCreationView';
 import DesignationView from './pages/Master/DesignationView';
@@ -47,6 +44,12 @@ import {
   WorkReportsAnalyticsView
 } from './pages/WorkManagement';
 
+// Procurement / Purchase Requisition (PR) Module
+import {
+  RaisePRView,
+  ViewRaisePRsView,
+  MyPendingApprovalsView
+} from './pages/Procurement';
 
 // Reusable dynamic page renderer
 import { ModuleRenderer } from './pages/ModuleRegistry';
@@ -66,17 +69,8 @@ export default function App() {
           {/* Index Redirect */}
           <Route index element={<Navigate to="/dashboard" replace />} />
 
-          {/* Direct Auth / Login shortcuts */}
-          <Route path="login" element={<Navigate to="/pages/auth/login" replace />} />
-          <Route path="auth/login" element={<Navigate to="/pages/auth/login" replace />} />
-
           {/* Main Dashboard */}
           <Route path="dashboard" element={<Dashboard />} />
-
-          {/* ── Procurement ── */}
-          {/* <Route path="procurement/raise-pr-request" element={<RaisePRRequestView />} /> */}
-          <Route path="procurement/raise-pr" element={<Navigate to="/procurement/raise-pr-request" replace />} />
-          <Route path="procurement/pr-request" element={<Navigate to="/procurement/raise-pr-request" replace />} />
 
           {/* Canonical Master Special Pages */}
           <Route path="master/companies" element={<KeyedModuleRenderer />} />

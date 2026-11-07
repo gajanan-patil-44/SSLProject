@@ -46,29 +46,32 @@ export const getMaritalStatusDropdown = async () => {
 
 
 export const getDesignationDropdown = async (CompanyId) => {
+
     const query = `
         SELECT
             CD."CompanyDesignationId",
             CD."CompanyId",
-            D."DesignationId",  
+            D."DesignationId",
             D."DesignationName",
             CD."DesignationLevel",
             CD."CanBeReportingManager"
-        FROM "LKP"."Designation" D
-        LEFT JOIN "DATA"."CompanyDesignation" CD
+        FROM "DATA"."CompanyDesignation" CD
+        INNER JOIN "LKP"."Designation" D
             ON CD."DesignationId" = D."DesignationId"
-            AND CD."IsDisabled" = false
         WHERE
-            D."IsDisabled" = false
+            CD."IsDisabled" = false
+            AND D."IsDisabled" = false
             AND (
-                $1 IS NULL
-                OR CD."CompanyId" = $1
+                $1::smallint IS NULL
+                OR CD."CompanyId" = $1::smallint
             )
         ORDER BY
             D."DesignationName";
     `;
 
-    const result = await pool.query(query, [CompanyId]);
+    const result = await pool.query(query, [
+        CompanyId ?? null
+    ]);
 
     return result.rows;
 };
@@ -1387,33 +1390,31 @@ export const getDepartmentDropdown = async (CompanyId = null) => {
     try {
 
         let query = `
-        SELECT
-            D."DepartmentId" AS "DepartmentId",
-            CD."CompanyId" AS "CompanyId",
-            D."DepartmentName" AS "DepartmentName",
-            D."DepartmentCode" AS "DepartmentCode"
+            SELECT
+                CD."CompanyDepartmentId",
+                D."DepartmentId",
+                CD."CompanyId",
+                D."DepartmentName",
+                D."DepartmentCode" 
 
-        FROM "DATA"."ComapnyDepartment" CD
+            FROM "DATA"."CompanyDepartment" CD
 
-        INNER JOIN "LKP"."Department" D
-            ON D."DepartmentId" = CD."DepartmentId"
+            INNER JOIN "LKP"."Department" D
+                ON D."DepartmentId" = CD."DepartmentId"
 
-        WHERE
-            CD."IsDsiabled" = false
-            AND D."IsDisabled" = false
-
-        ORDER BY
-            D."DepartmentName" ASC;
+            WHERE
+                CD."IsDisabled" = false
+                AND D."IsDisabled" = false AND CD."CompanyId" = $1
         `;
 
-        const values = [];
+        const values = [CompanyId??null];
 
-        if (CompanyId !== null) {
-            query += ` AND "CompanyId" = $1`;
+        if (CompanyId !== null && CompanyId !== undefined) {
             values.push(CompanyId);
+            query += ` AND CD."CompanyId" = $1`;
         }
 
-        query += ` ORDER BY "DepartmentName"`;
+        query += ` ORDER BY D."DepartmentName" ASC`;
 
         const result = await pool.query(query, values);
 
