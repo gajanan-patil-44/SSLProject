@@ -3,207 +3,179 @@ import { pool } from "../Config/db.js";
 
 // GET ALL PROJECTS
 
-export const getAllProjects = async () => {
 
-    try {
+export const getAllProjects = async (CompanyId) => {
 
-        const query = `
-            SELECT
-                PR."ProjectId",
-                PR."CompanyProductId",
-                C."CompanyId",
-                C."CompanyName",
-                P."ProductId",
-                P."ProductName",
-                P."ProductCode",
-                PR."ProjectName",
-                PR."ProjectCode",
-                PR."Description",
-                PR."IsDisabled",
-                PR."CreatedAt",
-                PR."UpdatedAt",
-                PR."CreatedByUserId",
-                PR."UpdatedByUserId"
+    const query = `
+        SELECT
+            PR."ProjectId",
+            PR."CompanyProductId",
 
-            FROM "LKP"."Project" PR
+            C."CompanyId",
+            C."CompanyName",
 
-            INNER JOIN "LKP"."CompanyProduct" CP
-                ON PR."CompanyProductId" =
-                   CP."CompanyProductId"
+            P."ProductId",
+            P."ProductName",
+            P."ProductCode",
 
-            INNER JOIN "LKP"."Company" C
-                ON CP."CompanyId" =
-                   C."CompanyId"
+            PR."ProjectName",
+            PR."ProjectCode",
+            PR."Description",
+            PR."IsDisabled",
+            PR."CreatedAt",
+            PR."UpdatedAt",
+            PR."CreatedByUserId",
+            PR."UpdatedByUserId"
 
-            INNER JOIN "LKP"."Product" P
-                ON CP."ProductId" =
-                   P."ProductId"
+        FROM "LKP"."Project" PR
 
-            ORDER BY
-                PR."CreatedAt" DESC;
-        `;
+        INNER JOIN "LKP"."CompanyProduct" CP
+            ON PR."CompanyProductId" = CP."CompanyProductId"
 
+        INNER JOIN "LKP"."Company" C
+            ON CP."CompanyId" = C."CompanyId"
 
-        const result = await pool.query(query);
+        INNER JOIN "LKP"."Product" P
+            ON CP."ProductId" = P."ProductId"
 
+        WHERE
+            ($1::SMALLINT IS NULL OR C."CompanyId" = $1)
 
-        return result.rows;
+        ORDER BY
+            PR."CreatedAt" DESC;
+    `;
 
-    } catch (error) {
+    const result = await pool.query(query, [CompanyId]);
 
-        throw error;
-    }
+    return result.rows;
 };
+
 
 
 // GET COMPANY PRODUCTS FOR DROPDOWN
 
-export const getCompanyProductsForDropdown = async () => {
 
-    try {
+export const getCompanyProductsForDropdown = async (CompanyId) => {
 
-        const query = `
-            SELECT
-                CP."CompanyProductId",
-                CP."CompanyId",
+    const query = `
+        SELECT
+            CP."CompanyProductId",
+            CP."CompanyId",
+            C."CompanyName",
+            CP."ProductId",
+            P."ProductName",
+            P."ProductCode",
+
+            CONCAT(
                 C."CompanyName",
-                CP."ProductId",
-                P."ProductName",
-                P."ProductCode",
+                ' - ',
+                P."ProductName"
+            ) AS "CompanyProductName"
 
-                CONCAT(
-                    C."CompanyName",
-                    ' - ',
-                    P."ProductName"
-                ) AS "CompanyProductName"
+        FROM "LKP"."CompanyProduct" CP
 
-            FROM "LKP"."CompanyProduct" CP
+        INNER JOIN "LKP"."Company" C
+            ON CP."CompanyId" = C."CompanyId"
 
-            INNER JOIN "LKP"."Company" C
-                ON CP."CompanyId" =
-                   C."CompanyId"
+        INNER JOIN "LKP"."Product" P
+            ON CP."ProductId" = P."ProductId"
 
-            INNER JOIN "LKP"."Product" P
-                ON CP."ProductId" =
-                   P."ProductId"
+        WHERE
+            CP."IsDisabled" = false
+            AND C."IsDisabled" = false
+            AND P."IsDisabled" = false
+            AND ($1::SMALLINT IS NULL OR CP."CompanyId" = $1)
 
-            WHERE
-                CP."IsDisabled" = false
+        ORDER BY
+            C."CompanyName",
+            P."ProductName";
+    `;
 
-                AND C."IsDisabled" = false
+    const result = await pool.query(query, [CompanyId]);
 
-                AND P."IsDisabled" = false
-
-            ORDER BY
-                C."CompanyName",
-                P."ProductName";
-        `;
-
-
-        const result = await pool.query(query);
-
-
-        return result.rows;
-
-    } catch (error) {
-
-        throw error;
-    }
+    return result.rows;
 };
 
 
 // CHECK COMPANY PRODUCT EXISTS AND ACTIVE
 
-export const checkCompanyProductExists = async (CompanyProductId) => {
 
-    try {
+export const checkCompanyProductExists = async (
+    CompanyProductId,
+    CompanyId
+) => {
 
-        const query = `
-            SELECT
-                CP."CompanyProductId",
-                CP."CompanyId",
-                CP."ProductId"
+    const query = `
+        SELECT
+            CP."CompanyProductId",
+            CP."CompanyId",
+            CP."ProductId"
 
-            FROM "LKP"."CompanyProduct" CP
+        FROM "LKP"."CompanyProduct" CP
 
-            INNER JOIN "LKP"."Company" C
-                ON CP."CompanyId" =
-                   C."CompanyId"
+        INNER JOIN "LKP"."Company" C
+            ON CP."CompanyId" = C."CompanyId"
 
-            INNER JOIN "LKP"."Product" P
-                ON CP."ProductId" =
-                   P."ProductId"
+        INNER JOIN "LKP"."Product" P
+            ON CP."ProductId" = P."ProductId"
 
-            WHERE
-                CP."CompanyProductId" = $1
+        WHERE
+            CP."CompanyProductId" = $1
+            AND CP."IsDisabled" = false
+            AND C."IsDisabled" = false
+            AND P."IsDisabled" = false
+            AND ($2::SMALLINT IS NULL OR CP."CompanyId" = $2)
 
-                AND CP."IsDisabled" = false
+        LIMIT 1;
+    `;
 
-                AND C."IsDisabled" = false
+    const result = await pool.query(query, [
+        CompanyProductId,
+        CompanyId
+    ]);
 
-                AND P."IsDisabled" = false;
-        `;
-
-
-        const values = [CompanyProductId];
-
-
-        const result =await pool.query(
-                query,
-                values
-            );
-
-
-        return result.rows;
-
-    } catch (error) {
-
-        throw error;
-    }
+    return result.rows;
 };
+
 
 
 // GET PROJECT BY ID
 
-export const getProjectById = async (ProjectId) => {
 
-    try {
+export const getProjectById = async (ProjectId, CompanyId) => {
 
-        const query = `
-            SELECT
-                "ProjectId",
-                "CompanyProductId",
-                "ProjectName",
-                "ProjectCode",
-                "IsDisabled",
-                "Description"
+    const query = `
+        SELECT
+            PR."ProjectId",
+            PR."CompanyProductId",
+            CP."CompanyId",
+            PR."ProjectName",
+            PR."ProjectCode",
+            PR."IsDisabled",
+            PR."Description"
 
-            FROM "LKP"."Project"
+        FROM "LKP"."Project" PR
 
-            WHERE "ProjectId" = $1;
-        `;
+        INNER JOIN "LKP"."CompanyProduct" CP
+            ON PR."CompanyProductId" = CP."CompanyProductId"
 
+        WHERE
+            PR."ProjectId" = $1
+            AND ($2::SMALLINT IS NULL OR CP."CompanyId" = $2);
+    `;
 
-        const values = [ProjectId];
+    const result = await pool.query(query, [
+        ProjectId,
+        CompanyId
+    ]);
 
-
-        const result = await pool.query(
-                query,
-                values
-            );
-
-
-        return result.rows;
-
-    } catch (error) {
-
-        throw error;
-    }
+    return result.rows;
 };
 
 
 
 // CHECK PROJECT FOR ADD
+
 
 export const checkProjectExists = async (
     CompanyProductId,
@@ -211,52 +183,30 @@ export const checkProjectExists = async (
     ProjectCode
 ) => {
 
-    try {
+    const query = `
+        SELECT
+            "ProjectId",
+            "CompanyProductId",
+            "ProjectName",
+            "ProjectCode"
 
-        const query = `
-            SELECT
-                "ProjectId",
-                "CompanyProductId",
-                "ProjectName",
-                "ProjectCode"
+        FROM "LKP"."Project"
 
-            FROM "LKP"."Project"
-
-            WHERE
-                "CompanyProductId" = $1
-
-                AND
-                (
-                    LOWER(TRIM("ProjectName")) =
-                        LOWER(TRIM($2))
-
-                    OR
-
-                    LOWER(TRIM("ProjectCode")) =
-                        LOWER(TRIM($3))
-                );
-        `;
-
-
-        const values = [
-            CompanyProductId,
-            ProjectName,
-            ProjectCode
-        ];
-
-
-        const result = await pool.query(
-                query,
-                values
+        WHERE
+            "CompanyProductId" = $1
+            AND (
+                LOWER(TRIM("ProjectName")) = LOWER(TRIM($2))
+                OR LOWER(TRIM("ProjectCode")) = LOWER(TRIM($3))
             );
+    `;
 
+    const result = await pool.query(query, [
+        CompanyProductId,
+        ProjectName,
+        ProjectCode
+    ]);
 
-        return result.rows;
-
-    } catch (error) {
-
-        throw error;
-    }
+    return result.rows;
 };
 
 
@@ -301,7 +251,6 @@ export const addProject = async (projectData) => {
                 "CreatedByUserId";
         `;
 
-
         const values = [
             projectData.CompanyProductId,
             projectData.ProjectName,
@@ -310,7 +259,6 @@ export const addProject = async (projectData) => {
             projectData.Description,
             projectData.CreatedByUserId
         ];
-
 
         const result = await pool.query(
                 query,
@@ -330,118 +278,103 @@ export const addProject = async (projectData) => {
 
 // CHECK PROJECT FOR UPDATE
 
+
 export const checkProjectExistsForUpdate = async (
     CompanyProductId,
     ProjectName,
     ProjectCode,
-    ProjectId
+    ProjectId,
+    CompanyId
 ) => {
 
-    try {
+    const query = `
+        SELECT
+            PR."ProjectId",
+            PR."CompanyProductId",
+            PR."ProjectName",
+            PR."ProjectCode"
 
-        const query = `
-            SELECT
-                "ProjectId",
-                "CompanyProductId",
-                "ProjectName",
-                "ProjectCode"
+        FROM "LKP"."Project" PR
 
-            FROM "LKP"."Project"
+        INNER JOIN "LKP"."CompanyProduct" CP
+            ON PR."CompanyProductId" = CP."CompanyProductId"
 
-            WHERE
-                "CompanyProductId" = $1
-
-                AND
-                "ProjectId" <> $4
-
-                AND
-                (
-                    LOWER(TRIM("ProjectName")) =
-                        LOWER(TRIM($2))
-
-                    OR
-
-                    LOWER(TRIM("ProjectCode")) =
-                        LOWER(TRIM($3))
-                );
-        `;
-
-
-        const values = [
-            CompanyProductId,
-            ProjectName,
-            ProjectCode,
-            ProjectId
-        ];
-
-
-        const result = await pool.query(
-                query,
-                values
+        WHERE
+            PR."CompanyProductId" = $1
+            AND PR."ProjectId" <> $4
+            AND ($5::SMALLINT IS NULL OR CP."CompanyId" = $5)
+            AND (
+                LOWER(TRIM(PR."ProjectName")) = LOWER(TRIM($2))
+                OR LOWER(TRIM(PR."ProjectCode")) = LOWER(TRIM($3))
             );
+    `;
 
+    const result = await pool.query(query, [
+        CompanyProductId,
+        ProjectName,
+        ProjectCode,
+        ProjectId,
+        CompanyId
+    ]);
 
-        return result.rows;
-
-    } catch (error) {
-
-        throw error;
-    }
+    return result.rows;
 };
-
 
 
 // EDIT PROJECT
 
+
 export const editProject = async (projectData) => {
 
-    try {
+    const query = `
+        UPDATE "LKP"."Project" PR
 
-        const query = `
-            UPDATE "LKP"."Project"
+        SET
+            "CompanyProductId" = $1,
+            "ProjectName" = $2,
+            "ProjectCode" = $3,
+            "IsDisabled" = $4,
+            "Description" = $5,
+            "UpdatedAt" = CURRENT_TIMESTAMP,
+            "UpdatedByUserId" = $6
 
-            SET
-                "CompanyProductId" = $1,
-                "ProjectName" = $2,
-                "ProjectCode" = $3,
-                "IsDisabled" = $4,
-                "Description" = $5,
-                "UpdatedAt" = CURRENT_TIMESTAMP,
-                "UpdatedByUserId" = $6
+        WHERE
+            PR."ProjectId" = $7
 
-            WHERE
-                "ProjectId" = $7;
-        `;
+            AND EXISTS (
+                SELECT 1
+                FROM "LKP"."CompanyProduct" CP
+                WHERE CP."CompanyProductId" = PR."CompanyProductId"
+                  AND ($8::SMALLINT IS NULL OR CP."CompanyId" = $8)
+            )
 
-
-        const values = [
-            projectData.CompanyProductId,
-            projectData.ProjectName,
-            projectData.ProjectCode,
-            projectData.IsDisabled,
-            projectData.Description,
-            projectData.UpdatedByUserId,
-            projectData.ProjectId
-        ];
-
-
-        const result = await pool.query(
-                query,
-                values
+            AND EXISTS (
+                SELECT 1
+                FROM "LKP"."CompanyProduct" NEWCP
+                WHERE NEWCP."CompanyProductId" = $1
+                  AND ($8::SMALLINT IS NULL OR NEWCP."CompanyId" = $8)
             );
+    `;
 
+    const values = [
+        projectData.CompanyProductId,
+        projectData.ProjectName,
+        projectData.ProjectCode,
+        projectData.IsDisabled,
+        projectData.Description,
+        projectData.UpdatedByUserId,
+        projectData.ProjectId,
+        projectData.CompanyId
+    ];
 
-        return result.rowCount;
+    const result = await pool.query(query, values);
 
-    } catch (error) {
-
-        throw error;
-    }
+    return result.rowCount;
 };
 
 
-// TOGGLE PROJECT STATUS
 
+// TOGGLE PROJECT STATUS
 
 export const toggleProjectStatuses = async (projectData) => {
 
@@ -469,13 +402,11 @@ export const toggleProjectStatuses = async (projectData) => {
                 "UpdatedByUserId";
         `;
 
-
         const values = [
             projectData.IsDisabled,
             projectData.UpdatedByUserId,
             projectData.ProjectId
         ];
-
 
         const result = await pool.query(
                 query,
@@ -505,9 +436,7 @@ export const deleteProject = async (ProjectId) => {
                 "ProjectId" = $1;
         `;
 
-
         const values = [ProjectId];
-
 
         const result = await pool.query(
                 query,

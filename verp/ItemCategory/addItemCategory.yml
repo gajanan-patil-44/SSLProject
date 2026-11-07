@@ -1,0 +1,29 @@
+info:
+  name: addItemCategory
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/itemCategoryCreation/addMaterialCategoryType
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":2,
+        "CompanyId":1,
+        "MaterialCategoryTypeName":"Switch",
+        "MaterialCategoryTypeCode":"SW02",
+        "IsDisabled":false,
+        "CreatedByUserName":"kavya"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkxOTYxNjgyLCJleHAiOjE3OTE5OTA0ODJ9.I0719HKNoOUxUqB01GegKLr5N2_tc0UryTZpasX338Y
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

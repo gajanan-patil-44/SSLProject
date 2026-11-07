@@ -1,0 +1,29 @@
+info:
+  name: toggleCompanyMasterStatus
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+<<<<<<< HEAD
+  url: http://192.168.23.115:9004/verp-service/companyMaster/toggleCompanyMasterStatus
+=======
+  url: http://192.168.23.107:9004/verp-service/companyMaster/toggleCompanyMasterStatus
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":4,
+        "IsDisabled":true,
+        "UpdatedByUserName":"kavya",
+        "CompanyMasterId":7
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

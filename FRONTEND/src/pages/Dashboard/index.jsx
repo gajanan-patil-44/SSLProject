@@ -74,41 +74,49 @@ export default function Dashboard() {
     { key: "name", label: "Full Name", type: "text", required: true, placeholder: "e.g. Evelyn Hayes" },
     { key: "email", label: "Corporate Email", type: "email", required: true, placeholder: "e.g. evelyn@vishvin-erp.com" },
     { key: "phone", label: "Phone Number", type: "text", required: true, placeholder: "+1 (555) 000-0000" },
-    { key: "department", label: "Department", type: "select", required: true, options: [
-      { value: "Engineering", label: "Engineering" },
-      { value: "Marketing", label: "Marketing" },
-      { value: "Finance", label: "Finance" },
-      { value: "Sales", label: "Sales" },
-      { value: "HR", label: "HR" }
-    ]},
-    { key: "designation", label: "Designation", type: "select", required: true, options: [
-      { value: "Senior Developer", label: "Senior Developer" },
-      { value: "Product Manager", label: "Product Manager" },
-      { value: "UX Designer", label: "UX Designer" },
-      { value: "Android Developer", label: "Android Developer" },
-      { value: "Financial Analyst", label: "Financial Analyst" },
-      { value: "HR Generalist", label: "HR Generalist" }
-    ]},
+    {
+      key: "department", label: "Department", type: "select", required: true, options: [
+        { value: "Engineering", label: "Engineering" },
+        { value: "Marketing", label: "Marketing" },
+        { value: "Finance", label: "Finance" },
+        { value: "Sales", label: "Sales" },
+        { value: "HR", label: "HR" }
+      ]
+    },
+    {
+      key: "designation", label: "Designation", type: "select", required: true, options: [
+        { value: "Senior Developer", label: "Senior Developer" },
+        { value: "Product Manager", label: "Product Manager" },
+        { value: "UX Designer", label: "UX Designer" },
+        { value: "Android Developer", label: "Android Developer" },
+        { value: "Financial Analyst", label: "Financial Analyst" },
+        { value: "HR Generalist", label: "HR Generalist" }
+      ]
+    },
     { key: "salary", label: "Monthly Gross Salary ($)", type: "number", required: true, placeholder: "e.g. 5000" }
   ];
 
   const jobFormFields = [
     { key: "title", label: "Job Title", type: "text", required: true, placeholder: "e.g. Senior Frontend Engineer" },
-    { key: "department", label: "Department", type: "select", required: true, options: [
-      { value: "Engineering", label: "Engineering" },
-      { value: "Marketing", label: "Marketing" },
-      { value: "Finance", label: "Finance" },
-      { value: "Sales", label: "Sales" },
-      { value: "HR", label: "HR" }
-    ]},
+    {
+      key: "department", label: "Department", type: "select", required: true, options: [
+        { value: "Engineering", label: "Engineering" },
+        { value: "Marketing", label: "Marketing" },
+        { value: "Finance", label: "Finance" },
+        { value: "Sales", label: "Sales" },
+        { value: "HR", label: "HR" }
+      ]
+    },
     { key: "location", label: "Office Location", type: "text", required: true, placeholder: "e.g. New York, USA (or Remote)" },
     { key: "vacancies", label: "Number of Openings", type: "number", required: true, placeholder: "e.g. 3" },
-    { key: "type", label: "Employment Type", type: "select", required: true, options: [
-      { value: "Full Time", label: "Full Time" },
-      { value: "Part Time", label: "Part Time" },
-      { value: "Contract", label: "Contract" },
-      { value: "Remote", label: "Remote" }
-    ]}
+    {
+      key: "type", label: "Employment Type", type: "select", required: true, options: [
+        { value: "Full Time", label: "Full Time" },
+        { value: "Part Time", label: "Part Time" },
+        { value: "Contract", label: "Contract" },
+        { value: "Remote", label: "Remote" }
+      ]
+    }
   ];
 
   const handleExport = () => {
@@ -407,7 +415,7 @@ export default function Dashboard() {
         {/* Performance tracking progress bars */}
         <Card className="flex flex-col gap-4">
           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Performance Tracking</span>
-          
+
           <div className="space-y-4">
             {/* Evelyn Hayes */}
             <div className="flex items-center justify-between text-xs">

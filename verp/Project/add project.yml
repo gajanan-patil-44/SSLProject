@@ -1,11 +1,11 @@
 info:
-  name: designation
+  name: add project
   type: http
   seq: 2
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/designationCreation/designation
+  url: http://localhost:9004/verp-service/projectCreation/addproject
   body:
     type: json
     data: |-
@@ -15,12 +15,13 @@ http:
 
 
       {
-        "flagId":2,
-        "CompanyId":1,
-        "DesignationName":"MANAGERRRr",
-        "DesignationCode":"MG00011",
+        "flagId": 2,
+        "CompanyProductId":1,
+        "ProjectName": "VERP",
+        "ProjectCode": "verp01",
+        "Description": "Vishvin ERP",
         "IsDisabled":false,
-        "CreatedByUserName":"kavv"
+        "CreatedByUserId":1
       }
   auth: inherit
 

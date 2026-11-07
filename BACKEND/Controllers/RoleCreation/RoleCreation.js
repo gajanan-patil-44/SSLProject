@@ -1,38 +1,104 @@
+
 import {
     getAllRoles,
     addRole,
     updateRoles,
-    deleteRoles,
     checkRoleExistsForUpdate,
     updateRoleStatus,
-    checkRoleExists,
-    checkCompanyExists,
-    getCompaniesForRole,
-    getCompanyDropdownData
+    checkRoleExists
 } from "../../Models/RoleModels.js";
+
+
+// =====================================================
+// ROLE DESCRIPTION VALIDATION
+// OPTIONAL - MAXIMUM 250 CHARACTERS
+// ONLY ALPHABETS, NUMBERS AND SPACES
+// =====================================================
+
+const validateRoleDescription = (description) => {
+
+    if (
+        description === undefined ||
+        description === null ||
+        description === ""
+    ) {
+        return {
+            valid: true,
+            value: null
+        };
+    }
+
+    if (typeof description !== "string") {
+        return {
+            valid: false,
+            message: "RoleDescription must be a string"
+        };
+    }
+
+    const trimmedDescription = description.trim();
+
+    if (trimmedDescription.length === 0) {
+        return {
+            valid: true,
+            value: null
+        };
+    }
+
+    if (trimmedDescription.length > 250) {
+        return {
+            valid: false,
+            message: "RoleDescription must not exceed 250 characters"
+        };
+    }
+
+    const descriptionRegex = /^[A-Za-z0-9 ]+$/;
+
+    if (!descriptionRegex.test(trimmedDescription)) {
+        return {
+            valid: false,
+            message: "RoleDescription must contain only alphabets, numbers and spaces. Special characters are not allowed."
+        };
+    }
+
+    return {
+        valid: true,
+        value: trimmedDescription
+    };
+};
 
 
 // =====================================================
 // FLAG ID 1 - GET ALL ROLES
 // =====================================================
+
 export const getRole = async (req, res) => {
+
     const { FlagId } = req.body;
+
     try {
 
-        if (parseInt(FlagId) === 1) {
-            const rows = await getAllRoles();
+        if (Number(FlagId) === 1) {
+
+        
+
+            const roles = await getAllRoles();
+
             return res.status(200).json({
                 status: "success",
                 message: "Roles fetched successfully",
-                data: rows
+                data: roles
             });
         }
+
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
+
     } catch (error) {
+
         console.error("Error fetching roles:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Failed to fetch roles",
@@ -40,85 +106,155 @@ export const getRole = async (req, res) => {
         });
     }
 };
+
+
 // =====================================================
 // FLAG ID 2 - ADD ROLE
 // =====================================================
+
 export const addRoles = async (req, res) => {
+
     const { FlagId } = req.body;
+
     try {
-        if (parseInt(FlagId) === 2) {
+
+        if (Number(FlagId) === 2) {
+
             const roleData = req.body;
-            // ---------------------------------------------
-            // VALIDATE COMPANY ID
-            // ---------------------------------------------
-            // CompanyId is OPTIONAL.
-            // If provided, check whether it exists.
-            // If not provided, store NULL.
-            // ---------------------------------------------
-            if (roleData.CompanyId !== undefined && roleData.CompanyId !== null && roleData.CompanyId !== "") {
-                const companyExists = await checkCompanyExists(roleData.CompanyId);
 
-                if (companyExists.length === 0) {
-                    return res.status(400).json({
-                        status: "error",
-                        message: "Invalid CompanyId"
-                    });
-                }
-
-            } else {
-                roleData.CompanyId = null;
-            }
-            // ---------------------------------------------
+            // ==========================================
             // VALIDATE ROLE NAME
-            // ---------------------------------------------
-            if (!roleData.RoleName) {
+            // ==========================================
+
+            if (
+                typeof roleData.RoleName !== "string" ||
+                !roleData.RoleName.trim()
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "RoleName is required"
                 });
             }
-            // ---------------------------------------------
+
+            roleData.RoleName = roleData.RoleName.trim();
+
+            const roleNameRegex = /^[A-Za-z ]{1,30}$/;
+
+            if (!roleNameRegex.test(roleData.RoleName)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "RoleName must contain only alphabetic characters and spaces, with a maximum length of 30 characters."
+                });
+            }
+
+            // ==========================================
             // VALIDATE ROLE CODE
-            // ---------------------------------------------
-            if (!roleData.Role_Code) {
+            // ==========================================
+
+            if (
+                typeof roleData.Role_Code !== "string" ||
+                !roleData.Role_Code.trim()
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "Role_Code is required"
                 });
             }
-            // ---------------------------------------------
-            // VALIDATE CREATED USER
-            // ---------------------------------------------
-            if (!roleData.CreatedByUserName) {
+
+            roleData.Role_Code = roleData.Role_Code.trim();
+
+            const roleCodeRegex = /^[A-Za-z0-9]{1,15}$/;
+
+            if (!roleCodeRegex.test(roleData.Role_Code)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Role_Code must contain only alphanumeric characters, with a maximum length of 15 characters."
+                });
+            }
+
+            // ==========================================
+            // VALIDATE ROLE DESCRIPTION
+            // OPTIONAL - MAX 250 CHARACTERS
+            // ==========================================
+
+            const descriptionValidation =
+                validateRoleDescription(roleData.RoleDescription);
+
+            if (!descriptionValidation.valid) {
+                return res.status(400).json({
+                    status: "error",
+                    message: descriptionValidation.message
+                });
+            }
+
+            roleData.RoleDescription = descriptionValidation.value;
+
+            // ==========================================
+            // VALIDATE CREATED BY USER
+            // ==========================================
+
+            if (
+                typeof roleData.CreatedByUserName !== "string" ||
+                !roleData.CreatedByUserName.trim()
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "CreatedByUserName is required"
                 });
             }
-            // ---------------------------------------------
+
+            roleData.CreatedByUserName =
+                roleData.CreatedByUserName.trim();
+
+            // ==========================================
             // CHECK DUPLICATE ROLE
-            // ---------------------------------------------
-            const existingRole = await checkRoleExists(roleData.RoleName, roleData.Role_Code);
+            // ==========================================
+
+            const existingRole = await checkRoleExists(
+                roleData.RoleName,
+                roleData.Role_Code
+            );
 
             if (existingRole.length > 0) {
-                const role = existingRole[0];
-                if (role.RoleName === roleData.RoleName) {
+
+                const roleNameExists = existingRole.some(
+                    role =>
+                        role.RoleName?.toLowerCase() ===
+                        roleData.RoleName.toLowerCase()
+                );
+
+                const roleCodeExists = existingRole.some(
+                    role =>
+                        role.RoleCode?.toLowerCase() ===
+                        roleData.Role_Code.toLowerCase()
+                );
+
+                if (roleNameExists && roleCodeExists) {
+                    return res.status(409).json({
+                        status: "error",
+                        message: "Role name and role code already exist"
+                    });
+                }
+
+                if (roleNameExists) {
                     return res.status(409).json({
                         status: "error",
                         message: "Role name already exists"
                     });
                 }
 
-                if (role.RoleCode === roleData.Role_Code) {
+                if (roleCodeExists) {
                     return res.status(409).json({
                         status: "error",
                         message: "Role code already exists"
                     });
                 }
             }
-            // ---------------------------------------------
+
+            // ==========================================
             // ADD ROLE
-            // ---------------------------------------------
+            // ==========================================
+
             const role = await addRole(roleData);
 
             return res.status(201).json({
@@ -127,16 +263,16 @@ export const addRoles = async (req, res) => {
                 data: role
             });
         }
-        // ---------------------------------------------
-        // INVALID FLAG ID
-        // ---------------------------------------------
+
         return res.status(400).json({
             status: "error",
             message: "Invalid FlagId."
         });
 
     } catch (error) {
-        console.error("Error adding role:", error);
+
+        console.error("Add Role Error:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Failed to add role",
@@ -144,136 +280,170 @@ export const addRoles = async (req, res) => {
         });
     }
 };
+
+
 // =====================================================
-// FLAG ID 3 - GET ALL COMPANY DATA
+// FLAG ID 4 - UPDATE ROLE
 // =====================================================
-export const getCompanyForRole = async (req, res) => {
 
-    const { FlagId } = req.body;
-
-    try {
-
-        if (parseInt(FlagId) === 3) {
-
-            const companies = await getCompaniesForRole();
-
-            return res.status(200).json({
-                status: "success",
-                message: "Company data fetched successfully",
-                data: companies
-            });
-        }
-
-        return res.status(400).json({
-            status: "error",
-            message: "Invalid FlagId."
-        });
-
-    } catch (error) {
-
-        console.error("Error fetching company data:", error);
-
-        return res.status(500).json({
-            status: "error",
-            message: "Failed to fetch company data",
-            error: error.message
-        });
-    }
-};
-// =====================================================
-// FLAG ID 4 - EDIT ROLE
-// =====================================================
 export const updateRole = async (req, res) => {
+
     const { FlagId } = req.body;
+
     try {
-        if (parseInt(FlagId) === 4) {
+
+        if (Number(FlagId) === 4) {
+
             const roleData = req.body;
 
-            if (!roleData.RoleId) {
 
+            // ==========================================
+            // VALIDATE ROLE ID
+            // ==========================================
+
+            roleData.RoleId = Number(roleData.RoleId);
+
+            if (
+                !Number.isInteger(roleData.RoleId) ||
+                roleData.RoleId <= 0
+            ) {
                 return res.status(400).json({
                     status: "error",
-                    message: "RoleId is required"
+                    message: "Valid RoleId is required"
                 });
             }
 
-
-            if (!roleData.CompanyId) {
-                return res.status(400).json({
-                    status: "error",
-                    message: "CompanyId is required"
-                });
-            }
-            // ---------------------------------------------
-            // CHECK COMPANY
-            // ---------------------------------------------
-            const companyExists = await checkCompanyExists(
-                roleData.CompanyId
-            );
-            if (companyExists.length === 0) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "Invalid CompanyId"
-                });
-            }
-            // ---------------------------------------------
+            // ==========================================
             // VALIDATE ROLE NAME
-            // ---------------------------------------------
-            if (!roleData.RoleName) {
+            // ==========================================
 
+            if (
+                typeof roleData.RoleName !== "string" ||
+                !roleData.RoleName.trim()
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "RoleName is required"
                 });
             }
-            // ---------------------------------------------
-            // VALIDATE ROLE CODE
-            // ---------------------------------------------
-            if (!roleData.Role_Code) {
 
+            roleData.RoleName = roleData.RoleName.trim();
+
+            const roleNameRegex = /^[A-Za-z ]{1,30}$/;
+
+            if (!roleNameRegex.test(roleData.RoleName)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "RoleName must contain only alphabetic characters and spaces, with a maximum length of 30 characters."
+                });
+            }
+
+            // ==========================================
+            // VALIDATE ROLE CODE
+            // ==========================================
+
+            if (
+                typeof roleData.Role_Code !== "string" ||
+                !roleData.Role_Code.trim()
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "Role_Code is required"
                 });
             }
-            // ---------------------------------------------
-            // VALIDATE UPDATED USER
-            // ---------------------------------------------
-            if (!roleData.UpdatedByUserName) {
 
+            roleData.Role_Code = roleData.Role_Code.trim();
+
+            const roleCodeRegex = /^[A-Za-z0-9]{1,15}$/;
+
+            if (!roleCodeRegex.test(roleData.Role_Code)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Role_Code must contain only alphanumeric characters, with a maximum length of 15 characters."
+                });
+            }
+
+            // ==========================================
+            // VALIDATE ROLE DESCRIPTION
+            // OPTIONAL - MAX 250 CHARACTERS
+            // ==========================================
+
+            const descriptionValidation =
+                validateRoleDescription(roleData.RoleDescription);
+
+            if (!descriptionValidation.valid) {
+                return res.status(400).json({
+                    status: "error",
+                    message: descriptionValidation.message
+                });
+            }
+
+            roleData.RoleDescription = descriptionValidation.value;
+
+            // ==========================================
+            // VALIDATE UPDATED BY USER
+            // ==========================================
+
+            if (
+                typeof roleData.UpdatedByUserName !== "string" ||
+                !roleData.UpdatedByUserName.trim()
+            ) {
                 return res.status(400).json({
                     status: "error",
                     message: "UpdatedByUserName is required"
                 });
             }
-            // ---------------------------------------------
-            // CHECK DUPLICATE ROLE
-            // ---------------------------------------------
+
+            roleData.UpdatedByUserName =
+                roleData.UpdatedByUserName.trim();
+
+            // ==========================================
+            // CHECK DUPLICATE ROLE NAME AND CODE
+            // ==========================================
+
             const existingRoles = await checkRoleExistsForUpdate(
                 roleData.RoleName,
                 roleData.Role_Code,
                 roleData.RoleId
             );
 
-            for (const role of existingRoles) {
-                if (role.RoleName === roleData.RoleName) {
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Role name already exists"
-                    });
-                }
+            const roleNameExists = existingRoles.some(
+                role =>
+                    role.RoleName?.toLowerCase() ===
+                    roleData.RoleName.toLowerCase()
+            );
 
-                if (role.RoleCode === roleData.Role_Code) {
-                    return res.status(409).json({
-                        status: "error",
-                        message: "Role code already exists"
-                    });
-                }
+            const roleCodeExists = existingRoles.some(
+                role =>
+                    role.RoleCode?.toLowerCase() ===
+                    roleData.Role_Code.toLowerCase()
+            );
+
+            if (roleNameExists && roleCodeExists) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Role name and role code already exist"
+                });
             }
-            // ---------------------------------------------
+
+            if (roleNameExists) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Role name already exists"
+                });
+            }
+
+            if (roleCodeExists) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Role code already exists"
+                });
+            }
+
+            // ==========================================
             // UPDATE ROLE
-            // ---------------------------------------------
+            // ==========================================
+
             const result = await updateRoles(roleData);
 
             if (result === 0) {
@@ -282,6 +452,7 @@ export const updateRole = async (req, res) => {
                     message: "Role not found"
                 });
             }
+
             return res.status(200).json({
                 status: "success",
                 message: "Role updated successfully",
@@ -293,8 +464,11 @@ export const updateRole = async (req, res) => {
             status: "error",
             message: "Invalid FlagId."
         });
+
     } catch (error) {
+
         console.error("Error updating role:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Failed to update role",
@@ -302,78 +476,12 @@ export const updateRole = async (req, res) => {
         });
     }
 };
-// =====================================================
-// FLAG ID 5 - DELETE ROLE
-// =====================================================
-
-export const deleteRole = async (req, res) => {
-
-    const { FlagId } = req.body;
-
-    try {
-
-        if (parseInt(FlagId) === 5) {
-
-            const roleData = req.body;
-
-            if (!roleData.RoleId) {
-
-                return res.status(400).json({
-                    status: "error",
-                    message: "RoleId is required"
-                });
-            }
 
 
-            const role = await deleteRoles(roleData);
-
-
-            if (role === 0) {
-
-                return res.status(404).json({
-                    status: "error",
-                    message: "Role not found"
-                });
-            }
-
-
-            return res.status(200).json({
-                status: "success",
-                message: "Role deleted successfully",
-                data: role
-            });
-        }
-
-
-        return res.status(400).json({
-            status: "error",
-            message: "Invalid FlagId."
-        });
-
-    } catch (error) {
-
-        console.error("Error deleting role:", error);
-
-
-        if (error.code === "ROLE_IN_USE") {
-
-            return res.status(409).json({
-                status: "error",
-                message: "Role cannot be deleted because it is being used"
-            });
-        }
-
-
-        return res.status(500).json({
-            status: "error",
-            message: "Failed to delete role",
-            error: error.message
-        });
-    }
-};
 // =====================================================
 // FLAG ID 6 - UPDATE ROLE STATUS
 // =====================================================
+
 export const updateRoleStatusController = async (req, res) => {
 
     const {
@@ -384,53 +492,50 @@ export const updateRoleStatusController = async (req, res) => {
 
     try {
 
-        if (parseInt(FlagId) === 6) {
+        if (Number(FlagId) === 6) {
 
-
-            // ---------------------------------------------
+            // ==========================================
             // VALIDATE ROLE ID
-            // ---------------------------------------------
+            // ==========================================
 
-            if (!RoleId) {
+            const validRoleId = Number(RoleId);
 
+            if (
+                !Number.isInteger(validRoleId) ||
+                validRoleId <= 0
+            ) {
                 return res.status(400).json({
                     status: "error",
-                    message: "RoleId is required"
+                    message: "Valid RoleId is required"
                 });
             }
 
-
-            // ---------------------------------------------
+            // ==========================================
             // VALIDATE IS DISABLED
-            // ---------------------------------------------
+            // ==========================================
 
             if (typeof IsDisabled !== "boolean") {
-
                 return res.status(400).json({
                     status: "error",
                     message: "IsDisabled must be true or false"
                 });
             }
 
-
-            // ---------------------------------------------
+            // ==========================================
             // UPDATE STATUS
-            // ---------------------------------------------
+            // ==========================================
 
             const result = await updateRoleStatus(
-                RoleId,
+                validRoleId,
                 IsDisabled
             );
 
-
             if (result === 0) {
-
                 return res.status(404).json({
                     status: "error",
                     message: "Role not found"
                 });
             }
-
 
             return res.status(200).json({
                 status: "success",
@@ -440,7 +545,6 @@ export const updateRoleStatusController = async (req, res) => {
                 data: result
             });
         }
-
 
         return res.status(400).json({
             status: "error",
@@ -458,31 +562,3 @@ export const updateRoleStatusController = async (req, res) => {
         });
     }
 };
-
-
-export const getCompanyDropdown = async (req, res) => {
-    const { FlagId } = req.body;
-    try {
-        if (parseInt(FlagId) === 1) {
-            const rows = await getCompanyDropdownData();
-            return res.status(200).json({
-                status: "success",
-                message: "Company dropdown fetched successfully",
-                data: rows
-            });
-        }
-        return res.status(400).json({
-            status: "error",
-            message: "Invalid FlagId."
-        });
-
-    } catch (error) {
-        console.error("Error fetching company dropdown:", error);
-        return res.status(500).json({
-            status: "error",
-            message: "Failed to fetch company dropdown",
-            error: error.message
-        });
-    }
-};
-

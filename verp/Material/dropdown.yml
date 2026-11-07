@@ -1,0 +1,32 @@
+info:
+  name: dropdown
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/material/dropdown
+  body:
+    type: json
+    data: |-
+      {
+<<<<<<< HEAD
+        "FlagId": 7
+      //  "MaterialCategoryTypeId": 2
+=======
+<<<<<<< HEAD
+        "FlagId": 6,
+        "GSTTypeId":4
+=======
+        "FlagId": 6
+>>>>>>> 7fbf101bd64937072ae81076ef43f5cd0218bdb6
+>>>>>>> 69bc7674324df59fbe679b50795e3d53124861bb
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

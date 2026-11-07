@@ -131,7 +131,8 @@ export const addCompany = async (companyData) => {
 
 export const checkCompanyExistsForUpdate = async (
     CompanyName,
-    CompanyCode
+    CompanyCode,
+    CompanyId
 ) => {
 
     try {
@@ -143,31 +144,71 @@ export const checkCompanyExistsForUpdate = async (
                 "CompanyCode"
             FROM "LKP"."Company"
             WHERE
-                "CompanyName" = $1
-                OR "CompanyCode" = $2
+                (
+                    "CompanyName" = $1
+                    OR "CompanyCode" = $2
+                )
+                AND "CompanyId" != $3
         `;
 
-        const values = [
+        const result = await pool.query(query, [
             CompanyName,
-            CompanyCode
-        ];
-
-        const result = await pool.query(query, values);
+            CompanyCode,
+            CompanyId
+        ]);
 
         return result.rows;
 
     } catch (error) {
+        throw error;
+    }
+};
 
-        // console.error("Error checking company for update:", error);
+
+export const checkCompanyPhoneExists = async (PhoneNumber) => {
+
+    try {
+
+        const query = `
+            SELECT "CompanyId"
+            FROM "LKP"."Company"
+            WHERE "PhoneNumber" = $1
+        `;
+
+        const result = await pool.query(query, [PhoneNumber]);
+
+        return result.rows;
+
+    } catch (error) {
 
         throw error;
     }
 };
 
 
-// ==========================================
+export const checkCompanyEmailExists = async (Email) => {
+
+    try {
+
+        const query = `
+            SELECT "CompanyId"
+            FROM "LKP"."Company"
+            WHERE LOWER("Email") = LOWER($1)
+        `;
+
+        const result = await pool.query(query, [Email]);
+
+        return result.rows;
+
+    } catch (error) {
+
+        throw error;
+    }
+};
+
+
+
 // UPDATE COMPANY
-// ==========================================
 
 export const updateCompanies = async (companyData) => {
 
@@ -243,7 +284,6 @@ export const toggleCompanyStatuses = async (companyData) => {
         throw error;
     }
 };
-
 
 
 // DELETE / DISABLE COMPANY

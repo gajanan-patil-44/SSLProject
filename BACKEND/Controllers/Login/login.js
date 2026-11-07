@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { readFile } from "fs/promises";
 
 import { findUserForLogin, updateFailedLogin, setTempBlock, clearTempBlock, resetAttempts, setPermanentBlock, logoutUserLoginDetail, createUserLoginDetail } from "../../Models/LoginModel.js"
 
@@ -72,6 +73,7 @@ export const login = async (req, res) => {
         // ==========================================================
         // REQUEST
         // ==========================================================
+
         const { username, password } = req.body;
 
         if (!username || !password) {
@@ -80,18 +82,47 @@ export const login = async (req, res) => {
                 message: "Username and password are required"
             });
         }
-        // ==========================================================
-        // FIND USER
-        // ==========================================================
-        const result = await findUserForLogin(username);
 
-        if (!result || !result.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid username or password"
-            });
-        }
+        const enteredUsername = String(username).trim();
+
+   // ==========================================================
+// IDENTIFY USERNAME TYPE
+// ==========================================================
+
+let usernameType;
+
+if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(enteredUsername)) {
+    usernameType = "Email";
+}
+else if (/^[0-9]{10}$/.test(enteredUsername)) {
+    usernameType = "PhoneNumber";
+}
+else {
+    usernameType = "EmployeeIdOrLoginName";
+}
+
+// ==========================================================
+// FIND USER
+// ==========================================================
+
+const result = await findUserForLogin(enteredUsername);
+
+if (!result || !result.user) {
+
+    const errorMessages = {
+        Email: "Invalid email address",
+        PhoneNumber: "Invalid phone number",
+        EmployeeIdOrLoginName: "Invalid Employee ID or Login Name"
+    };
+
+    return res.status(401).json({
+        success: false,
+        message: errorMessages[usernameType]
+    });
+}
+
         const user = result.user;
+     
         // ==========================================================
         // CHECK PERMANENT BLOCK
         // ==========================================================
@@ -151,7 +182,7 @@ export const login = async (req, res) => {
             }
             return res.status(401).json({
                 success: false,
-                message: "Invalid username or password",
+                message: "Invalid  password",
                 attemptsRemaining: Math.max(0, 3 - attemptCount)
             });
         }
@@ -168,13 +199,15 @@ export const login = async (req, res) => {
                 EmployeeId: user.EmployeeId,
                 LoginName: user.LoginName,
                 Email: user.Email,
-                DesignationId: user.DesignationId
+                DesignationId: user.DesignationId,
+                CompanyId: user.CompanyId
             },
             process.env.JWT_SECRET,
             {
                 expiresIn: process.env.JWT_EXPIRES_IN || "12h"
             }
         );
+
         // ==========================================================
         // MENU PAGE
         // ==========================================================
@@ -183,19 +216,20 @@ export const login = async (req, res) => {
         // PHOTO BASE64
         // ==========================================================
         let photo = null;
+
         if (user.Photo) {
-
-            if (Buffer.isBuffer(user.Photo)) {
-                photo = user.Photo.toString("base64");
-            } else if (
-                user.Photo instanceof Uint8Array
-            ) {
-                photo = Buffer.from(user.Photo).toString("base64");
-            } else if (
-                typeof user.Photo === "string"
-            ) {
-
-                photo = user.Photo;
+            try {
+                if (Buffer.isBuffer(user.Photo)) {
+                    photo = user.Photo.toString("base64");
+                } else if (user.Photo instanceof Uint8Array) {
+                    photo = Buffer.from(user.Photo).toString("base64");
+                } else if (typeof user.Photo === "string") {
+                    const photoBuffer = await readFile(user.Photo);
+                    photo = photoBuffer.toString("base64");
+                }
+            } catch (error) {
+                console.error("Photo conversion error:", error.message);
+                photo = null;
             }
         }
         // ==========================================================
@@ -207,36 +241,47 @@ export const login = async (req, res) => {
             token: {
                 accessToken: token
             },
-            data: {
-                user: {
-                    UserId: user.UserId,
-                    loginName: user.LoginName,
-                    name: {
-                        first: user.FirstName,
-                        middle: user.MiddleName,
-                        last: user.LastName
-                    },
-                    email: user.Email,
-                    phone: user.PhoneNumber,
+           data: {
+    user: {
+        UserId: user.UserId,
+        loginName: user.LoginName,
 
-                    designation: {
-                        id: user.DesignationId,
-                        name: user.DesignationName,
-                        level: user.DesignationLevel
-                    }
-                },
-                context: {
-                    companies: result.companies || [],
-                    products: result.products || [],
-                    projects: result.projects || [],
-                    roles: result.roles || []
-                },
-                reporting: {
-                    manager: result.reportingManager && result.reportingManager.length > 0 ? result.reportingManager[0] : null
-                },
-                menuPage: menuPage
-            },
-            photo: photo
+        name: {
+            first: user.FirstName,
+            middle: user.MiddleName,
+            last: user.LastName
+        },
+
+        email: user.Email,
+        phone: user.PhoneNumber,
+
+        designation: {
+            id: user.DesignationId,
+            name: user.DesignationName,
+            level: user.DesignationLevel
+        },
+
+        department: {
+    id: result.user.DepartmentId,
+    name: result.user.DepartmentName,
+    code: result.user.DepartmentCode
+}
+    },
+
+    context: {
+        companies: result.companies || [],
+        products: result.products || [],
+        projects: result.projects || [],
+        roles: result.roles || []
+    },
+
+    reporting: {
+        manager: result.reportingManager || []
+    },
+
+    menuPage: menuPage
+},
+photo: photo
         });
 
     } catch (error) {

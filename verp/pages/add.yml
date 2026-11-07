@@ -4,8 +4,8 @@ info:
   seq: 2
 
 http:
-  method: POST
-  url: http://localhost:9004/verp-service/managePages/add
+  method: GET
+  url: http://localhost:9004/verp-service/managePages/dropdown
   body:
     type: json
     data: |-
@@ -25,14 +25,26 @@ http:
 
 
       {
+<<<<<<< HEAD
+          "FlagId": 1
+=======
           "FlagId": 1,
-          "PageName": "user-creation",
-          "PageUrl": "/master/user-creation",
-          "PageIcon": "user-creation page",
+          "PageName": "Manage-Page",
+          "PageUrl": "/master/manage-page",
+          "PageIcon": "pages",
           "PageType": "MainPage",
           "ParentPageId": null,
-          "RoleIds": [1, 2],
+<<<<<<< HEAD
+          "RoleIds": [1],
+=======
+<<<<<<< HEAD
+          "RoleIds": [1],
+=======
+          "RoleIds": [3],
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+>>>>>>> 387fae5107b8cdde06744a21e56fa3f4bab38063
           "CreatedByUserName": "admin1"
+>>>>>>> 5c51827001527a9dbef9101417ecb00b1262b187
       }
   auth: inherit
 
@@ -41,4 +53,3 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: false

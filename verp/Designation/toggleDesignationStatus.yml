@@ -1,19 +1,19 @@
 info:
   name: toggleDesignationStatus
   type: http
-  seq: 4
+  seq: 3
 
 http:
-  method: POST
+  method: PATCH
   url: http://localhost:9004/verp-service/designationCreation/toggleDesignationStatus
   body:
     type: json
     data: |-
       {
         "flagId":4,
-        "CompanyDesignationId":12,
+        "CompanyDesignationId":3,
         "IsDisabled":true,
-        "UpdateByUserName":"ksss"
+        "UpdateByUserName":"kavya"
       }
   auth: inherit
 

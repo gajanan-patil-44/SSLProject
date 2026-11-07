@@ -1,0 +1,77 @@
+info:
+  name: Raise PR
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/PoPr/createPRPO
+  body:
+    type: multipart-form
+    data:
+      - name: flagId
+        type: text
+        value: "1"
+      - name: UserId
+        type: text
+        value: "2"
+      - name: CompanyId
+        type: text
+        value: "1"
+      - name: ProjectId
+        type: text
+        value: "3"
+      - name: DesignationId
+        type: text
+        value: "3"
+      - name: DepartmentId
+        type: text
+        value: "1"
+      - name: ReportingToUserId
+        type: text
+        value: "2"
+      - name: RequestDate
+        type: text
+        value: 04/11/2026
+      - name: RequiredDate
+        type: text
+        value: 05/11/2026
+      - name: PriorityId
+        type: text
+        value: "1"
+      - name: PurPose
+        type: text
+        value: require some equipment
+      - name: materials
+        type: text
+        value: |-
+          [
+          {
+          "MaterialId":1,
+          "Quantity":1,
+          "MaterialDescription":"Blower"
+          }
+          ]
+      - name: fileTypeIds
+        type: text
+        value: "[4,4]"
+      - name: files
+        type: file
+        value:
+          - C:\Users\manoj\Downloads\Annexure_Hangla (13).pdf
+        contentType: application/pdf
+      - name: files
+        type: file
+        value:
+          - C:\Users\manoj\Pictures\Screenshots\pit bull.png
+        contentType: image/png
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NTcwOTMsImV4cCI6MTc5Mzk4NTg5M30.luNwMUu8Os4MMGTTZOTJrzNbZxaT0AR3wy17ccPf9lY
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

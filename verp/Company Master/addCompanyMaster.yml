@@ -1,0 +1,34 @@
+info:
+  name: addCompanyMaster
+  type: http
+  seq: 2
+
+http:
+  method: POST
+<<<<<<< HEAD
+  url: http://192.168.23.115:9004/verp-service/companyMaster/addCompanyMaster
+=======
+  url: http://192.168.23.107:9004/verp-service/companyMaster/addCompanyMaster
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":2,
+        "CompanyName":"ABCDEF",
+        "CompanyCode":"abc0000",
+        "ContactNumber":"1111156544",
+        "EmailId":"kk@gmail.com",
+        "GSTNo":"29AABCU9603R1ZM",
+        "PanNo":"ABCDE1234G",
+        "Address":"Banglore",
+        "CreatedByUserName":"kavyaa"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

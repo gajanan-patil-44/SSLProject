@@ -1,114 +1,88 @@
+
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// ==========================================================
-// CREATE UPLOAD DIRECTORIES
-// ==========================================================
+const uploadDirectory = process.env.UPLOADS_DIRECTORY;
 
-const uploadDirectory = "uploads";
-
-const photoDirectory = path.join(uploadDirectory, "photos");
-const userFileDirectory = path.join(uploadDirectory, "userfiles");
-
-if (!fs.existsSync(photoDirectory)) {
-    fs.mkdirSync(photoDirectory, { recursive: true });
+if (!uploadDirectory) {
+    throw new Error("UPLOADS_DIRECTORY is missing in .env");
 }
 
-if (!fs.existsSync(userFileDirectory)) {
-    fs.mkdirSync(userFileDirectory, { recursive: true });
-}
+export const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 
-// ==========================================================
-// DISK STORAGE
-// ==========================================================
+const imageExtensions = [".jpg", ".jpeg", ".png", ".webp"];
 
-const storage = multer.diskStorage({
-
-    destination: (req, file, cb) => {
-
-        if (file.fieldname === "Photo") {
-            cb(null, photoDirectory);
-        }
-        else if (file.fieldname === "UserFile") {
-            cb(null, userFileDirectory);
-        }
-        else {
-            cb(new Error("Invalid file field"), false);
-        }
+const uploadConfig = {
+    Photo: {
+        directory: path.join(uploadDirectory, "photos"),
+        allowedExtensions: imageExtensions
     },
-
-    filename: (req, file, cb) => {
-
-        const extension = path.extname(file.originalname).toLowerCase();
-
-        const fileName =
-            `${Date.now()}-${Math.round(Math.random() * 1E9)}${extension}`;
-
-        cb(null, fileName);
-    }
-});
-
-// ==========================================================
-// FILE FILTER
-// ==========================================================
-
-const fileFilter = (req, file, cb) => {
-
-    const allowedExtensions = [
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".webp",
-        ".pdf"
-    ];
-
-    const allowedMimeTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/webp",
-        "application/pdf",
-        "application/x-pdf"
-    ];
-
-    const extension = path
-        .extname(file.originalname)
-        .toLowerCase();
-
-    const isValidExtension =
-        allowedExtensions.includes(extension);
-
-    const isValidMimeType =
-        allowedMimeTypes.includes(file.mimetype);
-
-    if (isValidExtension && isValidMimeType) {
-        cb(null, true);
-    }
-    else {
-      
-
-        cb(
-            new Error(
-                "Only JPG, JPEG, PNG, WEBP and PDF files are allowed"
-            ),
-            false
-        );
+    UserFile: {
+        directory: path.join(uploadDirectory, "userfiles"),
+        allowedExtensions: [...imageExtensions, ".pdf"]
     }
 };
 
-// ==========================================================
-// MULTER CONFIGURATION
-// ==========================================================
+// Create upload directories.
+for (const config of Object.values(uploadConfig)) {
+    fs.mkdirSync(config.directory, { recursive: true });
+}
 
-export const uploadUserPhoto = multer({
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const config = uploadConfig[file.fieldname];
 
-    storage: storage,
+        if (!config) {
+            return cb(
+                new Error(
+                    `Unsupported file field: ${file.fieldname}. ` +
+                    "Allowed fields: Photo, UserFile"
+                )
+            );
+        }
 
-    fileFilter: fileFilter,
+        cb(null, config.directory);
+    },
 
-    limits: {
-        fileSize: 5 * 1024 * 1024
+    filename: (req, file, cb) => {
+        const extension = path.extname(file.originalname).toLowerCase();
+
+        const filename =
+            `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
+
+        cb(null, filename);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    const config = uploadConfig[file.fieldname];
+
+    if (!config) {
+        return cb(
+            new Error(`Unsupported file field: ${file.fieldname}`)
+        );
     }
 
+    const extension = path.extname(file.originalname).toLowerCase();
+
+    if (!config.allowedExtensions.includes(extension)) {
+        const message =
+            file.fieldname === "Photo"
+                ? "Photo must be JPG, JPEG, PNG or WEBP. PDF is not allowed."
+                : "UserFile must be JPG, JPEG, PNG, WEBP or PDF.";
+
+        return cb(new Error(message));
+    }
+    cb(null, true);
+};
+
+export const uploadUserPhoto = multer({
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: MAX_FILE_SIZE,
+        files: 11,
+        fields: 100
+    }
 });

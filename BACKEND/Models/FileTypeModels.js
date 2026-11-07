@@ -6,7 +6,6 @@ import { pool } from "../Config/db.js";
 // ==========================================================
 
 export const getAllFileTypes = async () => {
-
     const query = `
         SELECT
             "FileTypeId",
@@ -18,6 +17,7 @@ export const getAllFileTypes = async () => {
             "CreatedByUserName",
             "UpdatedByUserName"
         FROM "LKP"."FileType"
+        WHERE "FileTypeId" IN (1, 2)
         ORDER BY "FileTypeId";
     `;
 

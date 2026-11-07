@@ -1,0 +1,25 @@
+info:
+  name: status
+  type: http
+  seq: 2
+
+http:
+  method: PATCH
+  url: http://192.168.23.79:9004/verp-service/gstRate/status
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 4,
+          "GSTRateId": 1,
+          "IsDisabled": false,
+          "UpdatedByUserName": "admin"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

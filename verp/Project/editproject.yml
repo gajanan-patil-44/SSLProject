@@ -4,7 +4,7 @@ info:
   seq: 3
 
 http:
-  method: POST
+  method: PATCH
   url: http://localhost:9004/verp-service/projectCreation/editproject
   body:
     type: json
@@ -16,10 +16,10 @@ http:
 
       {
         "flagId":2,
-        "ProjectId":8,
-        "CompanyProductId":5,
-        "ProjectName":"Inventory Managementt",
-        "ProjectCode":"INV-MGMTt",
+        "ProjectId":1,
+        "CompanyProductId":1,
+        "ProjectName":"test project",
+        "ProjectCode":"vish3",
         "IsDisabled":false,
         "Description":"hgdg",
         "UpdatedByUserId":1

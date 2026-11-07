@@ -1,0 +1,26 @@
+info:
+  name: getCompanyMaster
+  type: http
+  seq: 1
+
+http:
+  method: POST
+<<<<<<< HEAD
+  url: http://192.168.23.115:9004/verp-service/companyMaster/getCompanyMaster
+=======
+  url: http://192.168.23.107:9004/verp-service/companyMaster/getCompanyMaster
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,0 +1,24 @@
+info:
+  name: view
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://192.168.23.87:9004/verp-service/companyRole/view
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 1
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NDk4NzYsImV4cCI6MTc5Mzk3ODY3Nn0.r5tyvC5E3mrth5iz27h3MGENsFmsgviyaF6hW-kCmNg
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

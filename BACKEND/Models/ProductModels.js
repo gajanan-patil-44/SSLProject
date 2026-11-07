@@ -3,32 +3,41 @@ import { pool } from "../Config/db.js";
 
 // GET ALL ACTIVE PRODUCTS
 
-export const getAllProducts = async () => {
+export const getAllProducts = async (CompanyId) => {
 
     try {
 
-        const result = await pool.query(`
-            SELECT
-                "ProductId" AS "ProductId",
-                "ProductCode" AS "ProductCode",
-                "ProductName" AS "ProductName",
-                "ProductDescription" AS "Description",
-                "CreatedByUserName" AS "RequestUserName",
-                "CreatedAt" AS "CreatedOn",
-                "UpdatedAt" AS "UpdatedOn",
-                "UpdatedByUserName" AS "UpdatedByUserName",
-                "IsDisabled" AS "IsDisabled"
+        const query = `
+            SELECT DISTINCT
+                P."ProductId" AS "ProductId",
+                P."ProductCode" AS "ProductCode",
+                P."ProductName" AS "ProductName",
+                P."ProductDescription" AS "Description",
+                P."CreatedByUserName" AS "RequestUserName",
+                P."CreatedAt" AS "CreatedOn",
+                P."UpdatedAt" AS "UpdatedOn",
+                P."UpdatedByUserName" AS "UpdatedByUserName",
+                P."IsDisabled" AS "IsDisabled"
 
-            FROM "LKP"."Product"
+            FROM "LKP"."Product" P
 
-            ORDER BY "ProductId"
-        `);
+            ${CompanyId !== null ? `
+                INNER JOIN "LKP"."CompanyProduct" CP
+                    ON P."ProductId" = CP."ProductId"
+                WHERE CP."CompanyId" = $1
+                AND CP."IsDisabled" = false
+            ` : ""}
+
+            ORDER BY P."ProductId";
+        `;
+
+        const values = CompanyId !== null ? [CompanyId] : [];
+
+        const result = await pool.query(query, values);
 
         return result.rows;
 
     } catch (error) {
-
-        // console.error("Error fetching products:", error);
 
         throw error;
     }
@@ -118,7 +127,8 @@ export const addProduct = async (productData) => {
 
 export const checkProductExistsForUpdate = async (
     ProductName,
-    ProductCode
+    ProductCode,
+    ProductId
 ) => {
 
     try {
@@ -130,23 +140,22 @@ export const checkProductExistsForUpdate = async (
                 "ProductCode"
             FROM "LKP"."Product"
             WHERE
-                "ProductName" = $1
-                OR "ProductCode" = $2
+                (
+                    "ProductName" = $1
+                    OR "ProductCode" = $2
+                )
+                AND "ProductId" != $3
         `;
 
-        const values = [
+        const result = await pool.query(query, [
             ProductName,
-            ProductCode
-        ];
-
-        const result = await pool.query(query, values);
+            ProductCode,
+            ProductId
+        ]);
 
         return result.rows;
 
     } catch (error) {
-
-        // console.error("Error checking product for update:", error);
-
         throw error;
     }
 };
@@ -255,4 +264,3 @@ export const deleteProducts = async (productData) => {
         throw error;
     }
 };
-

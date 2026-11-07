@@ -1696,7 +1696,7 @@ export default function UserCreationView() {
         {currentStep === 5 && (
           <div className="animate-in fade-in duration-300">
             <SectionHeader
-              icon={FileText}
+              icon={Image}
               iconColor="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               title="Supporting Documents"
               subtitle="Upload documents for each required document type (Images: JPG, PNG, WEBP or PDF). Maximum 5 MB per file (1 MB for Aadhaar/PAN)."

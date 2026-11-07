@@ -14,7 +14,9 @@ http:
         "CompanyId": 1,
         "DesignationId": 4
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkzNjIxMzQyLCJleHAiOjE3OTM2NTAxNDJ9.kciplHn8NZWcGiS3ZFqV4V4vainJrhrryAityKUJrwo
 
 settings:
   encodeUrl: true

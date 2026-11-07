@@ -1,11 +1,11 @@
 info:
-  name: project
+  name: add designation
   type: http
   seq: 2
 
 http:
   method: POST
-  url: http://localhost:9004/verp-service/projectCreation/project
+  url: http://localhost:9004/verp-service/designationCreation/add_designation
   body:
     type: json
     data: |-
@@ -15,13 +15,13 @@ http:
 
 
       {
-        "flagId": 2,
-        "CompanyProductId":1,
-        "ProjectName": "WFMS",
-        "ProjectCode": "WFMS001",
-        "Description": "wow",
+        "flagId":2,
+        "CompanyId":1,
+        "DesignationName":"MANAGER",
+        "DesignationCode":"MG001",
         "IsDisabled":false,
-        "CreatedByUserId":1
+        "DesignationLevel":80,
+        "CreatedByUserName":"kavv"
       }
   auth: inherit
 

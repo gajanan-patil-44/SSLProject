@@ -2,12 +2,13 @@ import {
     getAllCompanies,
     addCompany,
     checkCompanyExists,
+    checkCompanyPhoneExists,
+    checkCompanyEmailExists,
     checkCompanyExistsForUpdate,
     updateCompanies,
     toggleCompanyStatuses,
     deleteCompanies
 } from "../../Models/CompanyModels.js";
-
 
 
 // GET ALL ACTIVE COMPANIES
@@ -33,6 +34,7 @@ export const getCompany = async (req, res) => {
                 message: "Companies fetched successfully",
                 data: rows
             });
+
         } else {
             return res.status(400).json({
                 status: "error",
@@ -73,6 +75,80 @@ export const addCompanies = async (req, res) => {
         // flagId 2 = Add Company
         if (parseInt(flagId) === 2) {
             const companyData = req.body;
+
+            // Validate Company Name: Only alphabets and spaces allowed
+            const companyNameRegex = /^[A-Za-z\s]+$/;
+
+            if (!companyData.CompanyName || !companyNameRegex.test(companyData.CompanyName)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name should contain only alphabets and spaces"
+                });
+            }
+
+            // PHONE NUMBER VALIDATION
+
+            const phoneNumber = String(companyData.PhoneNumber || "").trim();
+
+            // Check whether phone number is empty
+            if (!phoneNumber) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Phone number is required"
+                });
+            }
+
+            // Check whether phone number contains exactly 10 digits
+            const phoneRegex = /^[0-9]{10}$/;
+
+            if (!phoneRegex.test(phoneNumber)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Phone number must be a 10-digit number"
+                });
+            }
+            const companyName = String(companyData.CompanyName || "").trim();
+            const companyCode = String(companyData.CompanyCode || "").trim();
+
+            if (companyName.toLowerCase() === companyCode.toLowerCase()) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name and company code should not be the same"
+                });
+            }
+            // EMAIL VALIDATION
+
+            const email = String(companyData.Email || "").trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Please enter a valid email address"
+                });
+            }
+
+            // CHECK DUPLICATE PHONE NUMBER
+
+            const existingPhone = await checkCompanyPhoneExists(phoneNumber);
+
+            if (existingPhone.length > 0) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Phone number already exists"
+                });
+            }
+
+            // CHECK DUPLICATE EMAIL
+
+            const existingEmail = await checkCompanyEmailExists(email);
+
+            if (existingEmail.length > 0) {
+                return res.status(409).json({
+                    status: "error",
+                    message: "Email already exists"
+                });
+            }
 
             // Check Company Name and Company Code
             const existingCompany = await checkCompanyExists(
@@ -164,10 +240,33 @@ export const updateCompany = async (req, res) => {
 
             const companyData = req.body;
 
+            // Validate Company Name: Only alphabets and spaces allowed
+            const companyNameRegex = /^[A-Za-z\s]+$/;
+
+            if (
+                !companyData.CompanyName ||
+                !companyNameRegex.test(companyData.CompanyName)
+            ) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name should contain only alphabets and spaces"
+                });
+            }
+            const companyName = String(companyData.CompanyName || "").trim();
+            const companyCode = String(companyData.CompanyCode || "").trim();
+
+            if (companyName.toLowerCase() === companyCode.toLowerCase()) {
+                return res.status(400).json({
+                    status: "error",
+                    message: "Company name and company code should not be the same"
+                });
+            }
             // Check whether Company Name and Company Code already exist
+            // Exclude the current CompanyId from the duplicate check
             const existingCompanies = await checkCompanyExistsForUpdate(
                 companyData.CompanyName,
-                companyData.CompanyCode
+                companyData.CompanyCode,
+                companyData.CompanyId
             );
 
             // Check duplicate Company Name / Company Code
@@ -296,7 +395,9 @@ export const toggleCompanyStatus = async (req, res) => {
 // DELETE / DISABLE COMPANY
 
 export const deleteCompany = async (req, res) => {
+
     const { flagId } = req.body;
+
     try {
 
         if (!flagId) {

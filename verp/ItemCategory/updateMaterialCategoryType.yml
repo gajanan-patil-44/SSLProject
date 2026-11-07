@@ -1,0 +1,26 @@
+info:
+  name: updateMaterialCategoryType
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: http://localhost:9004/verp-service/itemCategoryCreation/updateMaterialCategoryType
+  body:
+    type: json
+    data: |-
+      {
+        "flagId":3,
+        "MaterialCategoryTypeName":"Mechanical Materials",
+        "MaterialCategoryTypeCode":"MECH",
+        "UpdatedByUserName":"kavv",
+        "MaterialCategoryTypeId":2
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

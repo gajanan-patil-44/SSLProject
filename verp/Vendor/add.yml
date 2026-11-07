@@ -1,0 +1,94 @@
+info:
+  name: add
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:9004/verp-service/vendor/add
+  body:
+    type: multipart-form
+    data:
+      - name: FlagId
+        type: text
+        value: "4"
+      - name: VendorName
+        type: text
+<<<<<<< HEAD
+        value: ROCK Supplierss
+      - name: VendorCode
+        type: text
+        value: ROCK002
+=======
+        value: ROCK
+      - name: VendorCode
+        type: text
+        value: ROCK004
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+      - name: ContactPerson
+        type: text
+        value: Rahul Kumars
+      - name: MobileNumber
+        type: text
+        value: "9876533219"
+      - name: Email
+        type: text
+        value: ROCK1@gmial.com
+      - name: GSTINUINNumber
+        type: text
+<<<<<<< HEAD
+        value: 29ADCDE1934F1Z5
+=======
+        value: 29ADCDE1934F1Z3
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+      - name: City
+        type: text
+        value: Bengaluru
+      - name: BankName
+        type: text
+        value: HDFC Bank
+      - name: AccountHolderName
+        type: text
+        value: ROCK Suppliers
+      - name: IFSCCode
+        type: text
+        value: HDFC0002233
+      - name: VendorAddress1
+        type: text
+        value: No. 10, Main Road
+      - name: VendorAddress2
+        type: text
+        value: Regular supplier
+      - name: Remarks
+        type: text
+        value: Regular supplier
+      - name: VendorTypeId
+        type: text
+        value: "1"
+      - name: CreatedByUserId
+        type: text
+        value: "2"
+      - name: VendorFileTypeIds
+        type: text
+        value: "1"
+      - name: VendorFiles
+        type: file
+        value:
+<<<<<<< HEAD
+          - C:\Users\hithi\OneDrive\Pictures\Saved Pictures\360_F_224999924_dczXcV018jdMQvFDjUkOoFgwQbuFYS12.jpg
+        contentType: image/jpeg
+=======
+          - C:\Users\Kavyashree.VISHVIN\Pictures\kptcl logo.png
+        contentType: image/png
+      - name: CompanyId
+        type: text
+        value: "2"
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,8 +1,8 @@
 import { pool } from "../../Config/db.js";
+import bcrypt from "bcrypt";
 
-export const getAllUserDetails = async () => {
+export const getAllUserDetails = async (CompanyId) => {
     try {
-
 
         const query = `
     SELECT
@@ -20,13 +20,13 @@ export const getAllUserDetails = async () => {
         u."IsDisabled",
         u."CreatedAt",
 
-        u."GenderId", 
+        u."GenderId",
         g."GenderName" AS "GenderName",
 
-        u."MaritalStatusId", 
+        u."MaritalStatusId",
         ms."MaritalStatusName" AS "MaritalStatusName",
 
-        u."DesignationId", 
+        u."DesignationId",
         cd."DesignationName" AS "DesignationName",
 
 
@@ -131,7 +131,7 @@ export const getAllUserDetails = async () => {
                         rmc."CompanyName"
                 )
             ) FILTER (
-                WHERE urm."UserReportingManagerId" IS NOT NULL
+                WHERE urm."UserReportingManagerId" IS NOT NULL AND urm."CompanyId" =$1
             ),
             '[]'
         ) AS "ReportingManagers"
@@ -211,14 +211,22 @@ export const getAllUserDetails = async () => {
     LEFT JOIN "LKP"."Company" rmc
         ON rmc."CompanyId" = urm."CompanyId"
 
-    LEFT JOIN "LKP"."Gender" g 
+    LEFT JOIN "LKP"."Gender" g
     ON g."GenderId" = u."GenderId"
 
-    LEFT JOIN "LKP"."MaritalStatus" ms 
+    LEFT JOIN "LKP"."MaritalStatus" ms
     ON ms."MaritalStatusId" = u."MaritalStatusId"
 
-    LEFT JOIN "LKP"."CompanyDesignation" cd 
+    LEFT JOIN "LKP"."CompanyDesignation" cd
     ON cd."CompanyDesignationId" = u."DesignationId"
+
+    WHERE EXISTS (
+    SELECT 1
+    FROM "DATA"."UserCompany" uc_filter
+    WHERE uc_filter."UserId" = u."UserId"
+      AND uc_filter."CompanyId" = $1
+      AND uc_filter."IsDisabled" = false
+)
 
 GROUP BY
         u."UserId",
@@ -228,15 +236,16 @@ GROUP BY
         u."LastName",
         u."Email",
         u."LoginName",
-        u."GenderId", 
-        g."GenderName", 
+        u."GenderId",
+        g."GenderName",
         u."MaritalStatusId",
-        ms."MaritalStatusName", 
-        u."DesignationId", 
+        ms."MaritalStatusName",
+        u."DesignationId",
         cd."DesignationName";
 
 `;
-        const result = await pool.query(query);
+
+        const result = await pool.query(query,[CompanyId]);
         return result.rows
     } catch (error) {
         throw error
@@ -1636,11 +1645,7 @@ GROUP BY
 // GET ALL GENDERS
 // ======================================================
 
-
-
-
 export const editUserdetails = async ({
-
     UserId,
 
     // ============================================================
@@ -1662,7 +1667,6 @@ export const editUserdetails = async ({
     dateOfJoining,
     updatedByUserName,
 
-
     // ============================================================
     // RELATIONSHIPS
     // ============================================================
@@ -1680,7 +1684,7 @@ export const editUserdetails = async ({
     try {
 
         // ============================================================
-        // 1. BEGIN
+        // 1. BEGIN TRANSACTION
         // ============================================================
 
         await client.query("BEGIN");
@@ -1716,7 +1720,6 @@ export const editUserdetails = async ({
 
 
         if (userResult.rows.length === 0) {
-
             throw new Error(
                 `User with UserId ${UserId} not found`
             );
@@ -1727,7 +1730,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 3. FETCH ALL OLD COMPANIES
+        // 3. FETCH OLD COMPANIES
         // ============================================================
 
         const oldCompaniesResult = await client.query(
@@ -1744,13 +1747,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldCompanies =
-            oldCompaniesResult.rows;
+        const oldCompanies = oldCompaniesResult.rows;
 
 
         // ============================================================
-        // 4. FETCH ALL OLD PRODUCTS
+        // 4. FETCH OLD PRODUCTS
         // ============================================================
 
         const oldProductsResult = await client.query(
@@ -1766,13 +1767,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldProducts =
-            oldProductsResult.rows;
+        const oldProducts = oldProductsResult.rows;
 
 
         // ============================================================
-        // 5. FETCH ALL OLD PROJECTS
+        // 5. FETCH OLD PROJECTS
         // ============================================================
 
         const oldProjectsResult = await client.query(
@@ -1789,13 +1788,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldProjects =
-            oldProjectsResult.rows;
+        const oldProjects = oldProjectsResult.rows;
 
 
         // ============================================================
-        // 6. FETCH ALL OLD ROLES
+        // 6. FETCH OLD ROLES
         // ============================================================
 
         const oldRolesResult = await client.query(
@@ -1814,13 +1811,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldRoles =
-            oldRolesResult.rows;
+        const oldRoles = oldRolesResult.rows;
 
 
         // ============================================================
-        // 7. FETCH ALL OLD REPORTING MANAGERS
+        // 7. FETCH OLD REPORTING MANAGERS
         // ============================================================
 
         const oldManagersResult = await client.query(
@@ -1837,13 +1832,11 @@ export const editUserdetails = async ({
             [UserId]
         );
 
-
-        const oldManagers =
-            oldManagersResult.rows;
+        const oldManagers = oldManagersResult.rows;
 
 
         // ============================================================
-        // 8. CHECK WHETHER ACTUAL USER VALUE CHANGED
+        // 8. CHECK USER FIELD CHANGES
         // ============================================================
 
         let hasChanges = false;
@@ -1856,12 +1849,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             firstName !== undefined &&
             firstName !== oldUser.FirstName
         ) {
             hasChanges = true;
         }
+
 
         if (
             middleName !== undefined &&
@@ -1870,12 +1865,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             lastName !== undefined &&
             lastName !== oldUser.LastName
         ) {
             hasChanges = true;
         }
+
 
         if (
             phoneNumber !== undefined &&
@@ -1884,6 +1881,7 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             dateOfBirth !== undefined &&
             dateOfBirth !== oldUser.DateOfBirth
@@ -1891,12 +1889,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             genderId !== undefined &&
             Number(genderId) !== Number(oldUser.GenderId)
         ) {
             hasChanges = true;
         }
+
 
         if (
             maritalStatusId !== undefined &&
@@ -1906,6 +1906,7 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             designationId !== undefined &&
             Number(designationId) !==
@@ -1914,12 +1915,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             email !== undefined &&
             email !== oldUser.Email
         ) {
             hasChanges = true;
         }
+
 
         if (
             loginName !== undefined &&
@@ -1928,12 +1931,14 @@ export const editUserdetails = async ({
             hasChanges = true;
         }
 
+
         if (
             altPhoneNumber !== undefined &&
             altPhoneNumber !== oldUser.AltPhoneNumber
         ) {
             hasChanges = true;
         }
+
 
         if (
             dateOfJoining !== undefined &&
@@ -1963,7 +1968,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserCompanyId ${company.UserCompanyId} not found for UserId ${UserId}`
                 );
@@ -2009,7 +2013,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserProductId ${product.UserProductId} not found for UserId ${UserId}`
                 );
@@ -2046,7 +2049,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserProjectId ${project.UserProjectId} not found for UserId ${UserId}`
                 );
@@ -2091,7 +2093,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserRoleId ${role.UserRoleId} not found for UserId ${UserId}`
                 );
@@ -2155,7 +2156,6 @@ export const editUserdetails = async ({
 
 
             if (!old) {
-
                 throw new Error(
                     `UserReportingManagerId ${manager.UserReportingManagerId} not found for UserId ${UserId}`
                 );
@@ -2197,9 +2197,42 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 15. INSERT OLD USER DATA
+        // 15. GET OLD RELATED RECORDS
         //
-        // One row for the main User information.
+        // Your UserDetails table has only one column for each
+        // related table, so we use the first existing old record.
+        // ============================================================
+
+        const oldCompany =
+            oldCompanies.length > 0
+                ? oldCompanies[0]
+                : null;
+
+        const oldProduct =
+            oldProducts.length > 0
+                ? oldProducts[0]
+                : null;
+
+        const oldProject =
+            oldProjects.length > 0
+                ? oldProjects[0]
+                : null;
+
+        const oldRole =
+            oldRoles.length > 0
+                ? oldRoles[0]
+                : null;
+
+        const oldManager =
+            oldManagers.length > 0
+                ? oldManagers[0]
+                : null;
+
+
+        // ============================================================
+        // 16. INSERT COMPLETE OLD RECORD
+        //
+        // ONLY ONE ROW IS INSERTED INTO UserDetails
         // ============================================================
 
         const historyResult = await client.query(
@@ -2207,6 +2240,7 @@ export const editUserdetails = async ({
             INSERT INTO "DATA"."UserDetails"
             (
                 "UserId",
+
                 "EmployeeId",
                 "FirstName",
                 "MiddleName",
@@ -2220,19 +2254,55 @@ export const editUserdetails = async ({
                 "LoginName",
                 "AltPhoneNumber",
                 "DateOfJoining",
+
+                "UserCompanyId",
+                "UserProductId",
+                "UserProjectId",
+                "UserReportingManagerId",
+                "UserRoleId",
+
+                "RoleId",
+                "ReportingManagerUserId",
+
                 "CreatedAt",
                 "CreatedByUserId"
             )
             VALUES
             (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-                $11,$12,$13,$14,
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7,
+                $8,
+                $9,
+                $10,
+                $11,
+                $12,
+                $13,
+                $14,
+
+                $15,
+                $16,
+                $17,
+                $18,
+                $19,
+
+                $20,
+                $21,
+
                 CURRENT_TIMESTAMP,
-                $15
+                $22
             )
             RETURNING "UserDetailsId";
             `,
             [
+                // ========================================================
+                // OLD USER DATA
+                // ========================================================
+
                 oldUser.UserId,
                 oldUser.EmployeeId,
                 oldUser.FirstName,
@@ -2247,6 +2317,67 @@ export const editUserdetails = async ({
                 oldUser.LoginName,
                 oldUser.AltPhoneNumber,
                 oldUser.DateOfJoining,
+
+                // ========================================================
+                // OLD COMPANY
+                // ========================================================
+
+                oldCompany
+                    ? oldCompany.UserCompanyId
+                    : null,
+
+                // ========================================================
+                // OLD PRODUCT
+                // ========================================================
+
+                oldProduct
+                    ? oldProduct.UserProductId
+                    : null,
+
+                // ========================================================
+                // OLD PROJECT
+                // ========================================================
+
+                oldProject
+                    ? oldProject.UserProjectId
+                    : null,
+
+                // ========================================================
+                // OLD REPORTING MANAGER
+                // ========================================================
+
+                oldManager
+                    ? oldManager.UserReportingManagerId
+                    : null,
+
+                // ========================================================
+                // OLD ROLE
+                // ========================================================
+
+                oldRole
+                    ? oldRole.UserRoleId
+                    : null,
+
+                // ========================================================
+                // OLD ROLE ID
+                // ========================================================
+
+                oldRole
+                    ? oldRole.RoleId
+                    : null,
+
+                // ========================================================
+                // OLD REPORTING MANAGER USER ID
+                // ========================================================
+
+                oldManager
+                    ? oldManager.ReportingManagerUserId
+                    : null,
+
+                // ========================================================
+                // USER WHO PERFORMED EDIT
+                // ========================================================
+
                 UserId
             ]
         );
@@ -2402,21 +2533,21 @@ export const editUserdetails = async ({
                     "UserId",
                     "UserReportingManagerId",
                     "ReportingManagerUserId",
-                    "ReportingManagerCompanyId",
+                    
                     "CreatedAt",
                     "CreatedByUserId"
                 )
                 VALUES
                 (
-                    $1,$2,$3,$4,
+                    $1,$2,$3,
                     CURRENT_TIMESTAMP,
-                    $5
+                    $4
                 );
                 `,
                 [
                     old.UserId,
                     old.UserReportingManagerId,
-                    old.ReportingManagerUserId,
+                    
                     old.CompanyId,
                     UserId
                 ]
@@ -2433,49 +2564,91 @@ export const editUserdetails = async ({
             UPDATE "DATA"."User"
             SET
                 "EmployeeId" =
-                    COALESCE($1, "EmployeeId"),
+                    COALESCE(
+                        $1,
+                        "EmployeeId"
+                    ),
 
                 "FirstName" =
-                    COALESCE($2, "FirstName"),
+                    COALESCE(
+                        $2,
+                        "FirstName"
+                    ),
 
                 "MiddleName" =
-                    COALESCE($3, "MiddleName"),
+                    COALESCE(
+                        $3,
+                        "MiddleName"
+                    ),
 
                 "LastName" =
-                    COALESCE($4, "LastName"),
+                    COALESCE(
+                        $4,
+                        "LastName"
+                    ),
 
                 "PhoneNumber" =
-                    COALESCE($5, "PhoneNumber"),
+                    COALESCE(
+                        $5,
+                        "PhoneNumber"
+                    ),
 
                 "DateOfBirth" =
-                    COALESCE($6, "DateOfBirth"),
+                    COALESCE(
+                        $6,
+                        "DateOfBirth"
+                    ),
 
                 "GenderId" =
-                    COALESCE($7, "GenderId"),
+                    COALESCE(
+                        $7,
+                        "GenderId"
+                    ),
 
                 "MaritalStatusId" =
-                    COALESCE($8, "MaritalStatusId"),
+                    COALESCE(
+                        $8,
+                        "MaritalStatusId"
+                    ),
 
                 "DesignationId" =
-                    COALESCE($9, "DesignationId"),
+                    COALESCE(
+                        $9,
+                        "DesignationId"
+                    ),
 
                 "Email" =
-                    COALESCE($10, "Email"),
+                    COALESCE(
+                        $10,
+                        "Email"
+                    ),
 
                 "LoginName" =
-                    COALESCE($11, "LoginName"),
+                    COALESCE(
+                        $11,
+                        "LoginName"
+                    ),
 
                 "AltPhoneNumber" =
-                    COALESCE($12, "AltPhoneNumber"),
+                    COALESCE(
+                        $12,
+                        "AltPhoneNumber"
+                    ),
 
                 "DateOfJoining" =
-                    COALESCE($13, "DateOfJoining"),
+                    COALESCE(
+                        $13,
+                        "DateOfJoining"
+                    ),
 
                 "UpdatedAt" =
                     CURRENT_TIMESTAMP,
 
                 "UpdatedByUserName" =
-                    COALESCE($14, "UpdatedByUserName")
+                    COALESCE(
+                        $14,
+                        "UpdatedByUserName"
+                    )
 
             WHERE "UserId" = $15;
             `,
@@ -2500,7 +2673,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 22. UPDATE COMPANIES
+        // 18. UPDATE COMPANIES
         // ============================================================
 
         for (const company of companies || []) {
@@ -2510,10 +2683,16 @@ export const editUserdetails = async ({
                 UPDATE "DATA"."UserCompany"
                 SET
                     "CompanyId" =
-                        COALESCE($1, "CompanyId"),
+                        COALESCE(
+                            $1,
+                            "CompanyId"
+                        ),
 
                     "IsPrimaryCompany" =
-                        COALESCE($2, "IsPrimaryCompany"),
+                        COALESCE(
+                            $2,
+                            "IsPrimaryCompany"
+                        ),
 
                     "UpdatedAt" =
                         CURRENT_TIMESTAMP,
@@ -2536,7 +2715,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 23. UPDATE PRODUCTS
+        // 19. UPDATE PRODUCTS
         // ============================================================
 
         for (const product of products || []) {
@@ -2571,7 +2750,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 24. UPDATE PROJECTS
+        // 20. UPDATE PROJECTS
         // ============================================================
 
         for (const project of projects || []) {
@@ -2613,7 +2792,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 25. UPDATE ROLES
+        // 21. UPDATE ROLES
         // ============================================================
 
         for (const role of roles || []) {
@@ -2669,7 +2848,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 26. UPDATE REPORTING MANAGERS
+        // 22. UPDATE REPORTING MANAGERS
         // ============================================================
 
         for (const manager of reportingManagers || []) {
@@ -2711,7 +2890,7 @@ export const editUserdetails = async ({
 
 
         // ============================================================
-        // 27. COMMIT
+        // 23. COMMIT
         // ============================================================
 
         await client.query("COMMIT");
@@ -2719,7 +2898,7 @@ export const editUserdetails = async ({
 
         return {
             UserId,
-            UserDetailsId: historyResult.rows[0].UserDetailsId,
+            UserDetailsId: userDetailsId,
             message: "User details updated successfully"
         };
 
@@ -2728,18 +2907,17 @@ export const editUserdetails = async ({
 
         await client.query("ROLLBACK");
 
-        console.error(
-            "Edit user transaction failed:",
-            error
-        );
-
+      
         throw error;
 
     } finally {
 
         client.release();
+
     }
 };
+
+
 
 export const getAllGenders = async () => {
 
@@ -2934,7 +3112,6 @@ export const getAllCompanyProducts = async (CompanyId) => {
 
 
 
-
 export const getAllProjects = async (CompanyProductId) => {
 
     try {
@@ -3030,5 +3207,132 @@ export const toggleUserStatuses = async (userData) => {
         // console.error("Error toggling user status:", error);
 
         throw error;
+    }
+};
+
+
+
+
+
+export const changeUserPassword = async ({
+    UserId,
+    NewPassword,
+    HashedPassword,
+    UpdatedByUserId
+}) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query("BEGIN");
+
+        // 1. Get the current user password
+        const userResult = await client.query(
+            `SELECT "UserId", "Password"
+             FROM "DATA"."User"
+             WHERE "UserId" = $1
+             FOR UPDATE`,
+            [UserId]
+        );
+
+        if (userResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+
+            return {
+                success: false,
+                status: 404,
+                message: "User not found"
+            };
+        }
+
+        const user = userResult.rows[0];
+
+        // 2. Check whether the new password is the current password
+        if (user.Password) {
+            const isCurrentPassword = await bcrypt.compare(
+                NewPassword,
+                user.Password
+            );
+
+            if (isCurrentPassword) {
+                await client.query("ROLLBACK");
+
+                return {
+                    success: false,
+                    status: 409,
+                    message: "New password must be different from the current password"
+                };
+            }
+        }
+
+        // 3. Get previous password history
+        const historyResult = await client.query(
+            `SELECT "HashedPassword"
+             FROM "TRACK"."SecretPassword"
+             WHERE "UserId" = $1`,
+            [UserId]
+        );
+
+        // 4. Prevent reuse of previously used passwords
+        for (const history of historyResult.rows) {
+            if (!history.HashedPassword) {
+                continue;
+            }
+
+            const isUsedPassword = await bcrypt.compare(
+                NewPassword,
+                history.HashedPassword
+            );
+
+            if (isUsedPassword) {
+                await client.query("ROLLBACK");
+
+                return {
+                    success: false,
+                    status: 409,
+                    message: "This password has already been used"
+                };
+            }
+        }
+
+        // 5. Update the current password
+       await client.query(
+    `UPDATE "DATA"."User"
+     SET "Password" = $1,
+         "PasswordChangedOn" = CURRENT_TIMESTAMP,
+         "UpdatedAt" = CURRENT_TIMESTAMP
+     WHERE "UserId" = $2`,
+    [HashedPassword, UserId]
+);
+
+        // 6. Save the new password hash in password history
+       await client.query(
+    `INSERT INTO "TRACK"."SecretPassword"
+    (
+        "UserId",
+        "PlainPassword",
+        "HashedPassword",
+        "CreatedByUserId",
+        "UpdatedByUserId",
+        "UpdatedAt"
+    )
+    VALUES ($1, $2, $3, $4, $4, CURRENT_TIMESTAMP)`,
+    [UserId, NewPassword, HashedPassword, UpdatedByUserId ?? UserId]
+);
+
+        await client.query("COMMIT");
+
+        return {
+            success: true,
+            status: 200,
+            message: "Password changed successfully"
+        };
+
+    } catch (error) {
+        await client.query("ROLLBACK");
+        console.error("Change User Password Model Error:", error);
+        throw error;
+
+    } finally {
+        client.release();
     }
 };

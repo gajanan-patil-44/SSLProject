@@ -1,0 +1,41 @@
+info:
+  name: editdesignationn
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+<<<<<<< HEAD
+  url: http://192.168.23.115:9004/verp-service/designationCreation/editdesignation
+=======
+  url: http://192.168.23.107:9004/verp-service/designationCreation/editdesignation
+>>>>>>> f42fe0e3df83107e70003ef2614b54218b50bd91
+  body:
+    type: json
+    data: |-
+      // {
+      //   "flagId":1
+      // }
+
+
+      {
+        "flagId":2,
+        "CompanyDesignationId":3,
+        "CompanyId":1,
+        "DesignationName":"TEAM LEAddD",
+        "DesignationCode":"Testtt",
+        "DesignationLevel":70,
+        "IsDisabled":false,
+        "UpdateByUserName":"kss",
+        "CanBeReportingManager":true
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjIsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkxODgzNDY1LCJleHAiOjE3OTE5MTIyNjV9.Xnmhdiuiw0AC0V0Klo-5Cd-UMnF1swTEK_9SesiQIKA
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -164,20 +164,20 @@ export default function App() {
           <Route path="work-management/analytics" element={<WorkReportsAnalyticsView />} />
 
           {/* Procurement / Purchase Requisition (PR) Module */}
-          <Route path="procurement/raise-pr" element={<RaisePRView />} />
+          {/* <Route path="procurement/raise-pr" element={<RaisePRView />} />
           <Route path="procurement/view-prs" element={<ViewRaisePRsView />} />
           <Route path="procurement/view-pr" element={<ViewRaisePRsView />} />
           <Route path="procurement/pending-approvals" element={<MyPendingApprovalsView />} />
           <Route path="procurement/my-pending-approvals" element={<MyPendingApprovalsView />} />
-          <Route path="procurement" element={<Navigate to="/procurement/view-prs" replace />} />
+          <Route path="procurement" element={<Navigate to="/procurement/view-prs" replace />} /> */}
 
           {/* Alternate / Alias PR Routes */}
-          <Route path="pr/raise-pr" element={<RaisePRView />} />
+          {/* <Route path="pr/raise-pr" element={<RaisePRView />} />
           <Route path="pr/view-prs" element={<ViewRaisePRsView />} />
           <Route path="pr/view-pr" element={<ViewRaisePRsView />} />
           <Route path="pr/pending-approvals" element={<MyPendingApprovalsView />} />
           <Route path="pr/my-pending-approvals" element={<MyPendingApprovalsView />} />
-          <Route path="pr" element={<Navigate to="/pr/view-prs" replace />} />
+          <Route path="pr" element={<Navigate to="/pr/view-prs" replace />} /> */}
 
           {/* UI Design System Showcases */}
           <Route path="ui/:subpage" element={<ShowcaseView />} />

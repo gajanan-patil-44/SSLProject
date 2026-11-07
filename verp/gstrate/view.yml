@@ -1,0 +1,26 @@
+info:
+  name: view
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://192.168.23.79:9004/verp-service/gstRate/view
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 3,
+          "CompanyId": 1,
+          "GSTTypeId": 2
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM3NzI1MjIsImV4cCI6MTc5MzgwMTMyMn0.7WxpF0xJqFbrldUvS1kWfVHeT0fzdnsa11B2hR4AH1o
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

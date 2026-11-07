@@ -1,0 +1,27 @@
+info:
+  name: edit
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: http://192.168.23.87:9004/verp-service/companyRole/edit
+  body:
+    type: json
+    data: |-
+      {
+          "FlagId": 3,
+          "CompanyRoleId": 2,
+          "RoleId": 3,
+          "UpdatedByUserName": "Admin"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NDk4NzYsImV4cCI6MTc5Mzk3ODY3Nn0.r5tyvC5E3mrth5iz27h3MGENsFmsgviyaF6hW-kCmNg
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
