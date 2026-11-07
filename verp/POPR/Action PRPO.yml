@@ -5,8 +5,20 @@ info:
 
 http:
   method: POST
-  url: PrPoAction
-  auth: inherit
+  url: http://localhost:9004/verp-service/PoPr/PrPoAction
+  body:
+    type: json
+    data: |-
+      {
+        "PRPOHeaderId":56,
+        "PRPOStatusId":3,
+        "UserId":6,
+        "ActionForUserId":7,
+        "Comments":"current pr been forwarded"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NTcwOTMsImV4cCI6MTc5Mzk4NTg5M30.luNwMUu8Os4MMGTTZOTJrzNbZxaT0AR3wy17ccPf9lY
 
 settings:
   encodeUrl: true
