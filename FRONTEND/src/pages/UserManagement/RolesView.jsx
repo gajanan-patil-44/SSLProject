@@ -39,7 +39,7 @@ const getSessionCompany = () => {
     }
     const ctx = useERPStore.getState()?.userContext;
     if (ctx?.companies?.length > 0) return ctx.companies[0];
-  } catch {}
+  } catch { }
   return null;
 };
 import { Modal } from '../../components/ui/Modal';
@@ -289,7 +289,7 @@ export default function RolesView() {
       const res = await roleService.updateRoleStatus(roleId, newDisabled);
       showToast(
         res?.message ||
-          `Role "${role.RoleName}" has been ${newDisabled ? 'disabled' : 'enabled'}.`
+        `Role "${role.RoleName}" has been ${newDisabled ? 'disabled' : 'enabled'}.`
       );
     } catch (err) {
       setError(err?.message || 'Failed to update role status.');
@@ -570,11 +570,10 @@ export default function RolesView() {
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                              isDisabled
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${isDisabled
                                 ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
                                 : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400'
-                            }`}
+                              }`}
                           >
                             <Shield className="w-4 h-4" />
                           </div>
@@ -720,9 +719,8 @@ export default function RolesView() {
                 maxLength={50}
                 onChange={handleRoleNameChange}
                 placeholder="e.g., Operations Manager, Auditor, Super Admin"
-                className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border ${
-                  formErrors.RoleName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
+                className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border ${formErrors.RoleName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
+                  } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
                 required
               />
               {formErrors.RoleName && (
@@ -750,9 +748,8 @@ export default function RolesView() {
                   }
                 }}
                 placeholder="e.g., OPR, AUD, SADMIN"
-                className={`w-full px-3.5 py-2.5 text-xs font-mono uppercase rounded-xl bg-slate-50 dark:bg-slate-800 border ${
-                  formErrors.Role_Code ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
+                className={`w-full px-3.5 py-2.5 text-xs font-mono uppercase rounded-xl bg-slate-50 dark:bg-slate-800 border ${formErrors.Role_Code ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
+                  } text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
                 required
               />
               {formErrors.Role_Code && (
@@ -775,9 +772,8 @@ export default function RolesView() {
                 }}
                 rows={3}
                 placeholder="Enter role responsibilities (text only)..."
-                className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none ${
-                  formErrors.Description ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
-                }`}
+                className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none ${formErrors.Description ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
+                  }`}
               />
               {formErrors.Description && (
                 <p className="text-[11px] text-red-500">{formErrors.Description}</p>
