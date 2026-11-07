@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://192.168.23.107:9004/verp-service/designationCreation/view
+  url: http://192.168.23.91:9004/verp-service/designationCreation/view
   body:
     type: json
     data: |-
@@ -14,11 +14,10 @@ http:
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiaWF0IjoxNzkwNTgwNjI3LCJleHAiOjE3OTA2MDk0Mjd9.805WBOO9abiWZazpw05m8JI4bm4p2JToUrz-w6U-P1o
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjEsIkVtcGxveWVlSWQiOiJFTVAxIiwiTG9naW5OYW1lIjoiYWRtaW4xIiwiRW1haWwiOiJhZG1pbjFAZ21haWwuY29tIiwiRGVzaWduYXRpb25JZCI6bnVsbCwiQ29tcGFueUlkIjpudWxsLCJpYXQiOjE3OTM5NTE3NDEsImV4cCI6MTc5Mzk4MDU0MX0.hpWU_2AhROPA_JRE4LAahqFBn6KwITGc-LkNWM5PlAU
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
-  forwardAuthorizationHeader: false

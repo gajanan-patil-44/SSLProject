@@ -24,6 +24,7 @@ import DepartmentRoutes from "../Routes/Department/DepartmentRoutes.js"
 import prpoRoutes from "../Routes/PRPORoutes/PoPrRoute.js"
 import VendorTypeRoutes from "../Routes/VendorType/VendorTypeRoutes.js"
 import viewPRPORoutes from "../Routes/ViewPRPO/ViewPRPORoutes.js"
+import CompanyRoleRoutes from "../Routes/CompanyRole/CompanyRole.js"
 
 
 const applyRoutes = (app) => {
