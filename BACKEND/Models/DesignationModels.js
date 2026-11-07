@@ -51,18 +51,7 @@ export const getCompaniesForDropdown = async (CompanyId) => {
     return result.rows;
 };
 
-
-
-
-
-
-
-
-
 // ADD DESIGNATION
-
-
-
 export const addDesignation = async (designationData) => {
 
     try {
@@ -107,11 +96,7 @@ export const addDesignation = async (designationData) => {
     }
 
 }
-
-
 // CHECK DESIGNATION FOR UPDATE
-
-
 export const checkDesignationExistsForUpdate = async (
     DesignationName,
     DesignationCode,
@@ -160,8 +145,6 @@ export const checkDesignationExistsForUpdate = async (
     }
 };
 // EDIT DESIGNATION
-
-
 export const editDesignation = async (designationData) => {
 
     try {
@@ -212,10 +195,6 @@ export const editDesignation = async (designationData) => {
         throw error;
     }
 };
-
-
-
-
 // TOGGLE DESIGNATION STATUS
 
 export const toggleDesignationStatuses = async (designationData) => {

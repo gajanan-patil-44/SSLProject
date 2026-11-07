@@ -469,24 +469,29 @@ export const toggleDesignationStatus = async (req, res) => {
 
     try {
 
-        // VALIDATE FLAG ID
+        // FLAG ID VALIDATION
 
         if (
             flagId === undefined ||
             flagId === null ||
             flagId === ""
         ) {
-
             return res.status(400).json({
                 status: "error",
                 message: "flagId is required"
             });
         }
 
+        if (!Number.isInteger(Number(flagId))) {
+            return res.status(400).json({
+                status: "error",
+                message: "flagId must be a valid number"
+            });
+        }
 
-        // FLAG ID 4 - TOGGLE DESIGNATION STATUS
+        // FLAG ID 4 = TOGGLE DESIGNATION STATUS
 
-        if (parseInt(flagId) === 4) {
+        if (Number(flagId) === 4) {
 
             const {
                 DesignationId,
@@ -494,91 +499,79 @@ export const toggleDesignationStatus = async (req, res) => {
                 UpdatedByUserName
             } = req.body;
 
-
-            // VALIDATE DESIGNATION ID
+            // DESIGNATION ID VALIDATION
 
             if (
                 DesignationId === undefined ||
                 DesignationId === null ||
                 DesignationId === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "DesignationId is required"
                 });
             }
 
+            const designationId = Number(DesignationId);
 
             if (
-                !Number.isInteger(Number(DesignationId)) ||
-                Number(DesignationId) <= 0
+                !Number.isInteger(designationId) ||
+                designationId <= 0
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "DesignationId must be a valid positive integer"
                 });
             }
 
-
-            // VALIDATE IS DISABLED
+            // STATUS VALIDATION
 
             if (typeof IsDisabled !== "boolean") {
-
                 return res.status(400).json({
                     status: "error",
                     message: "IsDisabled must be true or false"
                 });
             }
 
-
-            // VALIDATE UPDATED BY USER NAME
+            // UPDATED USER VALIDATION
 
             if (
-                UpdatedByUserName === undefined ||
-                UpdatedByUserName === null ||
-                UpdatedByUserName === "" ||
                 typeof UpdatedByUserName !== "string" ||
                 UpdatedByUserName.trim() === ""
             ) {
-
                 return res.status(400).json({
                     status: "error",
                     message: "UpdatedByUserName is required"
                 });
             }
 
-
             // UPDATE DESIGNATION STATUS
 
             const designationData = await toggleDesignationStatuses({
-                DesignationId: Number(DesignationId),
+
+                DesignationId: designationId,
                 IsDisabled,
                 UpdatedByUserName: UpdatedByUserName.trim()
+
             });
 
-
-            // DESIGNATION DOES NOT EXIST
+            // DESIGNATION NOT FOUND
 
             if (!designationData) {
-
                 return res.status(404).json({
                     status: "error",
                     message: "Designation not found"
                 });
             }
 
-
-            // SUCCESS
+            // SUCCESS RESPONSE
 
             return res.status(200).json({
                 status: "success",
-                message: "Designation status updated successfully"
+                message: "Designation status updated successfully",
+                data: designationData
             });
-
         }
-
 
         // INVALID FLAG ID
 
