@@ -29,6 +29,7 @@ import GSTCreationView from './pages/Master/GSTCreationView';
 import DesignationView from './pages/Master/DesignationView';
 import CompanyRoleView from './pages/Master/CompanyRoleView';
 import CompanyDesignationView from './pages/Master/CompanyDesignationView';
+import CompanyDepartmentView from './pages/Master/CompanyDepartmentView';
 
 // Work Management Module
 import {
@@ -86,6 +87,8 @@ export default function App() {
           <Route path="master/company-designation" element={<CompanyDesignationView />} />
           <Route path="master/company-roles" element={<CompanyRoleView />} />
           <Route path="master/company-role" element={<CompanyRoleView />} />
+          <Route path="master/company-departments" element={<CompanyDepartmentView />} />
+          <Route path="master/company-department" element={<CompanyDepartmentView />} />
           <Route path="master/roles" element={<KeyedModuleRenderer />} />
           <Route path="master/user-creation" element={<UserCreationView />} />
           <Route path="master/manage-users" element={<ManageUserView />} />
@@ -123,6 +126,8 @@ export default function App() {
           <Route path="company-designation" element={<Navigate to="/master/company-designations" replace />} />
           <Route path="company-roles" element={<Navigate to="/master/company-roles" replace />} />
           <Route path="company-role" element={<Navigate to="/master/company-roles" replace />} />
+          <Route path="company-departments" element={<Navigate to="/master/company-departments" replace />} />
+          <Route path="company-department" element={<Navigate to="/master/company-departments" replace />} />
           <Route path="projects" element={<Navigate to="/master/projects" replace />} />
           <Route path="manage-page" element={<Navigate to="/master/manage-page" replace />} />
           <Route path="department" element={<Navigate to="/master/department" replace />} />
