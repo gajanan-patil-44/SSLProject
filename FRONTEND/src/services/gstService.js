@@ -98,7 +98,7 @@ export const gstService = {
       } catch { return ''; }
     })() : '';
 
-    const userName = data.UpdatedByUserName || userState || 'Admin';
+    const userName = data.UpdatedByUserName || userState || '';
     const rateId = Number(data.GSTRateId ?? data.id ?? data.GSTId ?? data.gstRateId);
     const isDisabled = typeof data.IsDisabled === 'boolean' ? data.IsDisabled : Boolean(data.IsDisabled);
 
