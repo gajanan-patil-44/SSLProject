@@ -126,7 +126,9 @@ export const DESIGNATION_ROUTES = {
   DELETE_DESIGNATION: '/verp-service/designationCreation/deleteDesignation',
   COMPANY_DESIGNATION_DROPDOWN: '/verp-service/designationCreation/companyDesignationDpdwn',
   INSERT_COMPANY_DESIGNATION: '/verp-service/designationCreation/insertCompanyDesignation',
-  FETCH_COMPANY_DESIGNATION_VIEW: '/verp-service/designationCreation/fetchCompanyDesignationView'
+  FETCH_COMPANY_DESIGNATION_VIEW: '/verp-service/designationCreation/fetchCompanyDesignationView',
+  EDIT_COMPANY_DESIGNATION: '/verp-service/designationCreation/editCompanyDesignation',
+  TOGGLE_COMPANY_DESIGNATION_STATUS: '/verp-service/designationCreation/toggleCompanyDesignationStatus'
 };
 
 /**
@@ -288,8 +290,10 @@ export const COMPANY_DESIGNATION_ROUTES = {
   VIEW: '/verp-service/designationCreation/fetchCompanyDesignationView',
   ADD: '/verp-service/designationCreation/insertCompanyDesignation',
   INSERT: '/verp-service/designationCreation/insertCompanyDesignation',
-  EDIT: '/verp-service/companyDesignation/edit',
-  STATUS: '/verp-service/companyDesignation/status',
+  EDIT: '/verp-service/designationCreation/editCompanyDesignation',
+  EDIT_COMPANY_DESIGNATION: '/verp-service/designationCreation/editCompanyDesignation',
+  STATUS: '/verp-service/designationCreation/toggleCompanyDesignationStatus',
+  TOGGLE_STATUS: '/verp-service/designationCreation/toggleCompanyDesignationStatus',
   DROPDOWN: '/verp-service/designationCreation/companyDesignationDpdwn'
 };
 
