@@ -10,12 +10,12 @@ http:
     type: json
     data: |-
       {
-          "flagId": 2,
-          "DesignationName": "Projecttttttttt Manager",
-          "DesignationCode": "MD_00r01",
-          "DesignationDescription": "Responsible for managing projects and teamrrrrrs",
-          "IsDisabled": false,
-          "CreatedByUserName": "Praveen"
+        "flagId": 2,
+        "DesignationName": "Projecttttttttt Manager",
+        "DesignationCode": "MD_00r01",
+        "DesignationDescription": "Responsible for managing projects and teamrrrrrs",
+        "IsDisabled": false,
+        "CreatedByUserName": "Praveen"
       }
   auth:
     type: bearer

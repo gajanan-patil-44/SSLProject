@@ -31,8 +31,7 @@ const validateNameAndCode = (data) => {
     return null;
 };
 
-const bad = (res, message, code = 400) =>
-    res.status(code).json({ status: "error", message });
+const bad = (res, message, code = 400) => res.status(code).json({ status: "error", message });
 
 
 // FLAG ID 1 - VIEW (POST)

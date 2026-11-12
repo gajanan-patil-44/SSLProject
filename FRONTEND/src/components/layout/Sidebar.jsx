@@ -54,6 +54,10 @@ const ICON_MAP = {
   'company-role': Icons.ShieldCheck,
   companyroles: Icons.ShieldCheck,
   companyrole: Icons.ShieldCheck,
+  'company-departments': Icons.Network,
+  'company-department': Icons.Network,
+  companydepartments: Icons.Network,
+  companydepartment: Icons.Network,
   roles: Icons.Shield,
   'manage-page': Icons.Layers,
   managepage: Icons.Layers,
@@ -119,43 +123,34 @@ const renderIcon = (iconName, className = "w-4 h-4 shrink-0") => {
   return <IconComp className={className} />;
 };
 
-// Title Case formatter (e.g. "company products" -> "Company Products")
-const formatTitle = (str) => {
-  if (!str) return '';
-  return str
-    .split(/[\s_-]+/)
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
-};
-
 // Recursively format page items from API menuPage
 const formatPageNode = (page) => {
-  const rawName = page.PageName || page.name || page.label || '';
-  const rawUrl = page.PageUrl || page.url || page.path || '';
-  const rawIcon = page.PageIcon || page.icon || page.IconName || '';
-  const order = Number(page.OrderNo ?? page.order ?? 0);
+  const rawName = (page.PageName || page.pageName || page.name || page.label || '').trim();
+  const rawUrl = (page.PageUrl || page.PageURL || page.pageUrl || page.url || page.path || '').trim();
+  const rawIcon = page.PageIcon || page.pageIcon || page.icon || page.IconName || page.iconName || '';
+  const order = Number(page.OrderNo ?? page.orderNo ?? page.order ?? 0);
+  const parentPage = page.ParentPage || page.parentPage || null;
+  const parentPageId = page.ParentPageId ?? page.parentPageId ?? null;
+  const pageType = page.PageType || page.pageType || null;
 
-  let formattedLabel = formatTitle(rawName);
-  const lowerLabel = formattedLabel.toLowerCase();
-  if (lowerLabel === 'manage category' || lowerLabel === 'manage categories' || lowerLabel === 'material category' || lowerLabel === 'material categories') {
-    formattedLabel = 'Material Categories Creation';
-  } else if (lowerLabel === 'manage sub category' || lowerLabel === 'manage sub categories' || lowerLabel === 'material sub category' || lowerLabel === 'material sub categories') {
-    formattedLabel = 'Material Sub Category';
-  } else if (lowerLabel === 'gst' || lowerLabel === 'gst creation' || lowerLabel === 'gst master' || lowerLabel === 'gst-creation') {
-    formattedLabel = 'GST Creation';
-  }
+  // Use the exact name provided by the backend / Manage Page without hardcoding overrides
+  const label = rawName || (rawUrl ? rawUrl.split('/').filter(Boolean).pop()?.replace(/[-_]+/g, ' ') : '') || 'Untitled';
 
   const children = Array.isArray(page.children)
     ? page.children.map(formatPageNode).sort((a, b) => a.order - b.order)
     : [];
 
   return {
-    id: page.PageId || page.id || rawUrl,
-    label: formattedLabel,
+    id: page.PageId || page.pageId || page.id || rawUrl,
+    label: label,
     path: rawUrl,
     icon: rawIcon,
     order: order,
-    children: children
+    parentPage: parentPage,
+    parentPageId: parentPageId,
+    pageType: pageType,
+    children: children,
+    raw: page
   };
 };
 
@@ -175,19 +170,32 @@ const normalizeNavigation = (menuData) => {
     .map(formatPageNode)
     .sort((a, b) => a.order - b.order);
 
-  // Group top-level items by module extracted from URL (e.g. /master/companies -> MASTER, /work-management/... -> WORK MANAGEMENT)
+  // Group top-level items by module extracted from ParentPage, raw Module, or URL
   const sectionsMap = new Map();
 
   formattedItems.forEach(item => {
-    let sectionTitle = 'MENU';
-    if (item.path && item.path.startsWith('/')) {
+    let sectionTitle = '';
+
+    // 1. Check if backend provided ParentPage or Section/Module name
+    const rawParent = item.parentPage || item.raw?.ParentPage || item.raw?.parentPage || item.raw?.Section || item.raw?.Module;
+    if (rawParent && rawParent !== '-' && rawParent !== '—' && typeof rawParent === 'string') {
+      sectionTitle = rawParent.trim().toUpperCase();
+    }
+
+    // 2. Extract from URL module segment if not provided
+    if (!sectionTitle && item.path && item.path.startsWith('/')) {
       const segment = item.path.split('/')[1];
       if (segment) {
         sectionTitle = segment.toLowerCase() === 'dashboard' ? 'MAIN' : segment.replace(/[-_]+/g, ' ').toUpperCase();
       }
-    } else if (item.label && Array.isArray(item.children) && item.children.length > 0) {
+    } else if (!sectionTitle && item.label && Array.isArray(item.children) && item.children.length > 0) {
       sectionTitle = item.label.toUpperCase();
     }
+
+    if (!sectionTitle) {
+      sectionTitle = 'MENU';
+    }
+
     if (!sectionsMap.has(sectionTitle)) {
       sectionsMap.set(sectionTitle, []);
     }

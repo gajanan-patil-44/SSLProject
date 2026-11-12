@@ -69,6 +69,7 @@ apiClient.interceptors.request.use(
       config.url.includes('/designationCreation') ||
       config.url.includes('/companyRole') ||
       config.url.includes('/companyDesignation') ||
+      config.url.includes('/department/dropdown') ||
       config.url.includes('/gstRate')
     );
     if (!isExcludedUrl && sessionCompanyId && config.data) {

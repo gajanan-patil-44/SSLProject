@@ -79,10 +79,7 @@ export const getRole = async (req, res) => {
 
         if (Number(FlagId) === 1) {
 
-        
-
             const roles = await getAllRoles();
-
             return res.status(200).json({
                 status: "success",
                 message: "Roles fetched successfully",
