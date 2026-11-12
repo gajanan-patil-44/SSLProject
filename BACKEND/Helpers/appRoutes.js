@@ -26,6 +26,8 @@ import VendorTypeRoutes from "../Routes/VendorType/VendorTypeRoutes.js"
 import viewPRPORoutes from "../Routes/ViewPRPO/ViewPRPORoutes.js"
 import CompanyRoleRoutes from "../Routes/CompanyRole/CompanyRole.js"
 
+import CustomerTypeRoutes from "../Routes/CustomerType/CustomerTypeRoutes.js";
+
 
 const applyRoutes = (app) => {
 app.use(backendHelpers.USER_CREATION, UserRoutes);   // written by  hithin
@@ -64,6 +66,9 @@ app.use(backendHelpers.DEPARTMENT, DepartmentRoutes);
 app.use(backendHelpers.PO_PR,prpoRoutes);
 app.use(backendHelpers.VENDOR_TYPE, VendorTypeRoutes); //written by Lohith
 app.use(backendHelpers.VIEW_PRPO, viewPRPORoutes);
+
+app.use(backendHelpers.CUSTOMER_TYPE, CustomerTypeRoutes);
+
 };
 
 export default applyRoutes;

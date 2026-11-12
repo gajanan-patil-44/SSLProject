@@ -30,3 +30,6 @@ export const PO_PR="/verp-service/PoPr"
 export const DEPARTMENT="/verp-service/department"
 export const VENDOR_TYPE="/verp-service/vendorType"
 export const VIEW_PRPO="/verp-service/viewPRPO"
+
+
+export const CUSTOMER_TYPE = "/verp-service/customerType";
